@@ -2,7 +2,6 @@
   "fixture": "F71",
   "section": "Main tab, section 6.3",
   "stage": 8,
-  "ownerReview": true,
   "expect": {
     "emit": {
       "ok": false,

@@ -20,4 +20,4 @@ Consumers must ignore fields they do not know. The incremental-equals-full fixtu
 
 ## Status
 
-Accepted provisionally (implementer's choice; first build)
+Accepted. The owner confirmed the choice behind it on 3 October 2026.

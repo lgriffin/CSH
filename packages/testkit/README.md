@@ -46,7 +46,6 @@ The fixture runner checks results independently of the code under test ([ADR-26]
 
 ## Known limits
 
-- Fixtures F70 to F78 were written by the implementer from the composition rules and await owner review ([A-32](../../ASSUMPTIONS.md)).
 - Most comparisons are inclusion checks: an extra finding, gap or error passes unless the fixture sets `findingsExact` or lists the item as one that must be absent.
 - Only the OpenPGP signing path is exercised; SSH signing is not ([A-26](../../ASSUMPTIONS.md)).
 - Scratch files go under `.csh-cache/` inside the workspace, so that generated specifications can resolve `csl`.

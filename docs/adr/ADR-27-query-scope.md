@@ -16,8 +16,8 @@ Applying every assumption to every query, which could make unrelated queries vac
 
 ## Consequences
 
-Open as [Q-06](../../QUESTIONS.md) and [Q-09](../../QUESTIONS.md).
+Decided in [Q-06](../../QUESTIONS.md) and [Q-09](../../QUESTIONS.md).
 
 ## Status
 
-Accepted provisionally (implementer's choice; first build)
+Accepted. The owner confirmed the choice behind it on 3 October 2026.

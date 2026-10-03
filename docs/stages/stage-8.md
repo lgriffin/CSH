@@ -7,7 +7,7 @@
 ## Built
 
 - Packs, `use()` with pinned versions and digests, the lock file and `csl lock`, vocabulary merging, conjunction of obligations, strengthening by refinement check, and explicit relaxation.
-- Fixtures F70 to F78, written first from the main tab, section 6.3, each flagged `"ownerReview": true` ([Q-17](../../QUESTIONS.md)).
+- Fixtures F70 to F78, written first from the main tab, section 6.3, each flagged `"ownerReview": true`. The owner accepted them as written on 3 October 2026, and the flags were removed ([Q-17](../../QUESTIONS.md)).
 
 ## Effort
 

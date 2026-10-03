@@ -107,13 +107,13 @@ self-approved, until a second person joins. See the [Authority tab](docs/spec/05
 - **Unknown is common.** A solver timeout, a missing binding or an unapproved binding all give unknown. That is a correct answer, not a malfunction.
 - **Protection depends on keys.** It also depends on where the gate runs: CI should pin the root maintainers commit with `CSH_ROOT_COMMIT`, outside the repository ([A-28](ASSUMPTIONS.md)).
 - **SSH signatures are untested.** Their verification is implemented through git but no fixture covers it ([Q-16](QUESTIONS.md)).
-- **Choices made during the build are provisional.** They are registered in [ASSUMPTIONS.md](ASSUMPTIONS.md), with open questions in [QUESTIONS.md](QUESTIONS.md).
+- **Choices made during the build are registered.** They are in [ASSUMPTIONS.md](ASSUMPTIONS.md). The owner decided all seventeen questions in [QUESTIONS.md](QUESTIONS.md) on 3 October 2026.
 
 ## Status of the build
 
 All nine stages are built. All 51 golden fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to
 F52, F60 to F64, F70 to F78), as do the unit, property and fault-injection tests. The composition fixtures F70 to
-F78 were written by the implementer and await owner review. [docs/stages](docs/stages) records what each stage
+F78 were written by the implementer and accepted by the owner. [docs/stages](docs/stages) records what each stage
 built and what its fixtures revealed.
 
 ```sh

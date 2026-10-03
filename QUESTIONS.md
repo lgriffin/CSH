@@ -1,28 +1,30 @@
 # Questions for the owner
 
 Places where the documents are silent, ambiguous or contradictory (Implementer's brief, rule 2). Each entry gives
-the options, what each implies, and the provisional answer the build took, registered in
-[ASSUMPTIONS.md](ASSUMPTIONS.md). Every entry is open until the owner answers it. None blocks a stage, because each
-has a conservative provisional answer.
+the options, what each implies, and the answer chosen, registered in [ASSUMPTIONS.md](ASSUMPTIONS.md).
+
+**All seventeen are decided.** On 3 October 2026 the owner accepted the answer the build had taken for every question,
+including the composition fixtures F70 to F78 as written. No question is open. A new question gets the next number
+and stays open until the owner answers it.
 
 ## Q-01 Which Node release is "the current long-term-support release"?
 
 On 3 October 2026, Node 24 is the active LTS line and Node 22 is in maintenance LTS. The build container has Node 22.22.
 
 - **Node 24 only.** This matches the wording, but the tool could not be run in the build environment.
-- **Node 22.18 or later (taken).** Type stripping is on by default and the permission model is stable. The tool runs on both lines, and CI tests both.
+- **Node 22.18 or later (chosen).** Type stripping is on by default and the permission model is stable. The tool runs on both lines, and CI tests both.
 
-Provisional: A-25.
+Decided on 3 October 2026: the chosen option. Recorded as A-25.
 
 ## Q-02 How is a strengthening accepted by "recorded review" (composition rule 4)?
 
 The main tab, section 6.3, allows a local obligation to strengthen an inherited one "through a refinement check or a
 recorded review". No document defines the review record.
 
-- **Solver check only (taken).** When the check cannot show strengthening, emission fails with `E-WEAKEN`. The profile can relax the obligation explicitly. This rejects more, which is conservative.
+- **Solver check only (chosen).** When the check cannot show strengthening, emission fails with `E-WEAKEN`. The profile can relax the obligation explicitly. This rejects more, which is conservative.
 - **A new ledger decision kind**, such as `refine`, signed by a domain reviewer. This needs a schema change in the Authority tab.
 
-Provisional: A-23.
+Decided on 3 October 2026: the chosen option. Recorded as A-23.
 
 ## Q-03 F21 produces two findings the document does not list
 
@@ -31,129 +33,129 @@ query definitions also produce two more findings. Q-EX gives an `example-conflic
 `RejectAtBoundary` and the new requirement. Q-MEET gives a `not-met` finding: the model rejects a withdrawal of at
 most 10,000 that would cross the floor, so the transition does not meet the new requirement.
 
-- **Report them (taken).** They follow from the definitions, and hiding them would be a silent filter. The fixture expects all three.
+- **Report them (chosen).** They follow from the definitions, and hiding them would be a silent filter. The fixture expects all three.
 - **Report only the Q-FEAS finding.** That would need a rule that suppresses findings once a joint conflict exists, and no document gives one.
 
-Recorded in `fixtures/F21/README.md`.
+Decided on 3 October 2026: report all three. Recorded in `fixtures/F21/README.md`.
 
 ## Q-04 How are cycles of mutual assumptions detected?
 
 The main tab, section 6.3, says that "a cycle of mutual assumptions is reported as unresolved". Version 1 packs carry
 obligations and vocabulary but no assume–guarantee pairs, so no cycle can form.
 
-- **Not implemented (taken)**, until packs gain assume–guarantee contracts.
+- **Not implemented (chosen)**, until packs gain assume–guarantee contracts.
 - **Implement a dependency graph over assumptions now.** It would have nothing to run on.
 
-Provisional: A-24.
+Decided on 3 October 2026: the chosen option. Recorded as A-24.
 
 ## Q-05 Can stale evidence ever be refreshed without re-running the test?
 
 The Authority tab, section 5, makes evidence stale when a dependency changes. It does not say whether evidence can
 return to current.
 
-- **Never (taken).** A new witness must be recorded at the new snapshot.
+- **Never (chosen).** A new witness must be recorded at the new snapshot.
 - **Re-judge when only the obligation's digest changed.** The witness values are unchanged, so the new obligation could be evaluated on them. But a change in meaning may need a different test.
 
-Provisional: A-15.
+Decided on 3 October 2026: the chosen option. Recorded as A-15.
 
 ## Q-06 Which assumptions apply to which query, and which source do transitions belong to?
 
 The Semantic contract defines the queries "in a shared context C" without saying which assumptions make up C. It also
 does not say which source transitions and bindings belong to.
 
-- **By scope (taken).** An assumption applies when it speaks about the state of the query, or about the event of the query. Transitions and bindings belong to a pseudo-source `model`.
+- **By scope (chosen).** An assumption applies when it speaks about the state of the query, or about the event of the query. Transitions and bindings belong to a pseudo-source `model`.
 - **All assumptions everywhere.** This could make unrelated queries vacuous.
 
-Provisional: A-04, A-05.
+Decided on 3 October 2026: the chosen option. Recorded as A-04, A-05.
 
 ## Q-07 What is the verdict of an approved obligation with no policy?
 
-- **unknown, reason `no-policy` (taken).** No method says what evidence would satisfy it (P3).
+- **unknown, reason `no-policy` (chosen).** No method says what evidence would satisfy it (P3).
 - **satisfied when no finding involves it.** This would be a silent pass.
 
-Provisional: A-02.
+Decided on 3 October 2026: the chosen option. Recorded as A-02.
 
 ## Q-08 Is a witness for another event inapplicable, or simply not evidence?
 
-- **Not evidence (taken).** It is left out of the obligation's evidence list. It still appears in the report's `executions`.
+- **Not evidence (chosen).** It is left out of the obligation's evidence list. It still appears in the report's `executions`.
 - **Inapplicable with reason `event-mismatch`.** Every witness would be listed under every obligation, which makes reports long.
 
-Provisional: A-06.
+Decided on 3 October 2026: the chosen option. Recorded as A-06.
 
 ## Q-09 Which queries run for a state that Q-STATE finds inconsistent?
 
 Every formula is satisfied vacuously in an inconsistent state, so downstream queries would report noise.
 
-- **Skip them (taken).** Obligations on the state are marked skipped with reason `state-conflict`.
+- **Skip them (chosen).** Obligations on the state are marked skipped with reason `state-conflict`.
 - **Run them all.** Every vacuity and feasibility answer on that state would be meaningless.
 
-Provisional: A-07; fixture F13.
+Decided on 3 October 2026: the chosen option. Recorded as A-07; fixture F13.
 
 ## Q-10 Do candidate fragments affect the verdict of an approved obligation?
 
 The Semantic contract's verdict order says an obligation is conflicting when it is in a finding. It does not say
 whether a finding with a candidate member counts against an approved obligation.
 
-- **Only all-approved findings count (taken).** A candidate, which an agent can write, cannot make an approved obligation conflicting or block the gate. The finding is still reported, with its members' authority.
+- **Only all-approved findings count (chosen).** A candidate, which an agent can write, cannot make an approved obligation conflicting or block the gate. The finding is still reported, with its members' authority.
 - **Every finding counts.** An agent could then block delivery by writing one conflicting candidate.
 
-Provisional: A-10.
+Decided on 3 October 2026: the chosen option. Recorded as A-10.
 
 ## Q-11 What exactly is a single-source gap?
 
 The Joint evaluation tab lists a gap where one practice asserts something the others are silent on, but gives no
 precise test.
 
-- **Every term the obligation constrains is asserted by one source only (taken).**
+- **Every term the obligation constrains is asserted by one source only (chosen).**
 - **The obligation itself is cited by no other source.**
 
-Provisional: A-12.
+Decided on 3 October 2026: the chosen option. Recorded as A-12.
 
 ## Q-12 What is the snapshot of a working tree with uncommitted changes?
 
-- **`HEAD-dirty` (taken).** Witnesses are never current against it, and the gate refuses to decide for it unless its report has the same snapshot.
+- **`HEAD-dirty` (chosen).** Witnesses are never current against it, and the gate refuses to decide for it unless its report has the same snapshot.
 - **HEAD.** A decision would be bound to a commit that does not hold what was checked (CSH-010).
 
-Provisional: A-16.
+Decided on 3 October 2026: the chosen option. Recorded as A-16.
 
 ## Q-13 Which files count as "implementation" for staleness?
 
 The Authority tab, section 5, makes evidence stale when the implementation changes, without saying which files.
 
-- **Everything outside `csh/` unless configured (taken).** Evidence becomes stale more often, which is conservative.
+- **Everything outside `csh/` unless configured (chosen).** Evidence becomes stale more often, which is conservative.
 - **Nothing unless configured.** Evidence would stay current after any code change.
 
-Provisional: A-17.
+Decided on 3 October 2026: the chosen option. Recorded as A-17.
 
 ## Q-14 Which git signature statuses count, and who authored an unsigned change?
 
-- **`G` or `U`, with trust from `csh/maintainers.json` (taken).** An unsigned or unknown author is `unattributed` and never ends a self-approval.
+- **`G` or `U`, with trust from `csh/maintainers.json` (chosen).** An unsigned or unknown author is `unattributed` and never ends a self-approval.
 - **`G` only.** This needs every maintainer key marked trusted in each CI keyring, which duplicates the maintainers file.
 
-Provisional: A-18, A-19.
+Decided on 3 October 2026: the chosen option. Recorded as A-18, A-19.
 
 ## Q-15 Can the report carry fields the documents do not list?
 
-- **Yes, marked as extensions (taken).**
+- **Yes, marked as extensions (chosen).**
 - **No.** Unliftable content, harness errors and executions would then have no place in the report, against P2 and P4.
 
-Provisional: A-01.
+Decided on 3 October 2026: the chosen option. Recorded as A-01.
 
 ## Q-16 How should SSH-signed commits be verified?
 
 The owner may sign with OpenPGP or SSH keys. Git verifies SSH signatures only against an allowed-signers file. That
 file would be a second list of trusted keys beside `csh/maintainers.json`.
 
-- **Use git's verification for both (taken).** CI configures `gpg.ssh.allowedSignersFile` from the maintainers file. Only the OpenPGP path is tested by fixtures.
+- **Use git's verification for both (chosen).** CI configures `gpg.ssh.allowedSignersFile` from the maintainers file. Only the OpenPGP path is tested by fixtures.
 - **Verify SSH signatures in the harness** with `ssh-keygen -Y verify` against keys taken from `csh/maintainers.json` directly.
 
-Provisional: A-26.
+Decided on 3 October 2026: the chosen option. Recorded as A-26.
 
 ## Q-17 Do the composition fixtures F70 to F78 express the owner's intent?
 
 The brief asks for these fixtures to be written first and flagged for owner review. They are in `fixtures/F70` to
-`fixtures/F78`, each with `"ownerReview": true`. They cover: pinned packs, lock mismatch, missing lock, vocabulary
+`fixtures/F78`. The owner accepted them as written, and their review flags were removed. They cover: pinned packs, lock mismatch, missing lock, vocabulary
 disagreement, strengthening, silent weakening, explicit relaxation, a second unrelated domain, and a conflict between
 local and inherited obligations.
 
-Provisional: A-32.
+Decided on 3 October 2026: the chosen option. Recorded as A-32.

@@ -16,7 +16,7 @@ Pausing for owner review after each stage.
 
 ## Consequences
 
-Choices made during the build are provisional. They are registered in [ASSUMPTIONS.md](../../ASSUMPTIONS.md) and [QUESTIONS.md](../../QUESTIONS.md), and the composition fixtures F70 to F78 are flagged for owner review.
+Choices made during the build are provisional. They are registered in [ASSUMPTIONS.md](../../ASSUMPTIONS.md) and [QUESTIONS.md](../../QUESTIONS.md), and the composition fixtures F70 to F78 were flagged for owner review. The owner decided every question and accepted the fixtures on 3 October 2026.
 
 ## Status
 

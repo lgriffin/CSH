@@ -4,4 +4,5 @@ The same weakening as F75, made explicitly: the profile relaxes the inherited Mi
 reason, and states its own overdraft limit as a new obligation. Emission succeeds; the relaxation is recorded in the
 model and listed in the gap view, and the relaxed obligation no longer takes part in the checks (rule 5).
 
-Written first from the composition rules and flagged for owner review (Implementer's brief, stage 8).
+Written first from the composition rules and flagged for owner review (Implementer's brief, stage 8). The owner
+accepted it as written on 3 October 2026 ([Q-17](../../QUESTIONS.md)).

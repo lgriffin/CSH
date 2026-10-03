@@ -20,4 +20,4 @@ Only erasable TypeScript syntax may be used: no enums, namespaces or parameter p
 
 ## Status
 
-Accepted provisionally (implementer's choice; first build)
+Accepted. The owner confirmed the choice behind it on 3 October 2026.
