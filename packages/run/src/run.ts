@@ -3,7 +3,7 @@
 // the run record is stored under .csh-cache/runs/<snapshot digest>/. A harness's exit code is stored as an execution
 // fact and never enters a verdict (P2).
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { type ComponentManifest, DEFAULT_EXECUTIONS } from "@csh/component";
 import type { Report } from "@csh/check";
@@ -183,6 +183,13 @@ export async function runAt(o: RunOptions & { commit: string }): Promise<RunResu
     }
     mkdirSync(dirname(wt), { recursive: true });
     git(top, "worktree", "add", "--detach", "--force", wt, commit);
+    // A component inside a workspace (a package of a monorepo) resolves its packages from its own node_modules and
+    // those of the directories above it, which a worktree does not have. The dependency files are the commit's own
+    // (checked above), so the installed directories are linked in at the same paths.
+    for (let d = prefix; d !== "" && d !== "."; d = dirname(d) === "." ? "" : dirname(d)) {
+      const installed = join(top, d, "node_modules");
+      if (existsSync(installed) && !existsSync(join(wt, d, "node_modules"))) symlinkSync(installed, join(wt, d, "node_modules"), "dir");
+    }
     return await runComponent({ ...o, root: join(wt, prefix), storeRoot: root });
   } finally {
     try {

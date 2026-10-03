@@ -5,7 +5,7 @@ the options, what each implies, and the answer chosen, registered in [ASSUMPTION
 
 **Q-01 to Q-17 are decided.** On 3 October 2026 the owner accepted the answer the build had taken for each of them,
 including the composition fixtures F70 to F78 as written. **Q-18 is open**: it came from verifying the anchor design
-([09](docs/spec/09-anchor-harness-a3.md), section 14.1). A new question gets the next number and stays open until the
+([09](docs/spec/09-anchor-harness-a3.md), section 14.1). **Q-19 and Q-20 are open**, raised in stages 13 and 15. A new question gets the next number and stays open until the
 owner answers it.
 
 ## Q-01 Which Node release is "the current long-term-support release"?
@@ -187,3 +187,16 @@ containers. The implementer may not edit tabs 00 to 08.
 - **The owner amends the tabs.** The tabs stay the single source, and 09 becomes history.
 
 Open. Nothing in the code depends on the answer.
+
+## Q-20 How should the gate's own unit tests feed the harness?
+
+Raised in stage 15. Tracked as [issue #12](https://github.com/lgriffin/CSH/issues/12).
+
+The gate component's test practice is its unit tests with a probe around `gate` (09, section 8). Those tests run under
+vitest, and `@csh/harness` has a reporter for Node's test runner only, without which no witness becomes a claim.
+
+- **A separate probe file (chosen meanwhile).** `packages/gate/test/gate.probe.ts` repeats the cases of `gate.test.ts` under `node --test`. The two copies can drift apart, and nothing checks that they agree.
+- **A vitest reporter in `@csh/harness`.** The repository's tests are probed where they are; a second reporter keeps to the identity rules of A-39.
+- **The gate's tests move to Node's test runner.** One copy, outside the vitest suite.
+
+Open. Recorded as A-49.

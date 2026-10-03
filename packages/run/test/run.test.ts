@@ -135,4 +135,34 @@ describe("runAt", () => {
     const u = await runAt({ root: proj, solver: z3, commit: "no-such-commit" });
     expect(u.ok ? "ok" : u.code).toBe("unknown-commit");
   }, 60000);
+
+  it("runs a component inside a workspace with the packages installed for it", async () => {
+    // A component in a subdirectory whose harness imports a package installed only in that subdirectory's
+    // node_modules, as a workspace package's own dependencies are.
+    const ws = mkdtempSync(join(REPO, ".csh-cache", "run-ws-"));
+    const g = (...args: string[]) => execFileSync("git", args, { cwd: ws, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+    try {
+      const pkg = join(ws, "packages", "signin");
+      cpSync(proj, pkg, { recursive: true, filter: (src) => !/[\\/](\.git|\.csh-cache|reports|package\.json)$/.test(src) });
+      mkdirSync(join(pkg, "node_modules", "copy-witnesses"), { recursive: true });
+      writeFileSync(join(pkg, "node_modules", "copy-witnesses", "package.json"), '{ "name": "copy-witnesses", "type": "module", "exports": "./index.js" }\n');
+      writeFileSync(join(pkg, "node_modules", "copy-witnesses", "index.js"), 'import { copyFileSync } from "node:fs";\nexport const copy = (from, to) => copyFileSync(from, to);\n');
+      writeFileSync(join(pkg, "harness.mjs"), 'import { copy } from "copy-witnesses";\ncopy("recorded.ndjson", process.env.CSH_WITNESS_FILE);\n');
+      writeFileSync(join(ws, ".gitignore"), "node_modules/\nreports/\n.csh-cache/\ninputs/witnesses.ndjson\n");
+      g("init", "-q", "-b", "main");
+      g("config", "user.email", "test-only@example.invalid");
+      g("config", "user.name", "test-only");
+      g("config", "commit.gpgsign", "false");
+      g("add", "-A");
+      g("commit", "-q", "-m", "workspace");
+      const commit = g("rev-parse", "HEAD");
+      const r = await runAt({ root: pkg, solver: z3, commit });
+      if (!r.ok) throw new Error(r.message);
+      expect(r.record.harnesses[0]).toMatchObject({ exitCode: 0, witnesses: 1 });
+      expect(existsSync(join(ws, ".csh-cache", "worktrees", `run-${commit}`))).toBe(false);
+      expect(existsSync(join(pkg, "node_modules", "copy-witnesses", "index.js"))).toBe(true);
+    } finally {
+      rmSync(ws, { recursive: true, force: true });
+    }
+  }, 120000);
 });
