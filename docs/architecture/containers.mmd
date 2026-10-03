@@ -1,0 +1,32 @@
+%% C4 level 2: containers (Architecture tab, section 2).
+%% Every package under packages/ appears here by name; a docs test checks this.
+C4Container
+  title CSH: containers
+  Person(user, "Contributor, intent owner or agent")
+  System_Boundary(csh, "Composable Specification Harness") {
+    Container(cli, "Command line", "cli", "csl and csh commands; runs sources; the pipeline")
+    Container(emission, "Emission sandbox", "emit, csl, print", "Locked-down subprocess per module; rules S6 to S9; canonical printer")
+    Container(adapters, "Adapters", "adapter-witness-files, adapter-ears-markdown, witness", "Isolated subprocess per adapter; claims, witnesses, items")
+    Container(ledger, "Ledger and authority", "ledger", "Maintainers, entries, signatures through git; authority of each fragment")
+    Container(check, "Check engine", "check, solver", "Pool, queries, minimal sets, witness judging, gap view, report")
+    Container(gate, "Gate", "gate", "Snapshots, dispositions, waivers, decision record")
+    Container(kernel, "Kernel", "kernel", "Model types, typing, canonical JSON, digests, exact evaluation")
+    Container(testkit, "Test kit (development only)", "testkit", "Fixture runner and independent result checks")
+  }
+  System_Ext(vcs, "Version control", "git and gpg")
+  System_Ext(z3, "Z3", "z3-solver, WebAssembly")
+  Rel(user, cli, "Runs")
+  Rel(cli, emission, "Model of each module")
+  Rel(cli, adapters, "Source bytes in, claims out (IPC)")
+  Rel(cli, ledger, "Ledger state")
+  Rel(cli, check, "Module, adapter output, authority")
+  Rel(cli, gate, "Report, snapshot, waivers")
+  Rel(ledger, vcs, "git log, %G?, %GF")
+  Rel(check, z3, "Through SolverPort")
+  Rel(gate, check, "Report types")
+  Rel(gate, ledger, "Waivers")
+  Rel(emission, kernel, "Uses")
+  Rel(adapters, kernel, "Uses")
+  Rel(check, kernel, "Uses")
+  Rel(ledger, kernel, "Uses")
+  Rel(testkit, cli, "Runs fixtures end to end")

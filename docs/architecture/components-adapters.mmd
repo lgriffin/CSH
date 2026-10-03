@@ -1,0 +1,16 @@
+%% C4 level 3: components of the adapters container.
+C4Component
+  title Adapters: components
+  Container_Boundary(ad, "Adapters (witness, adapter-witness-files, adapter-ears-markdown)") {
+    Component(format, "Witness format", "witness/src/witness.ts", "csh-witness/v1, adapter contract, witness digest")
+    Component(recorder, "Recorder", "witness/src/record.ts", "recordWitness helper for any JavaScript test")
+    Component(reader, "Witness reader", "witness/src/witness.ts (parseWitnesses)", "Parses and validates records; reports malformed lines")
+    Component(lifter, "Example lifter", "adapter-witness-files/src/adapter.ts", "Passing records to example claims through reversed bindings")
+    Component(extractor, "Sentence extractor", "adapter-ears-markdown/src/adapter.ts", "Identified EARS sentences; pattern; text digest")
+    Component(runner, "Isolated runner", "cli/src/adapter-runner.ts", "Permission-restricted subprocess; bytes in, output out")
+  }
+  Rel(recorder, format, "Writes")
+  Rel(reader, format, "Validates")
+  Rel(lifter, reader, "Uses")
+  Rel(runner, lifter, "Runs")
+  Rel(runner, extractor, "Runs")

@@ -82,6 +82,16 @@ describe("no silent satisfaction", () => {
     expect(satisfied(report)).toEqual([]);
   }, 20000);
 
+  it("an adapter that reads the clock while it loads", async () => {
+    const d = fresh("clock");
+    const e = await emit(join(d, "spec.csl.ts"), { root: d, readable: [resolve(d, "..")] });
+    if (!e.ok) throw new Error("emit failed");
+    const runs = await runSources(e.module, { root: d, adapters: { Witnesses: join(ADAPTERS, "clock-at-load.ts") }, bindingAuthority: () => "approved" });
+    const diag = runs.find((x) => x.source === "UnitTests")!.output.diagnostics[0]!;
+    expect(diag.code).toBe("adapter-failed");
+    expect(diag.message).toMatch(/E-ACCESS: adapters may not use the clock/);
+  }, 20000);
+
   it.each(["crash", "timeout", "unknown", "garbage"] as const)("a solver that answers %s", async (b) => {
     const d = fresh(`solver-${b}`);
     const r = await run(d, { solverWrap: () => createFakeSolver(b) });

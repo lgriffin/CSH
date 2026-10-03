@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22", "24"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - name: Check tools
+        run: |
+          node --version
+          git --version
+          gpg --version | head -1
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: npx tsc -p tsconfig.fixtures.json
+      - name: Test (unit, property, fault injection, docs and every fixture)
+        run: pnpm test
+      - name: Walkthrough
+        run: examples/account/walkthrough.sh

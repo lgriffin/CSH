@@ -1,0 +1,17 @@
+%% C4 level 1: system context (Architecture tab, section 1).
+C4Context
+  title CSH: system context
+  Person(contributor, "Contributor", "Writes specifications, tests and requirement text; reads findings")
+  Person(owner, "Intent owner", "Approves, rejects, retires and waives, by signed commit")
+  Person_Ext(agent, "AI agent", "Does what a contributor does; its output is always candidate")
+  System(csh, "Composable Specification Harness", "Reports gaps and joint conflicts across practices; tracks authority; gates delivery")
+  System_Ext(vcs, "Version control", "Specifications, sources, ledger, maintainers file; commit identity and signatures")
+  System_Ext(practice, "Existing practice", "Test runs that record witnesses; requirement documents")
+  System_Ext(ci, "Continuous integration", "Runs the enforcing gate on the commit being merged")
+  Rel(contributor, csh, "csl emit, csh check, gaps, explain")
+  Rel(agent, csh, "Same commands; cannot sign")
+  Rel(owner, vcs, "Commits signed ledger lines")
+  Rel(owner, csh, "csh approve drafts a line")
+  Rel(csh, vcs, "Reads history, signatures, ledger")
+  Rel(practice, csh, "Witness files, Markdown requirements")
+  Rel(ci, csh, "csh check, csh gate --mode enforcing")
