@@ -20,6 +20,6 @@ sequenceDiagram
   Check-->>Run: report
   Run->>Gate: report, snapshot with componentDigest, waivers
   Gate-->>Run: decision
-  Run->>Store: run.json, report.json, gate.json
+  Run->>Store: run.json, report.json, gate.json, model.json (and reports/ too, except for a run at a past commit)
   Run-->>CLI: summary
   CLI-->>Person: exit 0, or 1 on block in enforcing mode, or 3 on dependencies-differ

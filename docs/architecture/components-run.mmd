@@ -8,7 +8,7 @@ C4Component
     Component(isolate, "Adapter runner", "run/src/adapter-runner.ts", "One permission-restricted subprocess per adapter, input over IPC")
     Component(pipeline, "Pipeline", "run/src/pipeline.ts", "Emit, check the manifest against the module, run sources, check")
     Component(evaluate, "Evaluation", "run/src/evaluate.ts", "One evaluation of a project and its gate decision, shared by check, gate and run")
-    Component(store, "Run store", "run/src/run.ts", "csh-run/v1 under .csh-cache/runs/<snapshot digest>/ with report.json and gate.json")
+    Component(store, "Run store", "run/src/run.ts", "csh-run/v1 under .csh-cache/runs/<snapshot digest>/ with report.json, gate.json and model.json")
     Component(at, "Past-commit runner", "run/src/run.ts (runAt)", "Throwaway worktree; refuses when dependency files differ")
   }
   Container_Ext(component, "Component", "component", "Manifest")

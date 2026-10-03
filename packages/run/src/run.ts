@@ -3,7 +3,7 @@
 // the run record is stored under .csh-cache/runs/<snapshot digest>/. A harness's exit code is stored as an execution
 // fact and never enters a verdict (P2).
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { COMPONENT_PATH, type ComponentManifest, DEFAULT_EXECUTIONS, DEFAULT_HARNESS_TIMEOUT_MS } from "@csh/component";
 import type { Report } from "@csh/check";
@@ -165,11 +165,27 @@ export function runDir(storeRoot: string, snapshotDigest: string): string {
   return join(storeRoot, RUNS_DIR, snapshotDigest.replace(/^sha256:/, ""));
 }
 
+/** The stored runs of a commit, newest first by modification. A stored run that cannot be read is skipped. */
+export function storedRuns(storeRoot: string, commit: string): string[] {
+  const runs = join(storeRoot, RUNS_DIR);
+  if (!existsSync(runs)) return [];
+  const found: { dir: string; at: number }[] = [];
+  for (const d of readdirSync(runs)) {
+    const file = join(runs, d, "run.json");
+    try {
+      if ((JSON.parse(readFileSync(file, "utf8")) as Partial<RunRecord>).snapshot?.commit === commit) found.push({ dir: join(runs, d), at: statSync(file).mtimeMs });
+    } catch {
+      // Not a run record.
+    }
+  }
+  return found.sort((a, b) => b.at - a.at).map((x) => x.dir);
+}
+
 /**
  * Run the component at the root's current state. `storeRoot` is where the run record goes; it differs from the root
- * only for a run at a past commit, whose worktree is thrown away afterwards.
+ * only for a run at a past commit, whose worktree is thrown away afterwards, and that run passes `reportFiles: false`.
  */
-export async function runComponent(o: RunOptions & { storeRoot?: string }): Promise<RunResult> {
+export async function runComponent(o: RunOptions & { storeRoot?: string; reportFiles?: boolean }): Promise<RunResult> {
   const p = loadProject(o.root, o.root);
   if (p.component === undefined && p.componentProblems.length === 0) return { ok: false, code: "no-component", message: `no csh/component.json under ${p.root}; csh run evaluates a component (csh init writes one)` };
   if (p.componentProblems.length > 0 || p.component === undefined) return { ok: false, code: "component-unusable", message: `the component manifest cannot be used:\n${p.componentProblems.map((e) => `  ${e.code}: ${e.detail}`).join("\n")}` };
@@ -205,6 +221,10 @@ export async function runComponent(o: RunOptions & { storeRoot?: string }): Prom
   write(join(dir, "report.json"), reportText);
   write(join(dir, "gate.json"), gateText);
   write(join(dir, "run.json"), stableJson(record));
+  // The model beside the report, so that csh explain --run reads a stored run as it reads the working tree's.
+  write(join(dir, "model.json"), stableJson(e.model));
+  // A run at a past commit writes nothing outside the run store: the worktree's report files are not the user's (#19).
+  if (o.reportFiles === false) return { ok: true, record, report: e.report, decision, dir };
   // The usual report files too, so that csh explain reads the run's report.
   write(join(p.root, REPORT_PATH), reportText);
   write(join(p.root, MODEL_PATH), stableJson(e.model));
@@ -319,7 +339,7 @@ export async function runAt(o: RunOptions & { commit: string }): Promise<RunResu
       const installed = join(top, d, "node_modules");
       if (existsSync(installed) && !existsSync(join(wt, d, "node_modules"))) symlinkSync(installed, join(wt, d, "node_modules"), "dir");
     }
-    return await runComponent({ ...o, root: join(wt, prefix), storeRoot: root });
+    return await runComponent({ ...o, root: join(wt, prefix), storeRoot: root, reportFiles: false });
   } finally {
     try {
       git(top, "worktree", "remove", "--force", wt);

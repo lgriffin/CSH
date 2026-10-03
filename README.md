@@ -136,7 +136,9 @@ csh a3 verify <slug>                        Re-run every stage at its commit and
 csh check [spec] [--json] [--budget ms] [--no-cache]
                                             Run every check; write reports/csh-report.json. Exits 0 when it completes.
 csh gaps [spec]                             Print the gap view only.
-csh explain <finding-id>                    Print one finding, members rendered through the printer.
+csh explain <finding-id> [--run <dir|commit>]
+                                            Print one finding, members rendered through the printer; with
+                                            --run, from a stored run (csh run --at writes no reports/ files).
 csh approve | reject | retire <fragment | #a3/slug> --actor <name> --rationale <text>
 csh waive <fragment> --scope <finding|obligation> --expires <YYYY-MM-DD> --actor <name> --rationale <text>
 csh countersign <seq> --actor <name> --rationale <text>
