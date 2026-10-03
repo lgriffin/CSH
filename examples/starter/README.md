@@ -1,7 +1,7 @@
 # Starter
 
 The smallest component the harness evaluates: one function, one probe, one sentence and one rule, at rung 3 of
-[the ladder](../../README.md#the-ladder). Unlike the other examples it stands alone. Copy it out of the repository,
+[the ladder](https://github.com/lgriffin/CSH/blob/main/README.md#the-ladder). Unlike the other examples it stands alone. Copy it out of the repository,
 install the tool beside it, and replace the function with yours.
 
 | File | What it is |
@@ -15,13 +15,14 @@ install the tool beside it, and replace the function with yours.
 ## Install it outside the repository
 
 From the root of a clone, after `pnpm install`. The packages are packed from the clone and never published
-([ADR-32](../../docs/adr/ADR-32-local-only-distribution.md)); TypeScript, Z3 and Node's types come from the npm registry.
+([ADR-32](https://github.com/lgriffin/CSH/blob/main/docs/adr/ADR-32-local-only-distribution.md)); TypeScript, Z3 and Node's types come from the npm registry.
 
 ```sh
-node packages/testkit/src/pack.ts /tmp/csh-packs
-cp -r examples/starter /tmp/my-component
-cd /tmp/my-component
-npm install --save-dev --no-audit --no-fund /tmp/csh-packs/*.tgz
+packs=$(mktemp -d) project=$(mktemp -d)
+node packages/testkit/src/pack.ts "$packs"
+cp -r examples/starter/. "$project"
+cd "$project"
+npm install --save-dev --no-audit --no-fund "$packs"/*.tgz
 npx csh run
 ```
 
@@ -39,7 +40,7 @@ stored under `.csh-cache/runs/`.
 
 ## Containers it exercises
 
-Checked against [the container diagram](../../docs/architecture/containers.mmd) and the commands this example runs
+Checked against [the container diagram](https://github.com/lgriffin/CSH/blob/main/docs/architecture/containers.mmd) and the commands this example runs
 (`packages/testkit/test/triangle.test.ts`).
 
 - `cli`: the `csh` command, installed from a tarball

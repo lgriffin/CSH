@@ -60,10 +60,11 @@ Copy it out of the repository and install the tool beside it, from tarballs pack
 published ([ADR-32](docs/adr/ADR-32-local-only-distribution.md)).
 
 ```sh
-node packages/testkit/src/pack.ts /tmp/csh-packs
-cp -r examples/starter /tmp/my-component
-cd /tmp/my-component
-npm install --save-dev --no-audit --no-fund /tmp/csh-packs/*.tgz
+packs=$(mktemp -d) project=$(mktemp -d)
+node packages/testkit/src/pack.ts "$packs"
+cp -r examples/starter/. "$project"
+cd "$project"
+npm install --save-dev --no-audit --no-fund "$packs"/*.tgz
 npx csh run
 ```
 

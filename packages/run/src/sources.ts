@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { compareCodePoints, digestOf, type Binding, type ClaimSet, type Module, type Source } from "@csh/kernel";
 import type { SourceRun } from "@csh/check";
 import { DEFAULT_EXECUTIONS } from "@csh/component";
+import { installedReadable } from "@csh/emit";
 import type { AdapterInput, AdapterOutput } from "@csh/witness";
 
 /** Built-in adapters by source kind. Configuration may add more (kind to module specifier or path). */
@@ -72,10 +73,10 @@ const RUNNER = join(HERE, `adapter-runner${extname(SELF)}`);
 
 function toolReadable(): string[] {
   // The tool's own code and installed packages: packages/ and the repository's node_modules, or, when the tool is
-  // installed, the node_modules directory it is installed in.
+  // installed, the outermost node_modules directory it is installed in and every node_modules above it (A-51).
   const parts = HERE.split(sep);
-  const nmAt = parts.lastIndexOf("node_modules");
-  if (nmAt >= 0) return [realpathSync(parts.slice(0, nmAt + 1).join(sep))];
+  const nmAt = parts.indexOf("node_modules");
+  if (nmAt >= 0) return installedReadable(parts.slice(0, nmAt + 1).join(sep));
   const pkgs = resolve(HERE, "..", "..");
   const nm = resolve(pkgs, "..", "node_modules");
   return [pkgs, nm].filter(existsSync).map((p) => realpathSync(p));

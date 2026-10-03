@@ -26,6 +26,8 @@ describe("examples and C4", () => {
       expect(containers, `examples/${e} declares ${c}, which the container diagram does not draw`).toContain(c);
       expect(reaches(dir, c), `examples/${e} declares ${c}, but nothing it runs reaches it`).toBe(true);
     }
+    const undeclared = containers.filter((c) => reaches(dir, c) === true && !declared!.includes(c));
+    expect(undeclared, `examples/${e} reaches containers its README does not declare`).toEqual([]);
   });
 
   it("every container is exercised by at least one example", () => {

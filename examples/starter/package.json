@@ -1,8 +1,5 @@
 {
   "name": "csh-starter",
   "private": true,
-  "type": "module",
-  "devDependencies": {
-    "@types/node": "22.20.5"
-  }
+  "type": "module"
 }

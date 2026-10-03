@@ -64,18 +64,30 @@ const RUNNER = join(here, `runner${extname(self)}`);
 
 /**
  * What the sandbox needs to load the language itself: the repository's packages and node_modules, or, when the tool
- * is installed, the node_modules directory it is installed in.
+ * is installed, the outermost node_modules directory it is installed in and every node_modules above it. The outermost
+ * one holds pnpm's package store and npm's nested installs; the ones above hold packages hoisted out of the project
+ * (A-51).
  */
 function toolReadable(): string[] {
   const parts = here.split(sep);
-  const nmAt = parts.lastIndexOf("node_modules");
-  if (nmAt >= 0) return [parts.slice(0, nmAt + 1).join(sep)];
+  const nmAt = parts.indexOf("node_modules");
+  if (nmAt >= 0) return installedReadable(parts.slice(0, nmAt + 1).join(sep));
   const pkgs = resolve(here, "..", "..");
   const repo = resolve(pkgs, "..");
   const out = [pkgs];
   const nm = join(repo, "node_modules");
   if (existsSync(nm)) out.push(nm);
   return out;
+}
+
+/** An installed tool's readable directories: its outermost node_modules and each node_modules above it, real paths. */
+export function installedReadable(outermost: string): string[] {
+  const out = [outermost];
+  for (let d = dirname(dirname(outermost)); ; d = dirname(d)) {
+    if (existsSync(join(d, "node_modules"))) out.push(join(d, "node_modules"));
+    if (dirname(d) === d) break;
+  }
+  return out.map((p) => realpathSync(p));
 }
 
 interface RunnerReply {

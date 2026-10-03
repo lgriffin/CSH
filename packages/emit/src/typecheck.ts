@@ -1,7 +1,7 @@
 // Step 1 of emission: type-check a specification file with the TypeScript compiler in strict mode.
 import { existsSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+import { dirname, resolve } from "node:path";
 import ts from "typescript";
 
 export interface CompileDiagnostic {
@@ -11,17 +11,15 @@ export interface CompileDiagnostic {
   message: string;
 }
 
-const here = dirname(fileURLToPath(import.meta.url));
-
 /**
- * The installation's @types directory, the nearest one above this file: the repository's own when the workspace runs
- * from source, the project's when the tool is installed under its node_modules.
+ * The @types directory holding Node's types: where @types/node, a dependency of this package, resolves from here. Under
+ * pnpm that is a directory of its store; under npm, the project's node_modules/@types.
  */
 function typesDir(): string {
-  for (let d = here; ; d = dirname(d)) {
-    const t = join(d, "node_modules", "@types");
-    if (existsSync(t)) return t;
-    if (dirname(d) === d) return join(resolve(here, "..", "..", ".."), "node_modules", "@types");
+  try {
+    return dirname(dirname(createRequire(import.meta.url).resolve("@types/node/package.json")));
+  } catch {
+    throw new Error("@csh/emit cannot find Node's types (@types/node), which it needs to type-check a specification; reinstall the tool");
   }
 }
 

@@ -9,6 +9,7 @@ each `package.json`, and `pnpm-lock.yaml` pins the full tree. The kernel has no 
 | --- | --- | --- | --- |
 | [z3-solver](https://www.npmjs.com/package/z3-solver) | 5.2.0 | `@csh/solver` | Z3's official JavaScript bindings (WebAssembly). Decides every query in linear integer arithmetic (D15, [ADR-09](docs/adr/ADR-09-z3-lia.md)). |
 | [typescript](https://www.npmjs.com/package/typescript) | 5.9.3 | `@csh/emit`, `@csh/testkit` | The compiler API checks rules S1 to S5 and units at emission time ([ADR-04](docs/adr/ADR-04-internal-dsl.md)). Also the workspace type checker, and the compiler that turns each package into JavaScript when it is packed ([A-40](ASSUMPTIONS.md)). |
+| [@types/node](https://www.npmjs.com/package/@types/node) | 22.20.5 | `@csh/emit` | Node's type definitions, the type roots emission type-checks a specification with, so that an installed tool carries them ([A-51](ASSUMPTIONS.md)). |
 
 ## Development
 
@@ -17,7 +18,7 @@ each `package.json`, and `pnpm-lock.yaml` pins the full tree. The kernel has no 
 | [pnpm](https://pnpm.io) | 10.28.0 | Workspace-aware package manager, chosen once ([ADR-17](docs/adr/ADR-17-toolchain.md)). Pinned in `packageManager`. |
 | [vitest](https://www.npmjs.com/package/vitest) | 3.2.7 | The one test runner. |
 | [fast-check](https://www.npmjs.com/package/fast-check) | 4.10.2 | Property tests: typing soundness, evaluator against solver, printer round trip. |
-| [@types/node](https://www.npmjs.com/package/@types/node) | 22.20.5 | Node type definitions for type checking. |
+| [@types/node](https://www.npmjs.com/package/@types/node) | 22.20.5 | Node type definitions for the workspace's type checking. |
 
 ## System tools
 

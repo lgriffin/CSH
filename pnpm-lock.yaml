@@ -140,6 +140,9 @@ importers:
       '@csh/kernel':
         specifier: workspace:*
         version: link:../kernel
+      '@types/node':
+        specifier: 22.20.5
+        version: 22.20.5
       csl:
         specifier: workspace:*
         version: link:../csl
