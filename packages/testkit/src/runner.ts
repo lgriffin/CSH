@@ -31,7 +31,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 12;
+export const BUILT_THROUGH_STAGE = 13;
 
 /** The stage a fixture belongs to, from its expected result. */
 export function fixtureStage(fixturesDir: string, id: string): number {
@@ -287,6 +287,7 @@ export class FixtureRunner {
     const label = `${f.kind} {${f.members.map((mm) => mm.fragment).join(",")}}`;
     if (x.scope !== undefined && f.scope !== x.scope) failures.push(`${label}: scope ${f.scope}, expected ${x.scope}`);
     if (x.crossSource !== undefined && f.crossSource !== x.crossSource) failures.push(`${label}: crossSource ${f.crossSource}, expected ${x.crossSource}`);
+    if (x.inputs !== undefined && f.inputs !== x.inputs) failures.push(`${label}: inputs ${f.inputs ?? "none"}, expected ${x.inputs}`);
     if (x.sources !== undefined) {
       const got = [...new Set(f.members.map((mm) => mm.source))].sort().join(",");
       if (got !== [...x.sources].sort().join(",")) failures.push(`${label}: sources ${got}, expected ${x.sources.join(",")}`);

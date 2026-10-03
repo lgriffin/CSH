@@ -11,7 +11,7 @@
 ## Public interface
 
 - `system(name, build)`: builds a `Module`; the callback runs exactly once with symbolic handles.
-- `SystemBuilder`: `enum`, `state`, `event`, `transition`, `policy`, `intent`, `source`, `claims`, `bind`, `use` and `relax`.
+- `SystemBuilder`: `enum`, `state`, `event` (with an optional `deterministic: true`, so that two examples answering one input two ways are a conflict rather than a divergence), `transition`, `policy`, `intent`, `source`, `claims`, `bind`, `use` and `relax`.
 - `ClaimBuilder`: `assume`, `invariant`, `requirement`, `example`, and the reserved `architecture` and `temporal`.
 - `unit(dimension, symbol)`, `UnitFn`: a branded unit and its literal constructor.
 - `int(unit?)`, `bool()`, `lit(value)`, `IntType`, `BoolType`, `EnumType`: type descriptors and a unitless literal.
@@ -42,7 +42,7 @@ The language is an internal DSL so that TypeScript does the type and unit checki
 
 ## How it is tested
 
-- `test/csl.test.ts`: the builder emits IR that passes every rule, literals are decimal strings, raw values are marked for S6, pack digests are stable, pinned uses and inherited obligations are recorded, `E-VOCAB` on a unit disagreement, replacements and relaxations are recorded, and relaxing a non-inherited obligation is refused.
+- `test/csl.test.ts`: the builder emits IR that passes every rule, literals are decimal strings, raw values are marked for S6, pack digests are stable, pinned uses and inherited obligations are recorded, `E-VOCAB` on a unit disagreement, replacements and relaxations are recorded, and relaxing a non-inherited obligation is refused; `deterministic` is recorded only when true, a non-boolean is refused, and any other value in the IR is S1.
 - `packages/emit/test/static-rules.ts` (run by `static-rules.test.ts`): each line that breaks S1 to S5 must fail to compile.
 - Fixtures: F01 to F09 (compile-time and IR rules on the account specification), F70 to F78 (composition with packs).
 

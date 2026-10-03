@@ -66,7 +66,7 @@ csl emit spec/lockout.csl.ts
 
 step csh run
 run
-expect '{"findings":"example-conflict,example-conflict,example-conflict,joint-conflict","notComparable":1,"errors":"dangling-citation,shape-mismatch","gaps":"no-rule,single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
+expect '{"findings":"example-conflict,example-conflict,example-conflict,example-divergence,joint-conflict","notComparable":1,"errors":"dangling-citation,shape-mismatch","gaps":"no-rule,single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
 
 # Explain the joint conflict and the conflict that holds the off-by-one.
 for id in $(node -e 'const r=require("./reports/csh-report.json");console.log(r.findings.filter(f=>f.kind==="joint-conflict"||f.members.some(m=>m.fragment.endsWith("/WitnessAllowsThreeFailedAttemptsBeforeLocking"))).map(f=>f.id).join(" "))'); do
@@ -160,7 +160,7 @@ if run --mode enforcing; then
   echo "walkthrough: the enforcing gate allowed the regression" >&2
   exit 1
 fi
-expect '{"findings":"example-conflict","notComparable":0,"errors":"","gaps":"single-source,single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
+expect '{"findings":"example-conflict,example-divergence,example-divergence","notComparable":0,"errors":"","gaps":"single-source,single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
 save_stage regression
 
 # The A3 is built from the four stages' reports and the judgments in a3/a3.json.

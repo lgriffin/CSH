@@ -203,7 +203,7 @@ export interface SystemBuilder {
   state<N extends string, F extends Fields>(name: N, fields: F): StateRef<N, F>;
   event<N extends string, S extends StateRef<any, any>, A extends Fields, R extends TypeDesc | undefined = undefined>(
     name: N,
-    spec: { on: S; args: A; returns?: R },
+    spec: { on: S; args: A; returns?: R; deterministic?: boolean },
   ): EventRef<N, S, A, R>;
   transition<E extends AnyEvent>(
     event: E,
@@ -419,6 +419,8 @@ export function system(name: string, build: (s: SystemBuilder) => void): Module 
       for (const [a, t] of Object.entries(spec.args)) args[a] = typeOf(t, units);
       const decl: Module["vocabulary"]["events"][number] = { name: eventName, on: st.name, args };
       if (spec.returns !== undefined) decl.returns = typeOf(spec.returns, units);
+      if (spec.deterministic !== undefined && typeof spec.deterministic !== "boolean") throw new CslError("E-EVENT", `event ${eventName}: deterministic is true or false`);
+      if (spec.deterministic === true) decl.deterministic = true;
       m.vocabulary.events.push(decl);
       const meta: EventMeta = { name: eventName, state: st.name, stateFields: st.fields, args: spec.args, returns: spec.returns };
       const fn = (callArgs: Record<string, unknown>) => {

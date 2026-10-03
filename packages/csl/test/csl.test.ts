@@ -104,3 +104,27 @@ describe("composition", () => {
     expect(compositionOf(m)?.errors.map((e) => e.code)).toContain("E-COMPOSE");
   });
 });
+
+describe("deterministic events", () => {
+  const withEvent = (deterministic?: unknown) =>
+    system("D", (s) => {
+      const A = s.state("A", { x: int(EUR) });
+      s.event("E", { on: A, args: {}, ...(deterministic !== undefined ? { deterministic: deterministic as boolean } : {}) });
+    });
+
+  it("records deterministic only when it is true", () => {
+    expect(withEvent(true).vocabulary.events[0]!.deterministic).toBe(true);
+    expect("deterministic" in withEvent(false).vocabulary.events[0]!).toBe(false);
+    expect("deterministic" in withEvent().vocabulary.events[0]!).toBe(false);
+  });
+
+  it("refuses a value other than true or false", () => {
+    expect(() => withEvent("yes")).toThrow(/deterministic/);
+  });
+
+  it("is an S1 violation in the IR when present and not true", () => {
+    const m = withEvent(true);
+    (m.vocabulary.events[0] as { deterministic?: unknown }).deterministic = false;
+    expect(validateModule(m).map((v) => v.rule)).toContain("S1");
+  });
+});

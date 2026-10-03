@@ -215,7 +215,8 @@ export class Printer {
         .sort(compareCodePoints)
         .map((a) => `${a}: ${this.type(ev.args[a]!)}`);
       const ret = ev.returns === undefined ? "" : `, returns: ${this.type(ev.returns)}`;
-      out.push(`  const ${ev.name} = s.event(${str(ev.name)}, { on: ${ev.on}, args: { ${args.join(", ")} }${ret} });`);
+      const det = ev.deterministic === true ? ", deterministic: true" : "";
+      out.push(`  const ${ev.name} = s.event(${str(ev.name)}, { on: ${ev.on}, args: { ${args.join(", ")} }${ret}${det} });`);
     }
     // Sources come before intents so that citations can name them (ADR-19).
     for (const s of m.sources) out.push(`  const ${this.sourceConst.get(s.name)} = s.source(${str(s.name)}, { kind: ${str(s.kind)}, at: ${str(s.at)} });`);

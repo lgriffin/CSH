@@ -37,3 +37,4 @@ Records ADR-01 to ADR-16 are the rows of the Rationale tab. ADR-17 onward record
 | [ADR-31](ADR-31-a3-judgments-through-the-ledger.md) | A3 judgments are approved through the ledger, like an obligation |
 | [ADR-32](ADR-32-local-only-distribution.md) | Distribution is local only; nothing is published |
 | [ADR-33](ADR-33-run-package.md) | The pipeline and the run live in their own package (supersedes ADR-24) |
+| [ADR-34](ADR-34-example-divergence.md) | Examples are compared with examples, and disagreement is a divergence |

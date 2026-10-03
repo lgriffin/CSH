@@ -336,6 +336,34 @@ export function qEx(env: QueryEnv, x: QExample, assumptions: QAssumption[], inva
   });
 }
 
+/** The input part of an example: its given state and its arguments, without its outcome. */
+export function exampleInputF(x: QExample, vocab: Vocabulary): F {
+  return exampleF({ ...x, then: { k: "bool", v: true } }, vocab);
+}
+
+/**
+ * Q-DIV(E1, E2) (Anchor, harnesses and A3, section 6.1): two examples on one event whose inputs can coincide,
+ * SAT(in1 and in2), and whose outcomes cannot both hold there, UNSAT(in1 and in2 and then1 and then2). Wanted: not
+ * both. Neither the rules nor the assumptions take part, so the finding is between the two examples alone. An example
+ * that cannot hold on its own is left to Q-EX.
+ */
+export function qDiv(env: QueryEnv, x1: QExample, x2: QExample): Promise<QueryResult> {
+  return guarded(async () => {
+    const budget = new Budget(env.budgetMs);
+    const f1 = exampleF(x1, env.vocabulary);
+    const f2 = exampleF(x2, env.vocabulary);
+    const inputs = [exampleInputF(x1, env.vocabulary), exampleInputF(x2, env.vocabulary)];
+    const meet = await run(env, budget, inputs, []);
+    if (meet.status === "unsat") return { status: "wanted" };
+    for (const f of [f1, f2]) if ((await run(env, budget, [f], [])).status === "unsat") return { status: "wanted" };
+    const both = await run(env, budget, [f1, f2], []);
+    if (both.status === "sat") return { status: "wanted" };
+    const set: MinimalSet = { members: [x1.id, x2.id].sort(), collisionTerms: collisionTerms([f1, f2]) };
+    if (meet.model !== undefined) set.witness = meet.model;
+    return { status: "failed", sets: [set], incomplete: false, context: [] };
+  });
+}
+
 /** Q-PRES(T, I): A and I(s) and T and not I(s') unsatisfiable. */
 export function qPres(env: QueryEnv, t: QTransition, inv: QInvariant, assumptions: QAssumption[], invariants: QInvariant[]): Promise<QueryResult> {
   return guarded(async () => {

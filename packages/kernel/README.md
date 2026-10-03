@@ -10,7 +10,7 @@ The kernel is its own container, "Kernel", a library with no dependencies. It ap
 
 ## Public interface
 
-- `Module`, `Vocabulary`, `UnitDecl`, `EnumDecl`, `StateDecl`, `EventDecl`, `PackUse`, `Type`: the model and its vocabulary.
+- `Module`, `Vocabulary`, `UnitDecl`, `EnumDecl`, `StateDecl`, `EventDecl`, `PackUse`, `Type`: the model and its vocabulary. An event may carry `deterministic: true`; S1 refuses any other value.
 - `Intent`, `Policy`, `Method`, `Rejection`, `METHODS`, `REJECTIONS`: intents, assurance policies and the version 1 method names.
 - `Assumption`, `Obligation`, `Invariant`, `Requirement`, `Reserved`, `Example`, `Transition`, `Binding`, `Relaxation`: the fragment node types.
 - `Source`, `ClaimSet`, `Unliftable`, `Cite`: lifted claims, retained native content and citations.
@@ -33,6 +33,7 @@ The kernel is its own container, "Kernel", a library with no dependencies. It ap
 
 - The model has no authority field. Nothing in the IR can say "approved", so authority can only come from recorded decisions (P1, CSH-015).
 - A fragment's digest covers its canonical JSON and the digests of every declaration it references, so changing a field's unit changes the digest of each fragment that reads it and returns it to candidate (P1, CSH-017).
+- An event's `deterministic` joins its dependency digest only when true, so models written before it keep their digests ([ADR-34](../../docs/adr/ADR-34-example-divergence.md)).
 - Canonical JSON sorts keys by code point, writes integers as decimal strings and refuses non-integer numbers, so the same model gives the same digest on any platform (P8).
 - Typing never converts between units: a comparison across units is a `unit-mismatch` error (P3, CSH-021).
 - Evaluation throws `EvalError` on a missing value instead of guessing one, so missing evidence cannot read as a pass (P3, CSH-006).

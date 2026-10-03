@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.base.json",
   "include": ["fixtures/**/*.ts"],
-  "exclude": ["fixtures/F01/**", "fixtures/F02/**", "fixtures/F03/**", "fixtures/F04/**", "fixtures/F09/**", "fixtures/F89/**"]
+  "exclude": ["fixtures/F01/**", "fixtures/F02/**", "fixtures/F03/**", "fixtures/F04/**", "fixtures/F09/**"]
 }

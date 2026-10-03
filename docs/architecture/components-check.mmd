@@ -3,14 +3,15 @@ C4Component
   title Check engine: components
   Container_Boundary(check, "Check engine (check, solver)") {
     Component(pool, "Pool and comparability", "check/src/pool.ts", "Merges adapter claims; type-checks them; unit mismatches to not comparable, other failures to unliftable")
-    Component(run, "Query runner", "check/src/run.ts", "Builds the pool and runs Q-STATE, Q-VAC, Q-FEAS, Q-EX, Q-PRES, Q-MEET")
-    Component(queries, "Query encoder", "solver/src/queries.ts, formula.ts", "Encodes the six queries; minimises unsatisfiable cores")
+    Component(run, "Query runner", "check/src/run.ts", "Builds the pool and runs Q-STATE, Q-VAC, Q-FEAS, Q-EX, Q-PRES, Q-MEET, Q-DIV")
+    Component(queries, "Query encoder", "solver/src/queries.ts, formula.ts", "Encodes the seven queries; minimises unsatisfiable cores")
     Component(port, "Solver port", "solver/src/port.ts, z3.ts, fake.ts", "Z3 behind an interface; a fake for fault injection")
     Component(cache, "Solver cache", "check/src/cache.ts", "Stores sat and unsat answers only")
     Component(evidence, "Witness judge and evidence store", "check/src/evidence.ts", "Bindings, keys, policy, freshness, exact evaluation")
     Component(assess, "Assessor", "check/src/assess.ts", "Verdict, applicability and methods per obligation")
     Component(gaps, "Gap view", "check/src/gaps.ts", "Rows, cells and derived gaps")
     Component(report, "Report writer and renderer", "check/src/check.ts, render.ts", "csh-report/v1 and its text rendering")
+    Component(signals, "Signals", "check/src/signals.ts", "Every item of a report as a signal with fragments, sources and practices; structured matching")
     Component(refine, "Refiner", "check/src/refine.ts", "Strengthening check for composition")
   }
   ContainerDb_Ext(z3, "Z3")
@@ -25,3 +26,4 @@ C4Component
   Rel(assess, report, "Assessments")
   Rel(gaps, report, "Gap view")
   Rel(refine, queries, "Entailment")
+  Rel(report, signals, "Report and component")

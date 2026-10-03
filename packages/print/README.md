@@ -24,6 +24,7 @@ It belongs to the "Emission sandbox" container, with `csl` and `@csh/emit`, show
 
 - Emitting printed text reproduces the original digest, so what a reviewer reads is exactly what is approved (P1, CSH-017; main tab, section 7.6).
 - Output is independent of the order in which the model lists its declarations (P8).
+- An event declared `deterministic` prints with `deterministic: true`, and an event without it prints nothing, so the round trip keeps the flag.
 - Integers beyond the safe JavaScript range print as `bigint` literals, so no value is rounded (P4).
 - Content with no source form is not invented: pack imports and unliftable entries are left out rather than approximated, and unliftable content stays visible in the report (P4, CSH-002).
 
@@ -33,7 +34,7 @@ An internal DSL means a source file may compute its obligations, so the containm
 
 ## How it is tested
 
-- `test/print.test.ts`: arithmetic and comparisons as handle methods, `now` and argument references outside a step, the function form of `and` and `or`, `bigint` literals, independence from declaration order, and a single binding fragment.
+- `test/print.test.ts`: arithmetic and comparisons as handle methods, `now` and argument references outside a step, the function form of `and` and `or`, `bigint` literals, independence from declaration order, a single binding fragment, and `deterministic` printed only when declared.
 - `packages/testkit/test/roundtrip.test.ts`: on random models (fast-check) and on every fixture model that uses no pack, printing then emitting reproduces the digest.
 - Fixtures: through the round trip, every fixture from F01 onward whose specification emits without packs; F77 is named in its README as a round-trip exit test.
 

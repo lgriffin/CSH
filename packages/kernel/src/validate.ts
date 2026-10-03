@@ -92,6 +92,7 @@ export function validateVocabulary(v: Vocabulary, c: Collector = new Collector()
       typeWellFormed(c, v, t, `event ${e.name}.${a}`);
     }
     if (e.returns !== undefined) typeWellFormed(c, v, e.returns, `event ${e.name}.returns`);
+    if ("deterministic" in e && e.deterministic !== true) c.add("S1", `event ${e.name}`, "deterministic is either true or absent");
   }
   return c.out;
 }

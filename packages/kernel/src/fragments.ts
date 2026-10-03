@@ -128,7 +128,8 @@ export function declarationsOf(node: FragmentNode, kind: FragmentKind, vocab: Vo
   for (const s of states) out.set(`state:${s}`, { name: s, exists: vocab.states.some((x) => x.name === s) });
   for (const e of events) {
     const d = vocab.events.find((x) => x.name === e);
-    out.set(`event:${e}`, d === undefined ? { missing: e } : { name: d.name, on: d.on });
+    // deterministic joins the dependency only when stated, so the digests of existing models do not change.
+    out.set(`event:${e}`, d === undefined ? { missing: e } : d.deterministic === true ? { name: d.name, on: d.on, deterministic: true } : { name: d.name, on: d.on });
   }
   for (const f of refs.fields) {
     const t = vocab.states.find((s) => s.name === f.state)?.fields[f.field];

@@ -36,13 +36,13 @@
     { "id": "one-voice", "name": "Rules come from one practice only", "match": [{ "kind": "single-source" }] },
     { "id": "together", "name": "Sentences never checked together", "match": [{ "kind": "joint-conflict" }, { "kind": "example-conflict", "any": "AcceptCorrectPassword" }] },
     { "id": "drift", "name": "Meaning drifts between notations", "match": [{ "kind": "shape-mismatch" }, { "kind": "dangling-citation" }, { "kind": "not-comparable" }] },
-    { "id": "count", "name": "A count in prose read two ways", "match": [{ "kind": "example-conflict", "any": "LockOnThirdFailure" }, { "kind": "violated", "any": "LockOnThirdFailure" }] }
+    { "id": "count", "name": "A count in prose read two ways", "match": [{ "kind": "example-conflict", "any": "LockOnThirdFailure" }, { "kind": "violated", "any": "LockOnThirdFailure" }, { "kind": "example-divergence", "any": "ThirdFailedAttempt" }] }
   ],
   "decisionPoints": [
     { "point": "Third wrong password (2 before it)", "class": "contradiction",
       "ears": ["says", "LCK-001: lock"], "bdd": ["says", "locked"], "tdd": ["clash", "refused, not locked"],
-      "note": "BDD and TDD contradict each other on the same input; the harness sees it only through the rule.",
-      "match": [{ "kind": "example-conflict", "any": "LockOnThirdFailure" }, { "kind": "violated", "any": "LockOnThirdFailure" }] },
+      "note": "BDD and TDD contradict each other on the same input. The divergence query (C7) now reports it directly, with no rule needed between them.",
+      "match": [{ "kind": "example-conflict", "any": "LockOnThirdFailure" }, { "kind": "violated", "any": "LockOnThirdFailure" }, { "kind": "example-divergence", "any": "ThirdFailedAttempt" }] },
     { "point": "Correct password on a locked account", "class": "contradiction",
       "ears": ["clash", "LCK-002: refuse · LCK-003: accept"], "bdd": ["says", "refused"], "tdd": ["says", "refused"],
       "note": "BDD and TDD each took the side of LCK-002 without saying so.",

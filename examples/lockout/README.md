@@ -16,7 +16,7 @@ The example is one run in four stages, each an overlay applied as a commit on to
 
 | Stage | Overlay | What changes | Result |
 | --- | --- | --- | --- |
-| Before | the files above | Nothing | 15 signals, 4 conflicts |
+| Before | the files above | Nothing | 16 signals, 4 conflicts, 1 divergence |
 | Countermeasures | `countermeasures/` | The A3's countermeasures C2 to C6 | No conflicts; every rule unknown |
 | Model and approval | `model/` | A model of the sign-in, then nine approvals signed by a throwaway key | Every rule satisfied; enforcing gate allows |
 | Regression | `regression/` | Code and test edited together back to three allowed | Tests green; enforcing gate blocks |

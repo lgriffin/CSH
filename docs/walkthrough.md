@@ -84,6 +84,20 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit a75bb1ff0e5080ec2696592cc9
     2. A context is missing (an assumption that would separate the cases).
     3. The intent is undecided, and a person must decide it.
 
+== Divergences between examples
+
+[example-divergence] 95294d66ce4bd84b  (cross-source)  from Q-DIV(AccountService/@UnitTests/WitnessLetsAPremiumAccountOverdraw, AccountService/ProtectFunds/RejectAtBoundary)
+  - AccountService/@UnitTests/WitnessLetsAPremiumAccountOverdraw  source UnitTests, candidate
+  - AccountService/ProtectFunds/RejectAtBoundary  source intent, candidate
+  collision terms: Account.balance@post, Account.balance@pre, Account.floor@pre, Withdraw.args.amount, Withdraw.result
+  inputs: identical
+  a shared input: Account.balance@pre = 5000, Account.floor@pre = 0, Withdraw.args.amount = 10000
+  Four readings, and the harness chooses none:
+    1. One example is wrong.
+    2. An unstated input separates them.
+    3. The intent is undecided, and a person must decide it.
+    4. The event may answer the same input in more than one way.
+
 == Gap view
 
   subject                                              intent      DesignNotes Product     UnitTests   model      
@@ -109,7 +123,7 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit a75bb1ff0e5080ec2696592cc9
 
 == Counts
 
-  findings 2: state-conflict 0, joint-conflict 0, example-conflict 2, vacuous 0, not-preserved 0, not-met 0, unknown 0
+  findings 3: state-conflict 0, joint-conflict 0, example-conflict 2, example-divergence 1, vacuous 0, not-preserved 0, not-met 0, unknown 0
   gaps 5; not comparable 0; unliftable 1
   obligations 2: conflicting 2, violated 0, satisfied 0, unknown 0
 ```
@@ -117,6 +131,7 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit a75bb1ff0e5080ec2696592cc9
 How to read this report:
 
 - **Two cross-source conflicts.** The premium overdraw test lifts as the example `WitnessLetsAPremiumAccountOverdraw` ([ADR-13](adr/ADR-13-passing-test-is-claim-and-witness.md)). That example is consistent on its own, and so are `MinimumBalance` and `RejectInsufficientFunds`. But no state satisfies the example together with either of them. Each minimal set has two members from two sources, with the terms on which they collide. The harness offers three readings and chooses none.
+- **One divergence between examples.** The same test also meets the intent's own example `RejectAtBoundary` on identical inputs: a balance of 5,000, a floor of 0 and a withdrawal of 10,000. The test says accepted and the example says rejected. Two examples that disagree are a divergence, not a conflict, because the harness does not assume an event answers one input one way ([A-36](../ASSUMPTIONS.md)). It offers four readings. Declaring `Withdraw` `deterministic` would turn this one into a third conflict.
 - **The gap view.** Each row is a term or obligation, and each column a source. `UnitTests` exemplifies everything; `Product` and `DesignNotes` assert nothing the model can read. The derived gaps say more:
   - The design note is held as `unliftable`, with its original text kept (P4).
   - No requirement covers the test that accepts a withdrawal within the balance (`no-rule`).

@@ -13,6 +13,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { signalsOf as checkSignalsOf, type Signal as CheckSignal } from "@csh/check";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -47,18 +48,23 @@ interface Stage {
 
 const short = (fragment: string) => fragment.split("/").pop() ?? fragment;
 
-/** Every signal of one report: findings, not comparable, errors and warnings, gaps, and violated rules. */
+/**
+ * Every signal of one report, read through the check package's one definition (Anchor, harnesses and A3, section
+ * 5.3), with the label the sheet prints and the text the rules in a3.json search. Stage 14 replaces the text rules
+ * with structured matches.
+ */
 export function signalsOf(report: any): Signal[] {
-  const out: Signal[] = [];
-  for (const f of report.findings ?? []) {
-    const names: string[] = f.members.map((m: any) => m.fragment);
-    out.push({ kind: f.kind, label: `${f.kind} ${f.id}: ${names.map(short).join(" × ")}`, text: [f.query ?? "", ...names].join(" ") });
-  }
-  for (const n of report.notComparable ?? []) out.push({ kind: "not-comparable", label: `not comparable: ${short(n.fragment)} (${n.reason})`, text: `${n.fragment} ${n.reason} ${n.source}` });
-  for (const e of report.errors ?? []) out.push({ kind: e.code, label: `${e.code}: ${e.detail}`, text: `${e.detail} ${e.fragment ?? ""} ${e.source ?? ""}` });
-  for (const g of report.gapView?.gaps ?? []) out.push({ kind: g.kind, label: `${g.kind}: ${short(g.subject)}${g.kind === "unliftable" ? ` (${g.detail.split(": ").pop()})` : ""}`, text: `${g.subject} ${g.detail ?? ""} ${(g.fragments ?? []).join(" ")}` });
-  for (const a of report.assessments ?? []) if (a.verdict === "violated") out.push({ kind: "violated", label: `violated: ${short(a.fragment)} (${a.authority})`, text: a.fragment });
-  return out.sort((a, b) => (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : a.label < b.label ? -1 : a.label > b.label ? 1 : 0));
+  const label = (s: CheckSignal): string => {
+    const names = s.fragments.map(short);
+    if (report.findings?.some((f: any) => f.id === s.id && f.kind === s.kind)) return `${s.kind} ${s.id}: ${names.join(" × ")}`;
+    if (s.kind === "not-comparable") return `not comparable: ${names[0]} (${s.detail})`;
+    if (s.kind === "violated") return `violated: ${names[0]} (${s.detail})`;
+    if (s.subject !== undefined && report.gapView?.gaps?.some((g: any) => g.kind === s.kind && g.subject === s.subject)) return `${s.kind}: ${short(s.subject)}${s.kind === "unliftable" ? ` (${(s.detail ?? "").split(": ").pop()})` : ""}`;
+    return `${s.kind}: ${s.detail}`;
+  };
+  return checkSignalsOf(report)
+    .map((s) => ({ kind: s.kind, label: label(s), text: [s.detail ?? "", s.subject ?? "", ...s.fragments, ...s.sources].join(" ") }))
+    .sort((a, b) => (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : a.label < b.label ? -1 : a.label > b.label ? 1 : 0));
 }
 
 export function matches(s: Signal, m: Match): boolean {
