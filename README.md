@@ -124,6 +124,7 @@ csl print <model.json | spec.csl.ts>        Print the canonical TypeScript.
 csl lock <spec.csl.ts>                      Write csh/lock.json from the packs the specification uses.
 
 csh init                                    Write csh/component.json by asking for each field. Guesses nothing.
+                                            Writes under --root, or the git top level, as every command reads.
 csh run [--at <commit>] [--mode advisory|enforcing] [--budget ms] [--no-cache]
                                             Run each practice's harness, check, decide, and store the run under
                                             .csh-cache/runs/<snapshot digest>/. Non-zero only on block in enforcing mode,

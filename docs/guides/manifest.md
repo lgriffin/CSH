@@ -1,7 +1,7 @@
 # The component manifest
 
 `csh/component.json` names one component, the practices that describe it, the sources each practice feeds and the
-command that runs each practice's tests. `csh init` writes it by asking for each field. It says what is evaluated,
+command that runs each practice's tests. `csh init` writes it by asking for each field, at the git repository's top level unless `--root` names another directory, the same root every other command reads. It says what is evaluated,
 never what is right: it holds no judgment and no authority ([09](../spec/09-anchor-harness-a3.md), section 2.1).
 
 ```json

@@ -5,6 +5,7 @@ import { createInterface } from "node:readline";
 import { dirname, join, resolve } from "node:path";
 import { COMPONENT_PATH, COMPONENT_SCHEMA, type ComponentManifest, type Practice, PRACTICE_KINDS, validateManifest } from "@csh/component";
 import { stableJson } from "@csh/kernel";
+import { projectRoot } from "@csh/run";
 
 interface Io {
   out: (s: string) => void;
@@ -39,7 +40,8 @@ const list = (s: string) => s.split(",").map((x) => x.trim()).filter((x) => x !=
 const words = (s: string) => s.trim().split(/\s+/).filter((x) => x !== "");
 
 export async function init(cwd: string, rootOption: string | undefined, io: Io): Promise<number> {
-  const root = resolve(cwd, rootOption ?? ".");
+  // The same root csh run and every other command use, so that a manifest written here is the one they read (#21).
+  const root = projectRoot(cwd, rootOption);
   const file = join(root, COMPONENT_PATH);
   if (existsSync(file)) {
     io.err(`${COMPONENT_PATH} already exists; csh init never overwrites it\n`);
@@ -50,7 +52,7 @@ export async function init(cwd: string, rootOption: string | undefined, io: Io):
   try {
     io.out(`csh init writes ${COMPONENT_PATH}. It asks for each field and guesses nothing.\n\n`);
     const name = (await ask("Component name, the same as the system name in the specification: ")).trim();
-    const spec = (await ask("The specification module, relative to this directory: ")).trim();
+    const spec = (await ask(`The specification module, relative to ${root === resolve(cwd) ? "this directory" : root}: `)).trim();
     const implementation = list(await ask("Implementation paths, comma separated (a change there makes a witness stale): "));
     const practices: Practice[] = [];
     for (;;) {
@@ -87,6 +89,7 @@ export async function init(cwd: string, rootOption: string | undefined, io: Io):
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, stableJson(manifest));
     io.out(`\nWrote ${COMPONENT_PATH}. csh run checks it against the specification before it evaluates anything.\n`);
+    if (root !== resolve(cwd)) io.out(`csh init wrote ${file}, under ${rootOption === undefined ? "the repository's top level, where every csh command reads it" : "--root"}, not under ${resolve(cwd)}.\n`);
     return 0;
   } finally {
     own?.close();

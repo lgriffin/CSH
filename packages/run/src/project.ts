@@ -66,8 +66,13 @@ function git(root: string, ...args: string[]): string {
   return execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
 }
 
+/** The root every command defaults to, csh init included: `--root` when given, else the git top level, else `cwd`. */
+export function projectRoot(cwd: string, rootOverride?: string): string {
+  return resolve(cwd, rootOverride ?? gitRoot(cwd) ?? ".");
+}
+
 export function loadProject(cwd: string, rootOverride?: string): Project {
-  const root = resolve(rootOverride ?? gitRoot(cwd) ?? cwd);
+  const root = projectRoot(cwd, rootOverride);
   const cfgFile = join(root, CONFIG_PATH);
   const config = existsSync(cfgFile) ? (JSON.parse(readFileSync(cfgFile, "utf8")) as ProjectConfig) : {};
   const lockFile = join(root, LOCK_PATH);

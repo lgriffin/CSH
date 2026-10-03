@@ -16,7 +16,7 @@ It is the "Run" container, shown in the [containers diagram](../../docs/architec
 - `evaluateProject(project, opts)`, `decideGate(project, evaluation, mode)`: one evaluation and its gate decision, shared by `csh check`, `csh gate` and `csh run`. `emitProject(project, opts)` and `emissionProblem(emission)` make and judge the emission alone; `opts.emission` hands it to `evaluateProject` so that it is not made twice.
 - `evaluateSpec(spec, opts, emission?)`, `emitSpec(spec, opts)`, `Emission`, `checkModule(module, digest, opts)`, `PipelineOptions`, `PipelineResult`, `sourceSettings(component)`: the pipeline for one specification, with or without a component.
 - `runSources(module, opts)`, `runIsolated(adapterUrl, input, timeoutMs)`, `BUILTIN_ADAPTERS`: sources through their adapters, each in a permission-restricted subprocess; a practice's adapter overrides the built-in one for its sources.
-- `loadProject(cwd, root)`, `Project`, `ProjectConfig`, `specOf`, `ledgerOf`, `snapshotOf`, `unchangedSince`, `readConfig`, `fixtureRoot`, and the paths `CONFIG_PATH`, `LOCK_PATH`, `REPORT_PATH`, `MODEL_PATH`, `CACHE_DIR`.
+- `loadProject(cwd, root)`, `projectRoot(cwd, root)` (the root every command defaults to, `csh init` included), `Project`, `ProjectConfig`, `specOf`, `ledgerOf`, `snapshotOf`, `unchangedSince`, `readConfig`, `fixtureRoot`, and the paths `CONFIG_PATH`, `LOCK_PATH`, `REPORT_PATH`, `MODEL_PATH`, `CACHE_DIR`.
 
 ## Depends on and used by
 

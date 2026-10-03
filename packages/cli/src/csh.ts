@@ -16,7 +16,8 @@ import { a3Command, a3Fragment } from "./a3.ts";
 
 const USAGE = `csh: the Composable Specification Harness
 
-  csh init                        Write csh/component.json by asking for each field. Guesses nothing.
+  csh init                        Write csh/component.json by asking for each field. Guesses nothing. Writes under
+                                  the same root as every other command: --root, or the git top level.
   csh run [--at <commit>] [--mode advisory|enforcing] [--budget ms] [--no-cache]
                                   Run each practice's harness, check and gate one snapshot of the component, and
                                   store the run under .csh-cache/runs/. Exits non-zero only on block in enforcing
