@@ -62,9 +62,10 @@ practice can express.
 examples/lockout/walkthrough.sh
 ```
 
-[docs/lockout-walkthrough.md](docs/lockout-walkthrough.md) shows the run before and after the countermeasures.
-[docs/lockout-a3.md](docs/lockout-a3.md) is the Lean A3 that reads the findings as one problem, with an A3 sheet in
-[docs/lockout-a3.html](docs/lockout-a3.html).
+The script runs one example in four stages: as written, after the countermeasures, with a model and signed approvals
+(the enforcing gate allows), and after a regression that keeps the tests green (the enforcing gate blocks).
+[docs/lockout-walkthrough.md](docs/lockout-walkthrough.md) shows the run, and [docs/lockout-a3.md](docs/lockout-a3.md)
+is the Lean A3 built from its reports, with an A3 sheet and a stage picker in [docs/lockout-a3.html](docs/lockout-a3.html).
 
 ## Commands
 

@@ -2,7 +2,8 @@
 
 This is the harness run end to end on `examples/lockout`, with the real output of each command. It was produced by
 `examples/lockout/walkthrough.sh` on 3 October 2026, with Node 22.22 and Z3 5.1. The script copies the example into a
-scratch git repository, so commit hashes differ from run to run. Nothing in it is signed or approved.
+scratch git repository, so commit hashes differ from run to run. Sections 1 to 7 sign and approve nothing. Section 8
+approves the rules with a key made for the run and thrown away after it, never your own.
 
 The example is one behaviour, sign-in lockout, described by three practices. Each is meant to pin behaviour down, and
 each is signed off on its own terms: the tests pass, the scenarios are agreed, and the sentences are reviewed. The
@@ -15,8 +16,8 @@ harness reads the scenarios; it does not execute them against the code.
 | `UnitTests` | TDD | The developer, test first | Four unit tests that record witnesses through `recordWitness` |
 
 The intent block in `spec/lockout.csl.ts` holds three predicates a person wrote from the EARS sentences, each citing
-the sentence it claims to express. There is deliberately no formal model of the transition: the three practices are the
-only voices, so everything the harness reports is a disagreement between them. The Lean reading of the same output is
+the sentence it claims to express. Until section 8 there is deliberately no formal model of the transition: the three
+practices are the only voices, so everything the harness reports is a disagreement between them. The Lean reading of the same output is
 [the A3](lockout-a3.md).
 
 Version 1 has no adapter for scenario files (Evidence tab, section 7), so the example brings its own:
@@ -350,3 +351,134 @@ No findings, no errors and nothing not comparable. What is left is what the A3 s
 - The three `single-source` gaps remain. BDD and TDD can only give examples, so every rule rests on one practice by construction.
 - `LCK-004`, `LCK-005` and the support scenario remain as gaps. They are owner decisions about scope, not defects, and a gap is not a failure.
 - The verdict on each rule is `unknown`, not `satisfied`: no binding is approved and there is no model of the transition for a solver check. Agreement between the practices is a precondition for a verdict, not a verdict.
+
+```
+$ csh gate
+gate allow (advisory)
+
+  candidate, never blocking: SignInService/StopPasswordGuessing/AcceptCorrectPassword, SignInService/StopPasswordGuessing/LockOnThirdFailure, SignInService/StopPasswordGuessing/RefuseWhileLocked
+```
+
+## 8. A model, then approval
+
+The three practices now agree, but agreement decides nothing. Two things are missing: a model of the sign-in, so the
+solver can check each rule against every case rather than four, and a person's approval, so the rules count.
+
+`examples/lockout/model/spec/lockout.csl.ts` adds both halves of the model to the specification. It adds one invariant,
+`LockHasDuration` (a locked account always carries its 900 seconds), and a transition for `SignIn` written from the
+agreed sentences: a correct password on an unlocked account is accepted and clears the count; any other attempt is
+refused; on a locked account nothing changes; otherwise the count goes up by one and the third failure locks.
+
+```
+$ csh check
+No findings.
+...
+  findings 0: state-conflict 0, joint-conflict 0, example-conflict 0, vacuous 0, not-preserved 0, not-met 0, unknown 0
+  gaps 8; not comparable 0; unliftable 2
+  obligations 4: conflicting 0, violated 0, satisfied 0, unknown 4
+```
+
+The model column of the gap view now reads `models` for every term, and the solver check is met for every rule. The
+verdicts stay `unknown` because nothing is approved: `method-missing: ApprovedBinding`, `binding-not-approved`.
+
+Approval is the one step an agent cannot take (Authority and ledger tab, section 1). The script makes a throwaway
+OpenPGP key in a temporary `GNUPGHOME`, lists it as the single person in `csh/maintainers.json` in a commit that key
+signs, then drafts nine decisions and commits the ledger alone, signed:
+
+```
+$ csh approve <fragment> --actor Owner --rationale <why>, nine times
+  approved StopPasswordGuessing/LockOnThirdFailure
+  approved StopPasswordGuessing/RefuseWhileLocked
+  approved StopPasswordGuessing/AcceptCorrectPassword
+  approved StopPasswordGuessing/LockHasDuration
+  approved #binding/Login.failures
+  approved #binding/Login.locked
+  approved #binding/Login.lockSeconds
+  approved #binding/SignIn.args.passwordOk
+  approved #binding/SignIn.result
+
+$ git commit -S csh/ledger.ndjson   (the ledger alone, signed by Owner)
+
+$ csh check
+...
+== Obligations
+
+  satisfied  SignInService/StopPasswordGuessing/AcceptCorrectPassword  [approved, self-approved; evidence current]  ApprovedBinding met; BoundaryWitness met; SolverCheck met
+  satisfied  SignInService/StopPasswordGuessing/LockHasDuration  [approved, self-approved; evidence current]  ApprovedBinding met; BoundaryWitness met; SolverCheck met
+  satisfied  SignInService/StopPasswordGuessing/LockOnThirdFailure  [approved, self-approved; evidence current]  ApprovedBinding met; BoundaryWitness met; SolverCheck met
+  satisfied  SignInService/StopPasswordGuessing/RefuseWhileLocked  [approved, self-approved; evidence current]  ApprovedBinding met; BoundaryWitness met; SolverCheck met
+
+$ csh gate --mode enforcing
+gate allow (enforcing)
+  allow   SignInService/StopPasswordGuessing/AcceptCorrectPassword  satisfied
+  allow   SignInService/StopPasswordGuessing/LockHasDuration  satisfied
+  allow   SignInService/StopPasswordGuessing/LockOnThirdFailure  satisfied
+  allow   SignInService/StopPasswordGuessing/RefuseWhileLocked  satisfied
+```
+
+Every rule is satisfied, and every one is marked self-approved, because one person both wrote and approved it.
+
+## 9. A regression
+
+A later change, from an agent or a hurried person, rereads "three failed attempts" as three allowed. It edits
+`src/lockout.ts` back to `>` and the first test to match (`examples/lockout/regression/`), in one unsigned commit.
+Both practices that change touches still agree with each other, so the suite is green:
+
+```
+$ git show --stat --format= HEAD
+ src/lockout.ts       |  4 ++--
+ test/lockout.test.ts | 11 +++++------
+ 2 files changed, 7 insertions(+), 8 deletions(-)
+✔ allows a third failed attempt
+✔ refuses a wrong password on a locked account without counting it
+✔ refuses a locked account even with the correct password
+✔ resets the count on a successful sign-in
+ℹ tests 4
+ℹ pass 4
+ℹ fail 0
+```
+
+The approved rule is outside the change, so the harness sees it:
+
+```
+$ csh check
+...
+[example-conflict] 36c73253a3c7724b  (cross-source)  from Q-EX(SignInService/@UnitTests/WitnessAllowsThird)
+  - SignInService/@UnitTests/WitnessAllowsThird  source UnitTests, candidate
+  - SignInService/StopPasswordGuessing/LockOnThirdFailure  source intent, approved
+...
+  violated (implementation)  SignInService/StopPasswordGuessing/LockOnThirdFailure  [approved, self-approved; evidence current]  witness allows-third makes it false
+
+$ csh gate --mode enforcing
+gate block (enforcing)
+  allow   SignInService/StopPasswordGuessing/AcceptCorrectPassword  satisfied
+  allow   SignInService/StopPasswordGuessing/LockHasDuration  satisfied
+  block   SignInService/StopPasswordGuessing/LockOnThirdFailure  violated, no valid waiver
+  allow   SignInService/StopPasswordGuessing/RefuseWhileLocked  satisfied
+```
+
+The gate exits 1, and the script fails if it does not. The verdict names the implementation, not the rule: the rule
+is approved and the evidence is current, so the witness is what disagrees.
+
+## 10. Build the A3
+
+The script keeps each stage's `csh-report.json` and `csh-gate.json`, then builds the A3 from them:
+
+```
+$ node examples/lockout/a3/build.ts --stages <stages> --out <stages>/a3
+wrote lockout-a3.html and lockout-a3.md for 4 stages
+docs/lockout-a3.md and docs/lockout-a3.html match the reports.
+```
+
+`examples/lockout/a3/a3.json` holds what only a person can say: the background, the root causes, the countermeasures
+and the plan, and a rule for each kind of signal saying where on the sheet it belongs. Every count, every Pareto bar,
+every verdict and the status of each countermeasure is computed from the reports. A signal no rule places shows up as
+unclassified. CI runs the script and fails when the committed A3 differs from the one it builds, so a change to the
+example or the harness that moves a number has to update the sheet in the same change:
+
+```sh
+examples/lockout/walkthrough.sh --update
+```
+
+To evolve the example, change a source, a judgment in `a3.json`, or the harness, run that command, and read the diff of
+`docs/lockout-a3.md`.
