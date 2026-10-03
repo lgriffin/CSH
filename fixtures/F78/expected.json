@@ -1,0 +1,23 @@
+{
+  "fixture": "F78",
+  "section": "Main tab, section 6.3",
+  "stage": 8,
+  "ownerReview": true,
+  "expect": {
+    "emit": {
+      "ok": true
+    },
+    "check": {
+      "findingsExact": true,
+      "findings": [
+        {
+          "kind": "state-conflict",
+          "members": [
+            "AccountService/AuditRules/BelowFloor",
+            "AccountService/ProtectFunds/MinimumBalance"
+          ]
+        }
+      ]
+    }
+  }
+}

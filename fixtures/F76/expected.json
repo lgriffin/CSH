@@ -1,0 +1,30 @@
+{
+  "fixture": "F76",
+  "section": "Main tab, section 6.3",
+  "stage": 8,
+  "ownerReview": true,
+  "expect": {
+    "emit": {
+      "ok": true
+    },
+    "composition": {
+      "relaxedInclude": [
+        "AccountService/ProtectFunds/MinimumBalance"
+      ]
+    },
+    "check": {
+      "findings": [],
+      "findingsExact": true,
+      "gaps": [
+        {
+          "kind": "relaxed",
+          "subject": "AccountService/ProtectFunds/MinimumBalance",
+          "detailIncludes": "FinanceDomainOwner"
+        }
+      ]
+    },
+    "absent": [
+      "AccountService/ProtectFunds/MinimumBalance"
+    ]
+  }
+}

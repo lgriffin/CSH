@@ -133,7 +133,7 @@ export interface Report {
   /** Extension: invalid ledger entries, present from stage 7. */
   ledger?: { head: number; invalid: { seq: number; reason: string; commit?: string }[] };
   /** Extension: composition results, present from stage 8. */
-  composition?: { uses: { pack: string; version: string; digest: string }[]; inherited: string[]; relaxed: { obligation: string; pack: string; rationale: string }[]; refinements: { obligation: string; pack: string; result: string }[] };
+  composition?: { uses: { pack: string; version: string; digest: string }[]; inherited: string[]; relaxed: { obligation: string; owner: string; reason: string }[]; refinements: { obligation: string; pack: string; result: string }[] };
 }
 
 export const TOOL_VERSION = "0.1.0";

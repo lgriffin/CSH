@@ -3,8 +3,8 @@
 // expected, collecting every mismatch rather than stopping at the first.
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { type Assessment, type AuthorityResolver, cachingSolver, type Finding, MemoryEvidenceStore, type Report, SolverCache } from "@csh/check";
-import { emit, typeCheck } from "@csh/emit";
+import { type Assessment, type AuthorityResolver, cachingSolver, makeRefiner, type Finding, MemoryEvidenceStore, type Report, SolverCache } from "@csh/check";
+import { emit, type Lock, readLock, typeCheck } from "@csh/emit";
 import { acceptDecision, gate, type Snapshot, type Waiver } from "@csh/gate";
 import { digestJson, type Fragment, fragmentsOf, type Module, stableJson } from "@csh/kernel";
 import { authorship, formatDecision, gitVcs, LEDGER_PATH, MAINTAINERS_PATH, readLedger, resolveAuthority, type Decision, type LedgerState, type Role } from "@csh/ledger";
@@ -58,6 +58,11 @@ function copyDir(from: string, to: string): void {
   }
 }
 
+function lockOf(dir: string): Lock | undefined {
+  const p = join(dir, "inputs", "lock.json");
+  return existsSync(p) ? readLock(p) : undefined;
+}
+
 function standIn(dir: string): AuthorityResolver | undefined {
   const p = join(dir, "inputs", "authority.json");
   if (!existsSync(p)) return undefined;
@@ -100,7 +105,10 @@ export class FixtureRunner {
   }
 
   private emitOpts(dir: string) {
-    return { root: dir, readable: [this.o.fixturesDir] };
+    const o: Parameters<typeof emit>[1] & object = { root: dir, readable: [this.o.fixturesDir], refine: makeRefiner(this.o.solver) };
+    const lock = lockOf(dir);
+    if (lock !== undefined) o.lock = lock;
+    return o;
   }
 
   // ---------------------------------------------------------------- single run
@@ -118,11 +126,12 @@ export class FixtureRunner {
       }
       if (e.emit?.ok === false) return;
     }
-    const needsCheck = ["check", "assessments", "executions", "items", "noneSatisfied", "gate", "gateReplay"].some((k) => e[k] !== undefined);
+    const needsCheck = ["check", "assessments", "executions", "items", "noneSatisfied", "gate", "gateReplay", "composition", "absent"].some((k) => e[k] !== undefined);
     if (!needsCheck && e.roundTrip === undefined) return;
     const cfg = readConfig(dir);
     const authority = standIn(dir);
-    const r = await evaluateSpec(spec, { root: dir, solver: this.o.solver, config: cfg, emit: { readable: [this.o.fixturesDir] }, ...(authority !== undefined ? { authority } : {}) });
+    const lock = lockOf(dir);
+    const r = await evaluateSpec(spec, { root: dir, solver: this.o.solver, config: cfg, emit: { readable: [this.o.fixturesDir] }, ...(authority !== undefined ? { authority } : {}), ...(lock !== undefined ? { lock } : {}) });
     if (!r.emitted.ok) {
       failures.push(`emission failed: ${JSON.stringify(r.emitted.errors)}`);
       return;
@@ -139,6 +148,17 @@ export class FixtureRunner {
     for (const x of e.items ?? []) {
       if (!report.items.some((y) => y.source === x.source && y.id === x.id && (x.pattern === undefined || y.pattern === x.pattern))) failures.push(`item ${x.source}/${x.id} (${x.pattern}) not reported`);
     }
+    if (e.composition !== undefined) {
+      const c = report.composition;
+      if (c === undefined) failures.push("composition: not reported");
+      else {
+        for (const u of e.composition.uses ?? []) if (!c.uses.some((x) => x.pack === u.pack && x.version === u.version)) failures.push(`composition: use of ${u.pack} ${u.version} not reported`);
+        for (const n of e.composition.inheritedInclude ?? []) if (!c.inherited.includes(n)) failures.push(`composition: ${n} not inherited; got ${c.inherited.join(", ")}`);
+        for (const n of e.composition.relaxedInclude ?? []) if (!c.relaxed.some((x) => x.obligation === n)) failures.push(`composition: ${n} not relaxed`);
+        for (const x of e.composition.refinements ?? []) if (!c.refinements.some((y) => y.obligation === x.obligation && y.result === x.result)) failures.push(`composition: refinement ${x.obligation} ${x.result} not reported; got ${JSON.stringify(c.refinements)}`);
+      }
+    }
+    for (const n of e.absent ?? []) if (checked.prepared.fragments.some((f) => f.name === n)) failures.push(`${n} should not be in the model`);
     if (e.gate !== undefined || e.gateReplay !== undefined) this.gateExpect(dir, cfg, report, checked.prepared.fragments, e, failures);
   }
 

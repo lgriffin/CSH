@@ -2,8 +2,8 @@
 // runner, the walkthrough and the CLI tests.
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { check, type CheckResult, type EvidenceStore, runSources, type AuthorityResolver, type SourceRun } from "@csh/check";
-import { emit, type EmitOptions, type EmitResult } from "@csh/emit";
+import { check, type CheckResult, type EvidenceStore, makeRefiner, type Report, runSources, type AuthorityResolver, type SourceRun } from "@csh/check";
+import { emit, type EmitOptions, type EmitResult, type Lock } from "@csh/emit";
 import { digestJson, fragmentsOf, refName, type Module } from "@csh/kernel";
 import { type LedgerState, resolveAuthority } from "@csh/ledger";
 import type { SolverPort } from "@csh/solver";
@@ -31,6 +31,9 @@ export interface PipelineOptions {
   evidence?: EvidenceStore;
   solverWrap?: (s: SolverPort) => SolverPort;
   emit?: EmitOptions;
+  /** The lock file pinning pack versions and digests. */
+  lock?: Lock;
+  composition?: Report["composition"];
   isolatedAdapters?: boolean;
   unchangedSince?: (a: string, b: string) => boolean;
 }
@@ -43,9 +46,13 @@ export interface PipelineResult {
 
 export async function evaluateSpec(spec: string, opts: PipelineOptions): Promise<PipelineResult> {
   const file = resolve(spec);
-  const emitted = await emit(file, { root: opts.root, ...(opts.emit ?? {}) });
+  const emitOpts: EmitOptions = { root: opts.root, refine: makeRefiner(opts.solver, opts.config?.budgetMs ?? 5000), ...(opts.emit ?? {}) };
+  if (opts.lock !== undefined) emitOpts.lock = opts.lock;
+  const emitted = await emit(file, emitOpts);
   if (!emitted.ok) return { emitted };
-  return { emitted, ...(await checkModule(emitted.module, emitted.digest, opts)) };
+  const m = emitted.module;
+  const composition = m.uses.length > 0 || (m.relaxations ?? []).length > 0 ? { uses: m.uses, inherited: emitted.composition.inherited.map((x) => x.name), relaxed: m.relaxations ?? [], refinements: emitted.composition.refinements } : undefined;
+  return { emitted, ...(await checkModule(m, emitted.digest, composition !== undefined ? { ...opts, composition } : opts)) };
 }
 
 export async function checkModule(module: Module, moduleDigest: string, opts: PipelineOptions): Promise<{ runs: SourceRun[]; checked: CheckResult }> {
@@ -79,6 +86,7 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   if (cfg.snapshot !== undefined) checkOpts.snapshot = { commit: cfg.snapshot.commit, ledgerHead: String(state?.head ?? 0) };
   if (state !== undefined) checkOpts.ledger = { head: state.head, invalid: state.invalid.map(({ seq, reason, commit }) => (commit !== undefined ? { seq, reason, commit } : { seq, reason })) };
   if (opts.unchangedSince !== undefined) checkOpts.unchangedSince = opts.unchangedSince;
+  if (opts.composition !== undefined) checkOpts.composition = opts.composition;
   const checked = await check(checkOpts);
   return { runs, checked };
 }
