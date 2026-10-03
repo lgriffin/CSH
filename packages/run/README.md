@@ -28,7 +28,7 @@ It is the "Run" container, shown in the [containers diagram](../../docs/architec
 - A harness's exit code is stored as an execution fact and never enters a verdict: a failing harness still gives a full evaluation (P2).
 - Old witness and execution files are removed before a harness runs, so a run never reads witnesses from an earlier one (P5).
 - The record is keyed by the snapshot digest, which includes the component manifest's digest; the same snapshot always gives the same directory, and `reportDigest` and `gateDigest` are over the stored bytes.
-- A run at a past commit installs nothing and is refused when the commit's dependency files differ from the working tree's; a missing stage is never filled from a neighbouring run ([A-38](../../ASSUMPTIONS.md)).
+- A run at a past commit installs nothing and is refused when the commit's dependency files differ from the working tree's; a missing stage is never filled from a neighbouring run ([A-38](../../ASSUMPTIONS.md)). A component in a subdirectory, such as a workspace package, gets the installed `node_modules` of its directories linked into the worktree ([A-50](../../ASSUMPTIONS.md)).
 - A manifest error stops the run before any source is read; a component with errors is never evaluated in part (P3).
 - `csh/config.json` may not repeat what the manifest says (`spec`, `implementationPaths`, `adapters`): the run refuses the project rather than choose between them.
 - Everything `@csh/cli` protected before the move still holds: adapters run isolated with bytes as input, sources are read from inside the root only, and a dirty tree is never current ([A-16](../../ASSUMPTIONS.md), [A-33](../../ASSUMPTIONS.md)).
@@ -39,7 +39,7 @@ The pipeline moved here from the command line so that a run, a check and a fixtu
 
 ## How it is tested
 
-- `test/run.test.ts` (in a throwaway git repository with a scripted harness): a run executes the harness with `CSH_COMMIT` and `CSH_WITNESS_FILE`, stores a record whose digests match the stored bytes, and gives the same snapshot the same record; a failing harness is recorded and the run still evaluates; a root with no manifest and a malformed manifest are refused; a past commit runs in a worktree that is removed afterwards; a commit with different dependency files and a name that is not a commit are refused.
+- `test/run.test.ts` (in a throwaway git repository with a scripted harness): a run executes the harness with `CSH_COMMIT` and `CSH_WITNESS_FILE`, stores a record whose digests match the stored bytes, and gives the same snapshot the same record; a failing harness is recorded and the run still evaluates; a root with no manifest and a malformed manifest are refused; a past commit runs in a worktree that is removed afterwards; a component in a subdirectory whose harness imports a package installed only beside it runs at a past commit; a commit with different dependency files and a name that is not a commit are refused.
 - `test/faults.test.ts` ("no silent satisfaction", on a copy of F34): a missing or malformed witness file, an adapter that crashes or never returns, a solver fault and a witness for another commit each leave obligations unknown, never satisfied.
 - Fixtures: every fixture runs through `evaluateSpec`; F80 and F81 exercise the component path.
 - `examples/lockout/walkthrough.sh` runs every stage of the lockout example through `csh run`.

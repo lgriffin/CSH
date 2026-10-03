@@ -1,0 +1,678 @@
+{
+  "authority": {
+    "authority": "candidate"
+  },
+  "background": [],
+  "component": "Gate",
+  "countermeasures": [],
+  "decisionPoints": [],
+  "followUp": {
+    "gate": {
+      "mode": "advisory",
+      "overall": "allow"
+    },
+    "returned": []
+  },
+  "goal": "",
+  "judgmentsDigest": "sha256:a80ee97c65784cc2b499c44d459621371de15799da343cc77addcd02776f7199",
+  "lanes": [
+    {
+      "counts": [
+        0
+      ],
+      "id": "ears",
+      "practice": "ears",
+      "step": 1,
+      "title": "EARS",
+      "where": "Authority"
+    },
+    {
+      "counts": [
+        0
+      ],
+      "id": "tdd",
+      "practice": "tdd",
+      "step": 1,
+      "title": "Unit tests",
+      "where": "UnitTests"
+    }
+  ],
+  "measures": [
+    {
+      "id": "conflicts",
+      "name": "Conflicts between claims",
+      "target": "0",
+      "values": [
+        {
+          "met": false,
+          "value": "13"
+        }
+      ]
+    },
+    {
+      "id": "not-comparable",
+      "name": "Not comparable",
+      "target": "0",
+      "values": [
+        {
+          "met": true,
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": "drift",
+      "name": "Shape mismatches and dangling citations",
+      "target": "0",
+      "values": [
+        {
+          "met": true,
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": "no-rule",
+      "name": "Examples with no rule",
+      "target": "0",
+      "values": [
+        {
+          "met": true,
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": "silences",
+      "name": "Silences without an owner decision",
+      "target": "0",
+      "values": [
+        {
+          "met": true,
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": "satisfied",
+      "name": "Rules satisfied on approved evidence",
+      "target": "all",
+      "values": [
+        {
+          "met": false,
+          "value": "0 of 7"
+        }
+      ]
+    },
+    {
+      "id": "gate",
+      "name": "Enforcing gate allows",
+      "target": "allow",
+      "values": [
+        {
+          "met": false,
+          "value": "allow (advisory)"
+        }
+      ]
+    },
+    {
+      "id": "cited",
+      "name": "Examples that cite a requirement",
+      "target": "all",
+      "values": [
+        {
+          "met": true,
+          "value": "17 of 17"
+        }
+      ]
+    }
+  ],
+  "pareto": [
+    {
+      "bars": [
+        {
+          "cause": "",
+          "cumulative": 1,
+          "n": 21,
+          "name": "Unclassified: no cause places it",
+          "vital": true
+        }
+      ],
+      "stage": "first"
+    }
+  ],
+  "plan": [],
+  "practices": [
+    {
+      "author": "Gate owner",
+      "id": "ears",
+      "kind": "requirements",
+      "name": "EARS",
+      "sources": [
+        "Authority"
+      ],
+      "unit": "the sentence"
+    },
+    {
+      "author": "Developer",
+      "id": "tdd",
+      "kind": "tests",
+      "name": "Unit tests",
+      "sources": [
+        "UnitTests"
+      ],
+      "unit": "the test"
+    }
+  ],
+  "problem": "",
+  "problems": [
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "example-conflict 226609020dc65386: WitnessStaleGivesReview × AllowSatisfied"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "example-conflict c5389a65a1977884: WitnessSelfApprovedNeedingReviewGivesReview × AllowSatisfied"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "joint-conflict 019df5366f3feef4: BlockUnknownCritical × WaiveViolatedWithWaiver"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "joint-conflict 431ff15ba078647c: BlockConflicting × ReviewUnknown"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "joint-conflict 4b3ccbab132a0547: BlockConflicting × ReviewSelfApproved"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "joint-conflict 53f10b4521b82818: ReviewUnknown × WaiveViolatedWithWaiver"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "joint-conflict 5cb9cb853f53bb0c: AllowSatisfied × ReviewUnknown"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "joint-conflict 5cfe9b79d4ab2007: ReviewSelfApproved × WaiveViolatedWithWaiver"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "joint-conflict 82e5e0bfe2c1a5bf: AllowSatisfied × BlockUnknownCritical"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "joint-conflict 86db1b2fd17db34f: AllowSatisfied × ReviewSelfApproved"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "joint-conflict 984794edd09ab1a5: BlockUnknownCritical × ReviewSelfApproved"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "joint-conflict e7f6554614a8de02: BlockViolatedWithoutWaiver × ReviewSelfApproved"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "joint-conflict fc3c487e0bf9d8eb: BlockViolatedWithoutWaiver × ReviewUnknown"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "single-source: ReviewUnknown"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "single-source: WaiveViolatedWithWaiver"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "single-source: AllowSatisfied"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "single-source: ReviewSelfApproved"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "single-source: BlockViolatedWithoutWaiver"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "single-source: BlockUnknownCritical"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "single-source: BlockConflicting"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "unobserved-test: gate.probe.ts::ignores candidate obligations, listing them"
+    }
+  ],
+  "rca": [],
+  "schema": "csh-a3/v1",
+  "slug": "dispositions",
+  "stages": [
+    {
+      "conflicts": 13,
+      "examples": {
+        "citing": 17,
+        "total": 17
+      },
+      "gate": {
+        "mode": "advisory",
+        "overall": "allow"
+      },
+      "id": "first",
+      "name": "",
+      "rules": [
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Gate/NoViolationAllowed/AllowSatisfied",
+          "name": "AllowSatisfied",
+          "selfApproved": false,
+          "verdict": "conflicting"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Gate/NoViolationAllowed/BlockConflicting",
+          "name": "BlockConflicting",
+          "selfApproved": false,
+          "verdict": "conflicting"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Gate/NoViolationAllowed/BlockUnknownCritical",
+          "name": "BlockUnknownCritical",
+          "selfApproved": false,
+          "verdict": "conflicting"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver",
+          "name": "BlockViolatedWithoutWaiver",
+          "selfApproved": false,
+          "verdict": "conflicting"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Gate/NoViolationAllowed/ReviewSelfApproved",
+          "name": "ReviewSelfApproved",
+          "selfApproved": false,
+          "verdict": "conflicting"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Gate/NoViolationAllowed/ReviewUnknown",
+          "name": "ReviewUnknown",
+          "selfApproved": false,
+          "verdict": "conflicting"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Gate/NoViolationAllowed/WaiveViolatedWithWaiver",
+          "name": "WaiveViolatedWithWaiver",
+          "selfApproved": false,
+          "verdict": "conflicting"
+        }
+      ],
+      "signals": [
+        {
+          "detail": "Q-EX(Gate/@UnitTests/WitnessStaleGivesReview)",
+          "fragments": [
+            "Gate/@UnitTests/WitnessStaleGivesReview",
+            "Gate/NoViolationAllowed/AllowSatisfied"
+          ],
+          "id": "226609020dc65386",
+          "kind": "example-conflict",
+          "label": "example-conflict 226609020dc65386: WitnessStaleGivesReview × AllowSatisfied",
+          "practices": [
+            "tdd"
+          ],
+          "sources": [
+            "UnitTests",
+            "intent"
+          ]
+        },
+        {
+          "detail": "Q-EX(Gate/@UnitTests/WitnessSelfApprovedNeedingReviewGivesReview)",
+          "fragments": [
+            "Gate/@UnitTests/WitnessSelfApprovedNeedingReviewGivesReview",
+            "Gate/NoViolationAllowed/AllowSatisfied"
+          ],
+          "id": "c5389a65a1977884",
+          "kind": "example-conflict",
+          "label": "example-conflict c5389a65a1977884: WitnessSelfApprovedNeedingReviewGivesReview × AllowSatisfied",
+          "practices": [
+            "tdd"
+          ],
+          "sources": [
+            "UnitTests",
+            "intent"
+          ]
+        },
+        {
+          "detail": "Q-FEAS(Decide)",
+          "fragments": [
+            "Gate/NoViolationAllowed/BlockUnknownCritical",
+            "Gate/NoViolationAllowed/WaiveViolatedWithWaiver"
+          ],
+          "id": "019df5366f3feef4",
+          "kind": "joint-conflict",
+          "label": "joint-conflict 019df5366f3feef4: BlockUnknownCritical × WaiveViolatedWithWaiver",
+          "practices": [],
+          "sources": [
+            "intent"
+          ]
+        },
+        {
+          "detail": "Q-FEAS(Decide)",
+          "fragments": [
+            "Gate/NoViolationAllowed/BlockConflicting",
+            "Gate/NoViolationAllowed/ReviewUnknown"
+          ],
+          "id": "431ff15ba078647c",
+          "kind": "joint-conflict",
+          "label": "joint-conflict 431ff15ba078647c: BlockConflicting × ReviewUnknown",
+          "practices": [],
+          "sources": [
+            "intent"
+          ]
+        },
+        {
+          "detail": "Q-FEAS(Decide)",
+          "fragments": [
+            "Gate/NoViolationAllowed/BlockConflicting",
+            "Gate/NoViolationAllowed/ReviewSelfApproved"
+          ],
+          "id": "4b3ccbab132a0547",
+          "kind": "joint-conflict",
+          "label": "joint-conflict 4b3ccbab132a0547: BlockConflicting × ReviewSelfApproved",
+          "practices": [],
+          "sources": [
+            "intent"
+          ]
+        },
+        {
+          "detail": "Q-FEAS(Decide)",
+          "fragments": [
+            "Gate/NoViolationAllowed/ReviewUnknown",
+            "Gate/NoViolationAllowed/WaiveViolatedWithWaiver"
+          ],
+          "id": "53f10b4521b82818",
+          "kind": "joint-conflict",
+          "label": "joint-conflict 53f10b4521b82818: ReviewUnknown × WaiveViolatedWithWaiver",
+          "practices": [],
+          "sources": [
+            "intent"
+          ]
+        },
+        {
+          "detail": "Q-FEAS(Decide)",
+          "fragments": [
+            "Gate/NoViolationAllowed/AllowSatisfied",
+            "Gate/NoViolationAllowed/ReviewUnknown"
+          ],
+          "id": "5cb9cb853f53bb0c",
+          "kind": "joint-conflict",
+          "label": "joint-conflict 5cb9cb853f53bb0c: AllowSatisfied × ReviewUnknown",
+          "practices": [],
+          "sources": [
+            "intent"
+          ]
+        },
+        {
+          "detail": "Q-FEAS(Decide)",
+          "fragments": [
+            "Gate/NoViolationAllowed/ReviewSelfApproved",
+            "Gate/NoViolationAllowed/WaiveViolatedWithWaiver"
+          ],
+          "id": "5cfe9b79d4ab2007",
+          "kind": "joint-conflict",
+          "label": "joint-conflict 5cfe9b79d4ab2007: ReviewSelfApproved × WaiveViolatedWithWaiver",
+          "practices": [],
+          "sources": [
+            "intent"
+          ]
+        },
+        {
+          "detail": "Q-FEAS(Decide)",
+          "fragments": [
+            "Gate/NoViolationAllowed/AllowSatisfied",
+            "Gate/NoViolationAllowed/BlockUnknownCritical"
+          ],
+          "id": "82e5e0bfe2c1a5bf",
+          "kind": "joint-conflict",
+          "label": "joint-conflict 82e5e0bfe2c1a5bf: AllowSatisfied × BlockUnknownCritical",
+          "practices": [],
+          "sources": [
+            "intent"
+          ]
+        },
+        {
+          "detail": "Q-FEAS(Decide)",
+          "fragments": [
+            "Gate/NoViolationAllowed/AllowSatisfied",
+            "Gate/NoViolationAllowed/ReviewSelfApproved"
+          ],
+          "id": "86db1b2fd17db34f",
+          "kind": "joint-conflict",
+          "label": "joint-conflict 86db1b2fd17db34f: AllowSatisfied × ReviewSelfApproved",
+          "practices": [],
+          "sources": [
+            "intent"
+          ]
+        },
+        {
+          "detail": "Q-FEAS(Decide)",
+          "fragments": [
+            "Gate/NoViolationAllowed/BlockUnknownCritical",
+            "Gate/NoViolationAllowed/ReviewSelfApproved"
+          ],
+          "id": "984794edd09ab1a5",
+          "kind": "joint-conflict",
+          "label": "joint-conflict 984794edd09ab1a5: BlockUnknownCritical × ReviewSelfApproved",
+          "practices": [],
+          "sources": [
+            "intent"
+          ]
+        },
+        {
+          "detail": "Q-FEAS(Decide)",
+          "fragments": [
+            "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver",
+            "Gate/NoViolationAllowed/ReviewSelfApproved"
+          ],
+          "id": "e7f6554614a8de02",
+          "kind": "joint-conflict",
+          "label": "joint-conflict e7f6554614a8de02: BlockViolatedWithoutWaiver × ReviewSelfApproved",
+          "practices": [],
+          "sources": [
+            "intent"
+          ]
+        },
+        {
+          "detail": "Q-FEAS(Decide)",
+          "fragments": [
+            "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver",
+            "Gate/NoViolationAllowed/ReviewUnknown"
+          ],
+          "id": "fc3c487e0bf9d8eb",
+          "kind": "joint-conflict",
+          "label": "joint-conflict fc3c487e0bf9d8eb: BlockViolatedWithoutWaiver × ReviewUnknown",
+          "practices": [],
+          "sources": [
+            "intent"
+          ]
+        },
+        {
+          "detail": "Decide.args.applicability, Decide.args.critical, Decide.args.verdict, Decide.result asserted only by intent",
+          "fragments": [
+            "Gate/NoViolationAllowed/ReviewUnknown"
+          ],
+          "id": "198d8967a175f166",
+          "kind": "single-source",
+          "label": "single-source: ReviewUnknown",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "Gate/NoViolationAllowed/ReviewUnknown"
+        },
+        {
+          "detail": "Decide.args.verdict, Decide.args.waiverValid, Decide.result asserted only by intent",
+          "fragments": [
+            "Gate/NoViolationAllowed/WaiveViolatedWithWaiver"
+          ],
+          "id": "6e261864f0618dd2",
+          "kind": "single-source",
+          "label": "single-source: WaiveViolatedWithWaiver",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "Gate/NoViolationAllowed/WaiveViolatedWithWaiver"
+        },
+        {
+          "detail": "Decide.args.verdict, Decide.result asserted only by intent",
+          "fragments": [
+            "Gate/NoViolationAllowed/AllowSatisfied"
+          ],
+          "id": "8757e3f8eb7f2bf9",
+          "kind": "single-source",
+          "label": "single-source: AllowSatisfied",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "Gate/NoViolationAllowed/AllowSatisfied"
+        },
+        {
+          "detail": "Decide.args.needsReview, Decide.args.selfApproved, Decide.result asserted only by intent",
+          "fragments": [
+            "Gate/NoViolationAllowed/ReviewSelfApproved"
+          ],
+          "id": "90b4650453d9bba3",
+          "kind": "single-source",
+          "label": "single-source: ReviewSelfApproved",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "Gate/NoViolationAllowed/ReviewSelfApproved"
+        },
+        {
+          "detail": "Decide.args.mode, Decide.args.verdict, Decide.args.waiverValid, Decide.result asserted only by intent",
+          "fragments": [
+            "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver"
+          ],
+          "id": "9e25edacb0600b84",
+          "kind": "single-source",
+          "label": "single-source: BlockViolatedWithoutWaiver",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver"
+        },
+        {
+          "detail": "Decide.args.applicability, Decide.args.critical, Decide.args.mode, Decide.args.verdict, Decide.result asserted only by intent",
+          "fragments": [
+            "Gate/NoViolationAllowed/BlockUnknownCritical"
+          ],
+          "id": "a31d499f803ee5fe",
+          "kind": "single-source",
+          "label": "single-source: BlockUnknownCritical",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "Gate/NoViolationAllowed/BlockUnknownCritical"
+        },
+        {
+          "detail": "Decide.args.mode, Decide.args.verdict, Decide.result asserted only by intent",
+          "fragments": [
+            "Gate/NoViolationAllowed/BlockConflicting"
+          ],
+          "id": "dcea34a4e5a9dc38",
+          "kind": "single-source",
+          "label": "single-source: BlockConflicting",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "Gate/NoViolationAllowed/BlockConflicting"
+        },
+        {
+          "detail": "reports/executions.ndjson:12: passed, and no witness from UnitTests",
+          "fragments": [],
+          "id": "513dfc87815f6460",
+          "kind": "unobserved-test",
+          "label": "unobserved-test: gate.probe.ts::ignores candidate obligations, listing them",
+          "practices": [],
+          "sources": [],
+          "subject": "test/gate.probe.ts::ignores candidate obligations, listing them"
+        }
+      ],
+      "tests": {
+        "passed": 14,
+        "total": 14
+      },
+      "what": ""
+    }
+  ],
+  "terms": [],
+  "title": "",
+  "whys": []
+}

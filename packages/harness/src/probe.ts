@@ -23,8 +23,8 @@ export interface ProbeMappers<A extends unknown[], R> {
 /** The parts of Node's test context the probe reads. */
 export interface TestContextLike {
   name: string;
-  fullName?: string;
-  filePath?: string;
+  fullName?: string | undefined;
+  filePath?: string | undefined;
 }
 
 export interface ProbeContext {

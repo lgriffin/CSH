@@ -47,7 +47,10 @@ function sheetStage(j: Judgments, rec: StageRecord, def: Judgments["stages"][num
     const lane = j.lanes.find((l) => anyMatch(s, l.match));
     return { ...s, label: labelOf(s, report), ...(cause !== undefined ? { cause: cause.id } : {}), ...(lane !== undefined ? { lane: lane.id } : {}) };
   });
-  const execs = report.executions ?? [];
+  // A test that calls the probed function several times has one execution per witness; it counts once, and passes
+  // only when every one of its executions passed.
+  const tests = new Map<string, boolean>();
+  for (const e of report.executions ?? []) tests.set(e.test ?? e.witness, (tests.get(e.test ?? e.witness) ?? true) && e.localResult === "passed");
   const disposition = new Map((rec.gate.obligations ?? []).map((o) => [o.fragment, o.disposition]));
   const owned = new Set(Object.keys(Object.keys(sources).length > 0 ? sources : (report.component?.sources ?? {})));
   const items = new Set((report.items ?? []).map((i) => `${i.source}/${i.id}`));
@@ -56,7 +59,7 @@ function sheetStage(j: Judgments, rec: StageRecord, def: Judgments["stages"][num
     id: def.id,
     name: def.name,
     what: def.what,
-    tests: { passed: execs.filter((e) => e.localResult === "passed").length, total: execs.length },
+    tests: { passed: [...tests.values()].filter((x) => x).length, total: tests.size },
     gate: { mode: rec.gate.mode, overall: rec.gate.overall },
     signals,
     conflicts: signals.filter((s) => s.kind.endsWith("-conflict")).length,

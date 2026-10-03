@@ -27,6 +27,13 @@ describe("buildA3", () => {
     expect(m.stages[0]!.tests).toEqual({ passed: 1, total: 1 });
   });
 
+  it("counts a test once however many witnesses it records, and as passed only when all its executions passed", () => {
+    const e = { source: "UnitTests", event: "SignIn", localResult: "passed" };
+    const executions = [{ ...e, witness: "a", test: "t.ts::a" }, { ...e, witness: "a-2", test: "t.ts::a" }, { ...e, witness: "b", test: "t.ts::b" }, { ...e, witness: "b-2", test: "t.ts::b", localResult: "failed" }];
+    const stage = { ...before, report: { ...before.report, executions } };
+    expect(buildA3(input({}, { stages: [stage] })).stages[0]!.tests).toEqual({ passed: 1, total: 2 });
+  });
+
   it("computes each countermeasure's status from the stages", () => {
     const cms = (c: Judgments["countermeasures"]) => buildA3(input({ countermeasures: c })).countermeasures.map((x) => x.status);
     expect(cms([{ id: "A", kind: "requirement", what: "", answers: ["Q1"], clears: [{ kind: "example-conflict" }] }])).toEqual(["verified"]);

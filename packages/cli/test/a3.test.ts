@@ -90,4 +90,10 @@ describe("csh a3", () => {
     expect(line.digest).toMatch(/^sha256:/);
     expect(git("rev-parse", "HEAD")).toBe(head);
   }, 60000);
+
+  it("the gate component's committed sheet matches its stage records and judgments", async () => {
+    const check = io(REPO);
+    expect(await csh(["a3", "build", "dispositions", "--check", "--root", join(REPO, "packages", "gate")], check.io), check.o.err).toBe(0);
+    expect(check.o.out).toMatch(/match the stage records and judgments/);
+  });
 });

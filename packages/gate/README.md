@@ -21,7 +21,7 @@ It is the "Gate" container, shown in the [containers diagram](../../docs/archite
 
 ## Depends on and used by
 
-- Depends on: `@csh/kernel` (`digestJson`, `stableJson`) and `@csh/check` (the `Report` and `Assessment` types). `@csh/ledger` is listed in `package.json`, but no source file imports it; `@csh/run` converts ledger waivers into `Waiver` records. No external packages.
+- Depends on: `@csh/kernel` (`digestJson`, `stableJson`) and `@csh/check` (the `Report` and `Assessment` types). For its evaluation as a component only, `@csh/harness` (the probe) and `csl` (the specification), as development dependencies. `@csh/ledger` is listed in `package.json`, but no source file imports it; `@csh/run` converts ledger waivers into `Waiver` records. No external packages.
 - Used by: `@csh/run` (every evaluation and run), `@csh/cli` (`csh gate`, `csh gate --verify` and `csh run`) and `@csh/testkit` (fixtures F44 and F45).
 
 ## Invariants it protects
@@ -44,9 +44,11 @@ It is the "Gate" container, shown in the [containers diagram](../../docs/archite
 - `test/gate.test.ts`: the disposition table in both modes; advisory mode records what enforcing would do; candidates are ignored and listed; a waiver applies until it expires, judged by commit date and by date only; a waiver at another digest does not apply; a finding-scoped waiver applies only to that finding's obligation; a decision for another snapshot is refused.
 - `packages/cli/test/cli.test.ts`: `csh gate` decides for the current snapshot and refuses a decision for a later commit or a forged one.
 - Fixtures: F44 (a valid waiver on one violated obligation), F45 (a decision presented for another snapshot).
+- The gate is also the harness's first real component ([09](../../docs/spec/09-anchor-harness-a3.md), section 8). [csh/component.json](csh/component.json) names two practices: the disposition table as seven EARS sentences in [docs/requirements.md](docs/requirements.md), and the unit tests, whose probe in `test/gate.probe.ts` records each call to `gate` as a witness of the event `Decide` ([A-49](../../ASSUMPTIONS.md)). [spec/gate.csl.ts](spec/gate.csl.ts) holds the model, the table's rows as predicates citing the sentences, and the bindings ([A-48](../../ASSUMPTIONS.md)). Every one of them is a candidate. `csh run --root packages/gate` evaluates it; its first run is the first stage of the A3 in [csh/a3/dispositions](csh/a3/dispositions/a3.md), whose judged sections are the gate owner's to write, and `packages/cli/test/a3.test.ts` checks that the committed sheet matches its stage record.
 
 ## Known limits
 
 - The staleness checker drawn in the gate's component diagram is implemented in `@csh/check` (`evidence.ts`) and `@csh/run` (`project.ts`): the gate reads each assessment's applicability and does not compare dependency digests itself. `csh gate` computes the report it decides on, rather than reading one from disk ([A-34](../../ASSUMPTIONS.md)).
 - The gate has no notion of partial delivery; `overall` is the worst disposition.
+- The probe's cases repeat those of `test/gate.test.ts`, and nothing checks that the two copies agree ([Q-20](../../QUESTIONS.md)).
 - A snapshot from a working tree with uncommitted changes carries the commit `HEAD-dirty` ([A-16](../../ASSUMPTIONS.md)).
