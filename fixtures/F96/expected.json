@@ -1,0 +1,10 @@
+{
+  "fixture": "F96",
+  "section": "Anchor, harnesses and A3, sections 10.3 and 10.4",
+  "stage": 16,
+  "expect": {
+    "starter": {
+      "run": "completed"
+    }
+  }
+}

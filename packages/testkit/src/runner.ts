@@ -21,7 +21,20 @@ export interface FixtureResult {
   pass: boolean;
   failures: string[];
   skipped?: string;
+  /** Written before the code it tests: its stage is not built yet (Anchor, harnesses and A3, section 14.1). */
+  pending?: string;
   ms: number;
+}
+
+/**
+ * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
+ * passing, until their stage raises this number.
+ */
+export const BUILT_THROUGH_STAGE = 9;
+
+/** The stage a fixture belongs to, from its expected result. */
+export function fixtureStage(fixturesDir: string, id: string): number {
+  return (JSON.parse(readFileSync(join(fixturesDir, id, "expected.json"), "utf8")) as { stage: number }).stage;
 }
 
 // biome-ignore lint: expected.json is free-form test data.
@@ -89,6 +102,10 @@ export class FixtureRunner {
     const doc = JSON.parse(readFileSync(join(dir, "expected.json"), "utf8")) as { stage: number; section: string; expect: Exp };
     const failures: string[] = [];
     const res: FixtureResult = { id, stage: doc.stage, section: doc.section, pass: false, failures, ms: 0 };
+    if (doc.stage > BUILT_THROUGH_STAGE) {
+      res.pending = `stage ${doc.stage} is not built yet`;
+      return res;
+    }
     try {
       const e = doc.expect;
       if ((e.git === true || e.steps !== undefined) && !gpgAvailable()) {
@@ -524,9 +541,10 @@ function diffLines(a: string, b: string): string {
 }
 
 export function summarise(results: FixtureResult[]): string {
-  const lines = results.map((r) => `${r.pass ? "pass" : r.skipped !== undefined ? "skip" : "FAIL"}  ${r.id}  stage ${r.stage}  ${r.ms} ms${r.skipped !== undefined ? `  (${r.skipped})` : ""}${r.failures.map((f) => `\n      ${f}`).join("")}`);
+  const lines = results.map((r) => `${r.pass ? "pass" : r.pending !== undefined ? "pending" : r.skipped !== undefined ? "skip" : "FAIL"}  ${r.id}  stage ${r.stage}  ${r.ms} ms${r.skipped !== undefined ? `  (${r.skipped})` : ""}${r.pending !== undefined ? `  (${r.pending})` : ""}${r.failures.map((f) => `\n      ${f}`).join("")}`);
   const pass = results.filter((r) => r.pass).length;
-  return `${lines.join("\n")}\n${pass} of ${results.length} fixtures pass\n`;
+  const pending = results.filter((r) => r.pending !== undefined).length;
+  return `${lines.join("\n")}\n${pass} of ${results.length} fixtures pass${pending > 0 ? `, ${pending} pending` : ""}\n`;
 }
 
 export function relativeTo(root: string, p: string): string {

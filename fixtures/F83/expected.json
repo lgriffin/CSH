@@ -1,0 +1,37 @@
+{
+  "fixture": "F83",
+  "section": "Anchor, harnesses and A3, sections 3.2 and 6.3",
+  "stage": 11,
+  "expect": {
+    "executions": [
+      {
+        "witness": "w1",
+        "localResult": "unknown"
+      },
+      {
+        "witness": "w2",
+        "localResult": "passed"
+      }
+    ],
+    "absent": [
+      "SignInService/@UnitTests/WitnessW1"
+    ],
+    "present": [
+      "SignInService/@UnitTests/WitnessW2"
+    ],
+    "check": {
+      "gaps": [
+        {
+          "kind": "outcome-unknown",
+          "subject": "test/signin.test.ts::locks on the third failure"
+        }
+      ],
+      "gapsExclude": [
+        {
+          "kind": "outcome-unknown",
+          "subject": "test/signin.test.ts::accepts the correct password"
+        }
+      ]
+    }
+  }
+}

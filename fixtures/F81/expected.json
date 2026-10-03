@@ -1,0 +1,28 @@
+{
+  "fixture": "F81",
+  "section": "Anchor, harnesses and A3, sections 2.1 and 6.4",
+  "stage": 10,
+  "expect": {
+    "component": {
+      "errors": []
+    },
+    "check": {
+      "gaps": [
+        {
+          "kind": "unowned-source",
+          "subject": "DesignNotes"
+        }
+      ],
+      "gapsExclude": [
+        {
+          "kind": "unowned-source",
+          "subject": "Product"
+        },
+        {
+          "kind": "unowned-source",
+          "subject": "UnitTests"
+        }
+      ]
+    }
+  }
+}

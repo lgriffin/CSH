@@ -1,0 +1,14 @@
+{
+  "fixture": "F92",
+  "section": "Anchor, harnesses and A3, section 5.5",
+  "stage": 14,
+  "expect": {
+    "a3": {
+      "problems": [
+        {
+          "kind": "dead-rule"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "fixture": "F84",
+  "section": "Anchor, harnesses and A3, section 3.2",
+  "stage": 11,
+  "expect": {
+    "check": {
+      "gaps": [
+        {
+          "kind": "unobserved-test",
+          "subject": "test/signin.test.ts::counts a wrong password"
+        }
+      ],
+      "gapsExclude": [
+        {
+          "kind": "unobserved-test",
+          "subject": "test/signin.test.ts::accepts the correct password"
+        }
+      ]
+    }
+  }
+}

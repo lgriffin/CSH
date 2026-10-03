@@ -1,0 +1,22 @@
+{
+  "fixture": "F89",
+  "section": "Anchor, harnesses and A3, section 6.1",
+  "stage": 13,
+  "expect": {
+    "emit": {
+      "ok": true
+    },
+    "check": {
+      "findingsExact": true,
+      "findings": [
+        {
+          "kind": "example-conflict",
+          "members": [
+            "SignInService/@Scenarios/ThirdFailureLocks",
+            "SignInService/@UnitTests/ThirdFailureAllowed"
+          ]
+        }
+      ]
+    }
+  }
+}

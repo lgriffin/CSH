@@ -1,0 +1,10 @@
+{
+  "schema": "csh-component/v1",
+  "name": "SignInService",
+  "spec": "spec.csl.ts",
+  "implementation": ["src"],
+  "practices": [
+    { "id": "ears", "name": "EARS", "kind": "requirements", "sources": ["Product"], "author": "Product owner", "unit": "the sentence" },
+    { "id": "bdd", "name": "BDD", "kind": "scenarios", "sources": ["Scenarios"], "adapter": "@csh/adapter-gherkin", "steps": "inputs/steps.ts", "cites": "Product", "author": "Three amigos", "unit": "the scenario" }
+  ]
+}
