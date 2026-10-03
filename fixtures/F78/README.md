@@ -4,4 +4,5 @@ The profile adds, in a local intent, an invariant that contradicts the inherited
 the floor. Inherited and local obligations combine by conjunction (rule 3), so Q-STATE is unsatisfiable and the
 minimal set names one inherited and one local obligation (rule 6).
 
-Written first from the composition rules and flagged for owner review (Implementer's brief, stage 8).
+Written first from the composition rules and flagged for owner review (Implementer's brief, stage 8). The owner
+accepted it as written on 3 October 2026 ([Q-17](../../QUESTIONS.md)).

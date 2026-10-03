@@ -20,4 +20,4 @@ The harness depends on git and gpg being installed where the gate runs. SSH sign
 
 ## Status
 
-Accepted provisionally (implementer's choice; first build)
+Accepted. The owner confirmed the choice behind it on 3 October 2026.

@@ -5,4 +5,5 @@ event that sets the target. Nothing in the kernel, the solver or the checker cha
 round trip succeed; every query gives the wanted outcome; with a policy that requires only SolverCheck, both
 obligations are satisfied by the solver checks against the transition. Exit test of stage 8.
 
-Written first from the composition rules and flagged for owner review (Implementer's brief, stage 8).
+Written first from the composition rules and flagged for owner review (Implementer's brief, stage 8). The owner
+accepted it as written on 3 October 2026 ([Q-17](../../QUESTIONS.md)).

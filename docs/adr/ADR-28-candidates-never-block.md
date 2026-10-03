@@ -16,8 +16,8 @@ Counting every finding.
 
 ## Consequences
 
-Open as [Q-10](../../QUESTIONS.md).
+Decided in [Q-10](../../QUESTIONS.md).
 
 ## Status
 
-Accepted provisionally (implementer's choice; first build)
+Accepted. The owner confirmed the choice behind it on 3 October 2026.

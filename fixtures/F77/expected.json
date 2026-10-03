@@ -2,7 +2,6 @@
   "fixture": "F77",
   "section": "Main tab, section 6.3",
   "stage": 8,
-  "ownerReview": true,
   "expect": {
     "compile": {
       "ok": true

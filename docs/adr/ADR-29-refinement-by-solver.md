@@ -16,8 +16,8 @@ A new ledger decision kind for refinement review.
 
 ## Consequences
 
-Open as [Q-02](../../QUESTIONS.md). Fixtures F74 to F76 cover strengthening, weakening and relaxation.
+Decided in [Q-02](../../QUESTIONS.md). Fixtures F74 to F76 cover strengthening, weakening and relaxation.
 
 ## Status
 
-Accepted provisionally (implementer's choice; first build)
+Accepted. The owner confirmed the choice behind it on 3 October 2026.
