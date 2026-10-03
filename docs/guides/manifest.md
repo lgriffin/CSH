@@ -27,7 +27,7 @@ never what is right: it holds no judgment and no authority ([09](../spec/09-anch
 | `practices[].id` | A lane on the A3: lower case letters, digits and hyphens |
 | `practices[].kind` | `requirements`, `scenarios`, `tests` or `design-notes` |
 | `practices[].sources` | The `s.source(...)` names this practice feeds. A source has one owner; one no practice names is the gap `unowned-source` |
-| `practices[].adapter` | A package or a path; the built-in adapter for the source kind when absent |
+| `practices[].adapter` | A package or a path; the built-in adapter for the source kind when absent. A Scenarios source with none, whose every file is JSON declaring `"schema": "csh-ir/v1"`, is read as claims already lifted |
 | `practices[].harness.run` | An argument vector, never a shell string. It runs with the project's own permissions |
 | `practices[].harness.witnesses` | The witness file the command writes; one of the practice's sources must read it |
 | `practices[].harness.executions` | The file the reporter writes; `reports/executions.ndjson` when absent |

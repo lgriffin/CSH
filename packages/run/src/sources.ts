@@ -140,6 +140,18 @@ function readClaimsJson(source: Source, bytes: Uint8Array, path: string): Adapte
   return { claims, diagnostics: [] };
 }
 
+/** A file that declares itself pre-lifted claims: JSON whose claim sets each carry schema csh-ir/v1. */
+function isIrJson(path: string, bytes: Uint8Array): boolean {
+  if (!path.endsWith(".json")) return false;
+  try {
+    const v = JSON.parse(new TextDecoder().decode(bytes)) as unknown;
+    const sets = Array.isArray(v) ? v : [v];
+    return sets.length > 0 && sets.every((s) => typeof s === "object" && s !== null && (s as { schema?: unknown }).schema === "csh-ir/v1");
+  } catch {
+    return false;
+  }
+}
+
 /** Run every source of the module through its adapter. */
 export async function runSources(module: Module, opts: RunSourcesOptions): Promise<SourceRun[]> {
   const registry = { ...BUILTIN_ADAPTERS, ...(opts.adapters ?? {}) };
@@ -161,7 +173,11 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
       const bytes = new Uint8Array(readFileSync(f.abs));
       return { path: f.path, digest: digestOf(bytes), bytes };
     });
-    const spec = opts.perSource?.[source.name]?.adapter ?? registry[source.kind];
+    const named = opts.perSource?.[source.name]?.adapter ?? opts.adapters?.[source.kind];
+    // A Scenarios source named no adapter whose every file declares csh-ir/v1 holds claims already lifted: it is read as
+    // data, not handed to the Gherkin adapter (#26). Only Scenarios: other kinds keep their built-in adapter.
+    const preLifted = named === undefined && source.kind === "Scenarios" && files.length > 0 && files.every((f) => isIrJson(f.path, f.bytes));
+    const spec = preLifted ? undefined : (named ?? registry[source.kind]);
     if (spec === undefined) {
       if (files.length > 0 && files.every((f) => f.path.endsWith(".json"))) {
         const out: AdapterOutput = { diagnostics: [] };

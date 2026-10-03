@@ -5,9 +5,9 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ComponentManifest } from "@csh/component";
-import { digestOf } from "@csh/kernel";
+import { digestOf, type Module } from "@csh/kernel";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { evaluateSpec, type Project, type RunRecord, runAt, runComponent, runHarnesses, unchangedSince } from "../src/index.ts";
+import { evaluateSpec, type Project, type RunRecord, runAt, runComponent, runHarnesses, runSources, type RunSourcesOptions, unchangedSince } from "../src/index.ts";
 
 const REPO = resolve(import.meta.dirname, "../../..");
 let proj: string;
@@ -333,4 +333,32 @@ describe("the executions file joined to a Witnesses source (#22)", () => {
       rmSync(tmp, { recursive: true, force: true });
     }
   }, 120000);
+});
+
+describe("pre-lifted claims in a Scenarios source (#26)", () => {
+  it("are read as claims-json when no adapter is named and every file is csh-ir/v1 JSON; other kinds keep their adapter", async () => {
+    const tmp = mkdtempSync(join(REPO, ".csh-cache", "run-ir-"));
+    try {
+      mkdirSync(join(tmp, "features"));
+      mkdirSync(join(tmp, "witnesses"));
+      const claims = { schema: "csh-ir/v1", source: "Scenarios", assumptions: [], obligations: [], examples: [], unliftable: [{ span: "x", reason: "unknown-term", text: "t" }] };
+      writeFileSync(join(tmp, "features", "a.json"), JSON.stringify(claims));
+      writeFileSync(join(tmp, "witnesses", "a.json"), JSON.stringify({ ...claims, source: "Tests" }));
+      const module = { schema: "csh-ir/v1", system: "X", uses: [], vocabulary: { units: [], enums: [], states: [], events: [] }, transitions: [], policies: [], intents: [], claims: [], bindings: [], sources: [{ name: "Scenarios", kind: "Scenarios", at: "features" }, { name: "Tests", kind: "Witnesses", at: "witnesses" }] } as unknown as Module;
+      const adapterOf = async (o: Partial<RunSourcesOptions> = {}) => Object.fromEntries((await runSources(module, { root: tmp, isolated: false, ...o })).map((r) => [r.source, r.adapter]));
+      expect(await adapterOf()).toEqual({ Scenarios: "claims-json", Tests: "@csh/adapter-witness-files" });
+      const lifted = (await runSources(module, { root: tmp, isolated: false })).find((r) => r.source === "Scenarios")!;
+      expect(lifted.output.claims!.unliftable.map((u) => u.reason)).toEqual(["unknown-term"]);
+      // A named adapter is used; so is the Gherkin adapter for a file that does not declare csh-ir/v1, or a feature file.
+      expect((await adapterOf({ perSource: { Scenarios: { adapter: "@csh/adapter-gherkin" } } })).Scenarios).toBe("@csh/adapter-gherkin");
+      expect((await adapterOf({ adapters: { Scenarios: "@csh/adapter-gherkin" } })).Scenarios).toBe("@csh/adapter-gherkin");
+      writeFileSync(join(tmp, "features", "b.feature"), "Feature: f\n");
+      expect((await adapterOf()).Scenarios).toBe("@csh/adapter-gherkin");
+      rmSync(join(tmp, "features", "b.feature"));
+      writeFileSync(join(tmp, "features", "a.json"), JSON.stringify({ ...claims, schema: undefined }));
+      expect((await adapterOf()).Scenarios).toBe("@csh/adapter-gherkin");
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  }, 60000);
 });
