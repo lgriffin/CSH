@@ -11,7 +11,7 @@ It is the "Run" container, shown in the [containers diagram](../../docs/architec
 ## Public interface
 
 - `runComponent(o)`: harnesses, evaluation, gate and stored record for the root's current state; returns the record, report, decision and directory, or a refusal code (`no-component`, `component-unusable`, `evaluation-failed`).
-- `runAt(o)`: the same for a past commit, in a throwaway worktree; refuses with `dependencies-differ` or `unknown-commit` ([A-38](../../ASSUMPTIONS.md)).
+- `runAt(o)`: the same for a past commit, in a throwaway worktree; refuses with `dependencies-differ`, `workspace-differs` or `unknown-commit` ([A-38](../../ASSUMPTIONS.md), [A-55](../../ASSUMPTIONS.md)).
 - `RunRecord`, `HarnessRecord`, `RunResult`, `RunOptions`, `RUNS_DIR`, `GATE_PATH`, `DEPENDENCY_FILES`, `runDir(store, digest)`, `runHarnesses(project, manifest, out)`.
 - `evaluateProject(project, opts)`, `decideGate(project, evaluation, mode)`: one evaluation and its gate decision, shared by `csh check`, `csh gate` and `csh run`.
 - `evaluateSpec(spec, opts)`, `checkModule(module, digest, opts)`, `PipelineOptions`, `PipelineResult`, `sourceSettings(component)`: the pipeline for one specification, with or without a component.
