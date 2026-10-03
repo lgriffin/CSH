@@ -20,4 +20,4 @@ The test kit depends on `cli` to run fixtures end to end.
 
 ## Status
 
-Accepted provisionally (implementer's choice; first build)
+Superseded by [ADR-33](ADR-33-run-package.md) in stage 10. Accepted provisionally (implementer's choice; first build)

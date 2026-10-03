@@ -19,7 +19,7 @@ It belongs to the "Adapters" container, with `@csh/witness` and `@csh/adapter-ea
 ## Depends on and used by
 
 - Depends on: `@csh/kernel` (model types) and `@csh/witness` (witness parsing and the adapter contract). No external packages.
-- Used by: no package imports it directly. `@csh/cli` names it in `BUILTIN_ADAPTERS` and loads it by module specifier inside the adapter subprocess.
+- Used by: no package imports it directly. `@csh/run` names it in `BUILTIN_ADAPTERS` and loads it by module specifier inside the adapter subprocess.
 
 ## Invariants it protects
 
@@ -36,7 +36,7 @@ Adapters sit outside the core, and version 1 ships two ([ADR-12](../../docs/adr/
 ## How it is tested
 
 - `test/adapter.test.ts`: lifts a passing record through reversed bindings; keeps a failing record as a witness without a claim; reports unknown keys, non-integers and malformed lines as unliftable; notes a candidate binding; flags duplicate example names; is deterministic regardless of file order; types values strictly.
-- `packages/cli/test/faults.test.ts`: missing and malformed witness files end to end.
+- `packages/run/test/faults.test.ts`: missing and malformed witness files end to end.
 - Fixtures: F24 (an unbound key, `unknown-term`), F30 to F35 (the base witness against approved and candidate bindings, a missing key, a mocked account), F40, F41, F44, F45 and F64 (witnesses reused across snapshots).
 
 ## Known limits

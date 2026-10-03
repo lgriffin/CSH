@@ -1,0 +1,12 @@
+{
+  "schema": "csh-component/v1",
+  "name": "SignInService",
+  "spec": "spec/lockout.csl.ts",
+  "implementation": ["src"],
+  "practices": [
+    { "id": "ears", "name": "EARS", "kind": "requirements", "sources": ["Product"], "author": "Product owner", "unit": "the sentence" },
+    { "id": "bdd", "name": "BDD", "kind": "scenarios", "sources": ["Scenarios"], "adapter": "./adapters/gherkin.ts", "author": "Three amigos", "unit": "the scenario" },
+    { "id": "tdd", "name": "TDD", "kind": "tests", "sources": ["UnitTests"], "author": "Developer", "unit": "the test",
+      "harness": { "run": ["node", "--test", "--test-reporter=spec", "test/lockout.test.ts"], "witnesses": "reports/witnesses.ndjson" } }
+  ]
+}

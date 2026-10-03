@@ -26,7 +26,7 @@ It is the main part of the "Check engine" container, with `@csh/solver`, shown i
 ## Depends on and used by
 
 - Depends on: `@csh/kernel`, `@csh/solver` and `@csh/witness` (witness and adapter output types, `witnessDigest`). No external packages.
-- Used by: `@csh/cli` (pipeline, commands, rendering), `@csh/gate` (report and assessment types) and `@csh/testkit`.
+- Used by: `@csh/run` (pipeline), `@csh/cli` (commands, rendering), `@csh/gate` (report and assessment types) and `@csh/testkit`.
 
 ## Invariants it protects
 
@@ -45,13 +45,13 @@ It is the main part of the "Check engine" container, with `@csh/solver`, shown i
 
 ## Rationale
 
-A joint conflict is an input with no valid outcome ([ADR-08](../../docs/adr/ADR-08-joint-conflict-is-q-feas.md)). The four axes stay separate ([ADR-10](../../docs/adr/ADR-10-four-axes.md)), and `csh check` exits zero when it completes ([ADR-11](../../docs/adr/ADR-11-check-never-blocks.md)). A passing test is both a claim and a witness ([ADR-13](../../docs/adr/ADR-13-passing-test-is-claim-and-witness.md)); requirement sentences are cited, not translated ([ADR-14](../../docs/adr/ADR-14-cite-not-translate.md)). The report carries extension fields ([ADR-22](../../docs/adr/ADR-22-report-extensions-and-json.md), [A-01](../../ASSUMPTIONS.md)). Caches are conservative ([ADR-23](../../docs/adr/ADR-23-caches.md), [A-31](../../ASSUMPTIONS.md)). Running adapters belongs to the command line, so this package only reads their output ([ADR-24](../../docs/adr/ADR-24-pipeline-in-cli.md)). Assumption scope and the `model` pseudo-source follow [ADR-27](../../docs/adr/ADR-27-query-scope.md) ([A-04](../../ASSUMPTIONS.md), [A-05](../../ASSUMPTIONS.md)), and candidates never change an approved verdict ([ADR-28](../../docs/adr/ADR-28-candidates-never-block.md)). Other choices are [A-03](../../ASSUMPTIONS.md), [A-06](../../ASSUMPTIONS.md) to [A-08](../../ASSUMPTIONS.md), [A-11](../../ASSUMPTIONS.md), [A-12](../../ASSUMPTIONS.md) and [A-30](../../ASSUMPTIONS.md).
+A joint conflict is an input with no valid outcome ([ADR-08](../../docs/adr/ADR-08-joint-conflict-is-q-feas.md)). The four axes stay separate ([ADR-10](../../docs/adr/ADR-10-four-axes.md)), and `csh check` exits zero when it completes ([ADR-11](../../docs/adr/ADR-11-check-never-blocks.md)). A passing test is both a claim and a witness ([ADR-13](../../docs/adr/ADR-13-passing-test-is-claim-and-witness.md)); requirement sentences are cited, not translated ([ADR-14](../../docs/adr/ADR-14-cite-not-translate.md)). The report carries extension fields ([ADR-22](../../docs/adr/ADR-22-report-extensions-and-json.md), [A-01](../../ASSUMPTIONS.md)). Caches are conservative ([ADR-23](../../docs/adr/ADR-23-caches.md), [A-31](../../ASSUMPTIONS.md)). Running adapters belongs to `@csh/run`, so this package only reads their output ([ADR-33](../../docs/adr/ADR-33-run-package.md), superseding [ADR-24](../../docs/adr/ADR-24-pipeline-in-cli.md)). Assumption scope and the `model` pseudo-source follow [ADR-27](../../docs/adr/ADR-27-query-scope.md) ([A-04](../../ASSUMPTIONS.md), [A-05](../../ASSUMPTIONS.md)), and candidates never change an approved verdict ([ADR-28](../../docs/adr/ADR-28-candidates-never-block.md)). Other choices are [A-03](../../ASSUMPTIONS.md), [A-06](../../ASSUMPTIONS.md) to [A-08](../../ASSUMPTIONS.md), [A-11](../../ASSUMPTIONS.md), [A-12](../../ASSUMPTIONS.md) and [A-30](../../ASSUMPTIONS.md).
 
 ## How it is tested
 
 - `test/cache.test.ts`: the solver cache stores and replays `sat` and `unsat`, never stores `unknown`, and survives a save and load.
 - `test/check.test.ts`: witness judging and the verdict order on the account model: violated in implementation scope, satisfied with every method met, unknown without approved bindings, a mocked witness rejected, a missing key, staleness, a failing local result kept apart (P2), no witnesses, no ledger, and a claim in another unit reported not comparable.
-- `packages/cli/test/faults.test.ts`: a missing witness file, a malformed witness file, a crashing adapter, a hanging adapter and a witness from another commit each leave obligations unknown, never satisfied.
+- `packages/run/test/faults.test.ts`: a missing witness file, a malformed witness file, a crashing adapter, a hanging adapter and a witness from another commit each leave obligations unknown, never satisfied.
 - `packages/gate/test/gate.test.ts` uses its report types.
 - Fixtures (through `@csh/testkit`): F10 to F16 (single-source queries), F20 to F23 (joint conflicts and not comparable), F12 and F24 (gap view), F30 to F35 (witness judging and methods), F50 and F52 (uncited items and dangling citations), F40, F41, F46, F51 and F64 (staleness and authority changes; F64 compares incremental and full runs).
 

@@ -111,6 +111,16 @@ export interface ReportError {
   span?: string;
 }
 
+/** What the check needs to know of a component manifest; the manifest itself is read by @csh/component. */
+export interface ComponentInfo {
+  name: string;
+  digest: string;
+  /** The practice that owns each source, by source name. */
+  sources: Record<string, string>;
+  /** Sources the specification declares and no practice names. */
+  unowned: string[];
+}
+
 export interface Report {
   schema: "csh-report/v1";
   moduleDigest: string;
@@ -132,6 +142,11 @@ export interface Report {
   items: { source: string; id: string; pattern?: string; span: string; textDigest: string }[];
   /** Extension: invalid ledger entries, present from stage 7. */
   ledger?: { head: number; invalid: { seq: number; reason: string; commit?: string }[] };
+  /**
+   * The component the report is for, and the practice that owns each source (Anchor, harnesses and A3, section 6.4).
+   * Present when the project has a component manifest.
+   */
+  component?: { name: string; digest: string; sources: Record<string, string> };
   /** Extension: composition results, present from stage 8. */
   composition?: { uses: { pack: string; version: string; digest: string }[]; inherited: string[]; relaxed: { obligation: string; owner: string; reason: string }[]; refinements: { obligation: string; pack: string; result: string }[] };
 }

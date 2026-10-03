@@ -1,12 +1,13 @@
-// The full pipeline for one specification: emit, run sources, check. Used by the fixture
-// runner, the walkthrough and the CLI tests.
+// The full pipeline for one specification: emit, check the component manifest against the model, run sources,
+// check. Used by csh check, csh run, the fixture runner and the tests.
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { check, type CheckResult, type EvidenceStore, makeRefiner, type Report, type AuthorityResolver, type SourceRun } from "@csh/check";
-import { runSources } from "./sources.ts";
+import { runSources, type RunSourcesOptions } from "./sources.ts";
 import { emit, type EmitOptions, type EmitResult, type Lock } from "@csh/emit";
 import { digestJson, fragmentsOf, refName, type Module } from "@csh/kernel";
 import { type LedgerState, resolveAuthority } from "@csh/ledger";
+import { checkAgainstModule, type ComponentProblem, type LoadedComponent, ownersOf } from "@csh/component";
 import type { SolverPort } from "@csh/solver";
 
 export interface FixtureConfig {
@@ -40,10 +41,14 @@ export interface PipelineOptions {
   adapters?: Record<string, string>;
   isolatedAdapters?: boolean;
   unchangedSince?: (a: string, b: string) => boolean;
+  /** The component manifest: it names each source's practice and adapter (Anchor, harnesses and A3, section 2). */
+  component?: LoadedComponent;
 }
 
 export interface PipelineResult {
   emitted: EmitResult;
+  /** Errors in the component manifest against the emitted model. Nothing is checked while there is one. */
+  componentErrors?: ComponentProblem[];
   runs?: SourceRun[];
   checked?: CheckResult;
 }
@@ -56,7 +61,25 @@ export async function evaluateSpec(spec: string, opts: PipelineOptions): Promise
   if (!emitted.ok) return { emitted };
   const m = emitted.module;
   const composition = m.uses.length > 0 || (m.relaxations ?? []).length > 0 ? { uses: m.uses, inherited: emitted.composition.inherited.map((x) => x.name), relaxed: m.relaxations ?? [], refinements: emitted.composition.refinements } : undefined;
+  if (opts.component !== undefined) {
+    const errors = checkAgainstModule(opts.component.manifest, m).errors;
+    if (errors.length > 0) return { emitted, componentErrors: errors };
+  }
   return { emitted, ...(await checkModule(m, emitted.digest, composition !== undefined ? { ...opts, composition } : opts)) };
+}
+
+/** Per-source adapter settings from the component manifest: each practice's adapter for the sources it owns. */
+export function sourceSettings(c: LoadedComponent | undefined): RunSourcesOptions["perSource"] {
+  if (c === undefined) return undefined;
+  const out: NonNullable<RunSourcesOptions["perSource"]> = {};
+  for (const p of c.manifest.practices) {
+    for (const s of p.sources) {
+      const set: NonNullable<RunSourcesOptions["perSource"]>[string] = {};
+      if (p.adapter !== undefined) set.adapter = p.adapter;
+      out[s] = set;
+    }
+  }
+  return out;
 }
 
 export async function checkModule(module: Module, moduleDigest: string, opts: PipelineOptions): Promise<{ runs: SourceRun[]; checked: CheckResult }> {
@@ -73,7 +96,8 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
     if (state !== undefined && f !== undefined) return resolveAuthority(state, f).authority;
     return opts.authority?.({ name, digest: f?.digest ?? "", kind: "binding", cites: [] }).authority ?? "candidate";
   };
-  const runs = await runSources(module, { root: opts.root, config: adapterConfig, isolated: opts.isolatedAdapters ?? true, bindingAuthority, ...(opts.adapters !== undefined ? { adapters: opts.adapters } : {}) });
+  const perSource = sourceSettings(opts.component);
+  const runs = await runSources(module, { root: opts.root, config: adapterConfig, isolated: opts.isolatedAdapters ?? true, bindingAuthority, ...(opts.adapters !== undefined ? { adapters: opts.adapters } : {}), ...(perSource !== undefined ? { perSource } : {}) });
   const items = new Map<string, string>();
   for (const r of runs) for (const it of r.output.items ?? []) items.set(`${r.source}/${it.id}`, it.textDigest);
   const resolver: AuthorityResolver | undefined = state !== undefined ? (f) => resolveAuthority(state, f, items) : opts.authority;
@@ -92,6 +116,10 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   if (state !== undefined) checkOpts.ledger = { head: state.head, invalid: state.invalid.map(({ seq, reason, commit }) => (commit !== undefined ? { seq, reason, commit } : { seq, reason })) };
   if (opts.unchangedSince !== undefined) checkOpts.unchangedSince = opts.unchangedSince;
   if (opts.composition !== undefined) checkOpts.composition = opts.composition;
+  if (opts.component !== undefined) {
+    const { unowned } = checkAgainstModule(opts.component.manifest, module);
+    checkOpts.component = { name: opts.component.manifest.name, digest: opts.component.digest, sources: ownersOf(opts.component.manifest), unowned };
+  }
   const checked = await check(checkOpts);
   return { runs, checked };
 }

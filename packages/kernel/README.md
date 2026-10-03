@@ -27,7 +27,7 @@ The kernel is its own container, "Kernel", a library with no dependencies. It ap
 ## Depends on and used by
 
 - Depends on: no workspace package and no external package. It uses only `node:crypto` for SHA-256.
-- Used by: every other workspace package (`csl`, `@csh/emit`, `@csh/print`, `@csh/solver`, `@csh/check`, `@csh/witness`, both adapters, `@csh/gate`, `@csh/cli`, `@csh/testkit`). `@csh/ledger` lists it in `package.json` but imports nothing from it.
+- Used by: every other workspace package (`csl`, `@csh/emit`, `@csh/print`, `@csh/solver`, `@csh/check`, `@csh/witness`, both adapters, `@csh/gate`, `@csh/component`, `@csh/run`, `@csh/cli`, `@csh/testkit`). `@csh/ledger` lists it in `package.json` but imports nothing from it.
 
 ## Invariants it protects
 

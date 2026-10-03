@@ -1,8 +1,5 @@
 {
-  "spec": "spec/lockout.csl.ts",
   "mode": "advisory",
   "budgetMs": 5000,
-  "implementationPaths": ["src"],
-  "specPaths": ["spec"],
-  "adapters": { "Scenarios": "./adapters/gherkin.ts" }
+  "specPaths": ["spec"]
 }

@@ -6,12 +6,13 @@
 
 ## Where it sits
 
-The test kit is development tooling and is not part of any runtime container. It appears in the [containers diagram](../../docs/architecture/containers.mmd) as "Test kit (development only)", with one relation: it runs fixtures end to end through the command line. No runtime package depends on it.
+The test kit is development tooling and is not part of any runtime container. It appears in the [containers diagram](../../docs/architecture/containers.mmd) as "Test kit (development only)", with one relation: it runs fixtures end to end through `@csh/run`. No runtime package depends on it.
 
 ## Public interface
 
 - `FixtureRunner`, `RunnerOptions`: runs one fixture by id (`run(id)`), including two-step scenarios and ledger scenarios.
-- `FixtureResult`: id, stage, section, pass, failures, an optional skip reason, and time taken.
+- `FixtureResult`: id, stage, section, pass, failures, an optional skip reason, `pending` for a fixture whose stage is not built yet, and time taken.
+- `BUILT_THROUGH_STAGE`, `fixtureStage(dir, id)`: the last stage built; a fixture of a later stage is reported as pending, never run and never failed.
 - `listFixtures(dir)`: fixture ids (`F` and two digits) in order.
 - `summarise(results)`: a text summary of a run.
 - `resolveSpecSource(file)`, `relativeTo(root, p)`: path helpers for fixture specifications.
@@ -22,13 +23,14 @@ The test kit is development tooling and is not part of any runtime container. It
 
 ## Depends on and used by
 
-- Depends on: every runtime workspace package: `@csh/kernel`, `csl`, `@csh/emit`, `@csh/print`, `@csh/solver`, `@csh/check`, `@csh/witness`, `@csh/adapter-witness-files`, `@csh/adapter-ears-markdown`, `@csh/ledger`, `@csh/gate` and `@csh/cli`. External: `git` and `gpg` for the ledger fixtures; Vitest and fast-check in its tests.
+- Depends on: every runtime workspace package: `@csh/kernel`, `csl`, `@csh/emit`, `@csh/print`, `@csh/solver`, `@csh/check`, `@csh/witness`, `@csh/adapter-witness-files`, `@csh/adapter-ears-markdown`, `@csh/ledger`, `@csh/gate`, `@csh/component` and `@csh/run`. External: `git` and `gpg` for the ledger fixtures; Vitest and fast-check in its tests.
 - Used by: no workspace package. The root test run executes its tests.
 
 ## Invariants it protects
 
 - A finding the solver reports is checked again outside the minimiser: counterexamples by exact evaluation, joint conflicts by a fresh query (P8, CSH-019).
 - Each fixture is an accepting or rejecting test of the documents, named by stage and section, so a regression in any earlier stage fails the run (P8).
+- A fixture with `inputs/component.json` runs with that manifest, so the component errors and the `unowned-source` gap are compared like any other result.
 - Printing then emitting reproduces the digest of every fixture model without packs and of random models, so what a person approves is what was emitted (P1, CSH-017).
 - Signing keys are test-only and live in a temporary keyring that is deleted afterwards; nothing touches the real repository's keys, commits or `csh/maintainers.json` (P6).
 - Before stage 7, fixtures stand in for the ledger with `inputs/authority.json`; from stage 7 on they use a real, signed ledger, so the authority rules are tested against git (P1, CSH-016).
@@ -39,7 +41,7 @@ The fixture runner checks results independently of the code under test ([ADR-26]
 
 ## How it is tested
 
-- `test/fixtures.test.ts`: one test per fixture directory: F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64 and F70 to F78. The stage of each comes from its `expected.json`, and the stage to package mapping is in the Implementer's brief, section 7.
+- `test/fixtures.test.ts`: one test per fixture directory: F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64 and F70 to F78, and F80 to F96 from the anchor design. A fixture of a stage not yet built is listed as skipped. The stage of each comes from its `expected.json`, and the stage to package mapping is in the Implementer's brief, section 7.
 - `test/roundtrip.test.ts`: the printer round trip on random models (fast-check) and on every fixture model that emits without packs.
 - `test/docs.test.ts`: every package has a README with the eight template headings and is named in `docs/architecture/containers.mmd`; every container has a component diagram; every cited decision record, assumption and question exists.
 - Ledger fixtures need gpg. They are skipped only when `CSH_ALLOW_GPG_SKIP=1`; otherwise a missing gpg fails the test.

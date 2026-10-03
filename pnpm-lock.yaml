@@ -59,15 +59,12 @@ importers:
 
   packages/cli:
     dependencies:
-      '@csh/adapter-ears-markdown':
-        specifier: workspace:*
-        version: link:../adapter-ears-markdown
-      '@csh/adapter-witness-files':
-        specifier: workspace:*
-        version: link:../adapter-witness-files
       '@csh/check':
         specifier: workspace:*
         version: link:../check
+      '@csh/component':
+        specifier: workspace:*
+        version: link:../component
       '@csh/emit':
         specifier: workspace:*
         version: link:../emit
@@ -83,15 +80,21 @@ importers:
       '@csh/print':
         specifier: workspace:*
         version: link:../print
+      '@csh/run':
+        specifier: workspace:*
+        version: link:../run
       '@csh/solver':
         specifier: workspace:*
         version: link:../solver
-      '@csh/witness':
-        specifier: workspace:*
-        version: link:../witness
       csl:
         specifier: workspace:*
         version: link:../csl
+
+  packages/component:
+    dependencies:
+      '@csh/kernel':
+        specifier: workspace:*
+        version: link:../kernel
 
   packages/csl:
     dependencies:
@@ -137,6 +140,39 @@ importers:
         specifier: workspace:*
         version: link:../kernel
 
+  packages/run:
+    dependencies:
+      '@csh/adapter-ears-markdown':
+        specifier: workspace:*
+        version: link:../adapter-ears-markdown
+      '@csh/adapter-witness-files':
+        specifier: workspace:*
+        version: link:../adapter-witness-files
+      '@csh/check':
+        specifier: workspace:*
+        version: link:../check
+      '@csh/component':
+        specifier: workspace:*
+        version: link:../component
+      '@csh/emit':
+        specifier: workspace:*
+        version: link:../emit
+      '@csh/gate':
+        specifier: workspace:*
+        version: link:../gate
+      '@csh/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+      '@csh/ledger':
+        specifier: workspace:*
+        version: link:../ledger
+      '@csh/solver':
+        specifier: workspace:*
+        version: link:../solver
+      '@csh/witness':
+        specifier: workspace:*
+        version: link:../witness
+
   packages/solver:
     dependencies:
       '@csh/kernel':
@@ -157,9 +193,9 @@ importers:
       '@csh/check':
         specifier: workspace:*
         version: link:../check
-      '@csh/cli':
+      '@csh/component':
         specifier: workspace:*
-        version: link:../cli
+        version: link:../component
       '@csh/emit':
         specifier: workspace:*
         version: link:../emit
@@ -175,6 +211,9 @@ importers:
       '@csh/print':
         specifier: workspace:*
         version: link:../print
+      '@csh/run':
+        specifier: workspace:*
+        version: link:../run
       '@csh/solver':
         specifier: workspace:*
         version: link:../solver

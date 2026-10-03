@@ -26,6 +26,11 @@ export interface RunSourcesOptions {
   config?: Record<string, string>;
   /** Extra adapters by source kind. */
   adapters?: Record<string, string>;
+  /**
+   * Settings by source name, from the component manifest. A source's own adapter takes precedence over the one for
+   * its kind.
+   */
+  perSource?: Record<string, { adapter?: string }>;
   /** Authority of each binding, by binding fragment name; candidate when absent. */
   bindingAuthority?: (b: Binding) => string;
   timeoutMs?: number;
@@ -146,7 +151,7 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
       const bytes = new Uint8Array(readFileSync(f.abs));
       return { path: f.path, digest: digestOf(bytes), bytes };
     });
-    const spec = registry[source.kind];
+    const spec = opts.perSource?.[source.name]?.adapter ?? registry[source.kind];
     if (spec === undefined) {
       if (files.length > 0 && files.every((f) => f.path.endsWith(".json"))) {
         const out: AdapterOutput = { diagnostics: [] };

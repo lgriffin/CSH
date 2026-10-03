@@ -20,7 +20,7 @@ It belongs to the "Adapters" container, with `@csh/witness` and `@csh/adapter-wi
 ## Depends on and used by
 
 - Depends on: `@csh/kernel` (`digestOf`, `ClaimSet`) and `@csh/witness` (adapter contract types). No external packages.
-- Used by: no package imports it directly. `@csh/cli` names it in `BUILTIN_ADAPTERS` and loads it inside the adapter subprocess. `@csh/check` has its own copy of the clause table for the shape check.
+- Used by: no package imports it directly. `@csh/run` names it in `BUILTIN_ADAPTERS` and loads it inside the adapter subprocess. `@csh/check` has its own copy of the clause table for the shape check.
 
 ## Invariants it protects
 

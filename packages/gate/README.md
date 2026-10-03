@@ -21,8 +21,8 @@ It is the "Gate" container, shown in the [containers diagram](../../docs/archite
 
 ## Depends on and used by
 
-- Depends on: `@csh/kernel` (`digestJson`, `stableJson`) and `@csh/check` (the `Report` and `Assessment` types). `@csh/ledger` is listed in `package.json`, but no source file imports it; `@csh/cli` converts ledger waivers into `Waiver` records. No external packages.
-- Used by: `@csh/cli` (`csh gate` and `csh gate --verify`) and `@csh/testkit` (fixtures F44 and F45).
+- Depends on: `@csh/kernel` (`digestJson`, `stableJson`) and `@csh/check` (the `Report` and `Assessment` types). `@csh/ledger` is listed in `package.json`, but no source file imports it; `@csh/run` converts ledger waivers into `Waiver` records. No external packages.
+- Used by: `@csh/run` (every evaluation and run), `@csh/cli` (`csh gate`, `csh gate --verify` and `csh run`) and `@csh/testkit` (fixtures F44 and F45).
 
 ## Invariants it protects
 
@@ -47,6 +47,6 @@ It is the "Gate" container, shown in the [containers diagram](../../docs/archite
 
 ## Known limits
 
-- The staleness checker drawn in the gate's component diagram is implemented in `@csh/check` (`evidence.ts`) and `@csh/cli` (`project.ts`): the gate reads each assessment's applicability and does not compare dependency digests itself. `csh gate` computes the report it decides on, rather than reading one from disk ([A-34](../../ASSUMPTIONS.md)).
+- The staleness checker drawn in the gate's component diagram is implemented in `@csh/check` (`evidence.ts`) and `@csh/run` (`project.ts`): the gate reads each assessment's applicability and does not compare dependency digests itself. `csh gate` computes the report it decides on, rather than reading one from disk ([A-34](../../ASSUMPTIONS.md)).
 - The gate has no notion of partial delivery; `overall` is the worst disposition.
 - A snapshot from a working tree with uncommitted changes carries the commit `HEAD-dirty` ([A-16](../../ASSUMPTIONS.md)).

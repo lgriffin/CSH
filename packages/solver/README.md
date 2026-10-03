@@ -26,7 +26,7 @@ It belongs to the "Check engine" container, with `@csh/check`, shown in the [con
 ## Depends on and used by
 
 - Depends on: `@csh/kernel` (expressions and vocabulary). External: `z3-solver` 5.2.0, loaded lazily by `createZ3Solver`.
-- Used by: `@csh/check` (queries, gap view, refinement, solver cache), `@csh/cli` (creates the Z3 solver) and `@csh/testkit` (fixture runner and independent checks).
+- Used by: `@csh/check` (queries, gap view, refinement, solver cache), `@csh/cli` (creates the Z3 solver), `@csh/run` (passes it to the check) and `@csh/testkit` (fixture runner and independent checks).
 
 ## Invariants it protects
 
@@ -44,7 +44,7 @@ Z3 with linear integer arithmetic was chosen for its JavaScript bindings and uns
 ## How it is tested
 
 - `test/solver.test.ts`: property tests (fast-check) that exact evaluation and Z3 agree on random expressions and values; that every minimal set is unsatisfiable and every set with one member removed is satisfiable; that a fake solver answering crash, timeout, unknown or garbage gives `unknown`; and that a zero budget gives `solver-timeout`.
-- `packages/cli/test/faults.test.ts` and `packages/testkit/src/verify.ts` check solver answers independently end to end.
+- `packages/run/test/faults.test.ts` and `packages/testkit/src/verify.ts` check solver answers independently end to end.
 - Fixtures: F10 to F16 (single-source queries; F16 sets the budget to zero), F20 to F22 (joint conflicts and minimal sets), F12 (unconstrained-after in the gap view), F74 to F76 and F78 (refinement in composition).
 
 ## Known limits

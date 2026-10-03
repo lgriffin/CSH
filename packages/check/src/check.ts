@@ -7,7 +7,7 @@ import { type EvidenceStore, MemoryEvidenceStore } from "./evidence.ts";
 import { gapView } from "./gaps.ts";
 import { prepare, type Prepared, type SourceRun } from "./pool.ts";
 import { buildPool, runQueries } from "./run.ts";
-import { ALL_CANDIDATE, type AuthorityInfo, type AuthorityResolver, type Report, TOOL_VERSION } from "./types.ts";
+import { ALL_CANDIDATE, type AuthorityInfo, type AuthorityResolver, type ComponentInfo, type Report, TOOL_VERSION } from "./types.ts";
 
 export const DEFAULT_BUDGET_MS = 5000;
 
@@ -26,6 +26,7 @@ export interface CheckOptions {
   unchangedSince?: (ancestor: string, commit: string) => boolean;
   ledger?: Report["ledger"];
   composition?: Report["composition"];
+  component?: ComponentInfo;
 }
 
 export interface CheckResult {
@@ -48,7 +49,7 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
   const env = { solver: opts.solver, vocabulary: v, budgetMs };
   const pool = buildPool(prepared.fragments, v, authority);
   const outcome = await runQueries(pool, env, authority);
-  const gaps = await gapView({ prepared, pool, outcome, env, authority });
+  const gaps = await gapView({ prepared, pool, outcome, env, authority, ...(opts.component !== undefined ? { unowned: opts.component.unowned } : {}) });
   const tool = { version: TOOL_VERSION, solver: opts.solver.id, budgetMs };
   const assessInput: Parameters<typeof assess>[0] = {
     pool,
@@ -88,5 +89,6 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
   if (opts.snapshot !== undefined) report.snapshot = opts.snapshot;
   if (opts.ledger !== undefined) report.ledger = opts.ledger;
   if (opts.composition !== undefined) report.composition = opts.composition;
+  if (opts.component !== undefined) report.component = { name: opts.component.name, digest: opts.component.digest, sources: opts.component.sources };
   return { report, prepared, authority };
 }

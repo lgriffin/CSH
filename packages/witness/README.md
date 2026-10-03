@@ -21,7 +21,7 @@ It belongs to the "Adapters" container, with `@csh/adapter-witness-files` and `@
 ## Depends on and used by
 
 - Depends on: `@csh/kernel` (canonical JSON, digests, model types). No external packages.
-- Used by: `@csh/adapter-witness-files`, `@csh/adapter-ears-markdown`, `@csh/check` (pool and evidence) and `@csh/cli` (running sources). Tests in projects that record witnesses use `recordWitness`.
+- Used by: `@csh/adapter-witness-files`, `@csh/adapter-ears-markdown`, `@csh/check` (pool and evidence) and `@csh/run` (running sources). Tests in projects that record witnesses use `recordWitness`.
 
 ## Invariants it protects
 
@@ -38,7 +38,7 @@ Adapters sit outside the core and produce IR in one neutral envelope ([ADR-12](.
 ## How it is tested
 
 - `test/witness.test.ts`: builds a well-formed record, leaves `recordedAt` out of the digest, reports malformed lines and duplicate ids, and appends one line per record to the witness file.
-- `packages/cli/test/faults.test.ts`: a malformed or missing witness file leaves obligations unknown.
+- `packages/run/test/faults.test.ts`: a malformed or missing witness file leaves obligations unknown.
 - Fixtures: F24 and F30 to F35 read `inputs/witnesses.ndjson` through this format; F40, F41, F44, F45 and F64 reuse witnesses across steps.
 
 ## Known limits

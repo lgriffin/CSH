@@ -1,5 +1,5 @@
-// A project on disk: configuration, lock file, version control, ledger and snapshot
-// (Authority tab, sections 2 and 4).
+// A project on disk: configuration, component manifest, lock file, version control, ledger and snapshot
+// (Authority tab, sections 2 and 4; Anchor, harnesses and A3, section 2).
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
@@ -7,19 +7,27 @@ import { emit, type Lock, readLock } from "@csh/emit";
 import { digestJson, digestOf, fragmentsOf } from "@csh/kernel";
 import { authorship, gitVcs, LEDGER_PATH, type LedgerState, MAINTAINERS_PATH, persons, readLedger, type VcsPort } from "@csh/ledger";
 import type { Snapshot } from "@csh/gate";
+import { type ComponentProblem, COMPONENT_PATH, type LoadedComponent, loadComponent } from "@csh/component";
 
 export interface ProjectConfig {
-  /** The specification module, relative to the project root. */
+  /** The specification module, relative to the project root. With a component manifest, the manifest names it. */
   spec?: string;
   budgetMs?: number;
   mode?: "advisory" | "enforcing";
-  /** Paths whose change makes a witness from an earlier commit stale (Authority tab, section 5). */
+  /**
+   * Paths whose change makes a witness from an earlier commit stale (Authority tab, section 5). Replaced by the
+   * component manifest's implementation when there is one.
+   */
   implementationPaths?: string[];
   /** Paths whose history decides who authored a fragment (default: the specification's directory). */
   specPaths?: string[];
   requirementIdPattern?: string;
+  /** Adapters by source kind. Replaced by each practice's adapter when there is a component manifest. */
   adapters?: Record<string, string>;
 }
+
+/** Settings of csh/config.json that the component manifest replaces (Anchor, harnesses and A3, section 2.1). */
+export const SUPERSEDED_BY_COMPONENT = ["spec", "implementationPaths", "adapters"] as const;
 
 export interface Project {
   root: string;
@@ -32,6 +40,12 @@ export interface Project {
   /** HEAD, with "-dirty" appended when the working tree has uncommitted changes. */
   commit: string;
   commitDate: string;
+  /** The component manifest, csh/component.json, when the project has one and it is usable. */
+  component?: LoadedComponent;
+  /** Why a manifest that exists cannot be used. Nothing is evaluated while there is one. */
+  componentProblems: ComponentProblem[];
+  /** The root's path below the repository's top level ("" at the top level), for worktrees of the whole repository. */
+  gitPrefix: string;
 }
 
 export const CONFIG_PATH = "csh/config.json";
@@ -64,7 +78,18 @@ export function loadProject(cwd: string, rootOverride?: string): Project {
     lockDigest: existsSync(lockFile) ? digestOf(readFileSync(lockFile)) : digestJson(null),
     commit: "uncommitted",
     commitDate: "",
+    componentProblems: [],
+    gitPrefix: "",
   };
+  const loaded = loadComponent(root);
+  if (loaded !== undefined) {
+    p.componentProblems = [...loaded.problems];
+    if (loaded.component !== undefined) p.component = loaded.component;
+    // One place says what is evaluated: a setting the manifest replaced is refused, never silently ignored.
+    for (const k of SUPERSEDED_BY_COMPONENT) {
+      if (config[k] !== undefined) p.componentProblems.push({ code: "config-superseded", detail: `${CONFIG_PATH} sets ${k}, which ${COMPONENT_PATH} replaces; remove it` });
+    }
+  }
   const lock = readLock(lockFile);
   if (lock !== undefined) p.lock = lock;
   if (gitRoot(root) !== undefined) {
@@ -75,6 +100,7 @@ export function loadProject(cwd: string, rootOverride?: string): Project {
       const dirty = git(root, "status", "--porcelain", "--untracked-files=no").trim() !== "";
       p.commit = dirty ? `${head}-dirty` : head;
       p.commitDate = git(root, "show", "-s", "--format=%cI", head).trim();
+      p.gitPrefix = git(root, "rev-parse", "--show-prefix").trim().replace(/\/$/, "");
     } catch {
       // A repository with no commits yet.
     }
@@ -83,8 +109,8 @@ export function loadProject(cwd: string, rootOverride?: string): Project {
 }
 
 export function specOf(p: Project, arg: string | undefined): string {
-  const s = arg ?? p.config.spec;
-  if (s === undefined) throw new Error(`no specification given and ${CONFIG_PATH} names none`);
+  const s = arg ?? p.component?.manifest.spec ?? p.config.spec;
+  if (s === undefined) throw new Error(`no specification given and neither ${COMPONENT_PATH} nor ${CONFIG_PATH} names one`);
   return resolve(p.root, s);
 }
 
@@ -98,9 +124,9 @@ async function digestsAtCommit(p: Project, spec: string, commit: string): Promis
     rmSync(wt, { recursive: true, force: true });
     mkdirSync(dirname(wt), { recursive: true });
     git(p.root, "worktree", "add", "--detach", "--force", wt, commit);
-    const file = join(wt, relative(p.root, spec));
+    const file = join(wt, p.gitPrefix, relative(p.root, spec));
     if (!existsSync(file)) return undefined;
-    const r = await emit(file, { root: wt, skipTypeCheck: true });
+    const r = await emit(file, { root: join(wt, p.gitPrefix), skipTypeCheck: true });
     return r.ok ? new Map(fragmentsOf(r.module).map((f) => [f.name, f.digest])) : undefined;
   } catch {
     return undefined;
@@ -132,7 +158,10 @@ export async function ledgerOf(p: Project, spec: string): Promise<LedgerState | 
 }
 
 export function snapshotOf(p: Project, moduleDigest: string, ledger: LedgerState | undefined, solver: string, toolVersion: string): Snapshot {
-  return { commit: p.commit, moduleDigest, ledgerHead: ledger?.head ?? 0, configDigest: p.configDigest, lockDigest: p.lockDigest, tool: { version: toolVersion, solver } };
+  const s: Snapshot = { commit: p.commit, moduleDigest, ledgerHead: ledger?.head ?? 0, configDigest: p.configDigest, lockDigest: p.lockDigest, tool: { version: toolVersion, solver } };
+  // Changing what is evaluated changes the snapshot (Anchor, harnesses and A3, section 6.4).
+  if (p.component !== undefined) s.componentDigest = p.component.digest;
+  return s;
 }
 
 /** A witness from an earlier commit stays current only if no implementation path changed since. */
@@ -140,7 +169,7 @@ export function unchangedSince(p: Project): ((a: string, b: string) => boolean) 
   const vcs = p.vcs;
   if (vcs === undefined) return undefined;
   // Conservative default (ASSUMPTIONS.md): with no implementation paths configured, every file outside csh/ counts.
-  const impl = p.config.implementationPaths;
+  const impl = p.component?.manifest.implementation ?? p.config.implementationPaths;
   return (a, b) => {
     const target = b.replace(/-dirty$/, "");
     if (!vcs.isAncestor(a, target)) return false;
