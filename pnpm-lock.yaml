@@ -11,6 +11,9 @@ importers:
       '@csh/adapter-gherkin':
         specifier: workspace:*
         version: link:packages/adapter-gherkin
+      '@csh/check':
+        specifier: workspace:*
+        version: link:packages/check
       '@csh/harness':
         specifier: workspace:*
         version: link:packages/harness

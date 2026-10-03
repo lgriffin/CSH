@@ -19,7 +19,7 @@ export type AuthorityResolver = (fragment: { name: string; digest: string; kind:
 
 export const ALL_CANDIDATE: AuthorityResolver = () => ({ authority: "candidate" });
 
-export type FindingKind = "state-conflict" | "vacuous" | "joint-conflict" | "example-conflict" | "not-preserved" | "not-met" | "unknown";
+export type FindingKind = "state-conflict" | "vacuous" | "joint-conflict" | "example-conflict" | "example-divergence" | "not-preserved" | "not-met" | "unknown";
 
 export interface Member {
   fragment: string;
@@ -39,6 +39,11 @@ export interface Finding {
   witness?: Record<string, string>;
   reason?: string;
   incomplete?: boolean;
+  /**
+   * For Q-DIV: identical when both examples state every field and argument with equal values; overlapping when the
+   * inputs can coincide but one leaves something unstated (Anchor, harnesses and A3, section 6.1).
+   */
+  inputs?: "identical" | "overlapping";
   /** Extension: the query that produced the finding, such as Q-FEAS(Withdraw). */
   query: string;
 }

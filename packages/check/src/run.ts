@@ -1,8 +1,9 @@
 // Steps 3 and 4 of joint evaluation: run the named queries over the pool and turn every
 // failing or unknown answer into findings (Joint evaluation, sections 3 and 4).
-import { collectRefs, compareCodePoints, digestJson, type Fragment, type Vocabulary, INTENT_SOURCE, MODEL_SOURCE } from "@csh/kernel";
+import { canonicalJson, collectRefs, compareCodePoints, digestJson, type Expr, type Fragment, type Vocabulary, INTENT_SOURCE, MODEL_SOURCE } from "@csh/kernel";
 import type { Assumption, Example, Invariant, Requirement, Transition } from "@csh/kernel";
 import {
+  qDiv,
   qEx,
   qFeas,
   qMeet,
@@ -112,7 +113,15 @@ export interface QueryOutcome {
   skipped: Map<string, string>;
 }
 
-const KIND_ORDER: FindingKind[] = ["state-conflict", "joint-conflict", "example-conflict", "vacuous", "not-preserved", "not-met", "unknown"];
+const KIND_ORDER: FindingKind[] = ["state-conflict", "joint-conflict", "example-conflict", "example-divergence", "vacuous", "not-preserved", "not-met", "unknown"];
+
+/** Both examples state every field of the state and every argument of the event, with equal values. */
+export function identicalInputs(x1: { given: Record<string, Expr>; args: Record<string, Expr> }, x2: typeof x1, ev: { args: Record<string, unknown> } | undefined, fields: string[]): boolean {
+  if (ev === undefined) return false;
+  const full = (x: typeof x1) => fields.every((f) => x.given[f] !== undefined) && Object.keys(ev.args).every((a) => x.args[a] !== undefined);
+  if (!full(x1) || !full(x2)) return false;
+  return fields.every((f) => canonicalJson(x1.given[f]) === canonicalJson(x2.given[f])) && Object.keys(ev.args).every((a) => canonicalJson(x1.args[a]) === canonicalJson(x2.args[a]));
+}
 
 export function sortFindings(fs: Finding[]): Finding[] {
   return [...fs].sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || compareCodePoints(a.members.map((m) => m.fragment).join(","), b.members.map((m) => m.fragment).join(",")) || compareCodePoints(a.id, b.id));
@@ -202,6 +211,30 @@ export async function runQueries(pool: Pool, env: QueryEnv, authority: Map<strin
       failedOrUnknown(r, `Q-EX(${x.id})`, (r) => {
         for (const s of r.sets) add("example-conflict", `Q-EX(${x.id})`, s.members, { context: r.context, collisionTerms: s.collisionTerms, ...(r.incomplete ? { incomplete: true } : {}) });
       }, [x.id, ...ids(reqs), ...ids(invs)], ids(as));
+    }
+
+    // Q-DIV for each pair of examples from different sources: one practice is never compared with itself.
+    const evDecl = v.events.find((e) => e.name === ev);
+    const fields = Object.keys(v.states.find((s) => s.name === st)?.fields ?? {});
+    const xs = pool.examples.filter((x) => x.event === ev);
+    for (let i = 0; i < xs.length; i++) {
+      for (let j = i + 1; j < xs.length; j++) {
+        const [a, b] = [xs[i]!, xs[j]!];
+        const fa = pool.byName.get(a.id);
+        const fb = pool.byName.get(b.id);
+        if (fa === undefined || fb === undefined || sourceColumn(fa) === sourceColumn(fb)) continue;
+        const query = `Q-DIV(${[a.id, b.id].sort(compareCodePoints).join(", ")})`;
+        const r = await qDiv(env, a, b);
+        failedOrUnknown(r, query, (r) => {
+          const s = r.sets[0]!;
+          const inputs = identicalInputs(a, b, evDecl, fields) ? "identical" : "overlapping";
+          // A stated determinism turns a divergence on identical inputs into a contradiction between the two examples.
+          const kind: FindingKind = evDecl?.deterministic === true && inputs === "identical" ? "example-conflict" : "example-divergence";
+          const extra: Partial<Finding> = { collisionTerms: s.collisionTerms, ...(kind === "example-divergence" ? { inputs } : {}) };
+          if (s.witness !== undefined && kind === "example-divergence") extra.witness = s.witness;
+          add(kind, query, s.members, extra);
+        }, [a.id, b.id], []);
+      }
     }
 
     // Q-PRES and Q-MEET for each transition.

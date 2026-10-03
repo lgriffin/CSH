@@ -37,3 +37,14 @@ describe("the canonical printer", () => {
     expect(printFragment(emptyModule("S"), "binding", { target: { k: "result", event: "Withdraw" }, key: "status" })).toBe('s.bind(Withdraw.result, "status");');
   });
 });
+
+describe("deterministic events", () => {
+  it("prints deterministic only when the event declares it", () => {
+    const m = emptyModule("S");
+    m.vocabulary.states = [{ name: "A", fields: {} }];
+    m.vocabulary.events = [{ name: "E", on: "A", args: {}, deterministic: true }, { name: "F", on: "A", args: {} }];
+    const text = printModule(m);
+    expect(text).toMatch(/s\.event\("E", \{[^\n]*deterministic: true/);
+    expect(text).not.toMatch(/s\.event\("F", \{[^\n]*deterministic/);
+  });
+});

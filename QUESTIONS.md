@@ -174,3 +174,16 @@ build step.
 - **Ship source and require a loader.** Users would run Node with a TypeScript loader; nothing in Node supports this under `node_modules` without a third-party dependency.
 
 Open. Recorded as A-40; stage 16 builds the chosen option.
+
+## Q-19 Do tabs 00 to 08 take the amendments of 09, section 6.5?
+
+Raised in stage 13. Tracked as [issue #9](https://github.com/lgriffin/CSH/issues/9).
+
+Section 6.5 lists amendments to the semantic contract, joint evaluation, evidence, ledger and architecture tabs: Q-DIV,
+`deterministic`, the new finding and gap kinds, witness version 2 and `cites`, `componentDigest`, and three
+containers. The implementer may not edit tabs 00 to 08.
+
+- **Record them in 09 and the decision records (chosen meanwhile).** The tabs are unchanged; 09, ADR-33, ADR-34 and A-36 to A-44 are the record.
+- **The owner amends the tabs.** The tabs stay the single source, and 09 becomes history.
+
+Open. Nothing in the code depends on the answer.

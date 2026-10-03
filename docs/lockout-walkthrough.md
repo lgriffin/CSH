@@ -40,12 +40,12 @@ summary:
 
 ```text
 $ csh run
-run SignInService at 77bced731172e48036f51fb3920f0ea48f0597ef
+run SignInService at c014161737c32cec70ab3a659f3571308514049d
   harness tdd: node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=@csh/harness/reporter --test-reporter-destination=stdout test/lockout.test.ts  exit 0, 4 witnesses, 4 executions (not sandboxed)
-  findings 4 (4 conflicts, 3 cross-source); gaps 8; not comparable 1; errors 2
+  findings 5 (4 conflicts, 1 divergence, 4 cross-source); gaps 8; not comparable 1; errors 2
   obligations 3: conflicting 3, violated 0, satisfied 0, unknown 0
   gate allow (advisory)
-  stored .csh-cache/runs/98764a8069a779309347e4f162039ab911ee27efb92fa667afe9438b29e8d0e8
+  stored .csh-cache/runs/ebb554a5e2f5a9fb6f7c71eb844bc927b62f26dfab628a71fc3ea24dd655c5f7
 ```
 
 The sections below show the same evaluation step by step, as the separate commands `csh check` and `csh gate`, which
@@ -53,12 +53,12 @@ compute exactly what `csh run` does after the harness. The last stage, with the 
 
 ```text
 $ csh run --mode enforcing
-run SignInService at 77fc5274040025fd9ccb5f3dfb8036b785f9ee2c
+run SignInService at 6877324652170b94bb9e8486b9942f6735e8bc9d
   harness tdd: node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=@csh/harness/reporter --test-reporter-destination=stdout test/lockout.test.ts  exit 0, 4 witnesses, 4 executions (not sandboxed)
-  findings 1 (1 conflicts, 1 cross-source); gaps 8; not comparable 0; errors 0
+  findings 3 (1 conflict, 2 divergences, 3 cross-source); gaps 8; not comparable 0; errors 0
   obligations 4: conflicting 0, violated 1, satisfied 3, unknown 0
   gate block (enforcing)
-  stored .csh-cache/runs/f42bfdbb849bf05167bc4a137b6cd717cfe76e62b9ed76380c2fce7fb4f8f66f
+  stored .csh-cache/runs/250831f1398bee884a3d54f3fdc64674a213d03ec970d13c521f43e31394ac70
 ```
 
 In the commands below, `csh` and `csl` stand for `node packages/cli/bin/csh.js` and `node packages/cli/bin/csl.js`.
@@ -91,7 +91,7 @@ attempts": three are allowed, and the lock comes with the attempt after them (`s
 ```text
 $ csh check
 CSH report for sha256:66743add5a384c68a39afc17e1465bde853b18de8195a77de10a23fa9484f20e
-tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit da4553a247e1af112384a82c76cb33942d5d3229, ledger head 0
+tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit c014161737c32cec70ab3a659f3571308514049d, ledger head 0
 
 == Cross-source conflicts
 
@@ -138,6 +138,20 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit da4553a247e1af112384a82c76
     2. A context is missing (an assumption that would separate the cases).
     3. The intent is undecided, and a person must decide it.
 
+== Divergences between examples
+
+[example-divergence] d7620e8595d774a2  (cross-source)  from Q-DIV(SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessAllowsThreeFailedAttemptsBeforeLocking)
+  - SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount  source Scenarios, candidate
+  - SignInService/@UnitTests/WitnessAllowsThreeFailedAttemptsBeforeLocking  source UnitTests, candidate
+  collision terms: Login.failures@pre, Login.locked@post, Login.locked@pre, SignIn.args.passwordOk, SignIn.result
+  inputs: overlapping
+  a shared input: Login.failures@pre = 2, Login.lockSeconds@pre = 0, Login.locked@pre = false, SignIn.args.passwordOk = false
+  Four readings, and the harness chooses none:
+    1. One example is wrong.
+    2. An unstated input separates them.
+    3. The intent is undecided, and a person must decide it.
+    4. The event may answer the same input in more than one way.
+
 == Not comparable
 
   SignInService/@Scenarios/ScenarioTheLockLastsFifteenMinutes  (Scenarios): unit-mismatch
@@ -178,7 +192,7 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit da4553a247e1af112384a82c76
 
 == Counts
 
-  findings 4: state-conflict 0, joint-conflict 1, example-conflict 3, vacuous 0, not-preserved 0, not-met 0, unknown 0
+  findings 5: state-conflict 0, joint-conflict 1, example-conflict 3, example-divergence 1, vacuous 0, not-preserved 0, not-met 0, unknown 0
   gaps 8; not comparable 1; unliftable 2
   obligations 3: conflicting 3, violated 0, satisfied 0, unknown 0
 ```
@@ -195,10 +209,13 @@ How to read this report, one practice pair at a time:
 - **BDD and TDD against EARS.** The scenario `A locked account is refused even with the correct password` and the
   unit test `refuses a locked account even with the correct password` both conflict with `AcceptCorrectPassword`. Both practices took the side of `LCK-002`
   without saying so. Their two conflicts are the joint conflict seen from below.
-- **BDD against TDD.** No finding names them together. The scenario `Third failed attempt locks the account` and the
-  unit test `allows three failed attempts before locking` start from the same state with the same input and assert opposite results. The
-  harness sees that only through `LockOnThirdFailure`, because Q-EX compares an example with rules, never with another
-  example. Where EARS is silent, two examples can contradict each other unseen.
+- **BDD against TDD.** The scenario `Third failed attempt locks the account` and the unit test `allows three failed
+  attempts before locking` start from the same state with the same input and assert opposite results. Until stage 13
+  the harness saw that only through `LockOnThirdFailure`, because Q-EX compares an example with rules, never with
+  another example. The divergence query, Q-DIV, now compares the two directly, so the contradiction would show even
+  with no rule between them (countermeasure C7). It is a divergence, not a conflict: the specification does not say
+  that sign-in gives one outcome for one input, so a fourth reading stays open. The inputs are `overlapping`, because
+  the scenario leaves the lock time unstated.
 - **Not comparable.** `The lock lasts fifteen minutes` states minutes, and the model counts seconds. The harness
   reports a unit mismatch and keeps the scenario out of every conflict, rather than guess that 15 means 900.
 - **Errors and warnings.** `LCK-002` has a WHILE clause, and the predicate that cites it was written with `and`
@@ -335,7 +352,7 @@ $ CSH_COMMIT=$(git rev-parse HEAD) CSH_WITNESS_FILE=reports/witnesses.ndjson CSH
 ```text
 $ csh check
 CSH report for sha256:7c78aa1c8d792b748d479498e6816d18ac14329a72fd1c2019ab646e0ea8f874
-tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit f5eb9eb06c80eac83bc3824f3fbbfa18f53bcb21, ledger head 0
+tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit ca764a17d12dfa4930c8c0e41e13430c5a908e3c, ledger head 0
 
 No findings.
 
@@ -369,7 +386,7 @@ No findings.
 
 == Counts
 
-  findings 0: state-conflict 0, joint-conflict 0, example-conflict 0, vacuous 0, not-preserved 0, not-met 0, unknown 0
+  findings 0: state-conflict 0, joint-conflict 0, example-conflict 0, example-divergence 0, vacuous 0, not-preserved 0, not-met 0, unknown 0
   gaps 7; not comparable 0; unliftable 2
   obligations 3: conflicting 0, violated 0, satisfied 0, unknown 3
 ```
@@ -474,6 +491,8 @@ $ csh check
 [example-conflict] 17baf74885f66bc7  (cross-source)  from Q-EX(SignInService/@UnitTests/WitnessAllowsAThirdFailedAttempt)
   - SignInService/@UnitTests/WitnessAllowsAThirdFailedAttempt  source UnitTests, candidate
   - SignInService/StopPasswordGuessing/LockOnThirdFailure  source intent, approved
+...
+[example-divergence] d3b14091a05a18c8  (cross-source)  from Q-DIV(SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessAllowsAThirdFailedAttempt)
 ...
   violated (implementation)  SignInService/StopPasswordGuessing/LockOnThirdFailure  [approved, self-approved; evidence current]  witness allows-a-third-failed-attempt makes it false
 

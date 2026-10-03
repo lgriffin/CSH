@@ -45,6 +45,11 @@ export interface EventDecl {
   on: string;
   args: Record<string, Type>;
   returns?: Type;
+  /**
+   * Stated by name: the event gives one outcome for one input (Anchor, harnesses and A3, section 6.1). Present only
+   * when true. Two examples with identical inputs whose outcomes cannot both hold are then a conflict, not a divergence.
+   */
+  deterministic?: true;
 }
 
 export interface Vocabulary {

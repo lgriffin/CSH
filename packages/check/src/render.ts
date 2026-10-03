@@ -6,6 +6,15 @@ import type { Assessment, Finding, Report } from "./types.ts";
 const CONFLICTS = new Set(["state-conflict", "joint-conflict", "example-conflict", "vacuous"]);
 const PRESERVATION = new Set(["not-preserved", "not-met"]);
 
+/** The readings of a divergence (Anchor, harnesses and A3, section 6.1): one more than a conflict has. */
+export const DIVERGENCE_READINGS = [
+  "Four readings, and the harness chooses none:",
+  "  1. One example is wrong.",
+  "  2. An unstated input separates them.",
+  "  3. The intent is undecided, and a person must decide it.",
+  "  4. The event may answer the same input in more than one way.",
+];
+
 const READINGS = [
   "Three readings, and the harness chooses none:",
   "  1. A member is wrong.",
@@ -18,13 +27,15 @@ function finding(f: Finding): string[] {
   for (const m of f.members) lines.push(`  - ${m.fragment}  source ${m.source}, ${m.authority}`);
   if (f.context.length > 0) lines.push(`  context: ${f.context.join(", ")}`);
   if (f.collisionTerms.length > 0) lines.push(`  collision terms: ${f.collisionTerms.join(", ")}`);
+  if (f.inputs !== undefined) lines.push(`  inputs: ${f.inputs}`);
   if (f.witness !== undefined) {
-    const label = f.kind === "joint-conflict" ? "input with no valid outcome" : "counterexample";
+    const label = f.kind === "joint-conflict" ? "input with no valid outcome" : f.kind === "example-divergence" ? "a shared input" : "counterexample";
     lines.push(`  ${label}: ${Object.entries(f.witness).map(([k, v]) => `${k} = ${v}`).join(", ")}`);
   }
   if (f.reason !== undefined) lines.push(`  reason: ${f.reason}`);
   if (f.incomplete === true) lines.push("  the list of minimal sets is incomplete (limit of 16 reached)");
   if (CONFLICTS.has(f.kind) && f.kind !== "vacuous") lines.push(...READINGS.map((l) => `  ${l}`));
+  if (f.kind === "example-divergence") lines.push(...DIVERGENCE_READINGS.map((l) => `  ${l}`));
   return lines;
 }
 
@@ -44,6 +55,7 @@ export function renderReport(r: Report): string {
   };
   section("Cross-source conflicts", r.findings.filter((f) => CONFLICTS.has(f.kind) && f.crossSource));
   section("Other conflicts", r.findings.filter((f) => CONFLICTS.has(f.kind) && !f.crossSource));
+  section("Divergences between examples", r.findings.filter((f) => f.kind === "example-divergence"));
   section("Failed preservation", r.findings.filter((f) => PRESERVATION.has(f.kind)));
   section("Unknown", r.findings.filter((f) => f.kind === "unknown"));
   if (r.findings.length === 0) out.push("No findings.", "");
@@ -70,7 +82,7 @@ export function renderReport(r: Report): string {
   }
   const count = (k: string) => r.findings.filter((f) => f.kind === k).length;
   out.push("== Counts", "");
-  out.push(`  findings ${r.findings.length}: ${["state-conflict", "joint-conflict", "example-conflict", "vacuous", "not-preserved", "not-met", "unknown"].map((k) => `${k} ${count(k)}`).join(", ")}`);
+  out.push(`  findings ${r.findings.length}: ${["state-conflict", "joint-conflict", "example-conflict", "example-divergence", "vacuous", "not-preserved", "not-met", "unknown"].map((k) => `${k} ${count(k)}`).join(", ")}`);
   out.push(`  gaps ${r.gapView.gaps.length}; not comparable ${r.notComparable.length}; unliftable ${r.unliftable.length}`);
   if (r.assessments !== undefined) {
     const v = (x: string) => r.assessments!.filter((a) => a.verdict === x).length;

@@ -1,7 +1,7 @@
 // The csh command (Joint evaluation, section 7; Authority tab, sections 3.4 and 6; Anchor, harnesses and A3, section 7.1).
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { type Finding, renderGaps, renderReport, type Report } from "@csh/check";
+import { DIVERGENCE_READINGS, type Finding, renderGaps, renderReport, type Report } from "@csh/check";
 import { exitCode, formatDecision as formatGate, type GateDecision, type Mode } from "@csh/gate";
 import { fragmentsOf, type Module, stableJson } from "@csh/kernel";
 import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons } from "@csh/ledger";
@@ -84,11 +84,13 @@ function explainFinding(f: Finding, m: Module): string {
   }
   if (f.context.length > 0) lines.push(`Context: ${f.context.join(", ")}`);
   if (f.collisionTerms.length > 0) lines.push(`Collision terms: ${f.collisionTerms.join(", ")}`);
-  if (f.witness !== undefined) lines.push(`${f.kind === "joint-conflict" ? "Input with no valid outcome" : "Counterexample"}: ${Object.entries(f.witness).map(([k, v]) => `${k} = ${v}`).join(", ")}`);
+  if (f.inputs !== undefined) lines.push(`Inputs: ${f.inputs}`);
+  if (f.witness !== undefined) lines.push(`${f.kind === "joint-conflict" ? "Input with no valid outcome" : f.kind === "example-divergence" ? "A shared input" : "Counterexample"}: ${Object.entries(f.witness).map(([k, v]) => `${k} = ${v}`).join(", ")}`);
   if (f.reason !== undefined) lines.push(`Reason: ${f.reason}`);
   if (["state-conflict", "joint-conflict", "example-conflict"].includes(f.kind)) {
     lines.push("", "Three readings, and the harness chooses none:", "  1. A member is wrong.", "  2. A context is missing.", "  3. The intent is undecided.");
   }
+  if (f.kind === "example-divergence") lines.push("", ...DIVERGENCE_READINGS);
   return `${lines.join("\n")}\n`;
 }
 
@@ -249,6 +251,7 @@ async function runGate(p: Project, a: Args, io: Io): Promise<number> {
   return exitCode(d);
 }
 
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 const countOf = (r: Report, kinds: string[]) => r.findings.filter((f) => kinds.includes(f.kind)).length;
 
 /** csh run: harnesses, check and gate for one snapshot of the component (Anchor, harnesses and A3, section 4). */
@@ -270,7 +273,7 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
   for (const h of record.harnesses) lines.push(`  harness ${h.practice}: ${h.argv.join(" ")}  exit ${h.exitCode ?? h.error ?? "none"}, ${h.witnesses} witnesses, ${h.executions} executions (not sandboxed)`);
   if (record.harnesses.length === 0) lines.push("  no practice has a harness");
   const conflicts = countOf(report, ["state-conflict", "joint-conflict", "example-conflict", "vacuous"]);
-  lines.push(`  findings ${report.findings.length} (${conflicts} conflicts, ${report.findings.filter((f) => f.crossSource).length} cross-source); gaps ${report.gapView.gaps.length}; not comparable ${report.notComparable.length}; errors ${report.errors.length}`);
+  lines.push(`  findings ${report.findings.length} (${plural(conflicts, "conflict")}, ${plural(countOf(report, ["example-divergence"]), "divergence")}, ${report.findings.filter((f) => f.crossSource).length} cross-source); gaps ${report.gapView.gaps.length}; not comparable ${report.notComparable.length}; errors ${report.errors.length}`);
   const v = (x: string) => (report.assessments ?? []).filter((y) => y.verdict === x).length;
   lines.push(`  obligations ${(report.assessments ?? []).length}: conflicting ${v("conflicting")}, violated ${v("violated")}, satisfied ${v("satisfied")}, unknown ${v("unknown")}`);
   lines.push(`  gate ${decision.overall} (${decision.mode})`);

@@ -1,7 +1,7 @@
 import fc from "fast-check";
 import { beforeAll, describe, expect, it } from "vitest";
 import { evaluateBool, type Expr, mapValuation, type Value, type Vocabulary } from "@csh/kernel";
-import { createFakeSolver, createZ3Solver, ex, PRE, qFeas, qState, type QInvariant, satisfiable, type SolverPort } from "@csh/solver";
+import { createFakeSolver, createZ3Solver, ex, PRE, qDiv, qFeas, qState, type QInvariant, satisfiable, type SolverPort } from "@csh/solver";
 
 const vocab: Vocabulary = {
   units: [],
@@ -111,5 +111,33 @@ describe("no answer is read as a wanted outcome", () => {
   it("a budget of zero gives unknown with reason solver-timeout", async () => {
     const r = await qState({ solver: z3, vocabulary: vocab, budgetMs: 0 }, [], [inv]);
     expect(r).toEqual({ status: "unknown", reason: "solver-timeout" });
+  });
+});
+
+describe("Q-DIV, examples compared with examples", () => {
+  const xv = (v: bigint): Expr => lit(v);
+  const result = (m: string): Expr => ({ k: "eq", l: { k: "result", event: "E" }, r: { k: "enum", enum: "Outcome", member: m } });
+  const example = (id: string, given: Record<string, Expr>, args: Record<string, Expr>, outcome: string) => ({ id, event: "E", given, args, then: result(outcome) });
+
+  it("fails with both examples when their inputs meet and their outcomes cannot both hold", async () => {
+    const env = { solver: z3, vocabulary: vocab, budgetMs: 10000 };
+    const r = await qDiv(env, example("A", { x: xv(1n) }, { a: xv(2n) }, "Accepted"), example("B", { x: xv(1n) }, { a: xv(2n) }, "Rejected"));
+    expect(r.status).toBe("failed");
+    if (r.status === "failed") {
+      expect(r.sets[0]!.members).toEqual(["A", "B"]);
+      expect(r.sets[0]!.witness?.["S.x@pre"]).toBe("1");
+    }
+  });
+
+  it("is wanted when the outcomes agree, or when the inputs cannot meet", async () => {
+    const env = { solver: z3, vocabulary: vocab, budgetMs: 10000 };
+    expect((await qDiv(env, example("A", { x: xv(1n) }, {}, "Accepted"), example("B", { x: xv(1n) }, { a: xv(5n) }, "Accepted"))).status).toBe("wanted");
+    expect((await qDiv(env, example("A", { x: xv(1n) }, {}, "Accepted"), example("B", { x: xv(2n) }, {}, "Rejected"))).status).toBe("wanted");
+  });
+
+  it("finds overlapping inputs: one example leaves a field unstated", async () => {
+    const env = { solver: z3, vocabulary: vocab, budgetMs: 10000 };
+    const r = await qDiv(env, example("A", { x: xv(1n) }, {}, "Accepted"), example("B", { x: xv(1n), y: xv(4n) }, { a: xv(0n) }, "Rejected"));
+    expect(r.status).toBe("failed");
   });
 });
