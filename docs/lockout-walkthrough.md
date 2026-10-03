@@ -5,7 +5,8 @@ This is the harness run end to end on `examples/lockout`, with the real output o
 scratch git repository, so commit hashes differ from run to run. Nothing in it is signed or approved.
 
 The example is one behaviour, sign-in lockout, described by three practices. Each is meant to pin behaviour down, and
-each is green on its own terms:
+each is signed off on its own terms: the tests pass, the scenarios are agreed, and the sentences are reviewed. The
+harness reads the scenarios; it does not execute them against the code.
 
 | Source | Practice | Who writes it | What it holds |
 | --- | --- | --- | --- |
@@ -61,7 +62,7 @@ attempts": three are allowed, and the lock comes with the attempt after them (`s
 ```text
 $ csh check
 CSH report for sha256:66743add5a384c68a39afc17e1465bde853b18de8195a77de10a23fa9484f20e
-tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit 9324dc654489412599cf3494265295381ed48774, ledger head 0
+tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit da4553a247e1af112384a82c76cb33942d5d3229, ledger head 0
 
 == Cross-source conflicts
 
@@ -180,7 +181,9 @@ How to read this report, one practice pair at a time:
   - `WitnessLocksOnFourth` has `no-rule`: the test pins down behaviour that no sentence and no scenario covers.
   - `LCK-004` (email the holder) is uncited, and `LCK-005` (WHERE two-factor sign-in is enabled) is unliftable with reason `feature-scope` as well as uncited. The scenario `Support unlocks a locked account` is unliftable with reason `unknown-step`.
 
-`csh check` exited 0. Reporting and judging are separate powers ([ADR-11](adr/ADR-11-check-never-blocks.md)).
+`csh check` exited 0. Reporting and judging are separate powers ([ADR-11](adr/ADR-11-check-never-blocks.md)). The
+script itself checks the report against the counts above and fails if they move, so CI notices when a change to the
+example or the harness changes this story.
 
 ## 4. Explain the joint conflict
 
@@ -277,10 +280,10 @@ $ git show --stat --format= HEAD
  docs/requirements.md     |  4 ++--
  features/lockout.feature |  2 +-
  features/units.json      |  1 +
- spec/lockout.csl.ts      |  9 +++++----
+ spec/lockout.csl.ts      | 11 +++++------
  src/lockout.ts           |  4 ++--
- test/lockout.test.ts     | 20 ++++++++++----------
- 6 files changed, 21 insertions(+), 19 deletions(-)
+ test/lockout.test.ts     | 18 +++++++++---------
+ 6 files changed, 20 insertions(+), 20 deletions(-)
 ```
 
 - `docs/requirements.md`: `LCK-001` counts explicitly ("fails when the account already has 2 failed attempts"), and `LCK-003` gains the context it was missing ("WHILE the account is not locked").
@@ -303,7 +306,7 @@ $ CSH_COMMIT=$(git rev-parse HEAD) CSH_WITNESS_FILE=reports/witnesses.ndjson nod
 ```text
 $ csh check
 CSH report for sha256:7c78aa1c8d792b748d479498e6816d18ac14329a72fd1c2019ab646e0ea8f874
-tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit 9488acf9db9c4c20e5c5fcd0bafde36727548f6b, ledger head 0
+tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit f5eb9eb06c80eac83bc3824f3fbbfa18f53bcb21, ledger head 0
 
 No findings.
 

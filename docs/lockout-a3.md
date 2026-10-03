@@ -6,7 +6,7 @@ follow-up. Every number comes from the two `csh check` runs in [the walkthrough]
 sheet, laid out as an A3, is [lockout-a3.html](lockout-a3.html).
 
 **Problem.** EARS, BDD and TDD are each designed to pin behaviour down and bring people onto one understanding. On
-sign-in lockout all three report green, yet read together they disagree on 9 decision points, and the code ships one
+sign-in lockout each is signed off on its own terms, yet read together they disagree on 9 decision points, and the code ships one
 of the readings nobody agreed.
 
 | Each practice alone | Read together by CSH | Decision points in dispute | After the countermeasures |
@@ -27,7 +27,7 @@ Each unifies inside its own boundary. None of them is judged against the others.
 | --- | --- | --- | --- |
 | Author | Product owner | Three amigos | Developer, test first |
 | Unit of truth | A rule over all cases, in prose | One agreed case | One execution and its assertion |
-| Judged by | Review | Step definitions run against the code | The code it drove into being |
+| Judged by | Review | Step definitions run against the code; here the scenarios are agreed and read by CSH, not run | The code it drove into being |
 | In CSH | Cited, never translated; a person writes the predicate ([ADR-14](adr/ADR-14-cite-not-translate.md)) | An example, lifted through step definitions and bindings | An example and a witness ([ADR-13](adr/ADR-13-passing-test-is-claim-and-witness.md)) |
 | Cannot say | A concrete value, or how two sentences combine | A rule; and a step means nothing until defined | Which requirement it serves |
 
@@ -87,7 +87,7 @@ and reviewed, and every case one practice cannot express is a recorded decision.
 
 ## 4. Root cause analysis
 
-1. **Why can all three be green while they disagree?** Each is judged by its own oracle. Tests pass against the code they drove, scenarios pass against their step definitions, and sentences pass review one at a time. No oracle reads another practice's artefact.
+1. **Why can all three be green while they disagree?** Each is judged by its own oracle. Tests pass against the code they drove, scenarios are agreed in a meeting and, when they run, run against their own step definitions, and sentences pass review one at a time. No oracle reads another practice's artefact.
 2. **Why do they disagree on the third attempt?** All three translated "three failed attempts" from the story independently, and an ordinal in prose reads two ways: the third one locks, or three are allowed. See `src/lockout.ts` (`failedAttempts > MAX_FAILED_ATTEMPTS`) and the 5 Whys below.
 3. **Why does EARS contradict itself?** Each sentence was written and reviewed alone, and EARS has no rule for how two sentences combine. The WHILE clause that would separate them was left out of LCK-003. This is reading 2, a missing context, and only the owner can confirm it.
 4. **Why does meaning drift between notations?** Every hand-off is a translation by a person or a table: WHILE became `and`, minutes became seconds, identifiers were renumbered. Bindings and step definitions are code that nobody reviews as requirements.

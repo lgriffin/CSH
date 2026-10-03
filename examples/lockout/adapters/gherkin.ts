@@ -35,6 +35,21 @@ const UNITS: Record<string, string> = { minutes: "time(min)", minute: "time(min)
 /** Conversions a team has decided, from units.json in the source: { "time(min)": { "to": "time(s)", "factor": 60 } }. */
 type Conversions = Record<string, { to: string; factor: number }>;
 
+/** Keep the well-formed entries of a parsed units.json; report every other one, so one bad entry loses nothing else. */
+export function readConversions(v: unknown, span: string, diagnostics: Diagnostic[]): Conversions {
+  const out: Conversions = {};
+  if (typeof v !== "object" || v === null || Array.isArray(v)) {
+    diagnostics.push({ code: "malformed-units", severity: "error", message: "units.json must hold an object of conversions", span });
+    return out;
+  }
+  for (const [from, c] of Object.entries(v as Record<string, unknown>)) {
+    const e = c as { to?: unknown; factor?: unknown } | null;
+    if (typeof e === "object" && e !== null && typeof e.to === "string" && typeof e.factor === "number" && Number.isSafeInteger(e.factor) && e.factor > 0) out[from] = { to: e.to, factor: e.factor };
+    else diagnostics.push({ code: "malformed-units", severity: "error", message: `${from}: a conversion needs a string "to" and a positive integer "factor"`, span });
+  }
+  return out;
+}
+
 function convert(v: Value, conversions: Conversions): Value {
   if (v.k !== "int" || v.unit === undefined) return v;
   const c = conversions[v.unit];
@@ -63,10 +78,18 @@ interface Scenario {
   title: string;
   line: number;
   tags: string[];
-  steps: { keyword: "Given" | "When" | "Then"; text: string; line: number }[];
+  /** Set for a construct this adapter does not lift (Scenario Outline, Background); the whole block is unliftable. */
+  unsupported?: string;
+  /** A step keyword of undefined means a line this adapter cannot read; the scenario is then unliftable. */
+  steps: { keyword: "Given" | "When" | "Then" | undefined; text: string; line: number }[];
 }
 
-/** Read Feature, Scenario, tag and step lines. And and But continue the keyword before them. */
+const HEADER = /^(Feature|Rule|Background|Scenario Outline|Scenario Template|Scenario|Example|Examples|Scenarios):\s*(.*)$/;
+
+/**
+ * Read Feature, Scenario, tag and step lines. And, But and * continue the keyword before them. Every other line
+ * inside a scenario is kept as an unreadable step, so a scenario is lifted whole or not at all.
+ */
 export function parse(text: string): { scenarios: Scenario[] } {
   const scenarios: Scenario[] = [];
   let tags: string[] = [];
@@ -79,21 +102,28 @@ export function parse(text: string): { scenarios: Scenario[] } {
       tags.push(...line.split(/\s+/));
       return;
     }
-    const sc = /^Scenario:\s*(.+)$/.exec(line);
-    if (sc !== null) {
-      current = { title: sc[1]!, line: i + 1, tags, steps: [] };
-      scenarios.push(current);
-      tags = [];
+    const h = HEADER.exec(line);
+    if (h !== null) {
+      const kind = h[1]!;
       last = undefined;
+      if (kind === "Scenario" || kind === "Example") {
+        current = { title: h[2]!, line: i + 1, tags, steps: [] };
+        scenarios.push(current);
+      } else if (kind === "Background" || kind === "Scenario Outline" || kind === "Scenario Template") {
+        current = { title: h[2] !== "" ? h[2]! : kind, line: i + 1, tags, steps: [], unsupported: kind };
+        scenarios.push(current);
+      } else if (kind === "Examples" || kind === "Scenarios") {
+        // An outline's table stays with the outline, which is already unliftable as a whole.
+        if (current?.unsupported === undefined) current = undefined;
+      } else current = undefined;
+      tags = [];
       return;
     }
-    const st = /^(Given|When|Then|And|But)\s+(.+)$/.exec(line);
-    if (st !== null && current !== undefined) {
-      const kw = st[1] === "And" || st[1] === "But" ? last : (st[1] as "Given" | "When" | "Then");
-      if (kw === undefined) return;
-      last = kw;
-      current.steps.push({ keyword: kw, text: st[2]!, line: i + 1 });
-    }
+    if (current === undefined) return; // free text under Feature or Rule
+    const st = /^(Given|When|Then|And|But|\*)\s+(.+)$/.exec(line);
+    const kw = st === null ? undefined : st[1] === "And" || st[1] === "But" || st[1] === "*" ? last : (st[1] as "Given" | "When" | "Then");
+    if (kw !== undefined) last = kw;
+    current.steps.push({ keyword: kw, text: st?.[2] ?? line, line: i + 1 });
   });
   return { scenarios };
 }
@@ -114,9 +144,10 @@ function lift(sc: Scenario, input: AdapterInput, event: string, conversions: Con
   const ev = v.events.find((e) => e.name === event);
   const st = v.states.find((s) => s.name === ev?.on);
   if (ev === undefined || st === undefined) return { reason: "unknown-term", at: sc.line };
+  if (sc.unsupported !== undefined) return { reason: "unsupported-construct", at: sc.line };
   const effects: Effect[] = [];
   for (const step of sc.steps) {
-    const def = STEPS.find((d) => d.keyword === step.keyword && d.pattern.test(step.text));
+    const def = step.keyword === undefined ? undefined : STEPS.find((d) => d.keyword === step.keyword && d.pattern.test(step.text));
     if (def === undefined) return { reason: "unknown-step", at: step.line };
     effects.push(...def.effects(def.pattern.exec(step.text)!).map((e) => ({ ...e, value: convert(e.value, conversions) })));
   }
@@ -152,7 +183,7 @@ export function run(input: AdapterInput): AdapterOutput {
   let conversions: Conversions = {};
   if (unitsFile !== undefined) {
     try {
-      conversions = JSON.parse(new TextDecoder().decode(unitsFile.bytes)) as Conversions;
+      conversions = readConversions(JSON.parse(new TextDecoder().decode(unitsFile.bytes)), unitsFile.path, diagnostics);
     } catch (err) {
       diagnostics.push({ code: "malformed-units", severity: "error", message: (err as Error).message, span: unitsFile.path });
     }

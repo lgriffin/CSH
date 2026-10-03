@@ -54,7 +54,7 @@ the model cannot express. The harness reports:
 
 [examples/lockout](examples/lockout) is a second named example. It describes sign-in lockout three ways: EARS
 requirements, BDD scenarios read by a project-local Gherkin adapter, and unit tests written test first. Each practice
-is green on its own. Read together they disagree on nine decision points: an off-by-one between the tests and the
+is signed off on its own. Read together they disagree on nine decision points: an off-by-one between the tests and the
 requirements, two EARS sentences that cannot both hold, a unit the scenarios state in minutes, and cases only one
 practice can express.
 

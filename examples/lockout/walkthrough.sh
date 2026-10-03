@@ -8,6 +8,25 @@ WORK="$REPO/.csh-cache/walkthrough/lockout"
 csh() { node "$REPO/packages/cli/bin/csh.js" "$@"; }
 csl() { node "$REPO/packages/cli/bin/csl.js" "$@"; }
 step() { printf '\n$ %s\n' "$*"; }
+# csh check exits 0 whatever it finds, so the script checks the report itself: the walkthrough documents these
+# counts, and CI fails if a change to the example or the harness moves them.
+expect() {
+  node -e '
+    const r = require("./reports/csh-report.json");
+    const want = JSON.parse(process.argv[1]);
+    const got = {
+      findings: r.findings.map((f) => f.kind).sort().join(","),
+      notComparable: r.notComparable.length,
+      errors: (r.errors ?? []).map((e) => e.code).sort().join(","),
+      gaps: r.gapView.gaps.map((g) => g.kind).sort().join(","),
+    };
+    const bad = Object.keys(want).filter((k) => JSON.stringify(got[k]) !== JSON.stringify(want[k]));
+    if (bad.length > 0) {
+      console.error("walkthrough: the report differs from the documented one");
+      for (const k of bad) console.error(`  ${k}: expected ${JSON.stringify(want[k])}, got ${JSON.stringify(got[k])}`);
+      process.exit(1);
+    }' "$1"
+}
 
 rm -rf "$WORK" && mkdir -p "$(dirname "$WORK")"
 cp -r "$REPO/examples/lockout" "$WORK"
@@ -26,6 +45,7 @@ CSH_COMMIT="$(git rev-parse HEAD)" CSH_WITNESS_FILE=reports/witnesses.ndjson nod
 
 step csh check
 csh check
+expect '{"findings":"example-conflict,example-conflict,example-conflict,joint-conflict","notComparable":1,"errors":"dangling-citation,shape-mismatch","gaps":"no-rule,single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
 
 # Explain the joint conflict and the conflict that holds the off-by-one.
 for id in $(node -e 'const r=require("./reports/csh-report.json");console.log(r.findings.filter(f=>f.kind==="joint-conflict"||f.members.some(m=>m.fragment.endsWith("/WitnessAllowsThreeFailures"))).map(f=>f.id).join(" "))'); do
@@ -51,3 +71,4 @@ CSH_COMMIT="$(git rev-parse HEAD)" CSH_WITNESS_FILE=reports/witnesses.ndjson nod
 
 step csh check
 csh check
+expect '{"findings":"","notComparable":0,"errors":"","gaps":"single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'

@@ -7,7 +7,8 @@ agree with the others:
 - `features/lockout.feature`: the BDD scenarios the three amigos agreed, read by the project-local adapter `adapters/gherkin.ts`.
 - `test/lockout.test.ts`: the developer's unit tests, written test first, recording witnesses to `reports/witnesses.ndjson`.
 
-Each practice is green on its own terms. Read together they disagree in nine places.
+Each is signed off on its own terms: the tests pass, the scenarios are agreed, and the sentences are reviewed. The
+harness reads the scenarios rather than executing them. Read together, the three disagree in nine places.
 [docs/lockout-walkthrough.md](../../docs/lockout-walkthrough.md) runs the harness on it with real output, and
 [docs/lockout-a3.md](../../docs/lockout-a3.md) is the Lean A3 that reads the findings as one problem.
 
