@@ -35,3 +35,5 @@ jobs:
         run: pnpm test
       - name: Walkthrough
         run: examples/account/walkthrough.sh
+      - name: Lockout walkthrough
+        run: examples/lockout/walkthrough.sh

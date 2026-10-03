@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lockout A3</title>
+<style>
+/* Layout: one Lean A3 sheet read left to right. Andon tiles on top, Plan (1-4) then Do/Check/Act (5-7), as in the tutors-release-harness A3. */
+:root{color-scheme:light;--bg:#f4f3ef;--sheet:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#7a7873;--rule:#dddbd4;--box:#ffffff;
+--pass:#2f7a4f;--warn:#8a6119;--fail:#a12a2a;--vital:#2a78d6;--trivial:#b9b7b0;--accent:#2a78d6;--hatch:#c9c7c0;
+--ears:#2a78d6;--bdd:#8a4fc4;--tdd:#b04e12;--on:#ffffff;--soft-fail:#f7e3e3;--soft-warn:#f6ecd9;--soft-pass:#e3f0e8;--soft-mute:#ecebe6;
+--font:system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#121211;--sheet:#1a1a19;--ink:#ffffff;--ink2:#c3c2b7;--muted:#9a988f;--rule:#383835;--box:#232322;
+--pass:#3f9a66;--warn:#c28a2a;--fail:#d05050;--vital:#3987e5;--trivial:#5a5953;--accent:#3987e5;--hatch:#4a4945;
+--ears:#4f94e8;--bdd:#a77ad8;--tdd:#ec8a45;--on:#1a1a19;--soft-fail:#3a1f1f;--soft-warn:#3a2f1a;--soft-pass:#1d3326;--soft-mute:#26261f}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#121211;--sheet:#1a1a19;--ink:#ffffff;--ink2:#c3c2b7;--muted:#9a988f;--rule:#383835;--box:#232322;
+--pass:#3f9a66;--warn:#c28a2a;--fail:#d05050;--vital:#3987e5;--trivial:#5a5953;--accent:#3987e5;--hatch:#4a4945;
+--ears:#4f94e8;--bdd:#a77ad8;--tdd:#ec8a45;--on:#1a1a19;--soft-fail:#3a1f1f;--soft-warn:#3a2f1a;--soft-pass:#1d3326;--soft-mute:#26261f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--font)}
+a{color:var(--accent)} a:focus-visible,summary:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+code{font:12.5px var(--mono)}
+.sheet{max-width:1440px;margin:0 auto;padding-block:20px 40px;padding-inline:16px}
+.title{display:flex;flex-wrap:wrap;gap:4px 24px;align-items:baseline;justify-content:space-between;border-bottom:3px solid var(--ink);padding-bottom:8px}
+.title h1{font-size:1.7rem;margin:0;letter-spacing:-.01em;text-wrap:balance} .title h1 span{font-weight:400;color:var(--ink2)}
+.title .meta{font-size:12.5px;color:var(--ink2)}
+.problem{font-size:1.05rem;margin:14px 0 0;max-width:75ch} .problem strong{font-weight:700}
+.andon{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px;margin:14px 0 4px}
+.tile{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0;grid-column:span 3}
+.tile .k{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink2)}
+.tile .huge{font-size:2.3rem;font-weight:800;line-height:1.05;letter-spacing:-.02em}
+.tile .sub{font-size:12px;color:var(--ink2)}
+.tile.pass{background:var(--pass);border:0;color:#fff} .tile.fail{background:var(--fail);border:0;color:#fff}
+.tile.pass .k,.tile.pass .sub,.tile.fail .k,.tile.fail .sub{color:#ffffffde}
+.note{font-size:12.5px;color:var(--ink2);margin:6px 0 0}
+.a3{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:14px;align-items:start;margin:14px 0}
+.col{display:grid;gap:14px;min-width:0}
+.blk{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:12px 16px 14px;min-width:0}
+.wide{margin:14px 0}
+.blk>h2{font-size:1rem;margin:0 0 8px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.blk>h2 .n{display:inline-grid;place-items:center;width:1.6rem;height:1.6rem;border-radius:50%;background:var(--ink);color:var(--sheet);font-size:.85rem;flex:none}
+.blk>h2 .hint{font-weight:400;font-size:12px;color:var(--ink2)}
+.blk p{margin:6px 0;max-width:80ch} h3{font-size:13px;margin:16px 0 6px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{text-align:left;vertical-align:top;padding:5px 8px;border-bottom:1px solid var(--rule)}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink2);font-weight:600}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.src{font-size:11.5px;color:var(--ink2)}
+.tag{display:inline-block;padding:0 7px;border-radius:4px;font-size:11.5px;font-weight:700;color:var(--on);white-space:nowrap}
+.tag.ears{background:var(--ears)} .tag.bdd{background:var(--bdd)} .tag.tdd{background:var(--tdd)}
+.cell{display:block;padding:3px 6px;border-radius:4px;font-size:12px}
+.cell.says{background:var(--soft-pass)} .cell.clash{background:var(--soft-fail)} .cell.drift{background:var(--soft-warn)} .cell.silent{background:var(--soft-mute);color:var(--muted)}
+.chip{display:inline-block;padding:0 7px;border-radius:4px;font-size:11.5px;font-weight:700;white-space:nowrap;border:1px solid}
+.chip.contradiction{color:var(--fail);border-color:var(--fail)} .chip.drift{color:var(--warn);border-color:var(--warn)} .chip.silence{color:var(--ink2);border-color:var(--muted);border-style:dashed}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--ink2);margin:6px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:6px} .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:10px;margin:8px 0}
+.compare>div{border:1px solid var(--rule);border-radius:6px;padding:8px 10px;background:var(--box);min-width:0}
+.compare h4{margin:0 0 4px;font-size:13px;display:flex;gap:8px;align-items:center}
+.compare dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12px} .compare dt{color:var(--ink2)} .compare dd{margin:0}
+figure{margin:12px 0 0} figcaption{display:flex;flex-wrap:wrap;gap:2px 12px;align-items:baseline;margin-bottom:6px}
+.lanes{width:100%;min-width:760px;height:auto;display:block}
+.lanes text{fill:var(--ink);font:12px var(--font)} .lanes .small{fill:var(--ink2);font-size:11px}
+.lanes .box{fill:var(--box);stroke:var(--rule)} .lanes .story{fill:var(--soft-mute);stroke:var(--muted)}
+.lanes .hub{fill:var(--soft-pass);stroke:var(--pass)}
+.lanes .arrow{stroke:var(--ink2);fill:none;stroke-width:1.4} .lanes .head{fill:var(--ink2)}
+.lanes .andon rect{fill:var(--fail)} .lanes .andon text{fill:#fff;font-weight:700;font-size:11px}
+.lanes .lane-ears{fill:var(--ears)} .lanes .lane-bdd{fill:var(--bdd)} .lanes .lane-tdd{fill:var(--tdd)}
+.pareto{max-width:760px}
+.phead,.bars li{display:grid;grid-template-columns:minmax(0,15rem) minmax(40px,1fr) 2.6rem 3rem;gap:8px;align-items:center}
+.phead{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)} .phead span:nth-child(n+3){text-align:right}
+ol.bars{list-style:none;margin:0;padding:0} .bars li{padding:3px 0;font-size:12.5px}
+.pl small{display:block;color:var(--ink2);font-size:11px;line-height:1.3}
+.pb{height:14px;display:block} .bar{display:block;height:100%;background:var(--trivial);border-radius:0 4px 4px 0}
+.vital .bar{background:var(--vital)} .vital .pl{font-weight:600}
+.pv,.pc{text-align:right;font-variant-numeric:tabular-nums} .pc{color:var(--ink2)}
+.bars li.cut{display:block;border-top:2px dashed var(--ink2);margin:4px 0 2px;padding:2px 0 0;font-size:11px;color:var(--ink2)}
+ol.rcas{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.rca{display:grid;grid-template-columns:2.2rem minmax(0,1fr);gap:8px}
+.rca .qn{font-weight:800;color:var(--ink2)} .rca .q{font-weight:700;margin:0} .rca p{margin:2px 0}
+.depth{display:inline-block;font-size:11.5px;color:var(--ink2);border-left:3px solid var(--rule);padding-left:8px;margin-top:2px}
+.depth.deep{border-color:var(--fail)}
+ol.chain{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:95ch}
+.chain li{display:grid;grid-template-columns:4rem minmax(0,1fr);gap:10px;padding:6px 0;border-bottom:1px solid var(--rule)}
+.chain .wn{font-weight:800;color:var(--ink2)} .chain .q{font-weight:700;margin:0} .chain p{margin:2px 0}
+.chain li.root{background:var(--soft-fail);border-radius:6px;padding:8px;border:0}
+.rootcause{font-weight:700;color:var(--fail)}
+.kind{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink2);border:1px solid var(--rule);border-radius:4px;padding:0 6px;white-space:nowrap}
+.status{display:inline-block;font-size:11.5px;font-weight:700;padding:0 7px;border-radius:4px;white-space:nowrap}
+.status.done{background:var(--pass);color:#fff} .status.proposed{border:1px dashed var(--ink2);color:var(--ink)} .status.decide{border:1px solid var(--warn);color:var(--warn)}
+.ok{color:var(--pass);font-weight:700} .no{color:var(--fail);font-weight:700} .kept{color:var(--warn);font-weight:700}
+.terms dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:6px 18px;margin:0} .terms dt{font-weight:700} .terms dd{margin:0;font-size:12.5px;color:var(--ink2)}
+footer{font-size:12px;color:var(--ink2);margin-top:14px}
+@media (max-width:900px){.a3{grid-template-columns:minmax(0,1fr)} .tile{grid-column:span 6}}
+@media (max-width:520px){.tile{grid-column:span 12} .phead,.bars li{grid-template-columns:minmax(0,9rem) minmax(30px,1fr) 2.2rem 2.8rem}}
+</style>
+</head><body>
+<main class="sheet">
+<header class="title"><h1>A3 <span>· Three practices, one lockout</span></h1><span class="meta">CSH named example <code>examples/lockout</code> · from <code>examples/lockout/walkthrough.sh</code>, 3 October 2026, tool 0.1.0, Z3 5.1 · <a href="https://github.com/lgriffin/CSH/blob/main/docs/lockout-walkthrough.md">walkthrough</a> · <a href="https://github.com/lgriffin/CSH/blob/main/docs/lockout-a3.md">A3 in the repository</a></span></header>
+
+<p class="problem"><strong>Problem.</strong> EARS, BDD and TDD are each designed to pin behaviour down and bring people onto one understanding. On sign-in lockout all three report green, yet read together they disagree on <strong>9 decision points</strong>, and the code ships one of the readings nobody agreed.</p>
+
+<section class="andon" aria-label="Final scoring">
+  <div class="tile pass"><span class="k">Each practice alone</span><span class="huge">Green</span><span class="sub">4 of 4 unit tests pass · 5 scenarios agreed · 5 sentences reviewed</span></div>
+  <div class="tile fail"><span class="k">Read together by CSH</span><span class="huge">15</span><span class="sub">signals: 4 conflicts, 1 not comparable, 2 errors and warnings, 8 gaps</span></div>
+  <div class="tile"><span class="k">Decision points in dispute</span><span class="huge">9</span><span class="sub">2 contradictions · 3 drifts between notations · 4 silences</span></div>
+  <div class="tile"><span class="k">After the countermeasures</span><span class="huge">0</span><span class="sub">conflicts, drift or errors · 7 gaps kept by decision · verdicts still <em>unknown</em></span></div>
+</section>
+<p class="note">The gate says <code>allow (advisory)</code> throughout: nothing is approved, so nothing can block. This sheet is advisory too. The harness offers three readings for every conflict and chooses none; where this A3 picks a side, it says so.</p>
+
+<div class="a3">
+<section class="blk"><h2><span class="n">1</span>Background <span class="hint">why this matters</span></h2>
+<p>A sign-in service must stop password guessing without locking out the real account holder. Three teams of people describe that behaviour, each with a practice that promises alignment. EARS promises one unambiguous way to write a requirement. BDD promises one shared example that business and engineering agree on. TDD promises that design and verification move together. Each unifies inside its own boundary. None of them is judged against the others.</p>
+<div class="compare">
+  <div><h4><span class="tag ears">EARS</span> the sentence</h4><dl><dt>Author</dt><dd>Product owner</dd><dt>Unit of truth</dt><dd>A rule over all cases, in prose</dd><dt>Judged by</dt><dd>Review</dd><dt>In CSH</dt><dd>Cited, never translated; a person writes the predicate</dd><dt>Cannot say</dt><dd>A concrete value, or how two sentences combine</dd></dl></div>
+  <div><h4><span class="tag bdd">BDD</span> the scenario</h4><dl><dt>Author</dt><dd>Three amigos</dd><dt>Unit of truth</dt><dd>One agreed case</dd><dt>Judged by</dt><dd>Step definitions run against the code</dd><dt>In CSH</dt><dd>An example, lifted through step definitions and bindings</dd><dt>Cannot say</dt><dd>A rule; and a step means nothing until defined</dd></dl></div>
+  <div><h4><span class="tag tdd">TDD</span> the test</h4><dl><dt>Author</dt><dd>Developer, test first</dd><dt>Unit of truth</dt><dd>One execution and its assertion</dd><dt>Judged by</dt><dd>The code it drove into being</dd><dt>In CSH</dt><dd>An example and a witness</dd><dt>Cannot say</dt><dd>Which requirement it serves</dd></dl></div>
+</div>
+</section>
+
+<section class="blk"><h2><span class="n">3</span>Goal <span class="hint">the target condition</span></h2>
+<p>Every decision point has one rule that all three practices agree with, every translation between notations is visible and reviewed, and every case one practice cannot express is a recorded decision.</p>
+<div class="scroll"><table><thead><tr><th>Measure</th><th class="num">Before</th><th class="num">Target</th><th class="num">After</th><th></th></tr></thead><tbody>
+<tr><td>Cross-source and joint conflicts</td><td class="num">4</td><td class="num">0</td><td class="num">0</td><td><span class="ok">met</span></td></tr>
+<tr><td>Not comparable</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td><span class="ok">met</span></td></tr>
+<tr><td>Shape mismatches and dangling citations</td><td class="num">2</td><td class="num">0</td><td class="num">0</td><td><span class="ok">met</span></td></tr>
+<tr><td>Examples with no rule</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td><span class="ok">met</span></td></tr>
+<tr><td>Silences without an owner decision</td><td class="num">4</td><td class="num">0</td><td class="num">3</td><td><span class="no">gap</span></td></tr>
+<tr><td>Rules satisfied on approved evidence</td><td class="num">0 of 3</td><td class="num">3 of 3</td><td class="num">0 of 3</td><td><span class="no">gap</span></td></tr>
+</tbody></table></div>
+<p class="src">Before and after are the two <code>csh check</code> runs in the walkthrough.</p>
+</section>
+</div>
+
+<section class="blk wide"><h2><span class="n">2</span>Current condition <span class="hint">go and see: how intent travels from the story to the code, and where it is lost</span></h2>
+<figure><figcaption><strong>Three parallel translations of one story</strong><span class="src">each red mark is a signal from <code>csh check</code>, placed at the hand-off that injected it</span></figcaption>
+<div class="scroll">
+<svg class="lanes" viewBox="0 0 960 330" role="img" aria-label="One user story is translated three times in parallel, into EARS sentences, BDD scenarios and unit tests, and the three meet only in the running code or in the harness.">
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" class="head"/></marker></defs>
+  <rect x="10" y="125" width="120" height="70" rx="8" class="story"/>
+  <text x="70" y="155" text-anchor="middle">User story</text><text x="70" y="172" text-anchor="middle" class="small">"three failed</text><text x="70" y="185" text-anchor="middle" class="small">attempts lock it"</text>
+  <!-- lanes -->
+  <g>
+    <rect x="160" y="22" width="6" height="66" class="lane-ears"/>
+    <rect x="176" y="22" width="170" height="66" rx="6" class="box"/><text x="186" y="44">Product owner writes</text><text x="186" y="62">EARS sentences</text><text x="186" y="78" class="small">docs/requirements.md</text>
+    <rect x="386" y="22" width="190" height="66" rx="6" class="box"/><text x="396" y="44">A person writes</text><text x="396" y="62">predicates that cite them</text><text x="396" y="78" class="small">spec/lockout.csl.ts</text>
+    <g class="andon"><rect x="320" y="12" width="40" height="20" rx="4"/><text x="340" y="26" text-anchor="middle">4</text></g>
+    <g class="andon"><rect x="550" y="12" width="40" height="20" rx="4"/><text x="570" y="26" text-anchor="middle">1</text></g>
+  </g>
+  <g>
+    <rect x="160" y="127" width="6" height="66" class="lane-bdd"/>
+    <rect x="176" y="127" width="170" height="66" rx="6" class="box"/><text x="186" y="149">Three amigos agree</text><text x="186" y="167">Gherkin scenarios</text><text x="186" y="183" class="small">features/lockout.feature</text>
+    <rect x="386" y="127" width="190" height="66" rx="6" class="box"/><text x="396" y="149">Step definitions map</text><text x="396" y="167">phrases to keys</text><text x="396" y="183" class="small">adapters/gherkin.ts</text>
+    <g class="andon"><rect x="320" y="117" width="40" height="20" rx="4"/><text x="340" y="131" text-anchor="middle">2</text></g>
+    <g class="andon"><rect x="550" y="117" width="40" height="20" rx="4"/><text x="570" y="131" text-anchor="middle">1</text></g>
+  </g>
+  <g>
+    <rect x="160" y="232" width="6" height="66" class="lane-tdd"/>
+    <rect x="176" y="232" width="170" height="66" rx="6" class="box"/><text x="186" y="254">Developer writes</text><text x="186" y="272">tests, then code</text><text x="186" y="288" class="small">test/ and src/lockout.ts</text>
+    <rect x="386" y="232" width="190" height="66" rx="6" class="box"/><text x="396" y="254">Witness keys map</text><text x="396" y="272">to model terms</text><text x="396" y="288" class="small">s.bind(...) in the spec</text>
+    <g class="andon"><rect x="320" y="222" width="40" height="20" rx="4"/><text x="340" y="236" text-anchor="middle">2</text></g>
+  </g>
+  <path d="M130 145 C145 145 145 55 172 55" class="arrow" marker-end="url(#ah)"/>
+  <path d="M130 160 L172 160" class="arrow" marker-end="url(#ah)"/>
+  <path d="M130 175 C145 175 145 265 172 265" class="arrow" marker-end="url(#ah)"/>
+  <path d="M346 55 L382 55" class="arrow" marker-end="url(#ah)"/><path d="M346 160 L382 160" class="arrow" marker-end="url(#ah)"/><path d="M346 265 L382 265" class="arrow" marker-end="url(#ah)"/>
+  <path d="M576 55 C640 55 640 145 676 150" class="arrow" marker-end="url(#ah)"/>
+  <path d="M576 160 L676 160" class="arrow" marker-end="url(#ah)"/>
+  <path d="M576 265 C640 265 640 175 676 170" class="arrow" marker-end="url(#ah)"/>
+  <rect x="680" y="115" width="190" height="90" rx="8" class="hub"/>
+  <text x="690" y="140">CSH: one pool</text><text x="690" y="158" class="small">rules from EARS only,</text><text x="690" y="172" class="small">examples from BDD and TDD</text><text x="690" y="190" class="small">first place the three meet</text>
+  <g class="andon"><rect x="840" y="105" width="40" height="20" rx="4"/><text x="860" y="119" text-anchor="middle">5</text></g>
+  <text x="680" y="240" class="small">Without the harness, the only place</text><text x="680" y="254" class="small">they meet is the running code.</text>
+</svg></div>
+<div class="legend"><span><i style="background:var(--ears)"></i>EARS lane</span><span><i style="background:var(--bdd)"></i>BDD lane</span><span><i style="background:var(--tdd)"></i>TDD lane</span><span><i style="background:var(--fail)"></i>signals injected at that hand-off (15 in all)</span></div>
+</figure>
+
+<h3>What each practice says at each decision point</h3>
+<div class="scroll"><table><thead><tr><th>Decision point</th><th><span class="tag ears">EARS</span></th><th><span class="tag bdd">BDD</span></th><th><span class="tag tdd">TDD</span></th><th>CSH reports</th><th>Class</th></tr></thead><tbody>
+<tr><td>Third wrong password (2 before it)</td><td><span class="cell says">LCK-001: lock</span></td><td><span class="cell says">locked</span></td><td><span class="cell clash">refused, not locked</span></td><td>example-conflict, TDD against <code>LockOnThirdFailure</code>. BDD and TDD contradict each other on the same input, and that is visible only through the rule.</td><td><span class="chip contradiction">contradiction</span></td></tr>
+<tr><td>Correct password on a locked account</td><td><span class="cell clash">LCK-002: refuse · LCK-003: accept</span></td><td><span class="cell says">refused</span></td><td><span class="cell says">refused</span></td><td>joint-conflict between LCK-002 and LCK-003, with the input that has no valid outcome. BDD and TDD each conflict with LCK-003.</td><td><span class="chip contradiction">contradiction</span></td></tr>
+<tr><td>How long the lock lasts</td><td><span class="cell says">15 minutes, written as 900 s</span></td><td><span class="cell drift">"15 minutes"</span></td><td><span class="cell says">900 s</span></td><td>not comparable: unit-mismatch. Kept out of every conflict rather than guessed.</td><td><span class="chip drift">drift</span></td></tr>
+<tr><td>LCK-002's WHILE clause</td><td><span class="cell drift">WHILE, translated as <code>and</code></span></td><td><span class="cell silent">n/a</span></td><td><span class="cell silent">n/a</span></td><td>warning shape-mismatch</td><td><span class="chip drift">drift</span></td></tr>
+<tr><td>Successful sign-in resets the count</td><td><span class="cell says">LCK-003</span></td><td><span class="cell drift">says it, tagged <code>@LOCK-3</code></span></td><td><span class="cell says">resets</span></td><td>error dangling-citation: the old identifier points at nothing</td><td><span class="chip drift">drift</span></td></tr>
+<tr><td>Fourth wrong password</td><td><span class="cell silent">silent</span></td><td><span class="cell silent">silent</span></td><td><span class="cell says">locks here</span></td><td>no-rule: the test pins behaviour nobody specified</td><td><span class="chip silence">silence</span></td></tr>
+<tr><td>Email the holder on lock</td><td><span class="cell says">LCK-004</span></td><td><span class="cell silent">silent</span></td><td><span class="cell silent">silent</span></td><td>uncited: no vocabulary for email</td><td><span class="chip silence">silence</span></td></tr>
+<tr><td>Two-factor sign-in</td><td><span class="cell says">LCK-005 (WHERE)</span></td><td><span class="cell silent">silent</span></td><td><span class="cell silent">silent</span></td><td>unliftable feature-scope, and uncited</td><td><span class="chip silence">silence</span></td></tr>
+<tr><td>Support unlocks an account</td><td><span class="cell silent">silent</span></td><td><span class="cell says">scenario</span></td><td><span class="cell silent">silent</span></td><td>unliftable unknown-step: no step definition, no event</td><td><span class="chip silence">silence</span></td></tr>
+</tbody></table></div>
+<div class="legend"><span><i style="background:var(--soft-pass)"></i>states it</span><span><i style="background:var(--soft-fail)"></i>contradicts another practice</span><span><i style="background:var(--soft-warn)"></i>states it in a form that drifted</span><span><i style="background:var(--soft-mute)"></i>silent</span></div>
+
+<figure class="pareto" id="pareto"><figcaption><strong>Pareto: the 15 signals by cause</strong><span class="src">every signal of the first <code>csh check</code>, each assigned to one cause</span></figcaption>
+<div class="phead" aria-hidden="true"><span></span><span></span><span>n</span><span>cum.</span></div>
+<ol class="bars">
+<li class="vital"><span class="pl">No practice owns the case<small>uncited ×2, unliftable ×2, no-rule</small></span><span class="pb"><span class="bar" style="width:100%"></span></span><span class="pv">5</span><span class="pc">33%</span></li>
+<li class="vital"><span class="pl">Rules come from one practice only<small>single-source ×3</small></span><span class="pb"><span class="bar" style="width:60%"></span></span><span class="pv">3</span><span class="pc">53%</span></li>
+<li class="vital"><span class="pl">Sentences never checked together<small>joint-conflict, and its two example-conflicts</small></span><span class="pb"><span class="bar" style="width:60%"></span></span><span class="pv">3</span><span class="pc">73%</span></li>
+<li class="vital"><span class="pl">Meaning drifts between notations<small>shape-mismatch, unit-mismatch, dangling-citation</small></span><span class="pb"><span class="bar" style="width:60%"></span></span><span class="pv">3</span><span class="pc">93%</span></li>
+<li class="cut" aria-hidden="true"><span>80% crossed: the vital few above, the useful many below</span></li>
+<li><span class="pl">A count in prose read two ways<small>the off-by-one example-conflict</small></span><span class="pb"><span class="bar" style="width:20%"></span></span><span class="pv">1</span><span class="pc">100%</span></li>
+</ol>
+<p class="note">Fifteen signals from one example show the shape of the problem, not a statistic. Counted by frequency, silence leads. Counted by harm, the single off-by-one leads: it is the only signal that ships a behaviour the owner did not ask for.</p>
+</figure>
+</section>
+
+<div class="a3">
+<section class="blk"><h2><span class="n">4</span>Root cause analysis <span class="hint">each question as deep as the evidence goes</span></h2>
+<ol class="rcas">
+<li class="rca"><span class="qn">Q1</span><div><p class="q">Why can all three be green while they disagree?</p><p>Each is judged by its own oracle. Tests pass against the code they drove. Scenarios pass against their step definitions. Sentences pass review one at a time. No oracle reads another practice's artefact.</p><p class="src">4 of 4 tests pass and <code>csh gate</code> allows, while <code>csh check</code> reports 15 signals.</p><span class="depth">Evidence stops: this is the condition, the questions below explain it.</span></div></li>
+<li class="rca"><span class="qn">Q2</span><div><p class="q">Why do they disagree on the third attempt?</p><p>All three translated "three failed attempts" from the story independently. Ordinals in prose read two ways: the third one locks, or three are allowed.</p><p class="src"><code>src/lockout.ts</code>: <code>failedAttempts &gt; MAX_FAILED_ATTEMPTS</code>; finding 776bf7df8a4c2145.</p><span class="depth deep">5 Whys to the root, below.</span></div></li>
+<li class="rca"><span class="qn">Q3</span><div><p class="q">Why does EARS contradict itself?</p><p>Each sentence was written and reviewed alone, and EARS has no rule for how two sentences combine. The WHILE clause that would separate them was left out of LCK-003.</p><p class="src">joint-conflict 6aa446d724b76ed9: locked, correct password, no valid outcome.</p><span class="depth">Evidence stops: reading 2, a missing context. Only the owner can confirm it.</span></div></li>
+<li class="rca"><span class="qn">Q4</span><div><p class="q">Why does meaning drift between notations?</p><p>Every hand-off is a translation by a person or a table: WHILE became <code>and</code>, minutes became seconds, ticket identifiers were renumbered. Bindings and step definitions are code that nobody reviews as requirements.</p><p class="src">shape-mismatch on LCK-002; unit-mismatch on the fifteen-minute scenario; dangling-citation <code>@LOCK-3</code>.</p><span class="depth">Evidence stops: the translations exist only as code.</span></div></li>
+<li class="rca"><span class="qn">Q5</span><div><p class="q">Why are some cases nobody's?</p><p>Each practice can express things the others cannot. EARS can say WHERE and talk about email; BDD can describe a support workflow; TDD can pin down the fourth attempt. What one practice says alone has nothing to agree or disagree with.</p><p class="src">uncited LCK-004 and LCK-005; unliftable support scenario; no-rule on the fourth-attempt test.</p><span class="depth">Evidence stops: these are scope decisions for the owner.</span></div></li>
+<li class="rca"><span class="qn">Q6</span><div><p class="q">Why would a BDD and TDD contradiction go unseen even with CSH?</p><p>Q-EX compares an example only with rules, never with another example. The scenario and the test on the third attempt collide only because LCK-001 has a predicate. Delete that rule and the contradiction is silent.</p><p class="src"><code>packages/check/src/run.ts</code>, the Q-EX loop.</p><span class="depth deep">Ends in a tool: countermeasure C7.</span></div></li>
+</ol>
+</section>
+<div class="col">
+<section class="blk"><h2><span class="n">5</span>Countermeasures <span class="hint">to the system, never to a person</span></h2>
+<div class="scroll"><table><thead><tr><th>#</th><th>Kind</th><th>Countermeasure</th><th>Answers</th><th>Status</th></tr></thead><tbody>
+<tr><td>C1</td><td><span class="kind">process</span></td><td>Make the EARS sentence the hub. A story is ready only when its sentences have identifiers, and every scenario and test names the one it illustrates.</td><td>Q2 Q5</td><td><span class="status proposed">proposed</span></td></tr>
+<tr><td>C2</td><td><span class="kind">requirement</span></td><td>LCK-003 gains "WHILE the account is not locked" (reading 2).</td><td>Q3</td><td><span class="status done">applied</span></td></tr>
+<tr><td>C3</td><td><span class="kind">requirement</span></td><td>State counts as states, not ordinals: LCK-001 "fails when the account already has 2 failed attempts".</td><td>Q2</td><td><span class="status done">applied</span></td></tr>
+<tr><td>C4</td><td><span class="kind">test</span></td><td>Lock on the third failure in code and test; the fourth-attempt test becomes a locked-account test.</td><td>Q2</td><td><span class="status done">applied</span></td></tr>
+<tr><td>C5</td><td><span class="kind">binding</span></td><td>Record unit conversions in the source (<code>features/units.json</code>) where they are reviewed like bindings.</td><td>Q4</td><td><span class="status done">applied</span></td></tr>
+<tr><td>C6</td><td><span class="kind">binding</span></td><td>Translate WHILE with <code>while</code>; retag <code>@LOCK-3</code> as <code>@LCK-003</code>.</td><td>Q4</td><td><span class="status done">applied</span></td></tr>
+<tr><td>C7</td><td><span class="kind">harness</span></td><td>Add an example-to-example query: two examples from different sources whose inputs can coincide and whose outcomes cannot both hold.</td><td>Q6</td><td><span class="status proposed">proposed</span></td></tr>
+<tr><td>C8</td><td><span class="kind">harness</span></td><td>Let a witness cite a requirement, so a unit test carries the same link a scenario tag does.</td><td>Q2 Q6</td><td><span class="status proposed">proposed</span></td></tr>
+<tr><td>C9</td><td><span class="kind">process</span></td><td>Run <code>csh check</code> on every change to requirements, features or tests, so a disagreement shows on the change that introduces it.</td><td>Q1</td><td><span class="status proposed">proposed</span></td></tr>
+<tr><td>C10</td><td><span class="kind">scope</span></td><td>The owner decides LCK-004, LCK-005 and the support unlock: model each one, or record it as out of scope.</td><td>Q5</td><td><span class="status decide">owner</span></td></tr>
+</tbody></table></div>
+<p class="note">C2 to C6 are applied in <code>examples/lockout/countermeasures/</code>, assuming the owner's answer to each conflict. C7 and C8 change the harness and are not built.</p>
+</section>
+<section class="blk"><h2><span class="n">6</span>Plan <span class="hint">who, what, when</span></h2>
+<div class="scroll"><table><thead><tr><th>What</th><th>Who</th><th>When</th></tr></thead><tbody>
+<tr><td>Decide the two contradictions (C2, C3)</td><td>Security owner</td><td>Before any predicate is approved</td></tr>
+<tr><td>Rewrite the sentences, fix code and test, retag (C2 to C6)</td><td>Product owner, developer, three amigos</td><td>In one change, after the decision</td></tr>
+<tr><td>Approve the predicates and the five bindings</td><td>Security owner, signed</td><td>After the change is green in <code>csh check</code></td></tr>
+<tr><td>Hub rule and CI check (C1, C9)</td><td>Team lead</td><td>Next story</td></tr>
+<tr><td>Example-to-example query and witness citations (C7, C8)</td><td>Harness maintainer</td><td>Next harness release</td></tr>
+<tr><td>Scope decisions (C10)</td><td>Product owner</td><td>Before release</td></tr>
+</tbody></table></div>
+</section>
+<section class="blk"><h2><span class="n">7</span>Follow-up <span class="hint">how we will know it worked</span></h2>
+<div class="scroll"><table><thead><tr><th>Check</th><th>Now</th><th></th></tr></thead><tbody>
+<tr><td>Second <code>csh check</code> has no findings</td><td>0 findings, 0 not comparable, no errors</td><td><span class="ok">yes</span></td></tr>
+<tr><td>Every test has a rule</td><td>no-rule gone</td><td><span class="ok">yes</span></td></tr>
+<tr><td>Silences are decisions</td><td>LCK-004, LCK-005, support unlock still open</td><td><span class="no">not yet</span></td></tr>
+<tr><td>Rules rest on more than one practice</td><td>single-source ×3, by construction until C1 links tests and scenarios to rules</td><td><span class="kept">kept</span></td></tr>
+<tr><td>Rules satisfied</td><td>verdict <em>unknown</em>: no approved binding, no model for a solver check</td><td><span class="no">not yet</span></td></tr>
+</tbody></table></div>
+<p class="note">Agreement between the practices is a precondition for a verdict, not a verdict. The last row turns green only after signed approvals.</p>
+</section>
+</div>
+</div>
+
+<section class="blk wide"><h2><span class="n">4</span>The 5 Whys <span class="hint">for the most harmful signal, the off-by-one, asked until the answer is a process or a tool</span></h2>
+<ol class="chain">
+<li><span class="wn">Why 1</span><div><p class="q">Why does the shipped code lock on the fourth failure?</p><p>It was written to pass <code>allows three failed attempts before locking</code>, the first test written (<code>test/lockout.test.ts</code>).</p></div></li>
+<li><span class="wn">Why 2</span><div><p class="q">Why did the test allow three?</p><p>The developer read "three failed attempts" in the story as a limit (<code>MAX_FAILED_ATTEMPTS = 3</code> with <code>&gt;</code>). The test came from the story, not from LCK-001 or the agreed scenario.</p></div></li>
+<li><span class="wn">Why 3</span><div><p class="q">Why from the story and not from the agreed artefacts?</p><p>A unit test has no way to cite a requirement or a scenario. The witness format carries no citation (Evidence tab, section 2), so nothing links the test to LCK-001 and nothing prompts the developer to look.</p></div></li>
+<li><span class="wn">Why 4</span><div><p class="q">Why did the scenario, which agrees with LCK-001, not catch it?</p><p>The scenario and the test are both examples, and nothing compares examples with each other: not the BDD runner, not the test runner, and not Q-EX in CSH. The contradiction surfaces only because LCK-001 has a predicate.</p></div></li>
+<li class="root"><span class="wn">Why 5</span><div><p class="q">Why does it take a rule for two practices to meet?</p><p>The three practices share no artefact between the story and the code. Each translates the story on its own, so they are parallel lanes, not a chain, and they meet only in the running system.</p><p class="rootcause">Root cause, in a process: no shared hub. Countermeasures C1 (process) and C7, C8 (harness).</p></div></li>
+</ol>
+</section>
+
+<section class="blk wide terms"><h2>Lean terms on this sheet</h2><dl>
+<div><dt>A3</dt><dd>the whole problem on one sheet: background, current condition, goal, root cause, countermeasures, plan, follow-up</dd></div>
+<div><dt>Gemba</dt><dd>go and see: the decision-point table reads what each artefact actually says, not what its author meant</dd></div>
+<div><dt>Andon</dt><dd>the red marks on the lanes: the hand-offs where signals were injected</dd></div>
+<div><dt>Pareto</dt><dd>the vital few causes, those up to 80% of the signals, above the dashed line</dd></div>
+<div><dt>5 Whys</dt><dd>asked until the answer is a process or a tool, never a person</dd></div>
+<div><dt>Jidoka</dt><dd>stop the line where the defect starts: C9 runs the check on the change that introduces a disagreement</dd></div>
+<div><dt>Muda of translation</dt><dd>three parallel translations of one story is rework done three times, with three chances to drift</dd></div>
+<div><dt>PDCA</dt><dd>sections 1 to 4 plan, 5 and 6 do, 7 checks, and the second <code>csh check</code> is the check</dd></div>
+</dl></section>
+<footer>Sources: <code>examples/lockout</code>, run by <code>examples/lockout/walkthrough.sh</code> before and after <code>countermeasures/</code>. Advisory, like the harness's own report: nothing here approves, waives or decides anything.</footer>
+</main>
+</body></html>
