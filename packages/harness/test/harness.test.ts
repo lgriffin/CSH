@@ -104,4 +104,25 @@ test("says nothing", () => {});
     ]);
     expect(read(join(root, "reports", "w.ndjson")).map((w) => w.execution.test)).toEqual(["test/a.test.ts::adds", "test/a.test.ts::fails", "test/a.test.ts::group > inner"]);
   }, 60000);
+
+  it("appends to its executions file on every run, never truncating it (#23)", () => {
+    const root = join(dir, "append");
+    mkdirSync(join(root, "test"), { recursive: true });
+    const run = (outcome: string) => {
+      writeFileSync(join(root, "test", "a.test.ts"), `import { test } from "node:test";\ntest("adds", () => { ${outcome === "failed" ? 'throw new Error("no");' : ""} });\n`);
+      try {
+        execFileSync(process.execPath, ["--test", "--test-reporter=@csh/harness/reporter", "--test-reporter-destination=stdout", "test/a.test.ts"], { cwd: root, env: { ...process.env, CSH_EXECUTIONS_FILE: "reports/e.ndjson" }, stdio: "pipe" });
+      } catch {
+        // The failing run exits 1.
+      }
+    };
+    run("passed");
+    run("failed");
+    // Two harnesses within one csh run may share the file, so the reporter keeps both runs' lines. Outside csh run, a
+    // pass followed by a fail is two outcomes for one identity, which the witness adapter reads as unknown: it fails safe.
+    expect(parseExecutions(readFileSync(join(root, "reports", "e.ndjson"), "utf8")).executions.map((x) => [x.e.test, x.e.outcome])).toEqual([
+      ["test/a.test.ts::adds", "passed"],
+      ["test/a.test.ts::adds", "failed"],
+    ]);
+  }, 60000);
 });

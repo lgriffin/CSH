@@ -27,6 +27,7 @@ It is the "Harnesses" container, shown in the [containers diagram](../../docs/ar
 - The probe writes no outcome. Only the test runner knows whether a test passed, so the outcome comes from the reporter or not at all (P2).
 - The probe fills in nothing it did not observe: a call that throws records nothing, and `mocked` is what the author states, since a probe cannot detect a test double (P10).
 - `pre` and `args` are read before the call, so a function that mutates its argument cannot change what was recorded as its input.
+- The reporter appends to its executions file and never truncates it, so two harnesses sharing the file within one `csh run` (which clears it once, first) both keep their lines. Run twice by hand, it accumulates lines: a pass followed by a fail gives one identity two outcomes, which the witness adapter reports as `ambiguous-test-identity` and reads as unknown. Appending fails safe; delete the file before running it by hand ([A-63](../../ASSUMPTIONS.md)).
 - Suites and skipped tests get no execution line; a failure in the test's own code is `failed`, and any other failure (hook, timeout, cancellation) and a todo test are `errored`, so neither can become a claim.
 
 ## Rationale
@@ -35,7 +36,7 @@ A hand-built record lets a test say anything about itself, and its default outco
 
 ## How it is tested
 
-- `test/harness.test.ts`: test identity; the probe returns the real result and records a version 2 witness with no outcome; an awaited result is recorded and a throwing call is not; witness ids number later calls; the reporter's outcome mapping for a pass, a failure in the test, another failure, a todo, a skip and a suite; full names from enclosing tests, per file; and a real run of `node --test` whose execution lines and witnesses join by identity.
+- `test/harness.test.ts`: test identity; the probe returns the real result and records a version 2 witness with no outcome; an awaited result is recorded and a throwing call is not; witness ids number later calls; the reporter's outcome mapping for a pass, a failure in the test, another failure, a todo, a skip and a suite; full names from enclosing tests, per file; a real run of `node --test` whose execution lines and witnesses join by identity; and two runs whose lines both stay in the file.
 - Fixtures F82 to F85 cover the join and the two gaps it adds (`outcome-unknown`, `unobserved-test`).
 - `examples/account/walkthrough.sh` and `examples/lockout/walkthrough.sh` run the probe and the reporter.
 
