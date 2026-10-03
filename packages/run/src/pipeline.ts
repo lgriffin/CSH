@@ -78,6 +78,7 @@ export function sourceSettings(c: LoadedComponent | undefined): RunSourcesOption
       if (p.adapter !== undefined) set.adapter = p.adapter;
       if (p.harness !== undefined) set.executions = p.harness.executions ?? DEFAULT_EXECUTIONS;
       if (p.cites !== undefined) set.cites = p.cites;
+      if (p.steps !== undefined) set.steps = p.steps;
       out[s] = set;
     }
   }

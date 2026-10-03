@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "dependencies": {
     "@csh/kernel": "workspace:*",
     "@csh/component": "workspace:*",
@@ -15,6 +17,7 @@
     "@csh/adapter-witness-files": "workspace:*",
     "@csh/adapter-ears-markdown": "workspace:*",
     "@csh/ledger": "workspace:*",
-    "@csh/gate": "workspace:*"
+    "@csh/gate": "workspace:*",
+    "@csh/adapter-gherkin": "workspace:*"
   }
 }

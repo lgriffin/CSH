@@ -22,7 +22,7 @@
       "match": [{ "kind": "shape-mismatch" }] },
     { "id": "bdd-scenario", "lane": "bdd", "step": 1, "title": ["Three amigos agree", "Gherkin scenarios"], "where": "features/lockout.feature",
       "match": [{ "kind": "unliftable", "any": "Scenarios" }, { "kind": "dangling-citation" }] },
-    { "id": "bdd-steps", "lane": "bdd", "step": 2, "title": ["Step definitions map", "phrases to keys"], "where": "adapters/gherkin.ts",
+    { "id": "bdd-steps", "lane": "bdd", "step": 2, "title": ["Step definitions map", "phrases to keys"], "where": "csh/steps.ts",
       "match": [{ "kind": "not-comparable" }] },
     { "id": "tdd-test", "lane": "tdd", "step": 1, "title": ["Developer writes", "tests, then code"], "where": "test/ and src/lockout.ts",
       "match": [{ "kind": "example-conflict", "any": "@UnitTests/", "not": "AcceptCorrectPassword" }, { "kind": "no-rule" }, { "kind": "violated" }] },

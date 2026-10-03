@@ -4,8 +4,8 @@ One behaviour, sign-in lockout, described by three practices that are each meant
 agree with the others:
 
 - `docs/requirements.md`: the product owner's requirements in EARS form, cited by the predicates in `spec/lockout.csl.ts`.
-- `features/lockout.feature`: the BDD scenarios the three amigos agreed, read by the project-local adapter `adapters/gherkin.ts`.
-- `test/lockout.test.ts`: the developer's unit tests, written test first, recording witnesses to `reports/witnesses.ndjson`.
+- `features/lockout.feature`: the BDD scenarios the three amigos agreed, read by `@csh/adapter-gherkin` through the example's step table, `csh/steps.ts`.
+- `test/lockout.test.ts`: the developer's unit tests, written test first, recording witnesses to `reports/witnesses.ndjson` through a probe.
 
 Each is signed off on its own terms: the tests pass, the scenarios are agreed, and the sentences are reviewed. The
 harness reads the scenarios rather than executing them. Read together, the three disagree in nine places.

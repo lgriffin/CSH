@@ -53,7 +53,7 @@ the model cannot express. The harness reports:
 ## Three practices, one lockout
 
 [examples/lockout](examples/lockout) is a second named example. It describes sign-in lockout three ways: EARS
-requirements, BDD scenarios read by a project-local Gherkin adapter, and unit tests written test first. Each practice
+requirements, BDD scenarios read by the Gherkin adapter through the example's step table, and unit tests written test first. Each practice
 is signed off on its own. Read together they disagree on nine decision points: an off-by-one between the tests and the
 requirements, two EARS sentences that cannot both hold, a unit the scenarios state in minutes, and cases only one
 practice can express.
@@ -149,8 +149,8 @@ node packages/testkit/src/run-fixtures.ts       # the fixtures alone, with a sum
 
 | Path | Contents |
 | --- | --- |
-| `packages/` | Sixteen packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `ledger`, `gate`, `component`, `run`, `harness`, `cli`, `testkit` |
-| `docs/guides/` | How to write a component manifest and a probe |
+| `packages/` | Seventeen packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `adapter-gherkin`, `ledger`, `gate`, `component`, `run`, `harness`, `cli`, `testkit` |
+| `docs/guides/` | How to write a component manifest, a probe and a step table |
 | `fixtures/` | Golden fixtures, one directory each, plus the shared bases and the test pack |
 | `examples/account/` | The walkthrough example |
 | `docs/spec/` | The specification, read-only |

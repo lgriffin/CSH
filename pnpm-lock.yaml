@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@csh/adapter-gherkin':
+        specifier: workspace:*
+        version: link:packages/adapter-gherkin
       '@csh/harness':
         specifier: workspace:*
         version: link:packages/harness
@@ -31,6 +34,15 @@ importers:
         version: 3.2.7(@types/node@22.20.5)
 
   packages/adapter-ears-markdown:
+    dependencies:
+      '@csh/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+      '@csh/witness':
+        specifier: workspace:*
+        version: link:../witness
+
+  packages/adapter-gherkin:
     dependencies:
       '@csh/kernel':
         specifier: workspace:*
@@ -154,6 +166,9 @@ importers:
       '@csh/adapter-ears-markdown':
         specifier: workspace:*
         version: link:../adapter-ears-markdown
+      '@csh/adapter-gherkin':
+        specifier: workspace:*
+        version: link:../adapter-gherkin
       '@csh/adapter-witness-files':
         specifier: workspace:*
         version: link:../adapter-witness-files
