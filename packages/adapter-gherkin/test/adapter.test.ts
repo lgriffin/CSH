@@ -102,6 +102,14 @@ describe("runWith", () => {
     expect(out.diagnostics.map((d) => d.code)).toContain("citation-without-source");
   });
 
+  it("matches a global or sticky pattern from the start of each step, every time", () => {
+    const flagged = steps.map((d) => ({ ...d, pattern: new RegExp(d.pattern.source, d.keyword === "Given" ? "g" : "y") }));
+    const plain = runWith(input({ "features/lockout.feature": FEATURE }, { cites: "Product" }), { steps }).claims!.examples;
+    const out = runWith(input({ "features/lockout.feature": FEATURE + FEATURE.replace("Feature: Sign-in lockout", "Feature: Again").replaceAll("Scenario: ", "Scenario: Again ") }, { cites: "Product" }), { steps: flagged });
+    expect(out.diagnostics.filter((d) => d.severity === "error")).toEqual([]);
+    expect(out.claims!.examples.length).toBe(plain.length * 2);
+  });
+
   it("needs the table to name the event when the vocabulary declares several", () => {
     const two = { ...vocabulary, events: [...vocabulary.events, { name: "Unlock", on: "Login", args: {} }] } as Vocabulary;
     const out = runWith({ ...input({ "features/lockout.feature": FEATURE }), vocabulary: two }, { steps });

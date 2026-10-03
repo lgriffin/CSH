@@ -120,6 +120,30 @@ describe("source locations", () => {
     }
   });
 
+  it("refuses a step table that is a directory rather than read its first file", async () => {
+    const d = fresh("steps-dir");
+    mkdirSync(join(d, "table"));
+    writeFileSync(join(d, "table", "steps.mjs"), "export const steps = [];\n");
+    const e = await emit(join(d, "spec.csl.ts"), { root: d, readable: [resolve(d, "..")] });
+    if (!e.ok) throw new Error("emit failed");
+    const m = { ...e.module, sources: [{ name: "Scenarios", kind: "Scenarios", at: "inputs" }] };
+    const runs = await runSources(m, { root: d, isolated: false, perSource: { Scenarios: { steps: "table" } } });
+    expect(runs[0]!.output.diagnostics.map((x) => x.code)).toEqual(["no-step-table"]);
+  });
+
+  it("reads an execution file inside a witness directory as executions, not as witnesses", async () => {
+    const d = fresh("exec-in-dir");
+    mkdirSync(join(d, "wit"));
+    cpSync(join(d, "inputs", "witnesses.ndjson"), join(d, "wit", "witnesses.ndjson"));
+    writeFileSync(join(d, "wit", "executions.ndjson"), '{"schema":"csh-execution/v1","test":"t.ts::a","outcome":"passed"}\n');
+    const e = await emit(join(d, "spec.csl.ts"), { root: d, readable: [resolve(d, "..")] });
+    if (!e.ok) throw new Error("emit failed");
+    const m = { ...e.module, sources: [{ name: "UnitTests", kind: "Witnesses", at: "wit" }] };
+    const runs = await runSources(m, { root: d, isolated: false, perSource: { UnitTests: { executions: "wit/executions.ndjson" } } });
+    expect(runs[0]!.output.diagnostics.map((x) => x.code)).not.toContain("malformed-witness");
+    expect(runs[0]!.files.map((f) => f.path)).toEqual(["wit/witnesses.ndjson", "wit/executions.ndjson"]);
+  });
+
   it("runs a project-local adapter in isolation", async () => {
     const d = fresh("local-adapter");
     mkdirSync(join(d, "adapters"));
