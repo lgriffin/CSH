@@ -1,36 +1,45 @@
-// A project-local adapter for BDD scenarios in Gherkin (Evidence tab, section 4; main tab, section 6.4).
-// Version 1 ships no scenario adapter, so this example brings its own, configured in csh/config.json.
+// The scenario adapter (Anchor, harnesses and A3, section 3.3): BDD scenarios in Gherkin, lifted as example claims.
 //
-// Lifting a scenario is mechanical in its structure and not in its meaning: "the account is locked" means
-// nothing to the harness until something says which key it sets. That something is the step table below,
-// the same job Cucumber's step definitions do. Each step sets one key, and the key is lifted to a model term
-// through the specification's bindings read in reverse, exactly as the witness adapter does for test records.
+// Lifting a scenario is mechanical in its structure and not in its meaning: "the account is locked" means nothing to
+// the harness until something says which key it sets. That something is the project's step table, the same job
+// Cucumber's step definitions do. The table is the project's own code: the practice's `steps` setting names it, and
+// it is loaded here, inside the adapter's sandbox. Each step sets one or more keys, and each key is lifted to a model
+// term through the specification's bindings read in reverse, exactly as the witness adapter does for test records.
 //
-// A scenario with a step the table does not know is kept whole as unliftable, reason unknown-step, never
-// dropped. A step that states a quantity keeps the unit the scenario wrote, so the harness, not the adapter,
-// decides whether that unit is comparable. A conversion happens only when the source itself holds one in
-// units.json, where a team records it as a decision that can be reviewed. Tags that look like requirement
-// identifiers become citations.
+// A scenario with a step the table does not know is kept whole as unliftable, reason unknown-step, never dropped. A
+// step that states a quantity keeps the unit the scenario wrote, so the harness, not the adapter, decides whether
+// that unit is comparable. A conversion happens only when the source itself holds one in units.json, where a team
+// records it as a decision that can be reviewed. Tags that look like requirement identifiers become citations of the
+// source the practice's `cites` setting names. Scenarios are read, never executed (A-37).
 import type { ClaimSet, Example, Expr, Type } from "@csh/kernel";
 import type { Adapter, AdapterInput, AdapterOutput, Diagnostic } from "@csh/witness";
 
 export const manifest = {
-  id: "example.adapter.gherkin",
+  id: "csh.adapter.gherkin",
   version: "0.1.0",
   ir: "csh-ir/v1",
   produces: ["claims"],
   inputKinds: ["Scenarios"],
 } as const;
 
-/** The source whose identifiers a scenario's tags cite. */
-const CITED_SOURCE = "Product";
 const ID_TAG = /^@([A-Z][A-Z0-9]*-[0-9]+)$/;
 
-type Part = "pre" | "args" | "post" | "result";
-type Value = { k: "int"; v: string; unit?: string } | { k: "bool"; v: boolean } | { k: "enum"; member: string };
-type Effect = { part: Part; key: string; value: Value };
+export type Part = "pre" | "args" | "post" | "result";
+export type Value = { k: "int"; v: string; unit?: string } | { k: "bool"; v: boolean } | { k: "enum"; member: string };
+export type Effect = { part: Part; key: string; value: Value };
 
-const UNITS: Record<string, string> = { minutes: "time(min)", minute: "time(min)", seconds: "time(s)", second: "time(s)" };
+/** One step definition: a phrase, by keyword, to the witness keys it sets. A project's step table is a list of these. */
+export interface StepDefinition {
+  keyword: "Given" | "When" | "Then";
+  pattern: RegExp;
+  effects: (m: RegExpExecArray) => Effect[];
+}
+
+/** What the step table module exports: `steps`, and optionally the event its scenarios are about. */
+export interface StepTable {
+  steps: StepDefinition[];
+  event?: string;
+}
 
 /** Conversions a team has decided, from units.json in the source: { "time(min)": { "to": "time(s)", "factor": 60 } }. */
 type Conversions = Record<string, { to: string; factor: number }>;
@@ -55,24 +64,6 @@ function convert(v: Value, conversions: Conversions): Value {
   const c = conversions[v.unit];
   return c === undefined ? v : { k: "int", v: String(BigInt(v.v) * BigInt(c.factor)), unit: c.to };
 }
-
-/** The step definitions: a phrase, by keyword, to what it sets. */
-const STEPS: { keyword: "Given" | "When" | "Then"; pattern: RegExp; effects: (m: RegExpExecArray) => Effect[] }[] = [
-  { keyword: "Given", pattern: /^the account has (\d+) failed attempts?$/, effects: (m) => [{ part: "pre", key: "failedAttempts", value: { k: "int", v: m[1]!, unit: "count(attempts)" } }] },
-  { keyword: "Given", pattern: /^the account is (not )?locked$/, effects: (m) => [{ part: "pre", key: "locked", value: { k: "bool", v: m[1] === undefined } }] },
-  { keyword: "When", pattern: /^the user signs in with the (correct|wrong) password$/, effects: (m) => [{ part: "args", key: "passwordOk", value: { k: "bool", v: m[1] === "correct" } }] },
-  { keyword: "Then", pattern: /^the sign-in is (accepted|refused)$/, effects: (m) => [{ part: "result", key: "result", value: { k: "enum", member: m[1] === "accepted" ? "Accepted" : "Refused" } }] },
-  { keyword: "Then", pattern: /^the account is (not )?locked$/, effects: (m) => [{ part: "post", key: "locked", value: { k: "bool", v: m[1] === undefined } }] },
-  { keyword: "Then", pattern: /^the account has (\d+) failed attempts?$/, effects: (m) => [{ part: "post", key: "failedAttempts", value: { k: "int", v: m[1]!, unit: "count(attempts)" } }] },
-  {
-    keyword: "Then",
-    pattern: /^the account is locked for (\d+) (minutes?|seconds?)$/,
-    effects: (m) => [
-      { part: "post", key: "locked", value: { k: "bool", v: true } },
-      { part: "post", key: "lockSeconds", value: { k: "int", v: m[1]!, unit: UNITS[m[2]!]! } },
-    ],
-  },
-];
 
 interface Scenario {
   title: string;
@@ -139,7 +130,7 @@ function literal(v: Value, t: Type | undefined): Expr {
   return { k: "enum", enum: t?.kind === "enum" ? t.enum : "", member: v.member };
 }
 
-function lift(sc: Scenario, input: AdapterInput, event: string, conversions: Conversions): { example: Example; candidate: boolean } | { reason: string; at: number } {
+function lift(sc: Scenario, input: AdapterInput, event: string, conversions: Conversions, steps: StepDefinition[], citedSource: string | undefined): { example: Example; candidate: boolean; uncitedIds: string[] } | { reason: string; at: number } {
   const v = input.vocabulary;
   const ev = v.events.find((e) => e.name === event);
   const st = v.states.find((s) => s.name === ev?.on);
@@ -147,7 +138,7 @@ function lift(sc: Scenario, input: AdapterInput, event: string, conversions: Con
   if (sc.unsupported !== undefined) return { reason: "unsupported-construct", at: sc.line };
   const effects: Effect[] = [];
   for (const step of sc.steps) {
-    const def = step.keyword === undefined ? undefined : STEPS.find((d) => d.keyword === step.keyword && d.pattern.test(step.text));
+    const def = step.keyword === undefined ? undefined : steps.find((d) => d.keyword === step.keyword && d.pattern.test(step.text));
     if (def === undefined) return { reason: "unknown-step", at: step.line };
     effects.push(...def.effects(def.pattern.exec(step.text)!).map((e) => ({ ...e, value: convert(e.value, conversions) })));
   }
@@ -169,16 +160,33 @@ function lift(sc: Scenario, input: AdapterInput, event: string, conversions: Con
   }
   if (then.length === 0) return { reason: "nothing-asserted", at: sc.line };
   const example: Example = { name: exampleName(sc.title), event: ev.name, given, args, then: then.length === 1 ? then[0]! : { k: "and", xs: then } };
-  const cites = sc.tags.map((tag) => ID_TAG.exec(tag)?.[1]).filter((id): id is string => id !== undefined).map((id) => ({ source: CITED_SOURCE, id }));
-  if (cites.length > 0) example.cites = cites;
-  return { example, candidate };
+  const ids = sc.tags.map((tag) => ID_TAG.exec(tag)?.[1]).filter((id): id is string => id !== undefined);
+  if (ids.length > 0 && citedSource !== undefined) example.cites = ids.map((id) => ({ source: citedSource, id }));
+  return { example, candidate, uncitedIds: citedSource === undefined ? ids : [] };
 }
 
-export function run(input: AdapterInput): AdapterOutput {
+/** Check the shape of a loaded step table; a malformed one is an error, never a partial table. */
+export function readStepTable(mod: unknown): { table?: StepTable; problem?: string } {
+  const m = mod as Partial<StepTable> | null;
+  if (m === null || typeof m !== "object" || !Array.isArray(m.steps)) return { problem: "the step table module must export steps, a list of step definitions" };
+  for (const [i, d] of m.steps.entries()) {
+    const ok = d !== null && typeof d === "object" && ["Given", "When", "Then"].includes((d as StepDefinition).keyword) && (d as StepDefinition).pattern instanceof RegExp && typeof (d as StepDefinition).effects === "function";
+    if (!ok) return { problem: `steps[${i}] needs a keyword (Given, When or Then), a pattern (a RegExp) and an effects function` };
+  }
+  if (m.event !== undefined && typeof m.event !== "string") return { problem: "event, when exported, must be an event name" };
+  const table: StepTable = { steps: m.steps };
+  if (m.event !== undefined) table.event = m.event;
+  return { table };
+}
+
+/** Run with a step table already loaded. */
+export function runWith(input: AdapterInput, table: StepTable): AdapterOutput {
   const claims: ClaimSet = { source: input.source.name, assumptions: [], obligations: [], examples: [], unliftable: [] };
   const diagnostics: Diagnostic[] = [];
-  // Every scenario in this example is about the one event the vocabulary declares; a larger project would name it per feature.
-  const event = input.vocabulary.events[0]?.name ?? "";
+  // The event the scenarios are about: the table names it, or the vocabulary declares only one.
+  const event = table.event ?? (input.vocabulary.events.length === 1 ? input.vocabulary.events[0]!.name : "");
+  if (event === "") diagnostics.push({ code: "event-unnamed", severity: "error", message: "the vocabulary declares several events; the step table must export event, the one its scenarios are about" });
+  const citedSource = input.config?.cites;
   const unitsFile = input.files.find((f) => f.path.endsWith("/units.json") || f.path === "units.json");
   let conversions: Conversions = {};
   if (unitsFile !== undefined) {
@@ -193,7 +201,7 @@ export function run(input: AdapterInput): AdapterOutput {
     const text = new TextDecoder().decode(file.bytes);
     const lines = text.split(/\r?\n/);
     for (const sc of parse(text).scenarios) {
-      const r = lift(sc, input, event, conversions);
+      const r = lift(sc, input, event, conversions, table.steps, citedSource);
       if ("reason" in r) {
         const span = `${file.path}:${r.at}`;
         claims.unliftable.push({ span, reason: r.reason, text: `Scenario: ${sc.title} | ${(lines[r.at - 1] ?? "").trim()}` });
@@ -201,10 +209,28 @@ export function run(input: AdapterInput): AdapterOutput {
         continue;
       }
       claims.examples.push(r.example);
+      if (r.uncitedIds.length > 0) diagnostics.push({ code: "citation-without-source", severity: "warning", message: `scenario "${sc.title}" is tagged ${r.uncitedIds.join(", ")}, but no practice says which source its citations refer to`, span: `${file.path}:${sc.line}` });
       if (r.candidate) diagnostics.push({ code: "depends-on-candidate-binding", severity: "info", message: `${r.example.name} lifts through a candidate binding`, span: `${file.path}:${sc.line}` });
     }
   }
   return { claims, diagnostics };
+}
+
+/**
+ * Load the project's step table from the file URL in `config.steps`, then run. The sandbox lets the adapter read that
+ * file and nothing else of the project.
+ */
+export async function run(input: AdapterInput): Promise<AdapterOutput> {
+  const at = input.config?.steps;
+  if (at === undefined) return { claims: { source: input.source.name, assumptions: [], obligations: [], examples: [], unliftable: [] }, diagnostics: [{ code: "no-step-table", severity: "error", message: "the scenarios practice names no step table (steps in csh/component.json); no scenario can be lifted" }] };
+  let loaded: { table?: StepTable; problem?: string };
+  try {
+    loaded = readStepTable(await import(at));
+  } catch (err) {
+    loaded = { problem: `the step table could not be loaded: ${(err as Error).message}` };
+  }
+  if (loaded.table === undefined) return { claims: { source: input.source.name, assumptions: [], obligations: [], examples: [], unliftable: [] }, diagnostics: [{ code: "malformed-step-table", severity: "error", message: loaded.problem! }] };
+  return runWith(input, loaded.table);
 }
 
 export const adapter: Adapter = { manifest: { ...manifest, produces: [...manifest.produces], inputKinds: [...manifest.inputKinds] }, run };

@@ -13,6 +13,7 @@
     "check": "pnpm typecheck && pnpm test"
   },
   "devDependencies": {
+    "@csh/adapter-gherkin": "workspace:*",
     "@csh/harness": "workspace:*",
     "@csh/witness": "workspace:*",
     "@types/node": "22.20.5",

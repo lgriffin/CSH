@@ -20,10 +20,9 @@ the sentence it claims to express. Until section 8 there is deliberately no form
 practices are the only voices, so everything the harness reports is a disagreement between them. The Lean reading of the same output is
 [the A3](lockout-a3.md).
 
-Version 1 has no adapter for scenario files (Evidence tab, section 7), so the example brings its own:
-`examples/lockout/adapters/gherkin.ts`, named by the BDD practice in `csh/component.json`. It does what
-Cucumber's step definitions do. A table maps each step phrase to the key it sets, and the key is lifted to a model term
-through the same bindings the unit tests use. A scenario with a step the table does not know is kept as unliftable,
+The scenarios are read by `@csh/adapter-gherkin`, which the BDD practice names in `csh/component.json`, with the
+example's own step table, `csh/steps.ts`. The table does what Cucumber's step definitions do. It maps each step phrase
+to the key it sets, and the key is lifted to a model term through the same bindings the unit tests use. A scenario with a step the table does not know is kept as unliftable,
 and a tag that looks like a requirement identifier becomes a citation.
 
 To run it yourself, from the repository root:

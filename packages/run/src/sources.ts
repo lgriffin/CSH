@@ -13,6 +13,7 @@ import type { AdapterInput, AdapterOutput } from "@csh/witness";
 /** Built-in adapters by source kind. Configuration may add more (kind to module specifier or path). */
 export const BUILTIN_ADAPTERS: Record<string, string> = {
   Witnesses: "@csh/adapter-witness-files",
+  Scenarios: "@csh/adapter-gherkin",
   Requirements: "@csh/adapter-ears-markdown",
 };
 
@@ -31,7 +32,7 @@ export interface RunSourcesOptions {
    * Settings by source name, from the component manifest. A source's own adapter takes precedence over the one for
    * its kind.
    */
-  perSource?: Record<string, { adapter?: string; executions?: string; cites?: string }>;
+  perSource?: Record<string, { adapter?: string; executions?: string; cites?: string; steps?: string }>;
   /** Authority of each binding, by binding fragment name; candidate when absent. */
   bindingAuthority?: (b: Binding) => string;
   timeoutMs?: number;
@@ -75,9 +76,9 @@ function toolReadable(): string[] {
 }
 
 /** Run one adapter in an isolated subprocess. */
-export function runIsolated(adapterUrl: string, input: AdapterInput, timeoutMs = 30000): Promise<AdapterOutput> {
-  // A project-local adapter may also read its own directory, and nothing else of the project.
-  const own = adapterUrl.startsWith("file:") ? [realpathSync(dirname(fileURLToPath(adapterUrl)))] : [];
+export function runIsolated(adapterUrl: string, input: AdapterInput, timeoutMs = 30000, readable: string[] = []): Promise<AdapterOutput> {
+  // A project-local adapter may also read its own directory, and nothing else of the project but the files it is given.
+  const own = [...(adapterUrl.startsWith("file:") ? [realpathSync(dirname(fileURLToPath(adapterUrl)))] : []), ...readable];
   const args = ["--permission", ...[...toolReadable(), ...own].map((p) => `--allow-fs-read=${p}`), "--disable-warning=ExperimentalWarning", "--no-addons", RUNNER];
   return new Promise((done, fail) => {
     const child = spawn(process.execPath, args, { stdio: ["ignore", "ignore", "pipe", "ipc"], env: {}, serialization: "advanced" });
@@ -175,8 +176,15 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
     }
     const input: AdapterInput = { source, vocabulary: module.vocabulary, bindings, files };
     const own = opts.perSource?.[source.name];
-    const config = { ...(opts.config ?? {}), ...(own?.cites !== undefined ? { cites: own.cites } : {}) };
-    if (opts.config !== undefined || own?.cites !== undefined) input.config = config;
+    // A scenarios practice's step table is project code: the adapter receives its file URL, and the sandbox lets it
+    // read that one file (Anchor, harnesses and A3, section 3.3).
+    const steps = own?.steps === undefined ? undefined : filesAt(opts.root, own.steps).files?.[0]?.abs;
+    if (own?.steps !== undefined && steps === undefined) {
+      runs.push({ ...base, files: files.map(({ path, digest }) => ({ path, digest })), output: { diagnostics: [{ code: "no-step-table", severity: "error", message: `the step table ${own.steps} is missing or outside the project root` }] } });
+      continue;
+    }
+    const config = { ...(opts.config ?? {}), ...(own?.cites !== undefined ? { cites: own.cites } : {}), ...(steps !== undefined ? { steps: pathToFileURL(realpathSync(steps)).href } : {}) };
+    if (opts.config !== undefined || own?.cites !== undefined || steps !== undefined) input.config = config;
     // The execution file sits beside a witness source: the practice's harness names it, or the reporter's default.
     const execAt = own?.executions ?? (source.kind === "Witnesses" ? DEFAULT_EXECUTIONS : undefined);
     const exec = execAt === undefined ? undefined : filesAt(opts.root, execAt);
@@ -192,7 +200,7 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
         const mod = (await import(url)) as { adapter: { run: (i: AdapterInput) => AdapterOutput | Promise<AdapterOutput> } };
         output = structuredClone(await mod.adapter.run(input));
       } else {
-        output = await runIsolated(url, input, opts.timeoutMs);
+        output = await runIsolated(url, input, opts.timeoutMs, steps === undefined ? [] : [realpathSync(steps)]);
       }
     } catch (err) {
       output = { diagnostics: [{ code: "adapter-failed", severity: "error", message: (err as Error).message }] };

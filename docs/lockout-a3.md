@@ -46,7 +46,7 @@ Where the signals were injected:
 - Product owner writes EARS sentences (`docs/requirements.md`): 4
 - A person writes predicates that cite them (`spec/lockout.csl.ts`): 1
 - Three amigos agree Gherkin scenarios (`features/lockout.feature`): 2
-- Step definitions map phrases to keys (`adapters/gherkin.ts`): 1
+- Step definitions map phrases to keys (`csh/steps.ts`): 1
 - Developer writes tests, then code (`test/ and src/lockout.ts`): 2
 - Witness keys map to model terms (`s.bind(...) in the spec`): 0
 - CSH: one pool (`rules from EARS only, examples from BDD and TDD`): 5

@@ -5,7 +5,7 @@
   "implementation": ["src"],
   "practices": [
     { "id": "ears", "name": "EARS", "kind": "requirements", "sources": ["Product"], "author": "Product owner", "unit": "the sentence" },
-    { "id": "bdd", "name": "BDD", "kind": "scenarios", "sources": ["Scenarios"], "adapter": "./adapters/gherkin.ts", "author": "Three amigos", "unit": "the scenario" },
+    { "id": "bdd", "name": "BDD", "kind": "scenarios", "sources": ["Scenarios"], "adapter": "@csh/adapter-gherkin", "steps": "csh/steps.ts", "cites": "Product", "author": "Three amigos", "unit": "the scenario" },
     { "id": "tdd", "name": "TDD", "kind": "tests", "sources": ["UnitTests"], "author": "Developer", "unit": "the test", "cites": "Product",
       "harness": {
         "run": ["node", "--test", "--test-reporter=spec", "--test-reporter-destination=stdout", "--test-reporter=@csh/harness/reporter", "--test-reporter-destination=stdout", "test/lockout.test.ts"],
