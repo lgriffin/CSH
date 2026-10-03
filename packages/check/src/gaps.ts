@@ -15,10 +15,14 @@ import {
   type Transition,
 } from "@csh/kernel";
 import { exampleF, neg, satisfiable, triggerF, unconstrainedAfter, type QueryEnv } from "@csh/solver";
-import { clausesOf } from "@csh/adapter-ears-markdown";
 import type { Prepared } from "./pool.ts";
 import { assumptionsFor, type Pool, type QueryOutcome, sourceColumn, stateOfEvent } from "./run.ts";
 import type { AuthorityInfo, Cell, Gap, GapView, ReportError } from "./types.ts";
+
+/** Which EARS clauses a pattern carries (Language reference, section 5), for the shape check. */
+function clausesOf(pattern: string): { while: boolean; ifClause: boolean } {
+  return { while: pattern === "state-driven" || pattern === "complex", ifClause: pattern === "unwanted-behaviour" };
+}
 
 const RANK: Cell[] = ["silent", "unliftable", "models", "exemplifies", "asserts"];
 

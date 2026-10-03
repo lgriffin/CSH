@@ -44,12 +44,6 @@ importers:
 
   packages/check:
     dependencies:
-      '@csh/adapter-ears-markdown':
-        specifier: workspace:*
-        version: link:../adapter-ears-markdown
-      '@csh/adapter-witness-files':
-        specifier: workspace:*
-        version: link:../adapter-witness-files
       '@csh/kernel':
         specifier: workspace:*
         version: link:../kernel
@@ -160,6 +154,9 @@ importers:
       '@csh/check':
         specifier: workspace:*
         version: link:../check
+      '@csh/cli':
+        specifier: workspace:*
+        version: link:../cli
       '@csh/emit':
         specifier: workspace:*
         version: link:../emit

@@ -2,7 +2,8 @@
 // runner, the walkthrough and the CLI tests.
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { check, type CheckResult, type EvidenceStore, makeRefiner, type Report, runSources, type AuthorityResolver, type SourceRun } from "@csh/check";
+import { check, type CheckResult, type EvidenceStore, makeRefiner, type Report, type AuthorityResolver, type SourceRun } from "@csh/check";
+import { runSources } from "./sources.ts";
 import { emit, type EmitOptions, type EmitResult, type Lock } from "@csh/emit";
 import { digestJson, fragmentsOf, refName, type Module } from "@csh/kernel";
 import { type LedgerState, resolveAuthority } from "@csh/ledger";
@@ -34,6 +35,9 @@ export interface PipelineOptions {
   /** The lock file pinning pack versions and digests. */
   lock?: Lock;
   composition?: Report["composition"];
+  /** The snapshot the report is for; overrides the one in the configuration. */
+  snapshot?: { commit: string; ledgerHead: string; digest?: string };
+  adapters?: Record<string, string>;
   isolatedAdapters?: boolean;
   unchangedSince?: (a: string, b: string) => boolean;
 }
@@ -69,7 +73,7 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
     if (state !== undefined && f !== undefined) return resolveAuthority(state, f).authority;
     return opts.authority?.({ name, digest: f?.digest ?? "", kind: "binding", cites: [] }).authority ?? "candidate";
   };
-  const runs = await runSources(module, { root: opts.root, config: adapterConfig, isolated: opts.isolatedAdapters ?? true, bindingAuthority });
+  const runs = await runSources(module, { root: opts.root, config: adapterConfig, isolated: opts.isolatedAdapters ?? true, bindingAuthority, ...(opts.adapters !== undefined ? { adapters: opts.adapters } : {}) });
   const items = new Map<string, string>();
   for (const r of runs) for (const it of r.output.items ?? []) items.set(`${r.source}/${it.id}`, it.textDigest);
   const resolver: AuthorityResolver | undefined = state !== undefined ? (f) => resolveAuthority(state, f, items) : opts.authority;
@@ -83,7 +87,8 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   if (cfg.budgetMs !== undefined) checkOpts.budgetMs = cfg.budgetMs;
   if (resolver !== undefined) checkOpts.authority = resolver;
   if (opts.evidence !== undefined) checkOpts.evidence = opts.evidence;
-  if (cfg.snapshot !== undefined) checkOpts.snapshot = { commit: cfg.snapshot.commit, ledgerHead: String(state?.head ?? 0) };
+  if (opts.snapshot !== undefined) checkOpts.snapshot = opts.snapshot;
+  else if (cfg.snapshot !== undefined) checkOpts.snapshot = { commit: cfg.snapshot.commit, ledgerHead: String(state?.head ?? 0) };
   if (state !== undefined) checkOpts.ledger = { head: state.head, invalid: state.invalid.map(({ seq, reason, commit }) => (commit !== undefined ? { seq, reason, commit } : { seq, reason })) };
   if (opts.unchangedSince !== undefined) checkOpts.unchangedSince = opts.unchangedSince;
   if (opts.composition !== undefined) checkOpts.composition = opts.composition;

@@ -5,9 +5,8 @@ import type { SolverPort } from "@csh/solver";
 import { assess, toolDigest } from "./assess.ts";
 import { type EvidenceStore, MemoryEvidenceStore } from "./evidence.ts";
 import { gapView } from "./gaps.ts";
-import { prepare, type Prepared } from "./pool.ts";
+import { prepare, type Prepared, type SourceRun } from "./pool.ts";
 import { buildPool, runQueries } from "./run.ts";
-import type { SourceRun } from "./sources.ts";
 import { ALL_CANDIDATE, type AuthorityInfo, type AuthorityResolver, type Report, TOOL_VERSION } from "./types.ts";
 
 export const DEFAULT_BUDGET_MS = 5000;

@@ -2,3 +2,4 @@ node_modules/
 .csh-cache/
 *.log
 coverage/
+reports/

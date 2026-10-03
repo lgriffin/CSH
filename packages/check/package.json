@@ -10,8 +10,6 @@
   "dependencies": {
     "@csh/kernel": "workspace:*",
     "@csh/solver": "workspace:*",
-    "@csh/witness": "workspace:*",
-    "@csh/adapter-witness-files": "workspace:*",
-    "@csh/adapter-ears-markdown": "workspace:*"
+    "@csh/witness": "workspace:*"
   }
 }

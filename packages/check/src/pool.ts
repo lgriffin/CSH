@@ -12,8 +12,17 @@ import {
   validateObligation,
   ViolationCollector,
 } from "@csh/kernel";
-import type { SourceItem, Witness } from "@csh/witness";
-import type { SourceRun } from "./sources.ts";
+import type { AdapterOutput, SourceItem, Witness } from "@csh/witness";
+
+/** One source after its adapter ran (the command line runs adapters; the check engine reads their output). */
+export interface SourceRun {
+  source: string;
+  kind: string;
+  /** The adapter used, or "claims-json" for a file of csh-ir claim sets, or none. */
+  adapter?: string;
+  files: { path: string; digest: string }[];
+  output: AdapterOutput;
+}
 
 export interface SourcedWitness {
   source: string;

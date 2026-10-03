@@ -11,7 +11,7 @@ import { authorship, formatDecision, gitVcs, LEDGER_PATH, MAINTAINERS_PATH, read
 import { printModule } from "@csh/print";
 import type { SolverPort } from "@csh/solver";
 import { createTestRepo, gpgAvailable, type TestRepo } from "./git.ts";
-import { checkModule, evaluateSpec, type FixtureConfig, readConfig } from "./pipeline.ts";
+import { checkModule, evaluateSpec, type FixtureConfig, readConfig } from "@csh/cli";
 import { verifyCounterexample, verifyNoOutcome } from "./verify.ts";
 
 export interface FixtureResult {

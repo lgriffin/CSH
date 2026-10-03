@@ -144,6 +144,30 @@ export class Printer {
     return lines;
   }
 
+  /** One fragment in the notation it would have inside its container (used by csh explain and csh approve). */
+  fragment(kind: string, node: unknown): string {
+    switch (kind) {
+      case "assumption":
+        return this.assumption("i", node as Assumption).trim();
+      case "invariant":
+      case "requirement":
+      case "architecture":
+      case "temporal":
+        return this.obligation("i", node as Obligation).map((l) => l.slice(4)).join("\n");
+      case "example":
+        return this.example("i", node as Example).map((l) => l.slice(4)).join("\n");
+      case "transition":
+        return this.transition(node as Transition).map((l) => l.slice(2)).join("\n");
+      case "binding": {
+        const t = (node as Module["bindings"][number]).target;
+        const target = t.k === "field" ? `${t.state}.${t.field}` : t.k === "arg" ? `${t.event}.args.${t.name}` : `${t.event}.result`;
+        return `s.bind(${target}, ${str((node as Module["bindings"][number]).key)});`;
+      }
+      default:
+        return JSON.stringify(node);
+    }
+  }
+
   print(): string {
     const m = this.m;
     const out: string[] = [`import { system, int, bool, unit, lit, truth, and, or } from "csl";`, ""];
@@ -201,6 +225,11 @@ export class Printer {
 /** Render a model as CSL TypeScript. Pack imports and unliftable entries have no source form and are not printed. */
 export function printModule(m: Module): string {
   return new Printer(m).print();
+}
+
+/** Render one fragment of a module as CSL. */
+export function printFragment(m: Module, kind: string, node: unknown): string {
+  return new Printer(m).fragment(kind, node);
 }
 
 /** Render one expression in the notation of a position. */

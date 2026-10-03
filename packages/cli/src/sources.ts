@@ -5,6 +5,7 @@ import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "n
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compareCodePoints, digestOf, type Binding, type ClaimSet, type Module, type Source } from "@csh/kernel";
+import type { SourceRun } from "@csh/check";
 import type { AdapterInput, AdapterOutput } from "@csh/witness";
 
 /** Built-in adapters by source kind. Configuration may add more (kind to module specifier or path). */
@@ -13,14 +14,7 @@ export const BUILTIN_ADAPTERS: Record<string, string> = {
   Requirements: "@csh/adapter-ears-markdown",
 };
 
-export interface SourceRun {
-  source: string;
-  kind: string;
-  /** The adapter used, or "claims-json" for a file of csh-ir claim sets, or none. */
-  adapter?: string;
-  files: { path: string; digest: string }[];
-  output: AdapterOutput;
-}
+export type { SourceRun };
 
 export interface RunSourcesOptions {
   /** Directory that source locations are relative to. */
