@@ -52,7 +52,8 @@ $ CSH_COMMIT=$(git rev-parse HEAD) CSH_WITNESS_FILE=reports/witnesses.ndjson nod
 All three tests pass. Passing is an execution fact (P2). The harness stores it and never treats it as conformance.
 The probe in `test/account.test.ts` appended one witness record per call to `reports/witnesses.ndjson`, naming the
 commit and the test but no outcome. The second reporter, `@csh/harness/reporter`, wrote one line per finished test to
-`reports/executions.ndjson`, and the witness adapter joins the two by test identity. A witness whose test has no
+`reports/executions.ndjson`, which `csh/config.json` names as its `executions` file, and the witness adapter joins the two by
+test identity. Without that setting no executions file is joined, and every witness would stay unknown. A witness whose test has no
 execution line has outcome unknown and is never lifted as a claim.
 
 ## 3. Check

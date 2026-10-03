@@ -24,10 +24,15 @@ export interface ProjectConfig {
   requirementIdPattern?: string;
   /** Adapters by source kind. Replaced by each practice's adapter when there is a component manifest. */
   adapters?: Record<string, string>;
+  /**
+   * The executions file a reporter run by hand writes, joined to every Witnesses source. None is joined without it.
+   * Replaced by each practice's harness or `executions` when there is a component manifest.
+   */
+  executions?: string;
 }
 
 /** Settings of csh/config.json that the component manifest replaces (Anchor, harnesses and A3, section 2.1). */
-export const SUPERSEDED_BY_COMPONENT = ["spec", "implementationPaths", "adapters"] as const;
+export const SUPERSEDED_BY_COMPONENT = ["spec", "implementationPaths", "adapters", "executions"] as const;
 
 export interface Project {
   root: string;

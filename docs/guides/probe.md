@@ -61,5 +61,9 @@ line per finished test. The witness adapter joins each witness to its test's lin
 | Present | missing | Outcome unknown; never a claim; gap `outcome-unknown` |
 | Missing | any | Gap `unobserved-test`: the test ran and told the harness nothing |
 
+To run the reporter by hand and then `csh check`, name its file explicitly: `executions` on a practice without a harness,
+or `executions` in `csh/config.json` for a project with no manifest. A Witnesses source whose practice names no harness
+and no `executions` file is joined to none, so it never takes outcomes from another practice's tests.
+
 Without the reporter every witness is unknown, and none becomes a claim. That is deliberate: a record cannot vouch for
 its own test.

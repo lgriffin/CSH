@@ -43,6 +43,8 @@ export interface PipelineOptions {
   unchangedSince?: (a: string, b: string) => boolean;
   /** The component manifest: it names each source's practice and adapter (Anchor, harnesses and A3, section 2). */
   component?: LoadedComponent;
+  /** Without a component: the executions file joined to every Witnesses source (csh/config.json's `executions`). */
+  executions?: string;
 }
 
 export interface PipelineResult {
@@ -88,7 +90,9 @@ export function sourceSettings(c: LoadedComponent | undefined): RunSourcesOption
     for (const s of p.sources) {
       const set: NonNullable<RunSourcesOptions["perSource"]>[string] = {};
       if (p.adapter !== undefined) set.adapter = p.adapter;
+      // An executions file is joined only where the practice names one: its harness's, or its own (#22).
       if (p.harness !== undefined) set.executions = p.harness.executions ?? DEFAULT_EXECUTIONS;
+      else if (p.executions !== undefined) set.executions = p.executions;
       if (p.cites !== undefined) set.cites = p.cites;
       if (p.steps !== undefined) set.steps = p.steps;
       out[s] = set;
@@ -112,7 +116,7 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
     return opts.authority?.({ name, digest: f?.digest ?? "", kind: "binding", cites: [] }).authority ?? "candidate";
   };
   const perSource = sourceSettings(opts.component);
-  const runs = await runSources(module, { root: opts.root, config: adapterConfig, isolated: opts.isolatedAdapters ?? true, bindingAuthority, ...(opts.adapters !== undefined ? { adapters: opts.adapters } : {}), ...(perSource !== undefined ? { perSource } : {}) });
+  const runs = await runSources(module, { root: opts.root, config: adapterConfig, isolated: opts.isolatedAdapters ?? true, bindingAuthority, ...(opts.adapters !== undefined ? { adapters: opts.adapters } : {}), ...(perSource !== undefined ? { perSource } : {}), ...(opts.executions !== undefined ? { executions: opts.executions } : {}) });
   const items = new Map<string, string>();
   for (const r of runs) for (const it of r.output.items ?? []) items.set(`${r.source}/${it.id}`, it.textDigest);
   const resolver: AuthorityResolver | undefined = state !== undefined ? (f) => resolveAuthority(state, f, items) : opts.authority;

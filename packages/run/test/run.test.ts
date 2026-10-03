@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ComponentManifest } from "@csh/component";
 import { digestOf } from "@csh/kernel";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { type Project, type RunRecord, runAt, runComponent, runHarnesses, unchangedSince } from "../src/index.ts";
+import { evaluateSpec, type Project, type RunRecord, runAt, runComponent, runHarnesses, unchangedSince } from "../src/index.ts";
 
 const REPO = resolve(import.meta.dirname, "../../..");
 let proj: string;
@@ -304,4 +304,33 @@ describe("runHarnesses", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   }, 60000);
+});
+
+describe("the executions file joined to a Witnesses source (#22)", () => {
+  it("is joined only where a practice's harness or executions, or a manifest-less configuration, names one", async () => {
+    const tmp = mkdtempSync(join(REPO, ".csh-cache", "run-exec-"));
+    try {
+      cpSync(join(REPO, "fixtures", "F82"), join(tmp, "F82"), { recursive: true });
+      cpSync(join(REPO, "fixtures", "base"), join(tmp, "base"), { recursive: true });
+      const d = join(tmp, "F82");
+      // A reporter's lines at the default path: another practice's run, or one by hand.
+      mkdirSync(join(d, "reports"));
+      cpSync(join(d, "inputs", "executions.ndjson"), join(d, "reports", "executions.ndjson"));
+      const parsed = JSON.parse(readFileSync(join(d, "inputs", "component.json"), "utf8")) as ComponentManifest;
+      const tdd = parsed.practices[1]!;
+      const joined = async (practice: object | undefined, executions?: string) => {
+        const component = practice === undefined ? undefined : { manifest: { ...parsed, practices: [parsed.practices[0]!, { ...tdd, harness: undefined, ...practice }] } as ComponentManifest, digest: "" };
+        const r = await evaluateSpec(join(d, "spec.csl.ts"), { root: d, solver: z3, emit: { readable: [tmp] }, ...(component !== undefined ? { component } : {}), ...(executions !== undefined ? { executions } : {}) });
+        return (r.runs ?? []).find((x) => x.source === "UnitTests")!.files.map((f) => f.path).filter((p) => p.includes("executions"));
+      };
+      expect(await joined({ harness: tdd.harness })).toEqual(["inputs/executions.ndjson"]);
+      expect(await joined({ harness: { run: ["node"], witnesses: "inputs/witnesses.ndjson" } })).toEqual(["reports/executions.ndjson"]);
+      expect(await joined({})).toEqual([]);
+      expect(await joined({ executions: "inputs/executions.ndjson" })).toEqual(["inputs/executions.ndjson"]);
+      expect(await joined(undefined)).toEqual([]);
+      expect(await joined(undefined, "reports/executions.ndjson")).toEqual(["reports/executions.ndjson"]);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  }, 120000);
 });

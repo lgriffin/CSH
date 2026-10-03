@@ -34,6 +34,11 @@ export interface Practice {
   /** Package or project path of the adapter; built in by source kind when absent. */
   adapter?: string;
   harness?: Harness;
+  /**
+   * For a practice without a harness: the file a reporter run by hand writes, joined to its Witnesses sources. Without
+   * it, or a harness, no executions file is joined (#22).
+   */
+  executions?: string;
   /** The source whose identifiers this practice's citations refer to (section 6.2). */
   cites?: string;
   /** For scenarios: the project's step table, loaded in the adapter's sandbox (section 3.3). */
@@ -116,6 +121,7 @@ export function validateManifest(v: unknown): ComponentProblem[] {
       }
     if (p.adapter !== undefined && (typeof p.adapter !== "string" || p.adapter === "")) bad("malformed-manifest", `${name}: adapter must be a module specifier or a path`);
     if (p.cites !== undefined && (typeof p.cites !== "string" || p.cites === "")) bad("malformed-manifest", `${name}: cites must name a source`);
+    if (p.executions !== undefined && (!projectPath(p.executions) || p.harness !== undefined)) bad("malformed-manifest", `${name}: executions is a path inside the component root, for a practice without a harness (harness.executions names a harness's)`);
     if (p.steps !== undefined && (!projectPath(p.steps) || p.kind !== "scenarios")) bad("malformed-manifest", `${name}: steps is a path inside the component root, for a scenarios practice only`);
     for (const k of ["author", "unit"] as const) if (p[k] !== undefined && typeof p[k] !== "string") bad("malformed-manifest", `${name}: ${k} must be a string`);
     if (p.harness !== undefined) {

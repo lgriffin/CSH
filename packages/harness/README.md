@@ -13,7 +13,7 @@ It is the "Harnesses" container, shown in the [containers diagram](../../docs/ar
 - `probe(event, fn, mappers, ctx?)`, `Probe`, `ProbeMappers`, `ProbeContext`: wrap `fn`; `probe.in(t, { cites })` returns the function, recording each call made by the test `t`. The mappers `pre`, `args`, `post` and `result` are the only place that names witness keys; `mocked` lists the test doubles the author states.
 - `witnessId(fullName)`: the witness id from the test's full name, numbering later calls in the same test.
 - `testIdentity(file, fullName, cwd?)`: the identity shared by witnesses and execution lines ([A-39](../../ASSUMPTIONS.md)).
-- `@csh/harness/reporter`: the default export is a reporter for `node --test` that writes csh-execution/v1 lines to `CSH_EXECUTIONS_FILE` (default `reports/executions.ndjson`) and prints nothing. `executionOf(event, fullName)` and `nameTracker()` are its parts.
+- `@csh/harness/reporter`: the default export is a reporter for `node --test` that writes csh-execution/v1 lines to `CSH_EXECUTIONS_FILE` (default `reports/executions.ndjson`) and prints nothing. Run by hand before `csh check`, its file must be named explicitly, as a practice's `executions` or `csh/config.json`'s `executions`: no file is joined to a Witnesses source that names none ([A-62](../../ASSUMPTIONS.md)). `executionOf(event, fullName)` and `nameTracker()` are its parts.
 - `HARNESS_TOOL`: the tool id written into each witness.
 
 ## Depends on and used by

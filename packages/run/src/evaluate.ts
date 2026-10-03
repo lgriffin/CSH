@@ -63,6 +63,7 @@ export async function evaluateProject(p: Project, o: EvaluateOptions): Promise<E
       snapshot: { commit: p.commit, ledgerHead: String(ledger?.head ?? 0) },
       ...(impl !== undefined ? { unchangedSince: impl } : {}),
       ...(p.config.adapters !== undefined ? { adapters: p.config.adapters } : {}),
+      ...(p.config.executions !== undefined ? { executions: p.config.executions } : {}),
       ...(p.component !== undefined ? { component: p.component } : {}),
     },
     o.emission,

@@ -7,7 +7,6 @@ import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { compareCodePoints, digestOf, type Binding, type ClaimSet, type Module, type Source } from "@csh/kernel";
 import type { SourceRun } from "@csh/check";
-import { DEFAULT_EXECUTIONS } from "@csh/component";
 import { installedReadable } from "@csh/emit";
 import type { AdapterInput, AdapterOutput } from "@csh/witness";
 
@@ -34,6 +33,8 @@ export interface RunSourcesOptions {
    * its kind.
    */
   perSource?: Record<string, { adapter?: string; executions?: string; cites?: string; steps?: string }>;
+  /** The executions file joined to a Witnesses source that no practice owns; none when absent (#22). */
+  executions?: string;
   /** Authority of each binding, by binding fragment name; candidate when absent. */
   bindingAuthority?: (b: Binding) => string;
   timeoutMs?: number;
@@ -194,8 +195,10 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
     }
     const config = { ...(opts.config ?? {}), ...(own?.cites !== undefined ? { cites: own.cites } : {}), ...(steps !== undefined ? { steps: pathToFileURL(realpathSync(steps)).href } : {}) };
     if (opts.config !== undefined || own?.cites !== undefined || steps !== undefined) input.config = config;
-    // The execution file sits beside a witness source: the practice's harness names it, or the reporter's default.
-    const execAt = own?.executions ?? (source.kind === "Witnesses" ? DEFAULT_EXECUTIONS : undefined);
+    // The execution file sits beside a witness source only where it is named: by the practice (its harness's, the
+    // reporter's default for a harness, or its own), or by the configuration of a project with no manifest. A source
+    // with no named file never inherits another practice's outcomes (#22).
+    const execAt = own !== undefined ? own.executions : source.kind === "Witnesses" ? opts.executions : undefined;
     const exec = execAt === undefined ? undefined : filesAt(opts.root, execAt);
     const execFiles = (exec?.files ?? []).map((f) => {
       const bytes = new Uint8Array(readFileSync(f.abs));

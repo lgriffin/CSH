@@ -52,6 +52,12 @@ describe("validateManifest", () => {
     for (const bad of [0, -1, 1.5, "1000", null]) expect(withTimeout(bad), String(bad)).toEqual(["malformed-manifest"]);
   });
 
+  it("takes a practice's own executions file only without a harness (#22)", () => {
+    expect(codes({ ...good, practices: [good.practices[0], { id: "tdd", name: "TDD", kind: "tests", sources: ["UnitTests"], executions: "reports/executions.ndjson" }] })).toEqual([]);
+    expect(codes({ ...good, practices: [good.practices[0], { ...good.practices[1], executions: "reports/executions.ndjson" }] })).toEqual(["malformed-manifest"]);
+    expect(codes({ ...good, practices: [good.practices[0], { id: "tdd", name: "TDD", kind: "tests", sources: ["UnitTests"], executions: "../x" }] })).toEqual(["malformed-manifest"]);
+  });
+
   it("refuses an empty practice list and a value that is not an object", () => {
     expect(codes({ ...good, practices: [] })).toEqual(["malformed-manifest"]);
     expect(codes([])).toEqual(["malformed-manifest"]);
