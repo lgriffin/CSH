@@ -2,12 +2,13 @@
 // files; the adapter sees only their bytes, the vocabulary and the bindings.
 import { spawn } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { compareCodePoints, digestOf, type Binding, type ClaimSet, type Module, type Source } from "@csh/kernel";
 import type { SourceRun } from "@csh/check";
 import { DEFAULT_EXECUTIONS } from "@csh/component";
+import { installedReadable } from "@csh/emit";
 import type { AdapterInput, AdapterOutput } from "@csh/witness";
 
 /** Built-in adapters by source kind. Configuration may add more (kind to module specifier or path). */
@@ -65,11 +66,17 @@ function filesAt(root: string, at: string): { files?: { path: string; abs: strin
   return { files: out };
 }
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-const RUNNER = join(HERE, "adapter-runner.ts");
+const SELF = fileURLToPath(import.meta.url);
+const HERE = dirname(SELF);
+// adapter-runner.ts in the workspace, adapter-runner.js in a packed package (A-40).
+const RUNNER = join(HERE, `adapter-runner${extname(SELF)}`);
 
 function toolReadable(): string[] {
-  // The tool's own code and installed packages: packages/ and the repository's node_modules.
+  // The tool's own code and installed packages: packages/ and the repository's node_modules, or, when the tool is
+  // installed, the outermost node_modules directory it is installed in and every node_modules above it (A-51).
+  const parts = HERE.split(sep);
+  const nmAt = parts.indexOf("node_modules");
+  if (nmAt >= 0) return installedReadable(parts.slice(0, nmAt + 1).join(sep));
   const pkgs = resolve(HERE, "..", "..");
   const nm = resolve(pkgs, "..", "node_modules");
   return [pkgs, nm].filter(existsSync).map((p) => realpathSync(p));

@@ -47,5 +47,6 @@ The pipeline moved here from the command line so that a run, a check and a fixtu
 ## Known limits
 
 - Harnesses are not sandboxed: a run executes the project's own test command.
+- Installed from a packed tarball, an adapter's sandbox may read the whole `node_modules` directory the tool is installed in ([A-40](../../ASSUMPTIONS.md)).
 - `runAt` refuses any difference in dependency files, even one that would not matter.
 - Each adapter run costs a subprocess start, and authorship from history emits the specification at each historical commit, which is slow on long histories.

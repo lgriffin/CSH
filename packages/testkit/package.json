@@ -21,6 +21,7 @@
     "@csh/gate": "workspace:*",
     "@csh/component": "workspace:*",
     "@csh/run": "workspace:*",
-    "@csh/a3": "workspace:*"
+    "@csh/a3": "workspace:*",
+    "typescript": "5.9.3"
   }
 }

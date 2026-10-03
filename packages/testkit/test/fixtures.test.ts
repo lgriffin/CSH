@@ -21,8 +21,8 @@ describe("golden fixtures", () => {
   for (const id of pending) it.skip(`${id} (pending: stage ${fixtureStage(fixturesDir, id)} is not built yet)`, () => undefined);
   it.each(built)("%s", async (id) => {
     const r = await runner.run(id);
-    // Fixtures that need gpg are skipped only where explicitly allowed; CI runs them all.
-    if (r.skipped !== undefined && process.env.CSH_ALLOW_GPG_SKIP === "1") return;
+    // Fixtures that need gpg, or the npm registry (F96), are skipped only where explicitly allowed; CI runs them all.
+    if (r.skipped !== undefined && (process.env.CSH_ALLOW_GPG_SKIP === "1" || process.env.CSH_ALLOW_OFFLINE_SKIP === "1")) return;
     expect(r.skipped, r.skipped).toBeUndefined();
     expect(r.failures, r.failures.join("\n")).toEqual([]);
   });

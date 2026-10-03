@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`@csh/testkit` runs the golden fixtures: for each `fixtures/Fnn` it drives the real pipeline, compares what it observes with `expected.json`, and collects every mismatch instead of stopping at the first. It also checks solver answers independently of the solver's own claims, and builds throwaway git repositories with throwaway signing keys for the ledger fixtures.
+`@csh/testkit` runs the golden fixtures: for each `fixtures/Fnn` it drives the real pipeline, compares what it observes with `expected.json`, and collects every mismatch instead of stopping at the first. It also checks solver answers independently of the solver's own claims, and builds throwaway git repositories with throwaway signing keys for the ledger fixtures. Two more development tools live here: local packing, which compiles every runtime package into an installable tarball, and the triangle checks, which tie the examples and the root README to the container diagram.
 
 ## Where it sits
 
@@ -20,15 +20,18 @@ The test kit is development tooling and is not part of any runtime container. It
 - `verifyNoOutcome(finding, model, fragments, solver)`: checks that a joint-conflict input really has no valid outcome, with a fresh, unminimised query.
 - `createTestRepo(parent, identities)`, `TestRepo`, `gpgAvailable()`: a temporary git repository with test-only gpg keys in a temporary `GNUPGHOME`.
 - `src/run-fixtures.ts`: a script that runs some or all fixtures and prints a summary (`node packages/testkit/src/run-fixtures.ts [F10 F11 ...]`).
+- `packWorkspace(outDir)`, `packedPackages()`, and the script `src/pack.ts <out-dir>`: compile every package except this one to JavaScript with declarations, and pack each into a tarball with `npm pack`, its workspace dependencies replaced by versions ([A-40](../../ASSUMPTIONS.md)).
+- `commandBlocks(markdown)`, `runtimeContainers()`, `declaredContainers(readme)`, `reaches(dir, container)`, and the script `src/triangle.ts readme`, which runs every `sh` block of the root README in order (09, section 11.1).
 
 ## Depends on and used by
 
-- Depends on: every runtime workspace package: `@csh/kernel`, `csl`, `@csh/emit`, `@csh/print`, `@csh/solver`, `@csh/check`, `@csh/witness`, `@csh/adapter-witness-files`, `@csh/adapter-ears-markdown`, `@csh/ledger`, `@csh/gate`, `@csh/component`, `@csh/run` and `@csh/a3`. External: `git` and `gpg` for the ledger fixtures; Vitest and fast-check in its tests.
+- Depends on: every runtime workspace package: `@csh/kernel`, `csl`, `@csh/emit`, `@csh/print`, `@csh/solver`, `@csh/check`, `@csh/witness`, `@csh/adapter-witness-files`, `@csh/adapter-ears-markdown`, `@csh/ledger`, `@csh/gate`, `@csh/component`, `@csh/run` and `@csh/a3`. External: `typescript` for packing, `npm` to pack and to install the starter (F96), `git` and `gpg` for the ledger fixtures; Vitest and fast-check in its tests.
 - Used by: no workspace package. The root test run executes its tests.
 
 ## Invariants it protects
 
 - A finding the solver reports is checked again outside the minimiser: counterexamples by exact evaluation, joint conflicts by a fresh query (P8, CSH-019).
+- Packing never touches the workspace: it compiles into a temporary directory, and every packed package keeps its private flag (ADR-32).
 - Each fixture is an accepting or rejecting test of the documents, named by stage and section, so a regression in any earlier stage fails the run (P8).
 - A fixture whose expectation is `a3` is built from `inputs/component.json` and `inputs/csh/a3/<slug>/`: its problems, its stage integrity, and its authority through a real, signed ledger with a test-only key (F91 to F95).
 - A fixture with `inputs/component.json` runs with that manifest, so the component errors and the `unowned-source` gap are compared like any other result.
@@ -44,6 +47,8 @@ The fixture runner checks results independently of the code under test ([ADR-26]
 
 - `test/fixtures.test.ts`: one test per fixture directory: F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64 and F70 to F78, and F80 to F96 from the anchor design. A fixture of a stage not yet built is listed as skipped. The stage of each comes from its `expected.json`, and the stage to package mapping is in the Implementer's brief, section 7.
 - `test/roundtrip.test.ts`: the printer round trip on random models (fast-check) and on every fixture model that emits without packs.
+- F96 copies `examples/starter` to an empty directory outside the repository, installs the tool there from freshly packed tarballs with npm, and runs the installed `csh run`.
+- `test/triangle.test.ts`: every example declares the containers it exercises and its commands reach each one; every runtime container has an example; the root README has its three doors and the command blocks they need. Continuous integration executes those blocks.
 - `test/docs.test.ts`: every package has a README with the eight template headings and is named in `docs/architecture/containers.mmd`; every container has a component diagram; every cited decision record, assumption and question exists.
 - Ledger fixtures need gpg. They are skipped only when `CSH_ALLOW_GPG_SKIP=1`; otherwise a missing gpg fails the test.
 
@@ -51,4 +56,5 @@ The fixture runner checks results independently of the code under test ([ADR-26]
 
 - Most comparisons are inclusion checks: an extra finding, gap or error passes unless the fixture sets `findingsExact` or lists the item as one that must be absent.
 - Only the OpenPGP signing path is exercised; SSH signing is not ([A-26](../../ASSUMPTIONS.md)).
-- Scratch files go under `.csh-cache/` inside the workspace, so that generated specifications can resolve `csl`.
+- Scratch files go under `.csh-cache/` inside the workspace, so that generated specifications can resolve `csl`. F96 is the exception: it works in the system's temporary directory, and needs the npm registry for TypeScript, Z3 and Node's types.
+- The container check recognises a container by patterns in an example's commands and test files; it shows that an example reaches a container, not how thoroughly.

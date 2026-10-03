@@ -48,3 +48,4 @@ The sandbox combines Node's permission model, an in-process lockdown before the 
 - Isolation relies on Node's permission model and on replacing globals before the import; a Node release that changes either could weaken it. Non-configurable exports are left to the permission model.
 - Two emissions that happen to draw the same random values would pass S9; the lockdown, not S9, is the main defence.
 - Every emission spawns two subprocesses and runs the TypeScript compiler, which dominates run time.
+- Installed from a packed tarball, the sandbox may read the whole `node_modules` directory the tool is installed in, not only the language's own files, and the type check needs `@types/node` installed in the project ([A-40](../../ASSUMPTIONS.md)).

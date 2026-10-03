@@ -29,11 +29,8 @@ jobs:
           git --version
           gpg --version | head -1
       - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck
       - run: npx tsc -p tsconfig.fixtures.json
-      - name: Test (unit, property, fault injection, docs and every fixture)
-        run: pnpm test
-      - name: Walkthrough
-        run: examples/account/walkthrough.sh
-      - name: Lockout walkthrough
-        run: examples/lockout/walkthrough.sh
+      # Every sh block of the root README, in order (Anchor, harnesses and A3, section 11.1): both walkthroughs, the
+      # starter installed from packed tarballs outside the repository, pnpm typecheck and pnpm test.
+      - name: README commands
+        run: node packages/testkit/src/triangle.ts readme

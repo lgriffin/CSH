@@ -26,7 +26,9 @@ Level 4 is the code: the types in `packages/kernel/src/model.ts`, `packages/chec
 source; no parallel definitions are generated.
 
 `containers.mmd` must name every package under `packages/`. The docs test (`packages/testkit/test/docs.test.ts`)
-fails if one is missing.
+fails if one is missing. Every runtime container must also be exercised by an example: each example's README lists
+the containers it exercises, and `packages/testkit/test/triangle.test.ts` fails when a container has no example or an
+example lists one that nothing it runs reaches.
 
 ## Rendering
 

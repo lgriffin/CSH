@@ -2,7 +2,7 @@
 // JSON and the digest, then emit again in a fresh subprocess and compare (Language reference, section 7).
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { canonicalJson, canonicalModule, moduleDigest, validateModule, type Digest, type Module, type Obligation } from "@csh/kernel";
 import { typeCheck, type CompileDiagnostic } from "./typecheck.ts";
@@ -57,17 +57,37 @@ export type EmitResult =
   | { ok: true; module: Module; digest: Digest; canonical: string; composition: CompositionReport }
   | { ok: false; errors: EmitError[]; diagnostics?: CompileDiagnostic[] };
 
-const here = dirname(fileURLToPath(import.meta.url));
-const RUNNER = join(here, "runner.ts");
+const self = fileURLToPath(import.meta.url);
+const here = dirname(self);
+// runner.ts in the workspace, runner.js in a packed package (A-40): the same extension as this file.
+const RUNNER = join(here, `runner${extname(self)}`);
 
-/** The repository's packages and node_modules: what the sandbox needs to load the language itself. */
+/**
+ * What the sandbox needs to load the language itself: the repository's packages and node_modules, or, when the tool
+ * is installed, the outermost node_modules directory it is installed in and every node_modules above it. The outermost
+ * one holds pnpm's package store and npm's nested installs; the ones above hold packages hoisted out of the project
+ * (A-51).
+ */
 function toolReadable(): string[] {
+  const parts = here.split(sep);
+  const nmAt = parts.indexOf("node_modules");
+  if (nmAt >= 0) return installedReadable(parts.slice(0, nmAt + 1).join(sep));
   const pkgs = resolve(here, "..", "..");
   const repo = resolve(pkgs, "..");
   const out = [pkgs];
   const nm = join(repo, "node_modules");
   if (existsSync(nm)) out.push(nm);
   return out;
+}
+
+/** An installed tool's readable directories: its outermost node_modules and each node_modules above it, real paths. */
+export function installedReadable(outermost: string): string[] {
+  const out = [outermost];
+  for (let d = dirname(dirname(outermost)); ; d = dirname(d)) {
+    if (existsSync(join(d, "node_modules"))) out.push(join(d, "node_modules"));
+    if (dirname(d) === d) break;
+  }
+  return out.map((p) => realpathSync(p));
 }
 
 interface RunnerReply {

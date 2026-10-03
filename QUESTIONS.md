@@ -173,7 +173,7 @@ build step.
 - **Compile always.** Every package exports compiled JavaScript, and the workspace builds before it runs. This reverses ADR-18.
 - **Ship source and require a loader.** Users would run Node with a TypeScript loader; nothing in Node supports this under `node_modules` without a third-party dependency.
 
-Open. Recorded as A-40; stage 16 builds the chosen option.
+Open. Recorded as A-40; stage 16 built the chosen option, and F96 installs the starter from those tarballs.
 
 ## Q-19 Do tabs 00 to 08 take the amendments of 09, section 6.5?
 
