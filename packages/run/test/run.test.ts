@@ -1,18 +1,21 @@
 // csh run (Anchor, harnesses and A3, section 4): a run executes each harness, evaluates, decides and stores one record
 // per snapshot; a run at a past commit uses a throwaway worktree and installs nothing (A-38).
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { ComponentManifest } from "@csh/component";
 import { digestOf } from "@csh/kernel";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { type RunRecord, runAt, runComponent } from "../src/index.ts";
+import { type Project, type RunRecord, runAt, runComponent, runHarnesses, unchangedSince } from "../src/index.ts";
 
 const REPO = resolve(import.meta.dirname, "../../..");
 let proj: string;
 let z3: SolverPort;
 let first: string;
 
+/** Worktrees a run left behind. */
+const leftOver = (top: string) => (existsSync(join(top, ".csh-cache", "worktrees")) ? readdirSync(join(top, ".csh-cache", "worktrees")).filter((d) => d.startsWith("run-")) : []);
 const git = (...args: string[]) => execFileSync("git", args, { cwd: proj, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 const commitAll = (message: string) => {
   git("add", "-A");
@@ -124,7 +127,20 @@ describe("runAt", () => {
     if (!r.ok) throw new Error(r.message);
     expect(r.record.snapshot.commit).toBe(first);
     expect(r.dir.startsWith(join(proj, ".csh-cache", "runs"))).toBe(true);
-    expect(existsSync(join(proj, ".csh-cache", "worktrees", `run-${first}`))).toBe(false);
+    expect(leftOver(proj)).toEqual([]);
+  }, 120000);
+
+  it("gives two runs of one commit a worktree each", async () => {
+    // Another run's worktree, as the old fixed path named it: a run removes only its own.
+    const other = join(proj, ".csh-cache", "worktrees", `run-${first}`);
+    mkdirSync(other, { recursive: true });
+    writeFileSync(join(other, "in-use"), "");
+    const [a, b] = await Promise.all([runAt({ root: proj, solver: z3, commit: first }), runAt({ root: proj, solver: z3, commit: first })]);
+    expect([a.ok ? "ok" : a.message, b.ok ? "ok" : b.message]).toEqual(["ok", "ok"]);
+    expect(a.ok && b.ok && a.record.snapshotDigest === b.record.snapshotDigest).toBe(true);
+    expect(existsSync(join(other, "in-use"))).toBe(true);
+    rmSync(other, { recursive: true });
+    expect(leftOver(proj)).toEqual([]);
   }, 120000);
 
   it("refuses a commit whose dependency files differ, and a name that is not a commit", async () => {
@@ -159,10 +175,60 @@ describe("runAt", () => {
       const r = await runAt({ root: pkg, solver: z3, commit });
       if (!r.ok) throw new Error(r.message);
       expect(r.record.harnesses[0]).toMatchObject({ exitCode: 0, witnesses: 1 });
-      expect(existsSync(join(ws, ".csh-cache", "worktrees", `run-${commit}`))).toBe(false);
+      expect(leftOver(ws)).toEqual([]);
       expect(existsSync(join(pkg, "node_modules", "copy-witnesses", "index.js"))).toBe(true);
+      // A workspace sibling linked into node_modules, as pnpm links workspace:* dependencies: once its source changes
+      // after the commit, with no dependency file changed, the commit would run against today's sibling.
+      mkdirSync(join(ws, "packages", "lib"));
+      writeFileSync(join(ws, "packages", "lib", "package.json"), '{ "name": "lib", "type": "module", "exports": "./index.js" }\n');
+      writeFileSync(join(ws, "packages", "lib", "index.js"), "export const n = 1;\n");
+      symlinkSync(join("..", "..", "lib"), join(pkg, "node_modules", "lib"), "dir");
+      g("add", "-A");
+      g("commit", "-q", "-m", "a sibling");
+      const sibling = g("rev-parse", "HEAD");
+      expect(await runAt({ root: pkg, solver: z3, commit: sibling }).then((x) => (x.ok ? "ok" : x.message))).toBe("ok");
+      writeFileSync(join(ws, "packages", "lib", "index.js"), "export const n = 2;\n");
+      const d = await runAt({ root: pkg, solver: z3, commit: sibling });
+      expect(d.ok ? "ok" : d.code).toBe("workspace-differs");
+      expect(d.ok ? "" : d.message).toMatch(/packages\/lib/);
+      // Deleted since the commit: the link dangles, and the run is refused just the same.
+      rmSync(join(ws, "packages", "lib"), { recursive: true });
+      const gone = await runAt({ root: pkg, solver: z3, commit: sibling });
+      expect(gone.ok ? "ok" : gone.code).toBe("workspace-differs");
+      expect(gone.ok ? "" : gone.message).toMatch(/packages\/lib/);
     } finally {
       rmSync(ws, { recursive: true, force: true });
     }
   }, 120000);
+});
+
+describe("unchangedSince", () => {
+  it("counts every file outside csh/ when the implementation list is empty, as when it is absent", () => {
+    const vcs = { isAncestor: () => true, changedBetween: () => ["src/signin.ts"] };
+    const at = (implementation: string[]) => unchangedSince({ vcs, config: {}, component: { manifest: { ...manifest, implementation }, digest: "" } } as unknown as Project)!("a", "b");
+    expect(at([])).toBe(false);
+    expect(at(["src"])).toBe(false);
+    expect(at(["lib"])).toBe(true);
+  });
+});
+
+describe("runHarnesses", () => {
+  it("clears each file once before any harness, so harnesses sharing a file both keep their lines", async () => {
+    const dir = mkdtempSync(join(REPO, ".csh-cache", "run-harnesses-"));
+    try {
+      mkdirSync(join(dir, "reports"));
+      writeFileSync(join(dir, "reports", "executions.ndjson"), "stale\n");
+      const line = (s: string) => ["node", "-e", `const f=require("fs");f.appendFileSync(process.env.CSH_EXECUTIONS_FILE,"${s}\\n");f.appendFileSync(process.env.CSH_WITNESS_FILE,"${s}\\n")`];
+      const practices = [
+        { id: "a", name: "A", kind: "tests" as const, sources: ["A"], harness: { run: line("a"), witnesses: "reports/w.ndjson" } },
+        { id: "b", name: "B", kind: "tests" as const, sources: ["B"], harness: { run: line("b"), witnesses: "reports/w.ndjson" } },
+      ];
+      const recs = await runHarnesses({ root: dir, commit: "c" } as Project, { ...manifest, practices } as ComponentManifest, () => undefined);
+      expect(readFileSync(join(dir, "reports", "executions.ndjson"), "utf8")).toBe("a\nb\n");
+      expect(readFileSync(join(dir, "reports", "w.ndjson"), "utf8")).toBe("a\nb\n");
+      expect(recs.map((r) => [r.exitCode, r.witnesses, r.executions])).toEqual([[0, 1, 1], [0, 1, 1]]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });

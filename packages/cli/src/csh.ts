@@ -183,6 +183,11 @@ async function decideA3(kind: DecisionKind, p: Project, slug: string, actor: str
     io.err(`no judgments for ${slug} under ${a3Dir(p.root, slug).slice(p.root.length + 1)}\n`);
     return 2;
   }
+  // A decision binds a digest that csh a3 build would refuse to use: nothing is appended.
+  if (read.problems.length > 0) {
+    io.err(`the judgments for ${slug} cannot be used:\n${read.problems.map((x) => `  ${x}`).join("\n")}\n`);
+    return 2;
+  }
   const fragment = a3Fragment(name, slug);
   const digest = digestOf(read.bytes);
   const ledger = await ledgerOf(p, specOf(p, undefined));

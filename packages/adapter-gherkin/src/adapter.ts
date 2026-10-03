@@ -138,9 +138,21 @@ function lift(sc: Scenario, input: AdapterInput, event: string, conversions: Con
   if (sc.unsupported !== undefined) return { reason: "unsupported-construct", at: sc.line };
   const effects: Effect[] = [];
   for (const step of sc.steps) {
-    const def = step.keyword === undefined ? undefined : steps.find((d) => d.keyword === step.keyword && d.pattern.test(step.text));
-    if (def === undefined) return { reason: "unknown-step", at: step.line };
-    effects.push(...def.effects(def.pattern.exec(step.text)!).map((e) => ({ ...e, value: convert(e.value, conversions) })));
+    // One match per pattern, from the start: a global or sticky pattern keeps its position between calls.
+    const match = (d: StepDefinition) => {
+      d.pattern.lastIndex = 0;
+      return d.pattern.exec(step.text);
+    };
+    let hit: { def: StepDefinition; m: RegExpExecArray } | undefined;
+    for (const d of steps) {
+      const m = d.keyword === step.keyword ? match(d) : null;
+      if (m !== null) {
+        hit = { def: d, m };
+        break;
+      }
+    }
+    if (step.keyword === undefined || hit === undefined) return { reason: "unknown-step", at: step.line };
+    effects.push(...hit.def.effects(hit.m).map((e) => ({ ...e, value: convert(e.value, conversions) })));
   }
   let candidate = false;
   const given: Record<string, Expr> = {};

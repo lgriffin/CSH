@@ -79,7 +79,51 @@ describe("csh a3", () => {
     const t = io(proj);
     expect(await csh(["a3", "verify", "lockout"], t.io)).toBe(1);
     expect(t.o.out).toMatch(/stage-mismatch first: report\.json is/);
+    const b = io(proj);
+    expect(await csh(["a3", "build", "lockout", "--check"], b.io)).toBe(1);
+    expect(b.o.err).toMatch(/stage-mismatch first: report\.json is/);
+    git("checkout", "--", "csh/a3/lockout/stages/first/report.json");
   }, 180000);
+
+  it("stage copies a stored run only in the mode asked for and while the tree is clean, and refuses another mode", async () => {
+    expect(await csh(["run"], io(proj).io)).toBe(0);
+    const bogus = io(proj);
+    expect(await csh(["a3", "stage", "lockout", "x", "--at", "HEAD", "--mode", "bogus"], bogus.io)).toBe(2);
+    expect(bogus.o.err).toMatch(/--mode is advisory or enforcing/);
+    const enf = io(proj);
+    expect(await csh(["a3", "stage", "lockout", "enf", "--at", "HEAD", "--mode", "enforcing"], enf.io)).toBe(0);
+    expect(JSON.parse(readFileSync(join(proj, "csh/a3/lockout/stages/enf/gate.json"), "utf8")).mode).toBe("enforcing");
+    git("add", "-A");
+    git("commit", "-q", "-m", "an enforcing stage");
+    expect(await csh(["run"], io(proj).io)).toBe(0);
+    // A damaged stored run of another commit is skipped, and an uncommitted judgments file is the A3's own.
+    mkdirSync(join(proj, ".csh-cache/runs/damaged"), { recursive: true });
+    for (const f of ["run.json", "report.json", "gate.json"]) writeFileSync(join(proj, ".csh-cache/runs/damaged", f), "{");
+    const judgments = join(proj, "csh/a3/lockout/judgments.json");
+    writeFileSync(judgments, readFileSync(judgments, "utf8").replace('"title": ""', '"title": "edited"'));
+    const reuse = io(proj);
+    expect(await csh(["a3", "stage", "lockout", "reuse", "--at", "HEAD"], reuse.io)).toBe(0);
+    expect(reuse.o.err).toBe(""); // the stored run is copied; nothing runs
+    rmSync(join(proj, ".csh-cache/runs/damaged"), { recursive: true });
+    writeFileSync(join(proj, "untracked.txt"), "read by no one, but the run cannot show that\n");
+    const dirty = io(proj);
+    expect(await csh(["a3", "stage", "lockout", "dirty", "--at", "HEAD"], dirty.io)).toBe(0);
+    expect(dirty.o.err).not.toBe(""); // the commit runs in a clean worktree
+    rmSync(join(proj, "untracked.txt"));
+    git("checkout", "--", ".");
+    rmSync(join(proj, "csh/a3/lockout/stages/reuse"), { recursive: true });
+    rmSync(join(proj, "csh/a3/lockout/stages/dirty"), { recursive: true });
+  }, 300000);
+
+  it("approve refuses judgments that cannot be used and appends nothing", async () => {
+    mkdirSync(join(proj, "csh/a3/broken"), { recursive: true });
+    writeFileSync(join(proj, "csh/a3/broken/judgments.json"), "{");
+    const a = io(proj);
+    expect(await csh(["approve", "#a3/broken", "--actor", "Owner", "--rationale", "r"], a.io)).toBe(2);
+    expect(a.o.err).toMatch(/cannot be used/);
+    expect(existsSync(join(proj, "csh/ledger.ndjson"))).toBe(false);
+    rmSync(join(proj, "csh/a3/broken"), { recursive: true });
+  });
 
   it("approve drafts a ledger line for the judgments' digest and commits nothing", async () => {
     const head = git("rev-parse", "HEAD");

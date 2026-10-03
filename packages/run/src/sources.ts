@@ -185,9 +185,11 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
     const own = opts.perSource?.[source.name];
     // A scenarios practice's step table is project code: the adapter receives its file URL, and the sandbox lets it
     // read that one file (Anchor, harnesses and A3, section 3.3).
-    const steps = own?.steps === undefined ? undefined : filesAt(opts.root, own.steps).files?.[0]?.abs;
+    // It is one file: a directory is refused, never read through its first file.
+    const table = own?.steps === undefined ? undefined : filesAt(opts.root, own.steps).files;
+    const steps = table?.length === 1 && table[0]!.abs === resolve(opts.root, own!.steps!) ? table[0]!.abs : undefined;
     if (own?.steps !== undefined && steps === undefined) {
-      runs.push({ ...base, files: files.map(({ path, digest }) => ({ path, digest })), output: { diagnostics: [{ code: "no-step-table", severity: "error", message: `the step table ${own.steps} is missing or outside the project root` }] } });
+      runs.push({ ...base, files: files.map(({ path, digest }) => ({ path, digest })), output: { diagnostics: [{ code: "no-step-table", severity: "error", message: `the step table ${own.steps} is missing, outside the project root or not a file` }] } });
       continue;
     }
     const config = { ...(opts.config ?? {}), ...(own?.cites !== undefined ? { cites: own.cites } : {}), ...(steps !== undefined ? { steps: pathToFileURL(realpathSync(steps)).href } : {}) };
@@ -200,6 +202,9 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
       return { path: f.path, digest: digestOf(bytes), bytes };
     });
     if (execAt !== undefined && exec?.outside !== true) input.executions = execFiles;
+    // A witness directory that holds the execution file reads it as executions only, never as witnesses.
+    const execPaths = new Set(execFiles.map((f) => f.path));
+    input.files = files.filter((f) => !execPaths.has(f.path));
     let output: AdapterOutput;
     try {
       const url = resolveAdapter(spec, opts.root);
@@ -213,7 +218,7 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
       output = { diagnostics: [{ code: "adapter-failed", severity: "error", message: (err as Error).message }] };
     }
     if (output.claims !== undefined) output.claims.source = source.name;
-    runs.push({ ...base, adapter: spec, files: [...files, ...execFiles].map(({ path, digest }) => ({ path, digest })), output });
+    runs.push({ ...base, adapter: spec, files: [...input.files, ...execFiles].map(({ path, digest }) => ({ path, digest })), output });
   }
   return runs;
 }

@@ -4,7 +4,7 @@ import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parseComponent } from "@csh/component";
 import { stableJson } from "@csh/kernel";
-import { buildA3, type BuildInput, type Judgments, readJudgments, readStage, renderHtml, renderMarkdown, skeleton, stageDir, stageIntegrity, type StageRecord } from "../src/index.ts";
+import { buildA3, type BuildInput, type Judgments, readJudgments, readStage, renderHtml, renderMarkdown, skeleton, stageDir, stageIntegrity, type StageRecord, validateJudgments } from "../src/index.ts";
 
 const F = (id: string) => resolve(import.meta.dirname, "../../../fixtures", id, "inputs");
 const manifest = parseComponent(readFileSync(join(F("F91"), "component.json"))).component!.manifest;
@@ -30,6 +30,13 @@ describe("buildA3", () => {
   it("counts a test once however many witnesses it records, and as passed only when all its executions passed", () => {
     const e = { source: "UnitTests", event: "SignIn", localResult: "passed" };
     const executions = [{ ...e, witness: "a", test: "t.ts::a" }, { ...e, witness: "a-2", test: "t.ts::a" }, { ...e, witness: "b", test: "t.ts::b" }, { ...e, witness: "b-2", test: "t.ts::b", localResult: "failed" }];
+    const stage = { ...before, report: { ...before.report, executions } };
+    expect(buildA3(input({}, { stages: [stage] })).stages[0]!.tests).toEqual({ passed: 1, total: 2 });
+  });
+
+  it("counts the same test identity from two sources as two tests", () => {
+    const e = { event: "SignIn", test: "t.ts::a" };
+    const executions = [{ ...e, source: "UnitTests", witness: "a", localResult: "passed" }, { ...e, source: "OtherTests", witness: "a", localResult: "failed" }];
     const stage = { ...before, report: { ...before.report, executions } };
     expect(buildA3(input({}, { stages: [stage] })).stages[0]!.tests).toEqual({ passed: 1, total: 2 });
   });
@@ -94,6 +101,14 @@ describe("stage records", () => {
     expect(stageIntegrity(tampered!)?.problem).toBe("stage-mismatch");
     expect(stageIntegrity(intact!)).toBeUndefined();
   });
+
+  it("refuse judgments whose evidence is not a pointer or whose mark is not one of the four", () => {
+    const bad = { ...base, rca: [{ id: "Q1", q: "", a: "", depth: "", evidence: null }], decisionPoints: [{ point: "P", class: "silence", says: { qa: { mark: "x", text: "" } }, match: [] }] };
+    const problems = validateJudgments(bad);
+    expect(problems.some((p) => p.startsWith("rca[0]: evidence"))).toBe(true);
+    expect(problems.some((p) => p.startsWith("decisionPoints[0]: says"))).toBe(true);
+    expect(validateJudgments(base)).toEqual([]);
+  });
 });
 
 describe("rendering", () => {
@@ -117,5 +132,16 @@ describe("rendering", () => {
     expect(html).not.toMatch(/<script>alert/);
     expect(html).toMatch(/&lt;script&gt;alert/);
     expect(html).not.toMatch(/(src|href)="https?:/);
+  });
+
+  it("keeps a decision point's mark inside its class attribute, and raw HTML out of the Markdown", () => {
+    const mark = 'says" onmouseover="alert(1)' as "says";
+    const m = buildA3(input({ title: "<img src=x onerror=alert(1)>", decisionPoints: [{ point: "<b>P</b>", class: "silence", says: { qa: { mark, text: "<i>t</i>" } }, match: [] }] }));
+    expect(renderHtml(m)).not.toMatch(/onmouseover/);
+    const md = renderMarkdown(m);
+    expect(md).not.toMatch(/(^|[^\\])<(img|b|i)\b/);
+    expect(md).toMatch(/# A3: \\<img/);
+    const slashed = renderMarkdown(buildA3(input({ title: "\\<img src=x onerror=alert(1)>" })));
+    expect(slashed).toMatch(/# A3: \\\\\\<img/);
   });
 });

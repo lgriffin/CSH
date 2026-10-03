@@ -2,7 +2,7 @@
 // picker shows each stage; everything that varies by stage is drawn once per stage and hidden but for one.
 import { readFileSync } from "node:fs";
 import { authorityLine, UNWRITTEN } from "./markdown.ts";
-import type { A3Model, SheetStage } from "./types.ts";
+import { type A3Model, type Mark, MARKS, type SheetStage } from "./types.ts";
 
 const CSS = readFileSync(new URL("./a3.css", import.meta.url), "utf8");
 const esc = (s: string) => s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
@@ -87,7 +87,7 @@ export function renderHtml(m: A3Model): string {
     const body = m.decisionPoints.map((d) => {
       const hits = d.signals[i] ?? [];
       const harness = hits.length === 0 ? `<span class="none">no signal at this stage</span>` : `${hits.map((id) => esc(labelOf(i, id))).join("<br>")}${d.note !== undefined ? `<br><span class="src">${esc(d.note)}</span>` : ""}`;
-      return `<tr><td>${esc(d.point)}</td>${m.practices.map((p) => { const c = d.says[p.id]; return `<td><span class="cell ${c?.mark ?? "silent"}">${esc(c?.text ?? "silent")}</span></td>`; }).join("")}<td>${harness}</td><td><span class="chip ${esc(d.class)}">${esc(d.class)}</span></td></tr>`;
+      return `<tr><td>${esc(d.point)}</td>${m.practices.map((p) => { const c = d.says[p.id]; return `<td><span class="cell ${MARKS.includes(c?.mark as Mark) ? c!.mark : "silent"}">${esc(c?.text ?? "silent")}</span></td>`; }).join("")}<td>${harness}</td><td><span class="chip ${esc(d.class)}">${esc(d.class)}</span></td></tr>`;
     });
     return `<div class="scroll" ${attr(st, i)}><table><thead><tr><th>Decision point</th>${m.practices.map((p) => `<th>${tag(p.id)}</th>`).join("")}<th>CSH reports at ${esc(name(st).toLowerCase())}</th><th>Class</th></tr></thead><tbody>
 ${body.join("\n")}

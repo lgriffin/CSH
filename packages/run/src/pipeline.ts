@@ -62,7 +62,7 @@ export async function evaluateSpec(spec: string, opts: PipelineOptions): Promise
   const m = emitted.module;
   const composition = m.uses.length > 0 || (m.relaxations ?? []).length > 0 ? { uses: m.uses, inherited: emitted.composition.inherited.map((x) => x.name), relaxed: m.relaxations ?? [], refinements: emitted.composition.refinements } : undefined;
   if (opts.component !== undefined) {
-    const errors = checkAgainstModule(opts.component.manifest, m).errors;
+    const errors = checkAgainstModule(opts.component.manifest, m, opts.root).errors;
     if (errors.length > 0) return { emitted, componentErrors: errors };
   }
   return { emitted, ...(await checkModule(m, emitted.digest, composition !== undefined ? { ...opts, composition } : opts)) };

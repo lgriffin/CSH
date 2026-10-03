@@ -3,8 +3,8 @@
 // the run record is stored under .csh-cache/runs/<snapshot digest>/. A harness's exit code is stored as an execution
 // fact and never enters a verdict (P2).
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { type ComponentManifest, DEFAULT_EXECUTIONS } from "@csh/component";
 import type { Report } from "@csh/check";
 import { formatDecision, type GateDecision, type Mode, type Snapshot } from "@csh/gate";
@@ -21,9 +21,9 @@ export interface HarnessRecord {
   argv: string[];
   /** The command's exit code; null when it ended by a signal or could not start. */
   exitCode: number | null;
-  /** Lines in the witness file after the run. */
+  /** Lines the run added to the witness file. */
   witnesses: number;
-  /** Lines in the executions file after the run. */
+  /** Lines the run added to the executions file. */
   executions: number;
   /** The harness runs with the project's own permissions, exactly as running the tests by hand would. */
   sandbox: "none";
@@ -73,18 +73,24 @@ function exec(argv: string[], cwd: string, env: NodeJS.ProcessEnv, out: (s: stri
 /** Run each practice's harness. Old witness and execution files are removed first, so a run never reads stale ones. */
 export async function runHarnesses(p: Project, manifest: ComponentManifest, out: (s: string) => void): Promise<HarnessRecord[]> {
   const records: HarnessRecord[] = [];
-  for (const practice of manifest.practices) {
-    const h = practice.harness;
-    if (h === undefined) continue;
+  const harnessed = manifest.practices.filter((x) => x.harness !== undefined);
+  // Every file is removed once, before any harness runs: two harnesses sharing a file (the default executions file
+  // most often) both keep their lines.
+  for (const x of harnessed) {
+    for (const f of [x.harness!.witnesses, x.harness!.executions ?? DEFAULT_EXECUTIONS]) {
+      rmSync(resolve(p.root, f), { force: true });
+      mkdirSync(dirname(resolve(p.root, f)), { recursive: true });
+    }
+  }
+  for (const practice of harnessed) {
+    const h = practice.harness!;
     const witnesses = resolve(p.root, h.witnesses);
     const executions = resolve(p.root, h.executions ?? DEFAULT_EXECUTIONS);
-    for (const f of [witnesses, executions]) {
-      rmSync(f, { force: true });
-      mkdirSync(dirname(f), { recursive: true });
-    }
     const env = { ...process.env, CSH_COMMIT: p.commit, CSH_WITNESS_FILE: witnesses, CSH_EXECUTIONS_FILE: executions };
+    // A shared file already holds an earlier harness's lines: each record counts only the lines its own run added.
+    const before = [countLines(witnesses), countLines(executions)] as const;
     const r = await exec(h.run, p.root, env, out);
-    const rec: HarnessRecord = { practice: practice.id, argv: [...h.run], exitCode: r.exitCode, witnesses: countLines(witnesses), executions: countLines(executions), sandbox: "none" };
+    const rec: HarnessRecord = { practice: practice.id, argv: [...h.run], exitCode: r.exitCode, witnesses: countLines(witnesses) - before[0], executions: countLines(executions) - before[1], sandbox: "none" };
     if (r.error !== undefined) rec.error = r.error;
     records.push(rec);
   }
@@ -144,6 +150,56 @@ function git(cwd: string, ...args: string[]): string {
 }
 
 /**
+ * The workspace packages a component at `prefix` resolves through the installed node_modules on its path, and through
+ * theirs in turn, whose files differ from the commit's. A run at the commit would load them from the working tree.
+ */
+function workspaceChanges(top: string, prefix: string, commit: string): string[] {
+  const queue: string[] = [];
+  for (let d = prefix; ; d = dirname(d) === "." ? "" : dirname(d)) {
+    queue.push(join(top, d, "node_modules"));
+    if (d === "" || d === ".") break;
+  }
+  const seen = new Set<string>([prefix]);
+  const changed: string[] = [];
+  for (let nm = queue.shift(); nm !== undefined; nm = queue.shift()) {
+    if (!existsSync(nm)) continue;
+    const entries = readdirSync(nm).flatMap((e) => (e.startsWith("@") ? readdirSync(join(nm, e)).map((x) => join(nm, e, x)) : e.startsWith(".") ? [] : [join(nm, e)]));
+    for (const e of entries) {
+      const inWorkspace = (rel: string) => !rel.startsWith("..") && !isAbsolute(rel) && !rel.split("/").includes("node_modules");
+      let real: string;
+      try {
+        real = realpathSync(e);
+      } catch {
+        // A link whose target is gone: a workspace package deleted since the commit differs from it.
+        let gone: string | undefined;
+        try {
+          gone = relative(top, resolve(dirname(e), readlinkSync(e))).split("\\").join("/");
+        } catch {
+          gone = undefined;
+        }
+        if (gone !== undefined && inWorkspace(gone) && !seen.has(gone)) {
+          seen.add(gone);
+          changed.push(gone || ".");
+        }
+        continue;
+      }
+      const rel = relative(top, real).split("\\").join("/");
+      if (!inWorkspace(rel) || seen.has(rel)) continue;
+      seen.add(rel);
+      queue.push(join(real, "node_modules"));
+      let differs = git(top, "ls-files", "--others", "--exclude-standard", "--", rel || ".").trim() !== "";
+      try {
+        git(top, "diff", "--quiet", commit, "--", rel || ".");
+      } catch {
+        differs = true;
+      }
+      if (differs) changed.push(rel || ".");
+    }
+  }
+  return changed.sort();
+}
+
+/**
  * Run the component as it stood at a past commit (section 4.2), in a temporary worktree inside the project, so that
  * packages resolve from the project's own installation. Nothing is installed: when the commit's dependency files
  * differ from the working tree's, the run is refused with dependencies-differ and the stage is unavailable (A-38).
@@ -173,15 +229,18 @@ export async function runAt(o: RunOptions & { commit: string }): Promise<RunResu
       if (then !== now) return { ok: false, code: "dependencies-differ", message: `${path} at ${commit.slice(0, 12)} differs from the working tree; the commit is not run against other dependencies than its own (A-38)` };
     }
   }
-  const wt = join(top, CACHE_DIR, "worktrees", `run-${commit}`);
+  // Workspace packages are linked, not installed: one whose files changed since the commit would be today's (A-55).
+  const changed = workspaceChanges(top, prefix, commit);
+  if (changed.length > 0) return { ok: false, code: "workspace-differs", message: `the workspace package${changed.length === 1 ? "" : "s"} ${changed.join(", ")} differ${changed.length === 1 ? "s" : ""} from ${commit.slice(0, 12)}; the commit would run against the working tree's sources, not its own (A-55)` };
+  // A directory of its own, so that two runs of one commit never remove each other's worktree.
+  mkdirSync(join(top, CACHE_DIR, "worktrees"), { recursive: true });
+  const wt = mkdtempSync(join(top, CACHE_DIR, "worktrees", `run-${commit.slice(0, 12)}-`));
   try {
-    rmSync(wt, { recursive: true, force: true });
     try {
       git(top, "worktree", "prune");
     } catch {
       // Nothing to prune.
     }
-    mkdirSync(dirname(wt), { recursive: true });
     git(top, "worktree", "add", "--detach", "--force", wt, commit);
     // A component inside a workspace (a package of a monorepo) resolves its packages from its own node_modules and
     // those of the directories above it, which a worktree does not have. The dependency files are the commit's own

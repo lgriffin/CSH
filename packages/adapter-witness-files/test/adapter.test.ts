@@ -122,6 +122,7 @@ describe("witness-files adapter", () => {
     const out = run({ ...input({ "a.ndjson": [v2("w1", "t::twice")] }), executions: executions(["t::twice", "passed"], ["t::twice", "failed"]) });
     expect(out.witnesses![0]!.execution.localResult).toBeUndefined();
     expect(out.diagnostics.map((d) => d.code)).toContain("ambiguous-test-identity");
+    expect(out.executions!.map((e) => e.outcome)).toEqual(["unknown", "unknown"]);
   });
 
   it("keeps a stated outcome, and reports a malformed execution line", () => {

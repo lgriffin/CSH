@@ -3,7 +3,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { digestOf } from "@csh/kernel";
-import { A3_DIR, type Judgments, JUDGMENTS_SCHEMA, type StageRecord } from "./types.ts";
+import { A3_DIR, type Judgments, JUDGMENTS_SCHEMA, MARKS, type StageRecord } from "./types.ts";
 
 export const STAGE_FILES = ["run.json", "report.json", "gate.json"] as const;
 
@@ -66,6 +66,15 @@ export function validateJudgments(v: unknown): string[] {
     if (!Array.isArray(m) || !m.every((x) => isRec(x) && typeof x.kind === "string")) out.push(`${where}: match must be a list of rules, each with a kind`);
   };
   for (const k of ["lanes", "causes", "decisionPoints"] as const) if (Array.isArray(v[k])) for (const [i, x] of (v[k] as unknown[]).entries()) matchList(`${k}[${i}]`, isRec(x) ? x.match : undefined);
+  // A decision point's marks become class names on the page, and its evidence is read as a pointer: both are checked.
+  if (Array.isArray(v.decisionPoints))
+    for (const [i, d] of (v.decisionPoints as unknown[]).entries()) {
+      const says = isRec(d) ? d.says : undefined;
+      if (!isRec(says) || !Object.values(says).every((c) => isRec(c) && (MARKS as readonly unknown[]).includes(c.mark) && typeof c.text === "string")) out.push(`decisionPoints[${i}]: says must map each practice to a mark (${MARKS.join(", ")}) and a text`);
+    }
+  const pointer = (p: unknown) => isRec(p) && ("finding" in p ? typeof p.finding === "string" && typeof p.stage === "string" : typeof p.file === "string" && typeof p.text === "string" && (p.stage === undefined || typeof p.stage === "string"));
+  for (const k of ["rca", "whys"] as const)
+    if (Array.isArray(v[k])) for (const [i, x] of (v[k] as unknown[]).entries()) if (!isRec(x) || (x.evidence !== undefined && !pointer(x.evidence))) out.push(`${k}[${i}]: evidence must be { file, text, stage? } or { finding, stage }`);
   if (Array.isArray(v.countermeasures))
     for (const [i, c] of (v.countermeasures as unknown[]).entries()) {
       if (!isRec(c) || typeof c.id !== "string" || !Array.isArray(c.answers)) out.push(`countermeasures[${i}] needs an id and a list of the questions it answers`);
