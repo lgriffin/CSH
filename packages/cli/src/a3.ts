@@ -36,10 +36,11 @@ const MODES: readonly string[] = ["advisory", "enforcing"];
 const git = (p: Project, ...args: string[]) => execFileSync("git", args, { cwd: p.root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
 
 /**
- * The stored run of a commit in a mode, if csh run has made one; the newest by modification when there are several.
+ * The stored run of a commit, in the mode asked for when one is, if csh run has made one; the newest by modification
+ * when there are several.
  * None while the working tree differs from HEAD in any way: a run names HEAD even when it read untracked files (A-54).
  */
-function storedRun(p: Project, commit: string, mode: Mode): string | undefined {
+function storedRun(p: Project, commit: string, mode: Mode | undefined): string | undefined {
   const runs = join(p.root, RUNS_DIR);
   if (!existsSync(runs)) return undefined;
   if (commit === p.head && git(p, "status", "--porcelain", "--", ".") !== "") return undefined;
@@ -50,7 +51,7 @@ function storedRun(p: Project, commit: string, mode: Mode): string | undefined {
     if (!existsSync(file) || !STAGE_FILES.every((f) => existsSync(join(dir, f)))) continue;
     const rec = JSON.parse(readFileSync(file, "utf8")) as { snapshot?: { commit?: string } };
     const gate = JSON.parse(readFileSync(join(dir, "gate.json"), "utf8")) as { mode?: string };
-    if (rec.snapshot?.commit === commit && gate.mode === mode) found.push({ dir, at: statSync(file).mtimeMs });
+    if (rec.snapshot?.commit === commit && (mode === undefined || gate.mode === mode)) found.push({ dir, at: statSync(file).mtimeMs });
   }
   found.sort((a, b) => b.at - a.at);
   return found[0]?.dir;
@@ -71,7 +72,7 @@ async function recordStage(p: Project, slug: string, id: string, at: string, io:
     io.err(`csh a3: ${at} is not a commit of the repository at ${p.root}\n`);
     return false;
   }
-  let from = storedRun(p, commit, mode ?? p.config.mode ?? "advisory");
+  let from = storedRun(p, commit, mode);
   if (from === undefined) {
     const r = await runAt({ ...(await io.runOptions()), root: p.root, commit, ...(mode !== undefined ? { mode } : {}) });
     if (!r.ok) {
