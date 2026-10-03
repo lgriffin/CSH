@@ -150,3 +150,19 @@ export function canonicalModule(m: Module): Module {
 export function moduleDigest(m: Module): Digest {
   return digestJson(canonicalModule(m));
 }
+
+/**
+ * Stable JSON for files people read (reports, decisions, caches): keys sorted by code point,
+ * numbers kept as numbers, two-space indentation. Digests always use canonicalJson.
+ */
+export function stableJson(value: unknown): string {
+  const sort = (v: unknown): unknown => {
+    if (Array.isArray(v)) return v.map(sort);
+    if (v !== null && typeof v === "object") {
+      const o = v as Record<string, unknown>;
+      return Object.fromEntries(Object.keys(o).filter((k) => o[k] !== undefined).sort(compareCodePoints).map((k) => [k, sort(o[k])]));
+    }
+    return v;
+  };
+  return `${JSON.stringify(sort(value), null, 2)}\n`;
+}

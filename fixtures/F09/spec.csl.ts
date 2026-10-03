@@ -46,7 +46,7 @@ export default system("AccountService", (s) => {
   }, (i) => {
     i.assume("PositiveAmount", Withdraw.args.amount.gt(EUR(0)));
 
-    // @ts-ignore-next-line is deliberately absent: the misspelling must fail.
+    // No suppression comment here: the misspelling must fail to compile.
     i.invariant("MinimumBalance", Account.balence.gte(Account.floor)); // expect-error: S1
 
     i.requirement("RejectInsufficientFunds", {

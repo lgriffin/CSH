@@ -4,7 +4,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { check, type CheckResult, type EvidenceStore, runSources, type AuthorityResolver, type SourceRun } from "@csh/check";
 import { emit, type EmitOptions, type EmitResult } from "@csh/emit";
-import { digestJson, type Module } from "@csh/kernel";
+import { digestJson, fragmentsOf, refName, type Module } from "@csh/kernel";
+import { type LedgerState, resolveAuthority } from "@csh/ledger";
 import type { SolverPort } from "@csh/solver";
 
 export interface FixtureConfig {
@@ -23,12 +24,13 @@ export interface PipelineOptions {
   root: string;
   solver: SolverPort;
   config?: FixtureConfig;
+  /** A stand-in for the ledger, used by fixtures before stage 7. */
   authority?: AuthorityResolver;
-  /** Authority used for bindings when adapters run (defaults to `authority`). */
+  /** The ledger read from history; takes precedence over `authority`. */
+  ledgerState?: LedgerState;
   evidence?: EvidenceStore;
+  solverWrap?: (s: SolverPort) => SolverPort;
   emit?: EmitOptions;
-  ledger?: Parameters<typeof check>[0]["ledger"];
-  ledgerHead?: string;
   isolatedAdapters?: boolean;
   unchangedSince?: (a: string, b: string) => boolean;
 }
@@ -50,30 +52,32 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   const cfg = opts.config ?? {};
   const adapterConfig: Record<string, string> = {};
   if (cfg.requirementIdPattern !== undefined) adapterConfig.requirementIdPattern = cfg.requirementIdPattern;
-  const resolver = opts.authority;
-  const runs = await runSources(module, {
-    root: opts.root,
-    config: adapterConfig,
-    isolated: opts.isolatedAdapters ?? true,
-    bindingAuthority: (b) => {
-      if (resolver === undefined) return "candidate";
-      const name = `${module.system}/#binding/${b.target.k === "field" ? `${b.target.state}.${b.target.field}` : b.target.k === "arg" ? `${b.target.event}.args.${b.target.name}` : `${b.target.event}.result`}`;
-      // The digest is recomputed by the resolver's caller; here only the name decides a stand-in resolver.
-      return resolver({ name, digest: "", kind: "binding", cites: [] }).authority;
-    },
-  });
+  // Authority of bindings is needed before adapters run (they lift through bindings);
+  // authority of everything else after, since cited items come from adapters.
+  const state = opts.ledgerState;
+  const emittedFragments = fragmentsOf(module);
+  const bindingAuthority = (b: Module["bindings"][number]): string => {
+    const name = `${module.system}/#binding/${refName(b.target)}`;
+    const f = emittedFragments.find((x) => x.name === name);
+    if (state !== undefined && f !== undefined) return resolveAuthority(state, f).authority;
+    return opts.authority?.({ name, digest: f?.digest ?? "", kind: "binding", cites: [] }).authority ?? "candidate";
+  };
+  const runs = await runSources(module, { root: opts.root, config: adapterConfig, isolated: opts.isolatedAdapters ?? true, bindingAuthority });
+  const items = new Map<string, string>();
+  for (const r of runs) for (const it of r.output.items ?? []) items.set(`${r.source}/${it.id}`, it.textDigest);
+  const resolver: AuthorityResolver | undefined = state !== undefined ? (f) => resolveAuthority(state, f, items) : opts.authority;
   const checkOpts: Parameters<typeof check>[0] = {
     module,
     moduleDigest,
     runs,
-    solver: opts.solver,
+    solver: opts.solverWrap !== undefined ? opts.solverWrap(opts.solver) : opts.solver,
     configDigest: digestJson(cfg),
   };
   if (cfg.budgetMs !== undefined) checkOpts.budgetMs = cfg.budgetMs;
   if (resolver !== undefined) checkOpts.authority = resolver;
   if (opts.evidence !== undefined) checkOpts.evidence = opts.evidence;
-  if (cfg.snapshot !== undefined) checkOpts.snapshot = { commit: cfg.snapshot.commit, ledgerHead: opts.ledgerHead ?? "0" };
-  if (opts.ledger !== undefined) checkOpts.ledger = opts.ledger;
+  if (cfg.snapshot !== undefined) checkOpts.snapshot = { commit: cfg.snapshot.commit, ledgerHead: String(state?.head ?? 0) };
+  if (state !== undefined) checkOpts.ledger = { head: state.head, invalid: state.invalid.map(({ seq, reason, commit }) => (commit !== undefined ? { seq, reason, commit } : { seq, reason })) };
   if (opts.unchangedSince !== undefined) checkOpts.unchangedSince = opts.unchangedSince;
   const checked = await check(checkOpts);
   return { runs, checked };
