@@ -3,7 +3,8 @@
 import { spawn } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
-import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { compareCodePoints, digestOf, type Binding, type ClaimSet, type Module, type Source } from "@csh/kernel";
 import type { SourceRun } from "@csh/check";
 import type { AdapterInput, AdapterOutput } from "@csh/witness";
@@ -82,7 +83,8 @@ export function runIsolated(adapterUrl: string, input: AdapterInput, timeoutMs =
 
 function resolveAdapter(spec: string, root: string): string {
   if (spec.startsWith(".") || spec.startsWith("/")) return new URL(`file://${resolve(root, spec)}`).href;
-  return import.meta.resolve(spec);
+  // import.meta.resolve is missing under some loaders (the test runner's among them); require resolution finds the same file.
+  return typeof import.meta.resolve === "function" ? import.meta.resolve(spec) : pathToFileURL(createRequire(import.meta.url).resolve(spec)).href;
 }
 
 /** A file of claim sets already in csh-ir/v1 form: data, read without an adapter. */
