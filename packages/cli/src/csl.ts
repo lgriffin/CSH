@@ -7,7 +7,7 @@ import { compareCodePoints, type Module, stableJson } from "@csh/kernel";
 import { printModule } from "@csh/print";
 import { createZ3Solver } from "@csh/solver";
 import { parseArgs } from "./args.ts";
-import { LOCK_PATH, loadProject } from "./project.ts";
+import { LOCK_PATH, loadProject } from "@csh/run";
 
 const USAGE = `csl: the specification language
 

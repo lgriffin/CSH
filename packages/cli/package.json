@@ -14,11 +14,10 @@
     "@csh/print": "workspace:*",
     "@csh/solver": "workspace:*",
     "@csh/check": "workspace:*",
-    "@csh/witness": "workspace:*",
-    "@csh/adapter-witness-files": "workspace:*",
-    "@csh/adapter-ears-markdown": "workspace:*",
+    "@csh/component": "workspace:*",
     "@csh/ledger": "workspace:*",
-    "@csh/gate": "workspace:*"
+    "@csh/gate": "workspace:*",
+    "@csh/run": "workspace:*"
   },
   "bin": {
     "csl": "./bin/csl.js",

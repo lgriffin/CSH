@@ -28,7 +28,7 @@ It is the "Ledger and authority" container, shown in the [containers diagram](..
 ## Depends on and used by
 
 - Depends on: `@csh/kernel` is listed in `package.json`, but no source file imports it. External: the `git` executable (and gpg or SSH signing as configured in git), called through `node:child_process`.
-- Used by: `@csh/cli` (decision commands, authority for `csh check`, waivers for `csh gate`) and `@csh/testkit` (ledger fixtures).
+- Used by: `@csh/run` (authority and waivers for every evaluation), `@csh/cli` (decision commands) and `@csh/testkit` (ledger fixtures).
 
 ## Invariants it protects
 

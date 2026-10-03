@@ -11,6 +11,8 @@ export interface Snapshot {
   configDigest: string;
   lockDigest: string;
   tool: { version: string; solver: string };
+  /** Digest of the component manifest, when there is one (Anchor, harnesses and A3, section 6.4). */
+  componentDigest?: string;
 }
 
 export function snapshotDigest(s: Snapshot): string {

@@ -11,8 +11,9 @@ import { authorship, formatDecision, gitVcs, LEDGER_PATH, MAINTAINERS_PATH, read
 import { printModule } from "@csh/print";
 import type { SolverPort } from "@csh/solver";
 import { createTestRepo, gpgAvailable, type TestRepo } from "./git.ts";
-import { checkModule, evaluateSpec, type FixtureConfig, readConfig } from "@csh/cli";
+import { checkModule, evaluateSpec, type FixtureConfig, readConfig } from "@csh/run";
 import { verifyCounterexample, verifyNoOutcome } from "./verify.ts";
+import { type ComponentProblem, parseComponent } from "@csh/component";
 
 export interface FixtureResult {
   id: string;
@@ -30,7 +31,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 9;
+export const BUILT_THROUGH_STAGE = 10;
 
 /** The stage a fixture belongs to, from its expected result. */
 export function fixtureStage(fixturesDir: string, id: string): number {
@@ -143,14 +144,28 @@ export class FixtureRunner {
       }
       if (e.emit?.ok === false) return;
     }
-    const needsCheck = ["check", "assessments", "executions", "items", "noneSatisfied", "gate", "gateReplay", "composition", "absent"].some((k) => e[k] !== undefined);
+    const needsCheck = ["check", "assessments", "executions", "items", "noneSatisfied", "gate", "gateReplay", "composition", "absent", "present", "component"].some((k) => e[k] !== undefined);
     if (!needsCheck && e.roundTrip === undefined) return;
     const cfg = readConfig(dir);
     const authority = standIn(dir);
     const lock = lockOf(dir);
-    const r = await evaluateSpec(spec, { root: dir, solver: this.o.solver, config: cfg, emit: { readable: [this.o.fixturesDir] }, ...(authority !== undefined ? { authority } : {}), ...(lock !== undefined ? { lock } : {}) });
+    // A component manifest in inputs/ is read as csh run reads csh/component.json (Anchor, harnesses and A3, section 2).
+    const manifestFile = join(dir, "inputs", "component.json");
+    const parsed = existsSync(manifestFile) ? parseComponent(readFileSync(manifestFile)) : undefined;
+    const r = await evaluateSpec(spec, { root: dir, solver: this.o.solver, config: cfg, emit: { readable: [this.o.fixturesDir] }, ...(authority !== undefined ? { authority } : {}), ...(lock !== undefined ? { lock } : {}), ...(parsed?.component !== undefined ? { component: parsed.component } : {}) });
     if (!r.emitted.ok) {
       failures.push(`emission failed: ${JSON.stringify(r.emitted.errors)}`);
+      return;
+    }
+    const componentErrors: ComponentProblem[] = [...(parsed?.problems ?? []), ...(r.componentErrors ?? [])];
+    if (e.component !== undefined) {
+      for (const x of e.component.errors ?? []) {
+        if (!componentErrors.some((y) => y.code === x.code && (x.detailIncludes === undefined || y.detail.includes(x.detailIncludes)))) failures.push(`component error ${x.code} ${x.detailIncludes ?? ""} not reported; got ${JSON.stringify(componentErrors)}`);
+      }
+      if ((e.component.errors ?? []).length === 0 && componentErrors.length > 0) failures.push(`expected no component errors, got ${JSON.stringify(componentErrors)}`);
+    }
+    if (componentErrors.length > 0) {
+      if (e.component === undefined) failures.push(`the component manifest was refused: ${JSON.stringify(componentErrors)}`);
       return;
     }
     if (e.roundTrip === true) await this.roundTrip(r.emitted.module, r.emitted.digest, failures);
@@ -176,6 +191,7 @@ export class FixtureRunner {
       }
     }
     for (const n of e.absent ?? []) if (checked.prepared.fragments.some((f) => f.name === n)) failures.push(`${n} should not be in the model`);
+    for (const n of e.present ?? []) if (!checked.prepared.fragments.some((f) => f.name === n)) failures.push(`${n} should be in the model; got ${checked.prepared.fragments.map((f) => f.name).join(", ")}`);
     if (e.gate !== undefined || e.gateReplay !== undefined) this.gateExpect(dir, cfg, report, checked.prepared.fragments, e, failures);
   }
 

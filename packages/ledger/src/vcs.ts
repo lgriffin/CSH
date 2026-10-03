@@ -2,6 +2,7 @@
 // and its git implementation. Signature checking is git's (and gpg's); trust in a key
 // comes only from csh/maintainers.json, never from the keyring's own trust model.
 import { execFileSync } from "node:child_process";
+import { posix } from "node:path";
 
 export interface CommitInfo {
   hash: string;
@@ -33,6 +34,16 @@ export function gitVcs(dir: string, opts: GitOptions = {}): VcsPort {
   const env = { ...process.env, ...(opts.env ?? {}), LC_ALL: "C" };
   const git = (...args: string[]): string => execFileSync("git", args, { cwd: dir, env, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 64 * 1024 * 1024 });
   const cache = new Map<string, CommitInfo>();
+  // Paths are relative to dir, which may sit below the repository's top level (a component root, such as
+  // packages/gate). git reports changed paths from the top level, so they are rebased onto dir; a path outside dir
+  // keeps a leading "../" and so never matches a path inside it.
+  let prefix = "";
+  try {
+    prefix = git("rev-parse", "--show-prefix").trim();
+  } catch {
+    // Not a repository yet; every call below fails in its own way.
+  }
+  const local = (paths: string[]): string[] => (prefix === "" ? paths : paths.map((p) => posix.relative(prefix, p)));
   return {
     head: () => git("rev-parse", "HEAD").trim(),
     commitsTouching(path) {
@@ -44,7 +55,7 @@ export function gitVcs(dir: string, opts: GitOptions = {}): VcsPort {
       if (hit !== undefined) return hit;
       const [h, parents, date, status, fpr, primary] = git("show", "-s", "--format=%H%x00%P%x00%cI%x00%G?%x00%GF%x00%GP", hash).replace(/\n$/, "").split("\0");
       const ps = (parents ?? "").trim() === "" ? [] : parents!.trim().split(" ");
-      const changed = (ps.length === 0 ? git("show", "--format=", "--name-only", "--root", hash) : git("diff", "--name-only", ps[0]!, hash)).split("\n").filter((x) => x !== "");
+      const changed = local((ps.length === 0 ? git("show", "--format=", "--name-only", "--root", hash) : git("diff", "--name-only", ps[0]!, hash)).split("\n").filter((x) => x !== ""));
       const info: CommitInfo = { hash: h!, parents: ps, date: date!, changed };
       // G: good; U: good, key validity unknown to the keyring. Validity is decided by maintainers.json.
       if (status === "G" || status === "U") info.signature = { fingerprints: [fpr ?? "", primary ?? ""].filter((x) => x !== "").map(normaliseFingerprint) };
@@ -53,7 +64,7 @@ export function gitVcs(dir: string, opts: GitOptions = {}): VcsPort {
     },
     fileAt(hash, path) {
       try {
-        return git("show", `${hash}:${path}`);
+        return git("show", `${hash}:${prefix}${path}`);
       } catch {
         return undefined;
       }
@@ -66,7 +77,7 @@ export function gitVcs(dir: string, opts: GitOptions = {}): VcsPort {
         return false;
       }
     },
-    changedBetween: (a, b) => git("diff", "--name-only", a, b).split("\n").filter((x) => x !== ""),
+    changedBetween: (a, b) => local(git("diff", "--name-only", a, b).split("\n").filter((x) => x !== "")),
   };
 }
 

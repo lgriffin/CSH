@@ -91,6 +91,47 @@ describe("csh", () => {
   });
 });
 
+describe("csh init and csh run", () => {
+  it("run refuses a project with no component manifest, and a mode it does not know", async () => {
+    const none = io(proj);
+    expect(await csh(["run"], none.io)).toBe(1);
+    expect(none.o.err).toMatch(/no-component/);
+    const bad = io(proj);
+    expect(await csh(["run", "--mode", "strict"], bad.io)).toBe(2);
+  }, 60000);
+
+  it("init writes the manifest from the answers, and never overwrites it", async () => {
+    const dir = mkdtempSync(join(REPO, ".csh-cache", "init-"));
+    try {
+      const answers = ["SignInService", "spec.csl.ts", "src", "ears", "EARS", "requirements", "Product", "", "", "", "Product owner", "the sentence", "tdd", "TDD", "tests", "UnitTests", "", "node --test test/signin.test.ts", "reports/witnesses.ndjson", "", "Product", "", "", ""];
+      const { o, io: x } = io(dir);
+      expect(await csh(["init"], { ...x, ask: async () => answers.shift() ?? "" })).toBe(0);
+      expect(o.out).toMatch(/Wrote csh\/component.json/);
+      const m = JSON.parse(readFileSync(join(dir, "csh", "component.json"), "utf8"));
+      expect(m.practices.map((p: { id: string }) => p.id)).toEqual(["ears", "tdd"]);
+      expect(m.practices[1].harness).toEqual({ run: ["node", "--test", "test/signin.test.ts"], witnesses: "reports/witnesses.ndjson" });
+      expect(m.practices[1].cites).toBe("Product");
+      const again = io(dir);
+      expect(await csh(["init"], { ...again.io, ask: async () => "" })).toBe(2);
+      expect(again.o.err).toMatch(/never overwrites/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("init writes nothing when the answers do not make a manifest", async () => {
+    const dir = mkdtempSync(join(REPO, ".csh-cache", "init-"));
+    try {
+      const { o, io: x } = io(dir);
+      expect(await csh(["init"], { ...x, ask: async () => "" })).toBe(1);
+      expect(o.err).toMatch(/Nothing written/);
+      expect(existsSync(join(dir, "csh", "component.json"))).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
 describe("csl", () => {
   it("emit fails on F07 (a policy names a method version 1 does not define)", async () => {
     const { o, io: x } = io(REPO);

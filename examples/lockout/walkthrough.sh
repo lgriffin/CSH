@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Reproduce docs/lockout-walkthrough.md: copy the example to a scratch repository and run every step, then build the
-# A3 (docs/lockout-a3.md and .html) from the reports of each stage.
+# Reproduce docs/lockout-walkthrough.md: copy the example to a scratch repository, make each stage a commit and run
+# it with csh run, then build the A3 (docs/lockout-a3.md and .html) from the run of each stage.
 # The copy lives under .csh-cache/ so that the specification resolves the csl package.
 # The approval stage signs with a throwaway key made for this run only; it never touches your own keys.
 #
@@ -15,8 +15,16 @@ csh() { node "$REPO/packages/cli/bin/csh.js" "$@"; }
 csl() { node "$REPO/packages/cli/bin/csl.js" "$@"; }
 step() { printf '\n$ %s\n' "$*"; }
 git_() { git -c user.name=walkthrough -c user.email=walkthrough@example.invalid -c commit.gpgsign=false "$@"; }
-run_tests() {
-  CSH_COMMIT="$(git rev-parse HEAD)" CSH_WITNESS_FILE=reports/witnesses.ndjson node --test --test-reporter=spec test/lockout.test.ts 2>&1 | grep -E '^(✔|✖|ℹ (tests|pass|fail) )' | sed -E 's/ \([0-9.]+ms\)//'
+# csh run: the tdd practice's harness runs the tests (their output goes to stderr, trimmed here to the test lines),
+# then check and gate. The run record is stored under .csh-cache/runs/, and the report and decision under reports/.
+run() {
+  local rc=0
+  mkdir -p .csh-cache
+  csh run "$@" > .csh-cache/run.out 2> .csh-cache/run.err || rc=$?
+  grep -E '^(✔|✖|ℹ (tests|pass|fail) )' .csh-cache/run.err | sed -E 's/ \([0-9.]+ms\)//' || true
+  grep -v -E "^(✔|✖|ℹ |▶|  |$)" .csh-cache/run.err >&2 || true
+  cat .csh-cache/run.out
+  return "$rc"
 }
 # Keep each stage's report and gate decision for the A3.
 save_stage() {
@@ -56,11 +64,8 @@ git_ commit -q -m "Lockout example"
 step csl emit spec/lockout.csl.ts
 csl emit spec/lockout.csl.ts
 
-step "CSH_COMMIT=\$(git rev-parse HEAD) CSH_WITNESS_FILE=reports/witnesses.ndjson node --test test/lockout.test.ts"
-run_tests
-
-step csh check
-csh check
+step csh run
+run
 expect '{"findings":"example-conflict,example-conflict,example-conflict,joint-conflict","notComparable":1,"errors":"dangling-citation,shape-mismatch","gaps":"no-rule,single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
 
 # Explain the joint conflict and the conflict that holds the off-by-one.
@@ -69,8 +74,6 @@ for id in $(node -e 'const r=require("./reports/csh-report.json");console.log(r.
   csh explain "$id" || true
 done
 
-step csh gate
-csh gate || true
 save_stage before
 
 # The countermeasures of the A3 (docs/lockout-a3.md, section 5), applied as one change.
@@ -83,15 +86,9 @@ git_ commit -q -m "Lockout countermeasures"
 step git show --stat --format= HEAD
 git show --stat --format= HEAD
 
-step "CSH_COMMIT=\$(git rev-parse HEAD) CSH_WITNESS_FILE=reports/witnesses.ndjson node --test test/lockout.test.ts"
-run_tests
-
-step csh check
-csh check
+step csh run
+run
 expect '{"findings":"","notComparable":0,"errors":"","gaps":"single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
-
-step csh gate
-csh gate || true
 save_stage countermeasures
 
 # The countermeasures leave every rule candidate and unknown: nothing models the sign-in, and nobody has approved
@@ -104,10 +101,9 @@ git_ commit -q -m "Model the sign-in"
 
 step csl emit spec/lockout.csl.ts
 csl emit spec/lockout.csl.ts
-run_tests
 
-step csh check
-csh check
+step csh run
+run
 expect '{"findings":"","notComparable":0,"errors":"","gaps":"single-source,single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
 
 # A throwaway OpenPGP key stands in for the owner's. In a real repository the key lives on a token the agent
@@ -143,12 +139,9 @@ step "git commit -S csh/ledger.ndjson   (the ledger alone, signed by Owner)"
 git add csh/ledger.ndjson
 signed -m "Approve the lockout rules and bindings"
 
-step csh check
-csh check
+step csh run --mode enforcing
+run --mode enforcing
 expect '{"findings":"","notComparable":0,"errors":"","gaps":"single-source,single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
-
-step csh gate --mode enforcing
-csh gate --mode enforcing
 save_stage approved
 
 # An agent later rereads "three failed attempts" as three allowed, and edits the code and its test together. The
@@ -161,17 +154,13 @@ git_ commit -q -m "Simplify the lockout threshold"
 
 step git show --stat --format= HEAD
 git show --stat --format= HEAD
-run_tests
 
-step csh check
-csh check
-expect '{"findings":"example-conflict","notComparable":0,"errors":"","gaps":"single-source,single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
-
-step csh gate --mode enforcing
-if csh gate --mode enforcing; then
+step csh run --mode enforcing
+if run --mode enforcing; then
   echo "walkthrough: the enforcing gate allowed the regression" >&2
   exit 1
 fi
+expect '{"findings":"example-conflict","notComparable":0,"errors":"","gaps":"single-source,single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
 save_stage regression
 
 # The A3 is built from the four stages' reports and the judgments in a3/a3.json.

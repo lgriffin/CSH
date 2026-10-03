@@ -7,8 +7,10 @@ the `.mmd` sources directly; the SVG files are for anywhere else.
 | Level | Source | Shows |
 | --- | --- | --- |
 | 1 Context | [context.mmd](context.mmd) | Contributors, intent owners and agents; version control, existing practice, CI |
-| 2 Containers | [containers.mmd](containers.mmd) | The seven runtime containers, with every package by name, and the development-only test kit |
+| 2 Containers | [containers.mmd](containers.mmd) | The nine runtime containers, with every package by name, and the development-only test kit |
 | 3 Components | [components-cli.mmd](components-cli.mmd) | Command line |
+| 3 Components | [components-run.mmd](components-run.mmd) | Run |
+| 3 Components | [components-component.mmd](components-component.mmd) | Component |
 | 3 Components | [components-emission.mmd](components-emission.mmd) | Emission sandbox |
 | 3 Components | [components-adapters.mmd](components-adapters.mmd) | Adapters |
 | 3 Components | [components-ledger.mmd](components-ledger.mmd) | Ledger and authority |

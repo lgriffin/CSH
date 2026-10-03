@@ -3,12 +3,12 @@ C4Component
   title Command line: components
   Container_Boundary(cl, "Command line (cli)") {
     Component(csl, "csl command", "cli/src/csl.ts", "emit, print, lock")
-    Component(csh, "csh command", "cli/src/csh.ts", "check, gaps, explain, approve, reject, retire, waive, countersign, gate")
-    Component(project, "Project", "cli/src/project.ts", "Config, lock, HEAD and dirty state, ledger from history, snapshot")
-    Component(sources, "Source runner", "cli/src/sources.ts", "Reads source files; runs each adapter isolated; claims-json")
-    Component(pipeline, "Pipeline", "cli/src/pipeline.ts", "Emit, run sources, resolve authority, check")
+    Component(csh, "csh command", "cli/src/csh.ts", "run, check, gaps, explain, approve, reject, retire, waive, countersign, gate")
+    Component(init, "Init", "cli/src/init.ts", "Asks for each manifest field; writes csh/component.json; never overwrites")
   }
-  Rel(csh, project, "Loads")
-  Rel(csh, pipeline, "Runs")
-  Rel(pipeline, sources, "Runs")
-  Rel(csl, project, "Loads")
+  Container_Ext(run, "Run", "run", "Project, pipeline, evaluation, run record")
+  Container_Ext(component, "Component", "component", "Manifest validation")
+  Rel(csh, run, "Evaluates, runs, decides")
+  Rel(csh, init, "csh init")
+  Rel(init, component, "Validates the answers")
+  Rel(csl, run, "Loads the project")

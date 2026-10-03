@@ -16,7 +16,7 @@ Running adapters in the main process. Letting adapters open files by path.
 
 ## Consequences
 
-Each adapter run costs a subprocess. The fault-injection tests show that a crashing or hanging adapter never yields a satisfied obligation (`packages/cli/test/faults.test.ts`).
+Each adapter run costs a subprocess. The fault-injection tests show that a crashing or hanging adapter never yields a satisfied obligation (`packages/run/test/faults.test.ts`).
 
 ## Status
 

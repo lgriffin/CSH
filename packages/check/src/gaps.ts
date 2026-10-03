@@ -85,6 +85,8 @@ export interface GapInput {
   outcome: QueryOutcome;
   env: QueryEnv;
   authority: Map<string, AuthorityInfo>;
+  /** Sources no practice of the component manifest names (Anchor, harnesses and A3, section 2.1). */
+  unowned?: string[];
 }
 
 export async function gapView(input: GapInput): Promise<{ view: GapView; errors: ReportError[] }> {
@@ -220,8 +222,11 @@ export async function gapView(input: GapInput): Promise<{ view: GapView; errors:
   for (const o of obligations.filter((o) => o.kind === "architecture" || o.kind === "temporal")) gaps.push({ kind: "reserved", subject: o.name, fragments: [o.name], detail: `${o.kind} obligations cannot be evaluated in version 1` });
   for (const r of m.relaxations ?? []) gaps.push({ kind: "relaxed", subject: r.obligation, fragments: [r.obligation], detail: `relaxed by ${r.owner}: ${r.reason}` });
 
+  // unowned-source: a source the specification declares that no practice of the component names.
+  for (const s of input.unowned ?? []) gaps.push({ kind: "unowned-source", subject: s, fragments: [], detail: `no practice in the component manifest names source ${s}` });
+
   const rows = [...cells.entries()].map(([subject, c]) => ({ subject, cells: c }));
-  const order = ["unliftable", "unconstrained-after", "no-example", "no-rule", "single-source", "uncited", "unbound", "reserved", "relaxed"];
+  const order = ["unliftable", "unconstrained-after", "no-example", "no-rule", "single-source", "uncited", "unbound", "reserved", "relaxed", "unowned-source"];
   gaps.sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind) || compareCodePoints(a.subject, b.subject) || compareCodePoints(a.detail ?? "", b.detail ?? ""));
   return { view: { sources, rows, gaps }, errors };
 }

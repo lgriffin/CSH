@@ -1,0 +1,12 @@
+%% C4 level 3: components of the component manifest (Anchor, harnesses and A3, section 2.1).
+C4Component
+  title Component: components
+  Container_Boundary(c, "Component (component)") {
+    Component(reader, "Manifest reader", "component/src/manifest.ts (loadComponent, parseComponent)", "Reads csh/component.json; digest of its bytes")
+    Component(validator, "Structural validator", "component/src/manifest.ts (validateManifest)", "Schema, ids, paths inside the root, one owner per source")
+    Component(against, "Specification check", "component/src/manifest.ts (checkAgainstModule)", "Name, known sources, read witness files; unowned sources")
+  }
+  Container_Ext(kernel, "Kernel", "kernel", "Module, digests")
+  Rel(reader, validator, "Validates")
+  Rel(against, kernel, "Reads the module")
+  Rel(reader, kernel, "digestOf")

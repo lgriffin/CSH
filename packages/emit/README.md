@@ -22,7 +22,7 @@ It is the launcher, loader and rule checker of the "Emission sandbox" container 
 ## Depends on and used by
 
 - Depends on: `@csh/kernel` (validation, canonical form, digests) and `csl` (the sandbox runner recognises modules and reads composition metadata). External: `typescript` 5.9.3 for the strict type check; the sandbox uses Node's permission model (`--permission`, `--allow-fs-read`).
-- Used by: `@csh/cli` (the `csl emit` and `csl lock` commands and the pipeline) and `@csh/testkit` (fixture runner and printer round trip).
+- Used by: `@csh/cli` (the `csl emit` and `csl lock` commands), `@csh/run` (the pipeline) and `@csh/testkit` (fixture runner and printer round trip).
 
 ## Invariants it protects
 

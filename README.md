@@ -62,7 +62,7 @@ practice can express.
 examples/lockout/walkthrough.sh
 ```
 
-The script runs one example in four stages: as written, after the countermeasures, with a model and signed approvals
+The script runs one example in four stages, each with `csh run`: as written, after the countermeasures, with a model and signed approvals
 (the enforcing gate allows), and after a regression that keeps the tests green (the enforcing gate blocks).
 [docs/lockout-walkthrough.md](docs/lockout-walkthrough.md) shows the run, and [docs/lockout-a3.md](docs/lockout-a3.md)
 is the Lean A3 built from its reports, with an A3 sheet and a stage picker in [docs/lockout-a3.html](docs/lockout-a3.html).
@@ -74,6 +74,11 @@ csl emit <spec.csl.ts> [--out model.json]   Emit the model and print its digest.
 csl print <model.json | spec.csl.ts>        Print the canonical TypeScript.
 csl lock <spec.csl.ts>                      Write csh/lock.json from the packs the specification uses.
 
+csh init                                    Write csh/component.json by asking for each field. Guesses nothing.
+csh run [--at <commit>] [--mode advisory|enforcing] [--budget ms] [--no-cache]
+                                            Run each practice's harness, check, decide, and store the run under
+                                            .csh-cache/runs/<snapshot digest>/. Non-zero only on block in enforcing mode,
+                                            or 3 when a past commit needs other dependencies than the installed ones.
 csh check [spec] [--json] [--budget ms] [--no-cache]
                                             Run every check; write reports/csh-report.json. Exits 0 when it completes.
 csh gaps [spec]                             Print the gap view only.
@@ -86,8 +91,9 @@ csh gate [--mode advisory|enforcing]        Check and decide for the current sna
 csh gate --verify <decision.json>           Recompute; refuse a decision for another snapshot or one that differs.
 ```
 
-Run them as `node packages/cli/bin/csh.js` and `node packages/cli/bin/csl.js`. A project keeps its settings in
-`csh/config.json`, its ledger in `csh/ledger.ndjson` and its maintainers in `csh/maintainers.json`.
+Run them as `node packages/cli/bin/csh.js` and `node packages/cli/bin/csl.js`. A component is described by
+`csh/component.json`: its practices, the sources each owns and the command that runs each practice's tests. A project
+keeps its other settings in `csh/config.json`, its ledger in `csh/ledger.ndjson` and its maintainers in `csh/maintainers.json`.
 
 ## How to read a report
 
@@ -143,7 +149,7 @@ node packages/testkit/src/run-fixtures.ts       # the fixtures alone, with a sum
 
 | Path | Contents |
 | --- | --- |
-| `packages/` | Thirteen packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `ledger`, `gate`, `cli`, `testkit` |
+| `packages/` | Fifteen packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `ledger`, `gate`, `component`, `run`, `cli`, `testkit` |
 | `fixtures/` | Golden fixtures, one directory each, plus the shared bases and the test pack |
 | `examples/account/` | The walkthrough example |
 | `docs/spec/` | The specification, read-only |

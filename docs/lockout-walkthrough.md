@@ -21,7 +21,7 @@ practices are the only voices, so everything the harness reports is a disagreeme
 [the A3](lockout-a3.md).
 
 Version 1 has no adapter for scenario files (Evidence tab, section 7), so the example brings its own:
-`examples/lockout/adapters/gherkin.ts`, named for the source kind `Scenarios` in `csh/config.json`. It does what
+`examples/lockout/adapters/gherkin.ts`, named by the BDD practice in `csh/component.json`. It does what
 Cucumber's step definitions do. A table maps each step phrase to the key it sets, and the key is lifted to a model term
 through the same bindings the unit tests use. A scenario with a step the table does not know is kept as unliftable,
 and a tag that looks like a requirement identifier becomes a citation.
@@ -31,6 +31,34 @@ To run it yourself, from the repository root:
 ```sh
 pnpm install
 examples/lockout/walkthrough.sh
+```
+
+Since stage 10 the script runs each stage with one command, `csh run`. It reads `csh/component.json`, runs the TDD
+practice's harness (the unit tests, which record witnesses), then checks, decides the gate and stores the run under
+`.csh-cache/runs/<snapshot digest>/`. For the example as written it prints the test lines on standard error and this
+summary:
+
+```text
+$ csh run
+run SignInService at 77bced731172e48036f51fb3920f0ea48f0597ef
+  harness tdd: node --test --test-reporter=spec test/lockout.test.ts  exit 0, 4 witnesses, 0 executions (not sandboxed)
+  findings 4 (4 conflicts, 3 cross-source); gaps 8; not comparable 1; errors 2
+  obligations 3: conflicting 3, violated 0, satisfied 0, unknown 0
+  gate allow (advisory)
+  stored .csh-cache/runs/98764a8069a779309347e4f162039ab911ee27efb92fa667afe9438b29e8d0e8
+```
+
+The sections below show the same evaluation step by step, as the separate commands `csh check` and `csh gate`, which
+compute exactly what `csh run` does after the harness. The last stage, with the regression, ends:
+
+```text
+$ csh run --mode enforcing
+run SignInService at 77fc5274040025fd9ccb5f3dfb8036b785f9ee2c
+  harness tdd: node --test --test-reporter=spec test/lockout.test.ts  exit 0, 4 witnesses, 0 executions (not sandboxed)
+  findings 1 (1 conflicts, 1 cross-source); gaps 8; not comparable 0; errors 0
+  obligations 4: conflicting 0, violated 1, satisfied 3, unknown 0
+  gate block (enforcing)
+  stored .csh-cache/runs/f42bfdbb849bf05167bc4a137b6cd717cfe76e62b9ed76380c2fce7fb4f8f66f
 ```
 
 In the commands below, `csh` and `csl` stand for `node packages/cli/bin/csh.js` and `node packages/cli/bin/csl.js`.

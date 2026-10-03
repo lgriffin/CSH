@@ -1,18 +1,23 @@
-// The csh command (Joint evaluation, section 7; Authority tab, sections 3.4 and 6).
+// The csh command (Joint evaluation, section 7; Authority tab, sections 3.4 and 6; Anchor, harnesses and A3, section 7.1).
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { cachingSolver, type Finding, loadEvidenceStore, renderGaps, renderReport, type Report, saveEvidenceStore, SolverCache, TOOL_VERSION } from "@csh/check";
-import { exitCode, formatDecision as formatGate, gate, type GateDecision, type Mode, snapshotDigest, type Waiver } from "@csh/gate";
+import { type Finding, renderGaps, renderReport, type Report } from "@csh/check";
+import { exitCode, formatDecision as formatGate, type GateDecision, type Mode } from "@csh/gate";
 import { fragmentsOf, type Module, stableJson } from "@csh/kernel";
-import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons, waiversFor } from "@csh/ledger";
+import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons } from "@csh/ledger";
 import { printFragment } from "@csh/print";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
+import { decideGate as decideFor, evaluateProject, GATE_PATH, ledgerOf, loadProject, MODEL_PATH, type Project, REPORT_PATH, runAt, runComponent, type RunResult, specOf } from "@csh/run";
 import { type Args, parseArgs } from "./args.ts";
-import { evaluateSpec } from "./pipeline.ts";
-import { CACHE_DIR, ledgerOf, loadProject, MODEL_PATH, type Project, REPORT_PATH, snapshotOf, specOf, unchangedSince } from "./project.ts";
+import { init } from "./init.ts";
 
 const USAGE = `csh: the Composable Specification Harness
 
+  csh init                        Write csh/component.json by asking for each field. Guesses nothing.
+  csh run [--at <commit>] [--mode advisory|enforcing] [--budget ms] [--no-cache]
+                                  Run each practice's harness, check and gate one snapshot of the component, and
+                                  store the run under .csh-cache/runs/. Exits non-zero only on block in enforcing
+                                  mode, or when the run could not be made.
   csh check [spec] [--out report.json] [--json] [--budget ms] [--no-cache]
                                   Run every check and write the report. Exits 0 when the run completed.
   csh gaps [spec]                 Print the gap view only.
@@ -37,6 +42,8 @@ interface Io {
   err: (s: string) => void;
   cwd: string;
   solver?: () => Promise<SolverPort>;
+  /** Asks one question and returns the answer (csh init); the default reads a line from standard input. */
+  ask?: (question: string) => Promise<string>;
 }
 
 let solverPromise: Promise<SolverPort> | undefined;
@@ -46,38 +53,13 @@ function defaultSolver(): Promise<SolverPort> {
 }
 
 async function runCheck(p: Project, a: Args, io: Io): Promise<{ report: Report; model: Module } | undefined> {
-  const spec = specOf(p, a.positional[0]);
   const solver = await (io.solver ?? defaultSolver)();
-  const budget = a.options.budget !== undefined ? Number(a.options.budget) : p.config.budgetMs;
-  const cacheFile = join(p.root, CACHE_DIR, "solver.json");
-  const evidenceFile = join(p.root, CACHE_DIR, "evidence.json");
-  const cache = a.flags.has("no-cache") ? new SolverCache() : SolverCache.load(cacheFile);
-  const evidence = loadEvidenceStore(evidenceFile);
-  const ledger = await ledgerOf(p, spec);
-  // The module digest is known only after emission; the snapshot digest is filled in after it.
-  const cfg = { ...(budget !== undefined ? { budgetMs: budget } : {}), ...(p.config.requirementIdPattern !== undefined ? { requirementIdPattern: p.config.requirementIdPattern } : {}) };
-  const impl = unchangedSince(p);
-  const r = await evaluateSpec(spec, {
-    root: p.root,
-    solver,
-    config: cfg,
-    ...(p.lock !== undefined ? { lock: p.lock } : {}),
-    ...(ledger !== undefined ? { ledgerState: ledger } : {}),
-    evidence,
-    solverWrap: (s) => cachingSolver(s, cache),
-    snapshot: { commit: p.commit, ledgerHead: String(ledger?.head ?? 0) },
-    ...(impl !== undefined ? { unchangedSince: impl } : {}),
-    ...(p.config.adapters !== undefined ? { adapters: p.config.adapters } : {}),
-  });
-  if (!r.emitted.ok) {
-    io.err(`emission failed:\n${r.emitted.errors.map((e) => `  ${e.code}${e.path !== undefined ? ` at ${e.path}` : ""}${e.line !== undefined ? `:${e.line}` : ""}: ${e.message}`).join("\n")}\n`);
+  const e = await evaluateProject(p, { solver, ...(a.positional[0] !== undefined ? { spec: a.positional[0] } : {}), ...(a.options.budget !== undefined ? { budgetMs: Number(a.options.budget) } : {}), ...(a.flags.has("no-cache") ? { noCache: true } : {}) });
+  if (!e.ok) {
+    io.err(e.message);
     return undefined;
   }
-  const report = r.checked!.report;
-  report.snapshot = { commit: p.commit, ledgerHead: String(ledger?.head ?? 0), digest: snapshotDigest(snapshotOf(p, report.moduleDigest, ledger, solver.id, TOOL_VERSION)) };
-  if (!a.flags.has("no-cache")) cache.save(cacheFile);
-  saveEvidenceStore(evidenceFile, evidence);
-  return { report, model: r.checked!.prepared.module };
+  return { report: e.report, model: e.model };
 }
 
 function write(path: string, text: string): void {
@@ -182,8 +164,11 @@ export async function csh(argv: string[], io: Io): Promise<number> {
     io.out(USAGE);
     return cmd === undefined ? 2 : 0;
   }
+  if (cmd === "init") return init(io.cwd, a.options.root, io);
   const p = loadProject(io.cwd, a.options.root);
   switch (cmd) {
+    case "run":
+      return run(p, a, io);
     case "check": {
       const res = await runCheck(p, a, io);
       if (res === undefined) return 1;
@@ -229,18 +214,13 @@ export async function csh(argv: string[], io: Io): Promise<number> {
  * edited report cannot change the decision (CSH-010).
  */
 async function decideGate(p: Project, a: Args, io: Io): Promise<GateDecision | undefined> {
-  const res = await runCheck(p, { ...a, positional: [] }, io);
-  if (res === undefined) return undefined;
-  const { report } = res;
   const solver = await (io.solver ?? defaultSolver)();
-  const ledger = await ledgerOf(p, specOf(p, undefined));
-  const snapshot = snapshotOf(p, report.moduleDigest, ledger, solver.id, TOOL_VERSION);
-  const waivers: Waiver[] = [];
-  for (const as of report.assessments ?? []) {
-    for (const w of ledger === undefined ? [] : waiversFor(ledger, { name: as.fragment, digest: as.digest })) waivers.push({ seq: w.seq, fragment: w.fragment, digest: w.digest, scope: w.waiver!.scope, expires: w.waiver!.expires });
+  const e = await evaluateProject(p, { solver, ...(a.options.budget !== undefined ? { budgetMs: Number(a.options.budget) } : {}), ...(a.flags.has("no-cache") ? { noCache: true } : {}) });
+  if (!e.ok) {
+    io.err(e.message);
+    return undefined;
   }
-  const mode = (a.options.mode ?? p.config.mode ?? "advisory") as Mode;
-  return gate({ report, snapshot, mode, waivers, commitDate: p.commitDate });
+  return decideFor(p, e, (a.options.mode ?? p.config.mode ?? "advisory") as Mode);
 }
 
 async function runGate(p: Project, a: Args, io: Io): Promise<number> {
@@ -262,9 +242,39 @@ async function runGate(p: Project, a: Args, io: Io): Promise<number> {
   }
   const d = await decideGate(p, a, io);
   if (d === undefined) return 1;
-  write(join(p.root, a.options.out ?? "reports/csh-gate.json"), formatGate(d));
+  write(join(p.root, a.options.out ?? GATE_PATH), formatGate(d));
   io.out(`gate ${d.overall} (${d.mode})\n${d.obligations.map((o) => `  ${o.disposition.padEnd(7)} ${o.fragment}  ${o.because}${o.recommends !== undefined ? `; recommends ${o.recommends}` : ""}`).join("\n")}\n`);
   if (d.candidates.obligations.length > 0) io.out(`  candidate, never blocking: ${d.candidates.obligations.join(", ")}\n`);
   if (d.invalidLedgerEntries.length > 0) io.out(`  ignored ledger entries: ${d.invalidLedgerEntries.map((e) => `seq ${e.seq} (${e.reason})`).join(", ")}\n`);
   return exitCode(d);
+}
+
+const countOf = (r: Report, kinds: string[]) => r.findings.filter((f) => kinds.includes(f.kind)).length;
+
+/** csh run: harnesses, check and gate for one snapshot of the component (Anchor, harnesses and A3, section 4). */
+async function run(p: Project, a: Args, io: Io): Promise<number> {
+  const solver = await (io.solver ?? defaultSolver)();
+  const mode = a.options.mode as Mode | undefined;
+  if (mode !== undefined && mode !== "advisory" && mode !== "enforcing") {
+    io.err("--mode is advisory or enforcing\n");
+    return 2;
+  }
+  const o = { root: p.root, solver, ...(mode !== undefined ? { mode } : {}), ...(a.options.budget !== undefined ? { budgetMs: Number(a.options.budget) } : {}), ...(a.flags.has("no-cache") ? { noCache: true } : {}), harnessOutput: (s: string) => io.err(s) };
+  const r: RunResult = a.options.at !== undefined ? await runAt({ ...o, commit: a.options.at }) : await runComponent(o);
+  if (!r.ok) {
+    io.err(`csh run: ${r.code}: ${r.message}\n`);
+    return r.code === "dependencies-differ" ? 3 : 1;
+  }
+  const { record, report, decision } = r;
+  const lines = [`run ${record.component} at ${record.snapshot.commit}`];
+  for (const h of record.harnesses) lines.push(`  harness ${h.practice}: ${h.argv.join(" ")}  exit ${h.exitCode ?? h.error ?? "none"}, ${h.witnesses} witnesses, ${h.executions} executions (not sandboxed)`);
+  if (record.harnesses.length === 0) lines.push("  no practice has a harness");
+  const conflicts = countOf(report, ["state-conflict", "joint-conflict", "example-conflict", "vacuous"]);
+  lines.push(`  findings ${report.findings.length} (${conflicts} conflicts, ${report.findings.filter((f) => f.crossSource).length} cross-source); gaps ${report.gapView.gaps.length}; not comparable ${report.notComparable.length}; errors ${report.errors.length}`);
+  const v = (x: string) => (report.assessments ?? []).filter((y) => y.verdict === x).length;
+  lines.push(`  obligations ${(report.assessments ?? []).length}: conflicting ${v("conflicting")}, violated ${v("violated")}, satisfied ${v("satisfied")}, unknown ${v("unknown")}`);
+  lines.push(`  gate ${decision.overall} (${decision.mode})`);
+  lines.push(`  stored ${r.dir.slice(p.root.length + 1)}`);
+  io.out(`${lines.join("\n")}\n`);
+  return exitCode(decision);
 }
