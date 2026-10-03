@@ -7,7 +7,7 @@ import { runSources, type RunSourcesOptions } from "./sources.ts";
 import { emit, type EmitOptions, type EmitResult, type Lock } from "@csh/emit";
 import { digestJson, fragmentsOf, refName, type Module } from "@csh/kernel";
 import { type LedgerState, resolveAuthority } from "@csh/ledger";
-import { checkAgainstModule, type ComponentProblem, type LoadedComponent, ownersOf } from "@csh/component";
+import { checkAgainstModule, type ComponentProblem, DEFAULT_EXECUTIONS, type LoadedComponent, ownersOf } from "@csh/component";
 import type { SolverPort } from "@csh/solver";
 
 export interface FixtureConfig {
@@ -76,6 +76,8 @@ export function sourceSettings(c: LoadedComponent | undefined): RunSourcesOption
     for (const s of p.sources) {
       const set: NonNullable<RunSourcesOptions["perSource"]>[string] = {};
       if (p.adapter !== undefined) set.adapter = p.adapter;
+      if (p.harness !== undefined) set.executions = p.harness.executions ?? DEFAULT_EXECUTIONS;
+      if (p.cites !== undefined) set.cites = p.cites;
       out[s] = set;
     }
   }

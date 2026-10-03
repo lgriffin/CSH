@@ -15,6 +15,7 @@ import {
   type Transition,
 } from "@csh/kernel";
 import { exampleF, neg, satisfiable, triggerF, unconstrainedAfter, type QueryEnv } from "@csh/solver";
+import { outcomeOf } from "@csh/witness";
 import type { Prepared } from "./pool.ts";
 import { assumptionsFor, type Pool, type QueryOutcome, sourceColumn, stateOfEvent } from "./run.ts";
 import type { AuthorityInfo, Cell, Gap, GapView, ReportError } from "./types.ts";
@@ -226,7 +227,23 @@ export async function gapView(input: GapInput): Promise<{ view: GapView; errors:
   for (const s of input.unowned ?? []) gaps.push({ kind: "unowned-source", subject: s, fragments: [], detail: `no practice in the component manifest names source ${s}` });
 
   const rows = [...cells.entries()].map(([subject, c]) => ({ subject, cells: c }));
-  const order = ["unliftable", "unconstrained-after", "no-example", "no-rule", "single-source", "uncited", "unbound", "reserved", "relaxed", "unowned-source"];
+  // outcome-unknown: a witness whose test has no outcome, stated or joined, is never a claim (section 3.2).
+  // unobserved-test: a test that finished and recorded no witness says nothing to the harness.
+  const unknown = new Map<string, string[]>();
+  const observed = new Set<string>();
+  for (const w of prepared.witnesses) {
+    const test = w.witness.execution.test;
+    if (test !== undefined) observed.add(`${w.source}\u0000${test}`);
+    if (outcomeOf(w.witness) !== "unknown") continue;
+    const subject = test ?? w.witness.id;
+    unknown.set(subject, [...(unknown.get(subject) ?? []), `${w.source} ${w.span ?? w.witness.id}`]);
+  }
+  for (const [subject, at] of unknown) gaps.push({ kind: "outcome-unknown", subject, fragments: [], detail: `${at.join(", ")}: no execution line gives this test's outcome, so its witnesses are not claims` });
+  const unobserved = new Map<string, string>();
+  for (const e of prepared.executions) if (!observed.has(`${e.source}\u0000${e.test}`) && !unobserved.has(e.test)) unobserved.set(e.test, `${e.span}: ${e.outcome}, and no witness from ${e.source}`);
+  for (const [subject, detail] of unobserved) gaps.push({ kind: "unobserved-test", subject, fragments: [], detail });
+
+  const order = ["unliftable", "unconstrained-after", "no-example", "no-rule", "single-source", "uncited", "unbound", "reserved", "relaxed", "unowned-source", "outcome-unknown", "unobserved-test"];
   gaps.sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind) || compareCodePoints(a.subject, b.subject) || compareCodePoints(a.detail ?? "", b.detail ?? ""));
   return { view: { sources, rows, gaps }, errors };
 }

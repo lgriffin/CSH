@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@csh/harness':
+        specifier: workspace:*
+        version: link:packages/harness
       '@csh/witness':
         specifier: workspace:*
         version: link:packages/witness
@@ -125,6 +128,12 @@ importers:
       '@csh/ledger':
         specifier: workspace:*
         version: link:../ledger
+
+  packages/harness:
+    dependencies:
+      '@csh/witness':
+        specifier: workspace:*
+        version: link:../witness
 
   packages/kernel: {}
 

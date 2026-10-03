@@ -69,7 +69,7 @@ run
 expect '{"findings":"example-conflict,example-conflict,example-conflict,joint-conflict","notComparable":1,"errors":"dangling-citation,shape-mismatch","gaps":"no-rule,single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
 
 # Explain the joint conflict and the conflict that holds the off-by-one.
-for id in $(node -e 'const r=require("./reports/csh-report.json");console.log(r.findings.filter(f=>f.kind==="joint-conflict"||f.members.some(m=>m.fragment.endsWith("/WitnessAllowsThreeFailures"))).map(f=>f.id).join(" "))'); do
+for id in $(node -e 'const r=require("./reports/csh-report.json");console.log(r.findings.filter(f=>f.kind==="joint-conflict"||f.members.some(m=>m.fragment.endsWith("/WitnessAllowsThreeFailedAttemptsBeforeLocking"))).map(f=>f.id).join(" "))'); do
   step csh explain "$id"
   csh explain "$id" || true
 done

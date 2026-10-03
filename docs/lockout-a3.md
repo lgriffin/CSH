@@ -31,12 +31,12 @@ At the first stage, 15 signals. What each practice says at each decision point, 
 
 | Decision point | EARS | BDD | TDD | CSH reports | Class |
 | --- | --- | --- | --- | --- | --- |
-| Third wrong password (2 before it) | LCK-001: lock | locked | refused, not locked | example-conflict 776bf7df8a4c2145: WitnessAllowsThreeFailures × LockOnThirdFailure | contradiction |
-| Correct password on a locked account | LCK-002: refuse · LCK-003: accept | refused | refused | example-conflict 3531cd9fa8be09b9: WitnessRefusesWhenLocked × AcceptCorrectPassword; example-conflict c897987617527744: ScenarioALockedAccountIsRefusedEvenWithTheCorrectPassword × AcceptCorrectPassword; joint-conflict 6aa446d724b76ed9: AcceptCorrectPassword × RefuseWhileLocked | contradiction |
+| Third wrong password (2 before it) | LCK-001: lock | locked | refused, not locked | example-conflict 7e5ab121a94c21fd: WitnessAllowsThreeFailedAttemptsBeforeLocking × LockOnThirdFailure | contradiction |
+| Correct password on a locked account | LCK-002: refuse · LCK-003: accept | refused | refused | example-conflict 5e3cfe7d6faa2c29: WitnessRefusesALockedAccountEvenWithTheCorrectPassword × AcceptCorrectPassword; example-conflict c897987617527744: ScenarioALockedAccountIsRefusedEvenWithTheCorrectPassword × AcceptCorrectPassword; joint-conflict 6aa446d724b76ed9: AcceptCorrectPassword × RefuseWhileLocked | contradiction |
 | How long the lock lasts | 15 minutes, written as 900 s | "15 minutes" | 900 s | not comparable: ScenarioTheLockLastsFifteenMinutes (unit-mismatch) | drift |
 | LCK-002's WHILE clause | WHILE, translated as and | n/a | n/a | shape-mismatch: Product/LCK-002 is complex with a while clause; SignInService/StopPasswordGuessing/RefuseWhileLocked has no while | drift |
 | Successful sign-in resets the count | LCK-003 | says it, tagged @LOCK-3 | resets | dangling-citation: SignInService/@Scenarios/ScenarioASuccessfulSignInClearsTheFailedAttempts cites Product/LOCK-3, which does not exist | drift |
-| Fourth wrong password | silent | silent | locks here | no-rule: WitnessLocksOnFourth | silence |
+| Fourth wrong password | silent | silent | locks here | no-rule: WitnessLocksOnTheFourthFailedAttempt | silence |
 | Email the holder on lock | LCK-004 | silent | silent | uncited: LCK-004 | silence |
 | Two-factor sign-in | LCK-005 (WHERE) | silent | silent | uncited: LCK-005; unliftable: Product (feature-scope) | silence |
 | Support unlocks an account | silent | scenario | silent | unliftable: Scenarios (unknown-step) | silence |

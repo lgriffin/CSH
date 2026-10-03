@@ -6,7 +6,7 @@
 
 ## Where it sits
 
-It is the "Component" container, shown in the [containers diagram](../../docs/architecture/containers.mmd). Its components (manifest reader, structural validator, specification check) are in [components-component.mmd](../../docs/architecture/components-component.mmd). It runs in the main process and holds no state.
+It is the "Component" container ([the manifest reference](../../docs/guides/manifest.md) describes each field), shown in the [containers diagram](../../docs/architecture/containers.mmd). Its components (manifest reader, structural validator, specification check) are in [components-component.mmd](../../docs/architecture/components-component.mmd). It runs in the main process and holds no state.
 
 ## Public interface
 

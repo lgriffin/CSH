@@ -7,6 +7,7 @@ import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { compareCodePoints, digestOf, type Binding, type ClaimSet, type Module, type Source } from "@csh/kernel";
 import type { SourceRun } from "@csh/check";
+import { DEFAULT_EXECUTIONS } from "@csh/component";
 import type { AdapterInput, AdapterOutput } from "@csh/witness";
 
 /** Built-in adapters by source kind. Configuration may add more (kind to module specifier or path). */
@@ -30,7 +31,7 @@ export interface RunSourcesOptions {
    * Settings by source name, from the component manifest. A source's own adapter takes precedence over the one for
    * its kind.
    */
-  perSource?: Record<string, { adapter?: string }>;
+  perSource?: Record<string, { adapter?: string; executions?: string; cites?: string }>;
   /** Authority of each binding, by binding fragment name; candidate when absent. */
   bindingAuthority?: (b: Binding) => string;
   timeoutMs?: number;
@@ -173,13 +174,23 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
       continue;
     }
     const input: AdapterInput = { source, vocabulary: module.vocabulary, bindings, files };
-    if (opts.config !== undefined) input.config = opts.config;
+    const own = opts.perSource?.[source.name];
+    const config = { ...(opts.config ?? {}), ...(own?.cites !== undefined ? { cites: own.cites } : {}) };
+    if (opts.config !== undefined || own?.cites !== undefined) input.config = config;
+    // The execution file sits beside a witness source: the practice's harness names it, or the reporter's default.
+    const execAt = own?.executions ?? (source.kind === "Witnesses" ? DEFAULT_EXECUTIONS : undefined);
+    const exec = execAt === undefined ? undefined : filesAt(opts.root, execAt);
+    const execFiles = (exec?.files ?? []).map((f) => {
+      const bytes = new Uint8Array(readFileSync(f.abs));
+      return { path: f.path, digest: digestOf(bytes), bytes };
+    });
+    if (execAt !== undefined && exec?.outside !== true) input.executions = execFiles;
     let output: AdapterOutput;
     try {
       const url = resolveAdapter(spec, opts.root);
       if (opts.isolated === false) {
-        const mod = (await import(url)) as { adapter: { run: (i: AdapterInput) => AdapterOutput } };
-        output = structuredClone(mod.adapter.run(input));
+        const mod = (await import(url)) as { adapter: { run: (i: AdapterInput) => AdapterOutput | Promise<AdapterOutput> } };
+        output = structuredClone(await mod.adapter.run(input));
       } else {
         output = await runIsolated(url, input, opts.timeoutMs);
       }
@@ -187,7 +198,7 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
       output = { diagnostics: [{ code: "adapter-failed", severity: "error", message: (err as Error).message }] };
     }
     if (output.claims !== undefined) output.claims.source = source.name;
-    runs.push({ ...base, adapter: spec, files: files.map(({ path, digest }) => ({ path, digest })), output });
+    runs.push({ ...base, adapter: spec, files: [...files, ...execFiles].map(({ path, digest }) => ({ path, digest })), output });
   }
   return runs;
 }

@@ -1,0 +1,24 @@
+%% One csh run (Anchor, harnesses and A3, section 4.1).
+sequenceDiagram
+  actor Person
+  participant CLI as csh run (cli)
+  participant Run as run
+  participant Harness as Harness command (project tests, probe, reporter)
+  participant Adapters as Adapter subprocesses
+  participant Check as check and solver
+  participant Gate as gate
+  participant Store as Run store (.csh-cache/runs)
+  Person->>CLI: csh run, or csh run --at a commit
+  CLI->>Run: runComponent, or runAt in a throwaway worktree
+  Run->>Run: load csh/component.json and check it against the emitted specification
+  Run->>Harness: argv per practice, with CSH_COMMIT, CSH_WITNESS_FILE, CSH_EXECUTIONS_FILE
+  Harness-->>Run: exit code (a fact, never a verdict), witness and execution files
+  Run->>Adapters: source bytes, execution bytes, vocabulary, bindings
+  Adapters-->>Run: claims, witnesses with joined outcomes, items, diagnostics
+  Run->>Check: module, adapter output, authority, owners of sources
+  Check-->>Run: report
+  Run->>Gate: report, snapshot with componentDigest, waivers
+  Gate-->>Run: decision
+  Run->>Store: run.json, report.json, gate.json
+  Run-->>CLI: summary
+  CLI-->>Person: exit 0, or 1 on block in enforcing mode, or 3 on dependencies-differ
