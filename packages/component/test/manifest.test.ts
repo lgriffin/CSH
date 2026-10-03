@@ -46,6 +46,12 @@ describe("validateManifest", () => {
     expect(codes({ ...good, practices: [{ ...good.practices[1], harness: { run: "node --test", witnesses: "w.ndjson" } }] })).toEqual(["malformed-manifest"]);
   });
 
+  it("takes a harness timeout only as a positive whole number of milliseconds (#20)", () => {
+    const withTimeout = (timeoutMs: unknown) => codes({ ...good, practices: [good.practices[0], { ...good.practices[1], harness: { run: ["node"], witnesses: "inputs/witnesses.ndjson", timeoutMs } }] });
+    expect(withTimeout(1000)).toEqual([]);
+    for (const bad of [0, -1, 1.5, "1000", null]) expect(withTimeout(bad), String(bad)).toEqual(["malformed-manifest"]);
+  });
+
   it("refuses an empty practice list and a value that is not an object", () => {
     expect(codes({ ...good, practices: [] })).toEqual(["malformed-manifest"]);
     expect(codes([])).toEqual(["malformed-manifest"]);

@@ -10,6 +10,8 @@ export const COMPONENT_SCHEMA = "csh-component/v1";
 export const PRACTICE_KINDS = ["requirements", "scenarios", "tests", "design-notes"] as const;
 /** Where a harness's execution lines go when the manifest does not say (section 3.2). */
 export const DEFAULT_EXECUTIONS = "reports/executions.ndjson";
+/** How long a harness command may run when the manifest does not say: ten minutes (owner-decided, #20). */
+export const DEFAULT_HARNESS_TIMEOUT_MS = 600000;
 
 export interface Harness {
   /** An argument vector, never a shell string. */
@@ -18,6 +20,8 @@ export interface Harness {
   witnesses: string;
   /** The file the test runner's reporter writes one line per finished test to (default reports/executions.ndjson). */
   executions?: string;
+  /** Milliseconds the command may run before its process tree is killed (default ten minutes). */
+  timeoutMs?: number;
 }
 
 export interface Practice {
@@ -120,6 +124,7 @@ export function validateManifest(v: unknown): ComponentProblem[] {
       else {
         if (!projectPath(h.witnesses)) bad("malformed-manifest", `${name}: harness.witnesses must be a path inside the component root`);
         if (h.executions !== undefined && !projectPath(h.executions)) bad("malformed-manifest", `${name}: harness.executions must be a path inside the component root`);
+        if (h.timeoutMs !== undefined && !(Number.isSafeInteger(h.timeoutMs) && (h.timeoutMs as number) > 0)) bad("malformed-manifest", `${name}: harness.timeoutMs must be a positive whole number of milliseconds`);
       }
     }
   }

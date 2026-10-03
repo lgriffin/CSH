@@ -5,7 +5,7 @@
 import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { type ComponentManifest, DEFAULT_EXECUTIONS } from "@csh/component";
+import { type ComponentManifest, DEFAULT_EXECUTIONS, DEFAULT_HARNESS_TIMEOUT_MS } from "@csh/component";
 import type { Report } from "@csh/check";
 import { formatDecision, type GateDecision, type Mode, type Snapshot } from "@csh/gate";
 import { digestOf, stableJson } from "@csh/kernel";
@@ -27,7 +27,7 @@ export interface HarnessRecord {
   executions: number;
   /** The harness runs with the project's own permissions, exactly as running the tests by hand would. */
   sandbox: "none";
-  /** Why the command could not start, when it could not. */
+  /** Why the command could not start, or that it timed out ("timed out after N ms"), when either happened. */
   error?: string;
 }
 
@@ -60,13 +60,30 @@ export type RunResult =
 
 const countLines = (file: string) => (existsSync(file) ? readFileSync(file, "utf8").split("\n").filter((l) => l.trim() !== "").length : 0);
 
-function exec(argv: string[], cwd: string, env: NodeJS.ProcessEnv, out: (s: string) => void): Promise<{ exitCode: number | null; error?: string }> {
+function exec(argv: string[], cwd: string, env: NodeJS.ProcessEnv, out: (s: string) => void, timeoutMs: number): Promise<{ exitCode: number | null; error?: string }> {
   return new Promise((done) => {
-    const child = spawn(argv[0]!, argv.slice(1), { cwd, env, stdio: ["ignore", "pipe", "pipe"] });
+    // A process group of its own, so that a timeout kills the command and everything it started (#20).
+    const child = spawn(argv[0]!, argv.slice(1), { cwd, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      try {
+        if (process.platform !== "win32" && child.pid !== undefined) process.kill(-child.pid, "SIGKILL");
+        else child.kill("SIGKILL");
+      } catch {
+        // Already gone.
+      }
+    }, timeoutMs);
     child.stdout.on("data", (d: Buffer) => out(d.toString()));
     child.stderr.on("data", (d: Buffer) => out(d.toString()));
-    child.on("error", (e) => done({ exitCode: null, error: e.message }));
-    child.on("close", (code) => done({ exitCode: code }));
+    child.on("error", (e) => {
+      clearTimeout(timer);
+      done({ exitCode: null, error: e.message });
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      done(timedOut ? { exitCode: null, error: `timed out after ${timeoutMs} ms` } : { exitCode: code });
+    });
   });
 }
 
@@ -89,7 +106,7 @@ export async function runHarnesses(p: Project, manifest: ComponentManifest, out:
     const env = { ...process.env, CSH_COMMIT: p.commit, CSH_WITNESS_FILE: witnesses, CSH_EXECUTIONS_FILE: executions };
     // A shared file already holds an earlier harness's lines: each record counts only the lines its own run added.
     const before = [countLines(witnesses), countLines(executions)] as const;
-    const r = await exec(h.run, p.root, env, out);
+    const r = await exec(h.run, p.root, env, out, h.timeoutMs ?? DEFAULT_HARNESS_TIMEOUT_MS);
     const rec: HarnessRecord = { practice: practice.id, argv: [...h.run], exitCode: r.exitCode, witnesses: countLines(witnesses) - before[0], executions: countLines(executions) - before[1], sandbox: "none" };
     if (r.error !== undefined) rec.error = r.error;
     records.push(rec);

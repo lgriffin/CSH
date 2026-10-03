@@ -231,4 +231,30 @@ describe("runHarnesses", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it("kills a harness that runs past its timeout, with everything it started, and records it (#20)", async () => {
+    const dir = mkdtempSync(join(REPO, ".csh-cache", "run-harnesses-"));
+    try {
+      // The command starts a grandchild that would outlive it, records its pid, and then hangs.
+      const hang = ["node", "-e", `const {spawn}=require("child_process");const c=spawn(process.execPath,["-e","setInterval(()=>{},1000)"],{stdio:"ignore"});require("fs").writeFileSync("pid",String(c.pid));setInterval(()=>{},1000)`];
+      const practices = [{ id: "a", name: "A", kind: "tests" as const, sources: ["A"], harness: { run: hang, witnesses: "reports/w.ndjson", timeoutMs: 1500 } }];
+      const started = Date.now();
+      const recs = await runHarnesses({ root: dir, commit: "c" } as Project, { ...manifest, practices } as ComponentManifest, () => undefined);
+      expect(Date.now() - started).toBeLessThan(30000);
+      expect(recs[0]).toMatchObject({ exitCode: null, error: "timed out after 1500 ms" });
+      const pid = Number(readFileSync(join(dir, "pid"), "utf8"));
+      const alive = () => {
+        try {
+          process.kill(pid, 0);
+          return true;
+        } catch {
+          return false;
+        }
+      };
+      for (let i = 0; i < 50 && alive(); i++) await new Promise((r) => setTimeout(r, 100));
+      expect(alive()).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 60000);
 });

@@ -31,6 +31,7 @@ never what is right: it holds no judgment and no authority ([09](../spec/09-anch
 | `practices[].harness.run` | An argument vector, never a shell string. It runs with the project's own permissions |
 | `practices[].harness.witnesses` | The witness file the command writes; one of the practice's sources must read it |
 | `practices[].harness.executions` | The file the reporter writes; `reports/executions.ndjson` when absent |
+| `practices[].harness.timeoutMs` | Milliseconds the command may run, a positive whole number; 600000 (ten minutes) when absent. On timeout its process tree is killed and the run records `exitCode: null`, `error: "timed out after N ms"` |
 | `practices[].cites` | The source this practice's citations refer to |
 | `practices[].steps` | For scenarios only: the project's step table |
 | `practices[].author`, `unit` | Shown on the A3: who writes it, and what one artefact is |
