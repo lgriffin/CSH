@@ -1,0 +1,26 @@
+{
+  "schema": "csh-component/v1",
+  "name": "Lock",
+  "spec": "spec.csl.ts",
+  "implementation": [
+    "src"
+  ],
+  "practices": [
+    {
+      "id": "rules",
+      "name": "Rules",
+      "kind": "requirements",
+      "sources": [
+        "Product"
+      ]
+    },
+    {
+      "id": "tests",
+      "name": "Tests",
+      "kind": "tests",
+      "sources": [
+        "UnitTests"
+      ]
+    }
+  ]
+}

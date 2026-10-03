@@ -1,0 +1,67 @@
+{
+  "schema": "csh-report/v1",
+  "moduleDigest": "sha256:27986d587dc187c525f8225b2f325711ee00f90b5ba1fe966fff1647920f4fe7",
+  "snapshot": {
+    "commit": "1111111111111111111111111111111111111111",
+    "ledgerHead": "0",
+    "digest": "sha256:64e84868e980bb3844f48bb476e3517b3b8788cb68c11e9ce4c1c3f962d4b6e9"
+  },
+  "tool": {
+    "version": "0.1.0",
+    "solver": "z3",
+    "budgetMs": 5000
+  },
+  "findings": [],
+  "notComparable": [],
+  "gapView": {
+    "sources": [
+      "Product",
+      "UnitTests",
+      "intent"
+    ],
+    "rows": [],
+    "gaps": [
+      {
+        "kind": "uncited",
+        "subject": "Product/LCK-002",
+        "fragments": [],
+        "detail": "docs/requirements.md:4: no fragment cites it"
+      }
+    ]
+  },
+  "assessments": [],
+  "unliftable": [],
+  "errors": [],
+  "diagnostics": [],
+  "executions": [
+    {
+      "witness": "allows-two-failures",
+      "source": "UnitTests",
+      "event": "SignIn",
+      "localResult": "passed",
+      "test": "test/lock.test.ts::allows two failures"
+    }
+  ],
+  "items": [
+    {
+      "source": "Product",
+      "id": "LCK-001",
+      "span": "docs/requirements.md:3",
+      "textDigest": "sha256:66c4680b21527abca2a6a95d801cf41926ba2581f599212a67f93196623c7be8"
+    },
+    {
+      "source": "Product",
+      "id": "LCK-002",
+      "span": "docs/requirements.md:4",
+      "textDigest": "sha256:0447453c05b0a7978b1a76268bde0de63ef29e1fa38a5177633da63524050a33"
+    }
+  ],
+  "component": {
+    "name": "Lock",
+    "digest": "sha256:046a70afe504159f03a81fc2d4f7a5f20f6275e8f5e384d9a0eda5a0fec2fc2d",
+    "sources": {
+      "Product": "rules",
+      "UnitTests": "tests"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "schema": "csh-run/v1",
+  "component": "Lock",
+  "snapshot": {
+    "commit": "2222222222222222222222222222222222222222",
+    "moduleDigest": "sha256:27986d587dc187c525f8225b2f325711ee00f90b5ba1fe966fff1647920f4fe7",
+    "ledgerHead": 0,
+    "configDigest": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "lockDigest": "sha256:74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "tool": {
+      "version": "0.1.0",
+      "solver": "z3"
+    },
+    "componentDigest": "sha256:046a70afe504159f03a81fc2d4f7a5f20f6275e8f5e384d9a0eda5a0fec2fc2d"
+  },
+  "snapshotDigest": "sha256:b9ad89289c4b4981deef1deb3f8e139903a19a96dce4788bab3a306857f02f43",
+  "harnesses": [
+    {
+      "practice": "tests",
+      "argv": [
+        "node",
+        "--test"
+      ],
+      "exitCode": 0,
+      "witnesses": 1,
+      "executions": 1,
+      "sandbox": "none"
+    }
+  ],
+  "reportDigest": "sha256:7591af8eb895eae8f63839622a544d7f58bb379af5c42b1cf0eddf3ee3945008",
+  "gateDigest": "sha256:6102a7e39fd6019e6da6748703653a64e07f6c9b4c7baec4ceb8b6258ea7561a"
+}
