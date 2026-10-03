@@ -1,0 +1,34 @@
+{
+  "candidates": {
+    "findings": [
+      "82e5e0bfe2c1a5bf",
+      "86db1b2fd17db34f",
+      "5cb9cb853f53bb0c",
+      "4b3ccbab132a0547",
+      "431ff15ba078647c",
+      "984794edd09ab1a5",
+      "019df5366f3feef4",
+      "e7f6554614a8de02",
+      "fc3c487e0bf9d8eb",
+      "5cfe9b79d4ab2007",
+      "53f10b4521b82818",
+      "c5389a65a1977884",
+      "226609020dc65386"
+    ],
+    "obligations": [
+      "Gate/NoViolationAllowed/AllowSatisfied",
+      "Gate/NoViolationAllowed/BlockConflicting",
+      "Gate/NoViolationAllowed/BlockUnknownCritical",
+      "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver",
+      "Gate/NoViolationAllowed/ReviewSelfApproved",
+      "Gate/NoViolationAllowed/ReviewUnknown",
+      "Gate/NoViolationAllowed/WaiveViolatedWithWaiver"
+    ]
+  },
+  "invalidLedgerEntries": [],
+  "mode": "advisory",
+  "obligations": [],
+  "overall": "allow",
+  "schema": "csh-gate/v1",
+  "snapshotDigest": "sha256:c6cc71ce886aa82d9e68bb9f4244cdd8f0a40b2ef4deae680c04d3201c5e04eb"
+}

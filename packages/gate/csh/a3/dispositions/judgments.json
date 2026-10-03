@@ -1,0 +1,39 @@
+{
+  "schema": "csh-a3-judgments/v1",
+  "title": "",
+  "problem": "",
+  "background": [],
+  "stages": [
+    {
+      "id": "first",
+      "name": "",
+      "what": ""
+    }
+  ],
+  "cannotSay": {},
+  "lanes": [
+    {
+      "id": "ears",
+      "practice": "ears",
+      "step": 1,
+      "title": "EARS",
+      "where": "Authority",
+      "match": []
+    },
+    {
+      "id": "tdd",
+      "practice": "tdd",
+      "step": 1,
+      "title": "Unit tests",
+      "where": "UnitTests",
+      "match": []
+    }
+  ],
+  "causes": [],
+  "decisionPoints": [],
+  "goal": "",
+  "rca": [],
+  "whys": [],
+  "countermeasures": [],
+  "plan": []
+}

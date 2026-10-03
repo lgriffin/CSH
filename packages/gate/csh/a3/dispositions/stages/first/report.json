@@ -1,0 +1,2226 @@
+{
+  "assessments": [
+    {
+      "applicability": "inapplicable",
+      "authority": "candidate",
+      "critical": false,
+      "digest": "sha256:19ba03b6ab4e337c897bc54742bbd0719ba83b761abc4d9ddcb225f5dd2a6a3e",
+      "evidence": [
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:1",
+          "witness": "satisfied-gives-allow"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:2",
+          "witness": "conflicting-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:3",
+          "witness": "conflicting-advisory-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:4",
+          "witness": "violated-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:5",
+          "witness": "unknown-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:6",
+          "witness": "unknown-critical-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:7",
+          "witness": "unknown-critical-advisory-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:8",
+          "witness": "stale-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:9",
+          "witness": "self-approved-needing-review-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:10",
+          "witness": "self-approved-solo-gives-allow"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:11",
+          "witness": "records-what-enforcing-mode-would-do-in-advisory-mode"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:12",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:13",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date-2"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:14",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date-3"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:15",
+          "witness": "does-not-apply-a-waiver-at-another-digest"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:16",
+          "witness": "waives-a-finding-scoped-waiver-only-when-the-finding-is-the-obligation-s"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:17",
+          "witness": "waives-a-finding-scoped-waiver-only-when-the-finding-is-the-obligation-s-2"
+        }
+      ],
+      "findings": [
+        "82e5e0bfe2c1a5bf",
+        "86db1b2fd17db34f",
+        "5cb9cb853f53bb0c",
+        "c5389a65a1977884",
+        "226609020dc65386"
+      ],
+      "fragment": "Gate/NoViolationAllowed/AllowSatisfied",
+      "kind": "requirement",
+      "methods": [
+        {
+          "met": false,
+          "method": "ApprovedBinding",
+          "reason": "binding-not-approved: Decide.args.verdict, Decide.result"
+        },
+        {
+          "met": false,
+          "method": "BoundaryWitness",
+          "reason": "binding-not-approved: Decide.args.verdict"
+        },
+        {
+          "met": true,
+          "method": "SolverCheck"
+        }
+      ],
+      "needsReview": false,
+      "policy": "GateSafety",
+      "reasons": [
+        "joint-conflict: 82e5e0bfe2c1a5bf",
+        "joint-conflict: 86db1b2fd17db34f",
+        "joint-conflict: 5cb9cb853f53bb0c",
+        "example-conflict: c5389a65a1977884",
+        "example-conflict: 226609020dc65386",
+        "joint-conflict",
+        "example-conflict"
+      ],
+      "scope": "specification",
+      "selfApproved": false,
+      "source": "intent",
+      "verdict": "conflicting"
+    },
+    {
+      "applicability": "inapplicable",
+      "authority": "candidate",
+      "critical": false,
+      "digest": "sha256:a6b95651a483a978ec220f872fff1df2110b2e1b9f6e33dc06b24d875d234ed9",
+      "evidence": [
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:1",
+          "witness": "satisfied-gives-allow"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:2",
+          "witness": "conflicting-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:3",
+          "witness": "conflicting-advisory-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:4",
+          "witness": "violated-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:5",
+          "witness": "unknown-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:6",
+          "witness": "unknown-critical-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:7",
+          "witness": "unknown-critical-advisory-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:8",
+          "witness": "stale-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:9",
+          "witness": "self-approved-needing-review-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:10",
+          "witness": "self-approved-solo-gives-allow"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:11",
+          "witness": "records-what-enforcing-mode-would-do-in-advisory-mode"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:12",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:13",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date-2"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:14",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date-3"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:15",
+          "witness": "does-not-apply-a-waiver-at-another-digest"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:16",
+          "witness": "waives-a-finding-scoped-waiver-only-when-the-finding-is-the-obligation-s"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:17",
+          "witness": "waives-a-finding-scoped-waiver-only-when-the-finding-is-the-obligation-s-2"
+        }
+      ],
+      "findings": [
+        "4b3ccbab132a0547",
+        "431ff15ba078647c"
+      ],
+      "fragment": "Gate/NoViolationAllowed/BlockConflicting",
+      "kind": "requirement",
+      "methods": [
+        {
+          "met": false,
+          "method": "ApprovedBinding",
+          "reason": "binding-not-approved: Decide.args.mode, Decide.args.verdict, Decide.result"
+        },
+        {
+          "met": false,
+          "method": "BoundaryWitness",
+          "reason": "binding-not-approved: Decide.args.verdict"
+        },
+        {
+          "met": true,
+          "method": "SolverCheck"
+        }
+      ],
+      "needsReview": false,
+      "policy": "GateSafety",
+      "reasons": [
+        "joint-conflict: 4b3ccbab132a0547",
+        "joint-conflict: 431ff15ba078647c",
+        "joint-conflict"
+      ],
+      "scope": "specification",
+      "selfApproved": false,
+      "source": "intent",
+      "verdict": "conflicting"
+    },
+    {
+      "applicability": "inapplicable",
+      "authority": "candidate",
+      "critical": false,
+      "digest": "sha256:2c24d17a0e94328adbe7634f1c464e927fdab3fa67dfbdf9d651a52f358f99f9",
+      "evidence": [
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:1",
+          "witness": "satisfied-gives-allow"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:2",
+          "witness": "conflicting-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:3",
+          "witness": "conflicting-advisory-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:4",
+          "witness": "violated-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:5",
+          "witness": "unknown-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:6",
+          "witness": "unknown-critical-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:7",
+          "witness": "unknown-critical-advisory-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:8",
+          "witness": "stale-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:9",
+          "witness": "self-approved-needing-review-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:10",
+          "witness": "self-approved-solo-gives-allow"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:11",
+          "witness": "records-what-enforcing-mode-would-do-in-advisory-mode"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:12",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:13",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date-2"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:14",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date-3"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:15",
+          "witness": "does-not-apply-a-waiver-at-another-digest"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:16",
+          "witness": "waives-a-finding-scoped-waiver-only-when-the-finding-is-the-obligation-s"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:17",
+          "witness": "waives-a-finding-scoped-waiver-only-when-the-finding-is-the-obligation-s-2"
+        }
+      ],
+      "findings": [
+        "82e5e0bfe2c1a5bf",
+        "984794edd09ab1a5",
+        "019df5366f3feef4"
+      ],
+      "fragment": "Gate/NoViolationAllowed/BlockUnknownCritical",
+      "kind": "requirement",
+      "methods": [
+        {
+          "met": false,
+          "method": "ApprovedBinding",
+          "reason": "binding-not-approved: Decide.args.applicability, Decide.args.critical, Decide.args.mode, Decide.args.verdict, Decide.result"
+        },
+        {
+          "met": false,
+          "method": "BoundaryWitness",
+          "reason": "binding-not-approved: Decide.args.verdict"
+        },
+        {
+          "met": true,
+          "method": "SolverCheck"
+        }
+      ],
+      "needsReview": false,
+      "policy": "GateSafety",
+      "reasons": [
+        "joint-conflict: 82e5e0bfe2c1a5bf",
+        "joint-conflict: 984794edd09ab1a5",
+        "joint-conflict: 019df5366f3feef4",
+        "joint-conflict"
+      ],
+      "scope": "specification",
+      "selfApproved": false,
+      "source": "intent",
+      "verdict": "conflicting"
+    },
+    {
+      "applicability": "inapplicable",
+      "authority": "candidate",
+      "critical": false,
+      "digest": "sha256:92384bd509fd02428ae6eb9908044acb11b0f466358438049c15422893dc95e5",
+      "evidence": [
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:1",
+          "witness": "satisfied-gives-allow"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:2",
+          "witness": "conflicting-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:3",
+          "witness": "conflicting-advisory-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:4",
+          "witness": "violated-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:5",
+          "witness": "unknown-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:6",
+          "witness": "unknown-critical-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:7",
+          "witness": "unknown-critical-advisory-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:8",
+          "witness": "stale-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:9",
+          "witness": "self-approved-needing-review-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:10",
+          "witness": "self-approved-solo-gives-allow"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:11",
+          "witness": "records-what-enforcing-mode-would-do-in-advisory-mode"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:12",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:13",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date-2"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:14",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date-3"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:15",
+          "witness": "does-not-apply-a-waiver-at-another-digest"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:16",
+          "witness": "waives-a-finding-scoped-waiver-only-when-the-finding-is-the-obligation-s"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:17",
+          "witness": "waives-a-finding-scoped-waiver-only-when-the-finding-is-the-obligation-s-2"
+        }
+      ],
+      "findings": [
+        "e7f6554614a8de02",
+        "fc3c487e0bf9d8eb"
+      ],
+      "fragment": "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver",
+      "kind": "requirement",
+      "methods": [
+        {
+          "met": false,
+          "method": "ApprovedBinding",
+          "reason": "binding-not-approved: Decide.args.mode, Decide.args.verdict, Decide.args.waiverValid, Decide.result"
+        },
+        {
+          "met": false,
+          "method": "BoundaryWitness",
+          "reason": "binding-not-approved: Decide.args.verdict"
+        },
+        {
+          "met": true,
+          "method": "SolverCheck"
+        }
+      ],
+      "needsReview": false,
+      "policy": "GateSafety",
+      "reasons": [
+        "joint-conflict: e7f6554614a8de02",
+        "joint-conflict: fc3c487e0bf9d8eb",
+        "joint-conflict"
+      ],
+      "scope": "specification",
+      "selfApproved": false,
+      "source": "intent",
+      "verdict": "conflicting"
+    },
+    {
+      "applicability": "inapplicable",
+      "authority": "candidate",
+      "critical": false,
+      "digest": "sha256:ac3e4ff96498c437d57c3e7b47b96f0023f2594b066fec0508ba5cc7339980d9",
+      "evidence": [
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:1",
+          "witness": "satisfied-gives-allow"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:2",
+          "witness": "conflicting-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:3",
+          "witness": "conflicting-advisory-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:4",
+          "witness": "violated-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:5",
+          "witness": "unknown-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:6",
+          "witness": "unknown-critical-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:7",
+          "witness": "unknown-critical-advisory-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:8",
+          "witness": "stale-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:9",
+          "witness": "self-approved-needing-review-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:10",
+          "witness": "self-approved-solo-gives-allow"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:11",
+          "witness": "records-what-enforcing-mode-would-do-in-advisory-mode"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:12",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:13",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date-2"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:14",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date-3"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:15",
+          "witness": "does-not-apply-a-waiver-at-another-digest"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:16",
+          "witness": "waives-a-finding-scoped-waiver-only-when-the-finding-is-the-obligation-s"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.selfApproved",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:17",
+          "witness": "waives-a-finding-scoped-waiver-only-when-the-finding-is-the-obligation-s-2"
+        }
+      ],
+      "findings": [
+        "86db1b2fd17db34f",
+        "4b3ccbab132a0547",
+        "984794edd09ab1a5",
+        "e7f6554614a8de02",
+        "5cfe9b79d4ab2007"
+      ],
+      "fragment": "Gate/NoViolationAllowed/ReviewSelfApproved",
+      "kind": "requirement",
+      "methods": [
+        {
+          "met": false,
+          "method": "ApprovedBinding",
+          "reason": "binding-not-approved: Decide.args.needsReview, Decide.args.selfApproved, Decide.result"
+        },
+        {
+          "met": false,
+          "method": "BoundaryWitness",
+          "reason": "binding-not-approved: Decide.args.selfApproved"
+        },
+        {
+          "met": true,
+          "method": "SolverCheck"
+        }
+      ],
+      "needsReview": false,
+      "policy": "GateSafety",
+      "reasons": [
+        "joint-conflict: 86db1b2fd17db34f",
+        "joint-conflict: 4b3ccbab132a0547",
+        "joint-conflict: 984794edd09ab1a5",
+        "joint-conflict: e7f6554614a8de02",
+        "joint-conflict: 5cfe9b79d4ab2007",
+        "joint-conflict"
+      ],
+      "scope": "specification",
+      "selfApproved": false,
+      "source": "intent",
+      "verdict": "conflicting"
+    },
+    {
+      "applicability": "inapplicable",
+      "authority": "candidate",
+      "critical": false,
+      "digest": "sha256:4a03a2887f8e3a977e4b3c9f306cb663342a3aa6047f11d03e708ae9eaca1376",
+      "evidence": [
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:1",
+          "witness": "satisfied-gives-allow"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:2",
+          "witness": "conflicting-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:3",
+          "witness": "conflicting-advisory-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:4",
+          "witness": "violated-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:5",
+          "witness": "unknown-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:6",
+          "witness": "unknown-critical-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:7",
+          "witness": "unknown-critical-advisory-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:8",
+          "witness": "stale-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:9",
+          "witness": "self-approved-needing-review-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:10",
+          "witness": "self-approved-solo-gives-allow"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:11",
+          "witness": "records-what-enforcing-mode-would-do-in-advisory-mode"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:12",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:13",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date-2"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:14",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date-3"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:15",
+          "witness": "does-not-apply-a-waiver-at-another-digest"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:16",
+          "witness": "waives-a-finding-scoped-waiver-only-when-the-finding-is-the-obligation-s"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:17",
+          "witness": "waives-a-finding-scoped-waiver-only-when-the-finding-is-the-obligation-s-2"
+        }
+      ],
+      "findings": [
+        "5cb9cb853f53bb0c",
+        "431ff15ba078647c",
+        "fc3c487e0bf9d8eb",
+        "53f10b4521b82818"
+      ],
+      "fragment": "Gate/NoViolationAllowed/ReviewUnknown",
+      "kind": "requirement",
+      "methods": [
+        {
+          "met": false,
+          "method": "ApprovedBinding",
+          "reason": "binding-not-approved: Decide.args.applicability, Decide.args.critical, Decide.args.verdict, Decide.result"
+        },
+        {
+          "met": false,
+          "method": "BoundaryWitness",
+          "reason": "binding-not-approved: Decide.args.verdict"
+        },
+        {
+          "met": true,
+          "method": "SolverCheck"
+        }
+      ],
+      "needsReview": false,
+      "policy": "GateSafety",
+      "reasons": [
+        "joint-conflict: 5cb9cb853f53bb0c",
+        "joint-conflict: 431ff15ba078647c",
+        "joint-conflict: fc3c487e0bf9d8eb",
+        "joint-conflict: 53f10b4521b82818",
+        "joint-conflict"
+      ],
+      "scope": "specification",
+      "selfApproved": false,
+      "source": "intent",
+      "verdict": "conflicting"
+    },
+    {
+      "applicability": "inapplicable",
+      "authority": "candidate",
+      "critical": false,
+      "digest": "sha256:baa3e2569a04cb69ccab700038ba3af8f14451b30e84427174ffd5a91c5f478f",
+      "evidence": [
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:1",
+          "witness": "satisfied-gives-allow"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:2",
+          "witness": "conflicting-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:3",
+          "witness": "conflicting-advisory-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:4",
+          "witness": "violated-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:5",
+          "witness": "unknown-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:6",
+          "witness": "unknown-critical-enforcing-gives-block"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:7",
+          "witness": "unknown-critical-advisory-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:8",
+          "witness": "stale-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:9",
+          "witness": "self-approved-needing-review-gives-review"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:10",
+          "witness": "self-approved-solo-gives-allow"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:11",
+          "witness": "records-what-enforcing-mode-would-do-in-advisory-mode"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:12",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:13",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date-2"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:14",
+          "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date-3"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:15",
+          "witness": "does-not-apply-a-waiver-at-another-digest"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:16",
+          "witness": "waives-a-finding-scoped-waiver-only-when-the-finding-is-the-obligation-s"
+        },
+        {
+          "applicability": "inapplicable",
+          "reason": "binding-not-approved: Decide.args.verdict",
+          "source": "UnitTests",
+          "span": "reports/witnesses.ndjson:17",
+          "witness": "waives-a-finding-scoped-waiver-only-when-the-finding-is-the-obligation-s-2"
+        }
+      ],
+      "findings": [
+        "019df5366f3feef4",
+        "5cfe9b79d4ab2007",
+        "53f10b4521b82818"
+      ],
+      "fragment": "Gate/NoViolationAllowed/WaiveViolatedWithWaiver",
+      "kind": "requirement",
+      "methods": [
+        {
+          "met": false,
+          "method": "ApprovedBinding",
+          "reason": "binding-not-approved: Decide.args.verdict, Decide.args.waiverValid, Decide.result"
+        },
+        {
+          "met": false,
+          "method": "BoundaryWitness",
+          "reason": "binding-not-approved: Decide.args.verdict"
+        },
+        {
+          "met": true,
+          "method": "SolverCheck"
+        }
+      ],
+      "needsReview": false,
+      "policy": "GateSafety",
+      "reasons": [
+        "joint-conflict: 019df5366f3feef4",
+        "joint-conflict: 5cfe9b79d4ab2007",
+        "joint-conflict: 53f10b4521b82818",
+        "joint-conflict"
+      ],
+      "scope": "specification",
+      "selfApproved": false,
+      "source": "intent",
+      "verdict": "conflicting"
+    }
+  ],
+  "component": {
+    "digest": "sha256:a95636fc876fe8e759bca1474eb873baaf474028f0c8877bf62bebea92bd7d40",
+    "name": "Gate",
+    "sources": {
+      "Authority": "ears",
+      "UnitTests": "tdd"
+    }
+  },
+  "diagnostics": [
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessSatisfiedGivesAllow lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:1"
+    },
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessConflictingEnforcingGivesBlock lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:2"
+    },
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessConflictingAdvisoryGivesReview lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:3"
+    },
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessViolatedEnforcingGivesBlock lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:4"
+    },
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessUnknownGivesReview lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:5"
+    },
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessUnknownCriticalEnforcingGivesBlock lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:6"
+    },
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessUnknownCriticalAdvisoryGivesReview lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:7"
+    },
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessStaleGivesReview lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:8"
+    },
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessSelfApprovedNeedingReviewGivesReview lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:9"
+    },
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessSelfApprovedSoloGivesAllow lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:10"
+    },
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessRecordsWhatEnforcingModeWouldDoInAdvisoryMode lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:11"
+    },
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessWaivesAViolationUntilTheWaiverExpiresJudgedByTheCommitDate lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:12"
+    },
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessWaivesAViolationUntilTheWaiverExpiresJudgedByTheCommitDate2 lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:13"
+    },
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessWaivesAViolationUntilTheWaiverExpiresJudgedByTheCommitDate3 lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:14"
+    },
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessDoesNotApplyAWaiverAtAnotherDigest lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:15"
+    },
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessWaivesAFindingScopedWaiverOnlyWhenTheFindingIsTheObligationS lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:16"
+    },
+    {
+      "code": "depends-on-candidate-binding",
+      "message": "WitnessWaivesAFindingScopedWaiverOnlyWhenTheFindingIsTheObligationS2 lifts through a candidate binding",
+      "severity": "info",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:17"
+    }
+  ],
+  "errors": [],
+  "examples": [
+    {
+      "cites": [
+        "Authority/GATE-001"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessConflictingAdvisoryGivesReview",
+      "source": "UnitTests"
+    },
+    {
+      "cites": [
+        "Authority/GATE-001"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessConflictingEnforcingGivesBlock",
+      "source": "UnitTests"
+    },
+    {
+      "cites": [
+        "Authority/GATE-002"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessDoesNotApplyAWaiverAtAnotherDigest",
+      "source": "UnitTests"
+    },
+    {
+      "cites": [
+        "Authority/GATE-002"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessRecordsWhatEnforcingModeWouldDoInAdvisoryMode",
+      "source": "UnitTests"
+    },
+    {
+      "cites": [
+        "Authority/GATE-006"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessSatisfiedGivesAllow",
+      "source": "UnitTests"
+    },
+    {
+      "cites": [
+        "Authority/GATE-007"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessSelfApprovedNeedingReviewGivesReview",
+      "source": "UnitTests"
+    },
+    {
+      "cites": [
+        "Authority/GATE-006"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessSelfApprovedSoloGivesAllow",
+      "source": "UnitTests"
+    },
+    {
+      "cites": [
+        "Authority/GATE-005"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessStaleGivesReview",
+      "source": "UnitTests"
+    },
+    {
+      "cites": [
+        "Authority/GATE-004"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessUnknownCriticalAdvisoryGivesReview",
+      "source": "UnitTests"
+    },
+    {
+      "cites": [
+        "Authority/GATE-004"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessUnknownCriticalEnforcingGivesBlock",
+      "source": "UnitTests"
+    },
+    {
+      "cites": [
+        "Authority/GATE-005"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessUnknownGivesReview",
+      "source": "UnitTests"
+    },
+    {
+      "cites": [
+        "Authority/GATE-002"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessViolatedEnforcingGivesBlock",
+      "source": "UnitTests"
+    },
+    {
+      "cites": [
+        "Authority/GATE-002",
+        "Authority/GATE-003"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessWaivesAFindingScopedWaiverOnlyWhenTheFindingIsTheObligationS",
+      "source": "UnitTests"
+    },
+    {
+      "cites": [
+        "Authority/GATE-002",
+        "Authority/GATE-003"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessWaivesAFindingScopedWaiverOnlyWhenTheFindingIsTheObligationS2",
+      "source": "UnitTests"
+    },
+    {
+      "cites": [
+        "Authority/GATE-002",
+        "Authority/GATE-003"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessWaivesAViolationUntilTheWaiverExpiresJudgedByTheCommitDate",
+      "source": "UnitTests"
+    },
+    {
+      "cites": [
+        "Authority/GATE-002",
+        "Authority/GATE-003"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessWaivesAViolationUntilTheWaiverExpiresJudgedByTheCommitDate2",
+      "source": "UnitTests"
+    },
+    {
+      "cites": [
+        "Authority/GATE-002",
+        "Authority/GATE-003"
+      ],
+      "fragment": "Gate/@UnitTests/WitnessWaivesAViolationUntilTheWaiverExpiresJudgedByTheCommitDate3",
+      "source": "UnitTests"
+    }
+  ],
+  "executions": [
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:1",
+      "test": "test/gate.probe.ts::satisfied gives allow",
+      "witness": "satisfied-gives-allow"
+    },
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:2",
+      "test": "test/gate.probe.ts::conflicting, enforcing gives block",
+      "witness": "conflicting-enforcing-gives-block"
+    },
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:3",
+      "test": "test/gate.probe.ts::conflicting, advisory gives review",
+      "witness": "conflicting-advisory-gives-review"
+    },
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:4",
+      "test": "test/gate.probe.ts::violated, enforcing gives block",
+      "witness": "violated-enforcing-gives-block"
+    },
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:5",
+      "test": "test/gate.probe.ts::unknown gives review",
+      "witness": "unknown-gives-review"
+    },
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:6",
+      "test": "test/gate.probe.ts::unknown, critical, enforcing gives block",
+      "witness": "unknown-critical-enforcing-gives-block"
+    },
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:7",
+      "test": "test/gate.probe.ts::unknown, critical, advisory gives review",
+      "witness": "unknown-critical-advisory-gives-review"
+    },
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:8",
+      "test": "test/gate.probe.ts::stale gives review",
+      "witness": "stale-gives-review"
+    },
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:9",
+      "test": "test/gate.probe.ts::self-approved needing review gives review",
+      "witness": "self-approved-needing-review-gives-review"
+    },
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:10",
+      "test": "test/gate.probe.ts::self-approved, solo gives allow",
+      "witness": "self-approved-solo-gives-allow"
+    },
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:11",
+      "test": "test/gate.probe.ts::records what enforcing mode would do in advisory mode",
+      "witness": "records-what-enforcing-mode-would-do-in-advisory-mode"
+    },
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:12",
+      "test": "test/gate.probe.ts::waives a violation until the waiver expires, judged by the commit date",
+      "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date"
+    },
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:13",
+      "test": "test/gate.probe.ts::waives a violation until the waiver expires, judged by the commit date",
+      "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date-2"
+    },
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:14",
+      "test": "test/gate.probe.ts::waives a violation until the waiver expires, judged by the commit date",
+      "witness": "waives-a-violation-until-the-waiver-expires-judged-by-the-commit-date-3"
+    },
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:15",
+      "test": "test/gate.probe.ts::does not apply a waiver at another digest",
+      "witness": "does-not-apply-a-waiver-at-another-digest"
+    },
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:16",
+      "test": "test/gate.probe.ts::waives a finding-scoped waiver only when the finding is the obligation's",
+      "witness": "waives-a-finding-scoped-waiver-only-when-the-finding-is-the-obligation-s"
+    },
+    {
+      "event": "Decide",
+      "localResult": "passed",
+      "source": "UnitTests",
+      "span": "reports/witnesses.ndjson:17",
+      "test": "test/gate.probe.ts::waives a finding-scoped waiver only when the finding is the obligation's",
+      "witness": "waives-a-finding-scoped-waiver-only-when-the-finding-is-the-obligation-s-2"
+    }
+  ],
+  "findings": [
+    {
+      "collisionTerms": [
+        "Decide.args.verdict",
+        "Decide.result"
+      ],
+      "context": [],
+      "crossSource": false,
+      "id": "82e5e0bfe2c1a5bf",
+      "kind": "joint-conflict",
+      "members": [
+        {
+          "authority": "candidate",
+          "digest": "sha256:19ba03b6ab4e337c897bc54742bbd0719ba83b761abc4d9ddcb225f5dd2a6a3e",
+          "fragment": "Gate/NoViolationAllowed/AllowSatisfied",
+          "source": "intent"
+        },
+        {
+          "authority": "candidate",
+          "digest": "sha256:2c24d17a0e94328adbe7634f1c464e927fdab3fa67dfbdf9d651a52f358f99f9",
+          "fragment": "Gate/NoViolationAllowed/BlockUnknownCritical",
+          "source": "intent"
+        }
+      ],
+      "query": "Q-FEAS(Decide)",
+      "scope": "specification",
+      "witness": {
+        "Decide.args.applicability": "stale",
+        "Decide.args.critical": "true",
+        "Decide.args.mode": "enforcing",
+        "Decide.args.verdict": "satisfied"
+      }
+    },
+    {
+      "collisionTerms": [
+        "Decide.result"
+      ],
+      "context": [],
+      "crossSource": false,
+      "id": "86db1b2fd17db34f",
+      "kind": "joint-conflict",
+      "members": [
+        {
+          "authority": "candidate",
+          "digest": "sha256:19ba03b6ab4e337c897bc54742bbd0719ba83b761abc4d9ddcb225f5dd2a6a3e",
+          "fragment": "Gate/NoViolationAllowed/AllowSatisfied",
+          "source": "intent"
+        },
+        {
+          "authority": "candidate",
+          "digest": "sha256:ac3e4ff96498c437d57c3e7b47b96f0023f2594b066fec0508ba5cc7339980d9",
+          "fragment": "Gate/NoViolationAllowed/ReviewSelfApproved",
+          "source": "intent"
+        }
+      ],
+      "query": "Q-FEAS(Decide)",
+      "scope": "specification",
+      "witness": {
+        "Decide.args.needsReview": "true",
+        "Decide.args.selfApproved": "true",
+        "Decide.args.verdict": "satisfied"
+      }
+    },
+    {
+      "collisionTerms": [
+        "Decide.args.verdict",
+        "Decide.result"
+      ],
+      "context": [],
+      "crossSource": false,
+      "id": "5cb9cb853f53bb0c",
+      "kind": "joint-conflict",
+      "members": [
+        {
+          "authority": "candidate",
+          "digest": "sha256:19ba03b6ab4e337c897bc54742bbd0719ba83b761abc4d9ddcb225f5dd2a6a3e",
+          "fragment": "Gate/NoViolationAllowed/AllowSatisfied",
+          "source": "intent"
+        },
+        {
+          "authority": "candidate",
+          "digest": "sha256:4a03a2887f8e3a977e4b3c9f306cb663342a3aa6047f11d03e708ae9eaca1376",
+          "fragment": "Gate/NoViolationAllowed/ReviewUnknown",
+          "source": "intent"
+        }
+      ],
+      "query": "Q-FEAS(Decide)",
+      "scope": "specification",
+      "witness": {
+        "Decide.args.applicability": "stale",
+        "Decide.args.critical": "false",
+        "Decide.args.verdict": "satisfied"
+      }
+    },
+    {
+      "collisionTerms": [
+        "Decide.result"
+      ],
+      "context": [],
+      "crossSource": false,
+      "id": "4b3ccbab132a0547",
+      "kind": "joint-conflict",
+      "members": [
+        {
+          "authority": "candidate",
+          "digest": "sha256:a6b95651a483a978ec220f872fff1df2110b2e1b9f6e33dc06b24d875d234ed9",
+          "fragment": "Gate/NoViolationAllowed/BlockConflicting",
+          "source": "intent"
+        },
+        {
+          "authority": "candidate",
+          "digest": "sha256:ac3e4ff96498c437d57c3e7b47b96f0023f2594b066fec0508ba5cc7339980d9",
+          "fragment": "Gate/NoViolationAllowed/ReviewSelfApproved",
+          "source": "intent"
+        }
+      ],
+      "query": "Q-FEAS(Decide)",
+      "scope": "specification",
+      "witness": {
+        "Decide.args.mode": "enforcing",
+        "Decide.args.needsReview": "true",
+        "Decide.args.selfApproved": "true",
+        "Decide.args.verdict": "conflicting"
+      }
+    },
+    {
+      "collisionTerms": [
+        "Decide.args.verdict",
+        "Decide.result"
+      ],
+      "context": [],
+      "crossSource": false,
+      "id": "431ff15ba078647c",
+      "kind": "joint-conflict",
+      "members": [
+        {
+          "authority": "candidate",
+          "digest": "sha256:a6b95651a483a978ec220f872fff1df2110b2e1b9f6e33dc06b24d875d234ed9",
+          "fragment": "Gate/NoViolationAllowed/BlockConflicting",
+          "source": "intent"
+        },
+        {
+          "authority": "candidate",
+          "digest": "sha256:4a03a2887f8e3a977e4b3c9f306cb663342a3aa6047f11d03e708ae9eaca1376",
+          "fragment": "Gate/NoViolationAllowed/ReviewUnknown",
+          "source": "intent"
+        }
+      ],
+      "query": "Q-FEAS(Decide)",
+      "scope": "specification",
+      "witness": {
+        "Decide.args.applicability": "stale",
+        "Decide.args.critical": "false",
+        "Decide.args.mode": "enforcing",
+        "Decide.args.verdict": "conflicting"
+      }
+    },
+    {
+      "collisionTerms": [
+        "Decide.result"
+      ],
+      "context": [],
+      "crossSource": false,
+      "id": "984794edd09ab1a5",
+      "kind": "joint-conflict",
+      "members": [
+        {
+          "authority": "candidate",
+          "digest": "sha256:2c24d17a0e94328adbe7634f1c464e927fdab3fa67dfbdf9d651a52f358f99f9",
+          "fragment": "Gate/NoViolationAllowed/BlockUnknownCritical",
+          "source": "intent"
+        },
+        {
+          "authority": "candidate",
+          "digest": "sha256:ac3e4ff96498c437d57c3e7b47b96f0023f2594b066fec0508ba5cc7339980d9",
+          "fragment": "Gate/NoViolationAllowed/ReviewSelfApproved",
+          "source": "intent"
+        }
+      ],
+      "query": "Q-FEAS(Decide)",
+      "scope": "specification",
+      "witness": {
+        "Decide.args.applicability": "current",
+        "Decide.args.critical": "true",
+        "Decide.args.mode": "enforcing",
+        "Decide.args.needsReview": "true",
+        "Decide.args.selfApproved": "true",
+        "Decide.args.verdict": "unknown"
+      }
+    },
+    {
+      "collisionTerms": [
+        "Decide.args.verdict",
+        "Decide.result"
+      ],
+      "context": [],
+      "crossSource": false,
+      "id": "019df5366f3feef4",
+      "kind": "joint-conflict",
+      "members": [
+        {
+          "authority": "candidate",
+          "digest": "sha256:2c24d17a0e94328adbe7634f1c464e927fdab3fa67dfbdf9d651a52f358f99f9",
+          "fragment": "Gate/NoViolationAllowed/BlockUnknownCritical",
+          "source": "intent"
+        },
+        {
+          "authority": "candidate",
+          "digest": "sha256:baa3e2569a04cb69ccab700038ba3af8f14451b30e84427174ffd5a91c5f478f",
+          "fragment": "Gate/NoViolationAllowed/WaiveViolatedWithWaiver",
+          "source": "intent"
+        }
+      ],
+      "query": "Q-FEAS(Decide)",
+      "scope": "specification",
+      "witness": {
+        "Decide.args.applicability": "stale",
+        "Decide.args.critical": "true",
+        "Decide.args.mode": "enforcing",
+        "Decide.args.verdict": "violated",
+        "Decide.args.waiverValid": "true"
+      }
+    },
+    {
+      "collisionTerms": [
+        "Decide.result"
+      ],
+      "context": [],
+      "crossSource": false,
+      "id": "e7f6554614a8de02",
+      "kind": "joint-conflict",
+      "members": [
+        {
+          "authority": "candidate",
+          "digest": "sha256:92384bd509fd02428ae6eb9908044acb11b0f466358438049c15422893dc95e5",
+          "fragment": "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver",
+          "source": "intent"
+        },
+        {
+          "authority": "candidate",
+          "digest": "sha256:ac3e4ff96498c437d57c3e7b47b96f0023f2594b066fec0508ba5cc7339980d9",
+          "fragment": "Gate/NoViolationAllowed/ReviewSelfApproved",
+          "source": "intent"
+        }
+      ],
+      "query": "Q-FEAS(Decide)",
+      "scope": "specification",
+      "witness": {
+        "Decide.args.mode": "enforcing",
+        "Decide.args.needsReview": "true",
+        "Decide.args.selfApproved": "true",
+        "Decide.args.verdict": "violated",
+        "Decide.args.waiverValid": "false"
+      }
+    },
+    {
+      "collisionTerms": [
+        "Decide.args.verdict",
+        "Decide.result"
+      ],
+      "context": [],
+      "crossSource": false,
+      "id": "fc3c487e0bf9d8eb",
+      "kind": "joint-conflict",
+      "members": [
+        {
+          "authority": "candidate",
+          "digest": "sha256:92384bd509fd02428ae6eb9908044acb11b0f466358438049c15422893dc95e5",
+          "fragment": "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver",
+          "source": "intent"
+        },
+        {
+          "authority": "candidate",
+          "digest": "sha256:4a03a2887f8e3a977e4b3c9f306cb663342a3aa6047f11d03e708ae9eaca1376",
+          "fragment": "Gate/NoViolationAllowed/ReviewUnknown",
+          "source": "intent"
+        }
+      ],
+      "query": "Q-FEAS(Decide)",
+      "scope": "specification",
+      "witness": {
+        "Decide.args.applicability": "stale",
+        "Decide.args.critical": "false",
+        "Decide.args.mode": "enforcing",
+        "Decide.args.verdict": "violated",
+        "Decide.args.waiverValid": "false"
+      }
+    },
+    {
+      "collisionTerms": [
+        "Decide.result"
+      ],
+      "context": [],
+      "crossSource": false,
+      "id": "5cfe9b79d4ab2007",
+      "kind": "joint-conflict",
+      "members": [
+        {
+          "authority": "candidate",
+          "digest": "sha256:ac3e4ff96498c437d57c3e7b47b96f0023f2594b066fec0508ba5cc7339980d9",
+          "fragment": "Gate/NoViolationAllowed/ReviewSelfApproved",
+          "source": "intent"
+        },
+        {
+          "authority": "candidate",
+          "digest": "sha256:baa3e2569a04cb69ccab700038ba3af8f14451b30e84427174ffd5a91c5f478f",
+          "fragment": "Gate/NoViolationAllowed/WaiveViolatedWithWaiver",
+          "source": "intent"
+        }
+      ],
+      "query": "Q-FEAS(Decide)",
+      "scope": "specification",
+      "witness": {
+        "Decide.args.needsReview": "true",
+        "Decide.args.selfApproved": "true",
+        "Decide.args.verdict": "violated",
+        "Decide.args.waiverValid": "true"
+      }
+    },
+    {
+      "collisionTerms": [
+        "Decide.args.verdict",
+        "Decide.result"
+      ],
+      "context": [],
+      "crossSource": false,
+      "id": "53f10b4521b82818",
+      "kind": "joint-conflict",
+      "members": [
+        {
+          "authority": "candidate",
+          "digest": "sha256:4a03a2887f8e3a977e4b3c9f306cb663342a3aa6047f11d03e708ae9eaca1376",
+          "fragment": "Gate/NoViolationAllowed/ReviewUnknown",
+          "source": "intent"
+        },
+        {
+          "authority": "candidate",
+          "digest": "sha256:baa3e2569a04cb69ccab700038ba3af8f14451b30e84427174ffd5a91c5f478f",
+          "fragment": "Gate/NoViolationAllowed/WaiveViolatedWithWaiver",
+          "source": "intent"
+        }
+      ],
+      "query": "Q-FEAS(Decide)",
+      "scope": "specification",
+      "witness": {
+        "Decide.args.applicability": "stale",
+        "Decide.args.critical": "false",
+        "Decide.args.verdict": "violated",
+        "Decide.args.waiverValid": "true"
+      }
+    },
+    {
+      "collisionTerms": [
+        "Decide.args.verdict",
+        "Decide.result"
+      ],
+      "context": [],
+      "crossSource": true,
+      "id": "c5389a65a1977884",
+      "kind": "example-conflict",
+      "members": [
+        {
+          "authority": "candidate",
+          "digest": "sha256:5149a3d5793f4870d5aa5d9388e7456be72d34d939facbdfc3700af27d17a82e",
+          "fragment": "Gate/@UnitTests/WitnessSelfApprovedNeedingReviewGivesReview",
+          "source": "UnitTests"
+        },
+        {
+          "authority": "candidate",
+          "digest": "sha256:19ba03b6ab4e337c897bc54742bbd0719ba83b761abc4d9ddcb225f5dd2a6a3e",
+          "fragment": "Gate/NoViolationAllowed/AllowSatisfied",
+          "source": "intent"
+        }
+      ],
+      "query": "Q-EX(Gate/@UnitTests/WitnessSelfApprovedNeedingReviewGivesReview)",
+      "scope": "specification"
+    },
+    {
+      "collisionTerms": [
+        "Decide.args.verdict",
+        "Decide.result"
+      ],
+      "context": [],
+      "crossSource": true,
+      "id": "226609020dc65386",
+      "kind": "example-conflict",
+      "members": [
+        {
+          "authority": "candidate",
+          "digest": "sha256:d2ec280d4dfbc87a8f5c4f323c383f43464db3e659336502ccdd1331fdd81ada",
+          "fragment": "Gate/@UnitTests/WitnessStaleGivesReview",
+          "source": "UnitTests"
+        },
+        {
+          "authority": "candidate",
+          "digest": "sha256:19ba03b6ab4e337c897bc54742bbd0719ba83b761abc4d9ddcb225f5dd2a6a3e",
+          "fragment": "Gate/NoViolationAllowed/AllowSatisfied",
+          "source": "intent"
+        }
+      ],
+      "query": "Q-EX(Gate/@UnitTests/WitnessStaleGivesReview)",
+      "scope": "specification"
+    }
+  ],
+  "gapView": {
+    "gaps": [
+      {
+        "detail": "Decide.args.verdict, Decide.result asserted only by intent",
+        "fragments": [
+          "Gate/NoViolationAllowed/AllowSatisfied"
+        ],
+        "kind": "single-source",
+        "subject": "Gate/NoViolationAllowed/AllowSatisfied"
+      },
+      {
+        "detail": "Decide.args.mode, Decide.args.verdict, Decide.result asserted only by intent",
+        "fragments": [
+          "Gate/NoViolationAllowed/BlockConflicting"
+        ],
+        "kind": "single-source",
+        "subject": "Gate/NoViolationAllowed/BlockConflicting"
+      },
+      {
+        "detail": "Decide.args.applicability, Decide.args.critical, Decide.args.mode, Decide.args.verdict, Decide.result asserted only by intent",
+        "fragments": [
+          "Gate/NoViolationAllowed/BlockUnknownCritical"
+        ],
+        "kind": "single-source",
+        "subject": "Gate/NoViolationAllowed/BlockUnknownCritical"
+      },
+      {
+        "detail": "Decide.args.mode, Decide.args.verdict, Decide.args.waiverValid, Decide.result asserted only by intent",
+        "fragments": [
+          "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver"
+        ],
+        "kind": "single-source",
+        "subject": "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver"
+      },
+      {
+        "detail": "Decide.args.needsReview, Decide.args.selfApproved, Decide.result asserted only by intent",
+        "fragments": [
+          "Gate/NoViolationAllowed/ReviewSelfApproved"
+        ],
+        "kind": "single-source",
+        "subject": "Gate/NoViolationAllowed/ReviewSelfApproved"
+      },
+      {
+        "detail": "Decide.args.applicability, Decide.args.critical, Decide.args.verdict, Decide.result asserted only by intent",
+        "fragments": [
+          "Gate/NoViolationAllowed/ReviewUnknown"
+        ],
+        "kind": "single-source",
+        "subject": "Gate/NoViolationAllowed/ReviewUnknown"
+      },
+      {
+        "detail": "Decide.args.verdict, Decide.args.waiverValid, Decide.result asserted only by intent",
+        "fragments": [
+          "Gate/NoViolationAllowed/WaiveViolatedWithWaiver"
+        ],
+        "kind": "single-source",
+        "subject": "Gate/NoViolationAllowed/WaiveViolatedWithWaiver"
+      },
+      {
+        "detail": "reports/executions.ndjson:12: passed, and no witness from UnitTests",
+        "fragments": [],
+        "kind": "unobserved-test",
+        "subject": "test/gate.probe.ts::ignores candidate obligations, listing them"
+      }
+    ],
+    "rows": [
+      {
+        "cells": {
+          "Authority": "silent",
+          "UnitTests": "exemplifies",
+          "intent": "asserts",
+          "model": "models"
+        },
+        "subject": "Decide"
+      },
+      {
+        "cells": {
+          "Authority": "silent",
+          "UnitTests": "exemplifies",
+          "intent": "asserts",
+          "model": "models"
+        },
+        "subject": "Decide.args.applicability"
+      },
+      {
+        "cells": {
+          "Authority": "silent",
+          "UnitTests": "exemplifies",
+          "intent": "asserts",
+          "model": "models"
+        },
+        "subject": "Decide.args.critical"
+      },
+      {
+        "cells": {
+          "Authority": "silent",
+          "UnitTests": "exemplifies",
+          "intent": "asserts",
+          "model": "models"
+        },
+        "subject": "Decide.args.mode"
+      },
+      {
+        "cells": {
+          "Authority": "silent",
+          "UnitTests": "exemplifies",
+          "intent": "asserts",
+          "model": "models"
+        },
+        "subject": "Decide.args.needsReview"
+      },
+      {
+        "cells": {
+          "Authority": "silent",
+          "UnitTests": "exemplifies",
+          "intent": "asserts",
+          "model": "models"
+        },
+        "subject": "Decide.args.selfApproved"
+      },
+      {
+        "cells": {
+          "Authority": "silent",
+          "UnitTests": "exemplifies",
+          "intent": "asserts",
+          "model": "models"
+        },
+        "subject": "Decide.args.verdict"
+      },
+      {
+        "cells": {
+          "Authority": "silent",
+          "UnitTests": "exemplifies",
+          "intent": "asserts",
+          "model": "models"
+        },
+        "subject": "Decide.args.waiverValid"
+      },
+      {
+        "cells": {
+          "Authority": "silent",
+          "UnitTests": "exemplifies",
+          "intent": "asserts",
+          "model": "models"
+        },
+        "subject": "Decide.result"
+      },
+      {
+        "cells": {
+          "Authority": "silent",
+          "UnitTests": "exemplifies",
+          "intent": "asserts",
+          "model": "models"
+        },
+        "subject": "Gate/NoViolationAllowed/AllowSatisfied"
+      },
+      {
+        "cells": {
+          "Authority": "silent",
+          "UnitTests": "exemplifies",
+          "intent": "asserts",
+          "model": "models"
+        },
+        "subject": "Gate/NoViolationAllowed/BlockConflicting"
+      },
+      {
+        "cells": {
+          "Authority": "silent",
+          "UnitTests": "exemplifies",
+          "intent": "asserts",
+          "model": "models"
+        },
+        "subject": "Gate/NoViolationAllowed/BlockUnknownCritical"
+      },
+      {
+        "cells": {
+          "Authority": "silent",
+          "UnitTests": "exemplifies",
+          "intent": "asserts",
+          "model": "models"
+        },
+        "subject": "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver"
+      },
+      {
+        "cells": {
+          "Authority": "silent",
+          "UnitTests": "exemplifies",
+          "intent": "asserts",
+          "model": "models"
+        },
+        "subject": "Gate/NoViolationAllowed/ReviewSelfApproved"
+      },
+      {
+        "cells": {
+          "Authority": "silent",
+          "UnitTests": "exemplifies",
+          "intent": "asserts",
+          "model": "models"
+        },
+        "subject": "Gate/NoViolationAllowed/ReviewUnknown"
+      },
+      {
+        "cells": {
+          "Authority": "silent",
+          "UnitTests": "exemplifies",
+          "intent": "asserts",
+          "model": "models"
+        },
+        "subject": "Gate/NoViolationAllowed/WaiveViolatedWithWaiver"
+      }
+    ],
+    "sources": [
+      "intent",
+      "Authority",
+      "UnitTests",
+      "model"
+    ]
+  },
+  "items": [
+    {
+      "id": "GATE-001",
+      "pattern": "unwanted-behaviour",
+      "source": "Authority",
+      "span": "docs/requirements.md:9",
+      "textDigest": "sha256:7feed7c908df0d7f57caea8a76e8536156fcbaced07c89cc07f7b40e4db90141"
+    },
+    {
+      "id": "GATE-002",
+      "pattern": "unwanted-behaviour",
+      "source": "Authority",
+      "span": "docs/requirements.md:10",
+      "textDigest": "sha256:075447aeca82d4a1ba2f78b9760c863eb4833609d3dd33d07ed2fb84798c4bdc"
+    },
+    {
+      "id": "GATE-003",
+      "pattern": "unwanted-behaviour",
+      "source": "Authority",
+      "span": "docs/requirements.md:11",
+      "textDigest": "sha256:288956cb7be93c948f329a6e282c151f03eefd04d09cf253edc6d8ae64dc1e7d"
+    },
+    {
+      "id": "GATE-004",
+      "pattern": "unwanted-behaviour",
+      "source": "Authority",
+      "span": "docs/requirements.md:12",
+      "textDigest": "sha256:298f025b5f486162ec62b2c187c3bc78c347ee807e88ca3b765bdc2150023ac1"
+    },
+    {
+      "id": "GATE-005",
+      "pattern": "unwanted-behaviour",
+      "source": "Authority",
+      "span": "docs/requirements.md:13",
+      "textDigest": "sha256:4172b6cddf4add89bbe468ef0f601c4014dfa84f9c4d79974bc430efc1f1d376"
+    },
+    {
+      "id": "GATE-006",
+      "pattern": "event-driven",
+      "source": "Authority",
+      "span": "docs/requirements.md:14",
+      "textDigest": "sha256:b3702147d80f5c9730ce782d211167ca309a04381ff5e906c2aa17eb928c70bd"
+    },
+    {
+      "id": "GATE-007",
+      "pattern": "unwanted-behaviour",
+      "source": "Authority",
+      "span": "docs/requirements.md:15",
+      "textDigest": "sha256:a5e28e5c5ddc510f58b6d310f6588f2be233ee336444f63410b58f398f468609"
+    }
+  ],
+  "moduleDigest": "sha256:80895af8cf87a9d375db8ccf62b51f357cea5c5020b79a27a63da2ffe149ac62",
+  "notComparable": [],
+  "schema": "csh-report/v1",
+  "snapshot": {
+    "commit": "f04a7ffdafc467921eaca26a4a64444728eeb42a",
+    "digest": "sha256:c6cc71ce886aa82d9e68bb9f4244cdd8f0a40b2ef4deae680c04d3201c5e04eb",
+    "ledgerHead": "0"
+  },
+  "tool": {
+    "budgetMs": 5000,
+    "solver": "z3 5.1.0.0",
+    "version": "0.1.0"
+  },
+  "unliftable": []
+}
