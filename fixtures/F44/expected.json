@@ -1,0 +1,32 @@
+{
+  "fixture": "F44",
+  "section": "Semantic contract, section 7.5",
+  "stage": 9,
+  "expect": {
+    "gate": [
+      {
+        "commitDate": "2026-10-03T12:00:00Z",
+        "mode": "enforcing",
+        "obligations": [
+          {
+            "fragment": "AccountService/ProtectFunds/MinimumBalance",
+            "verdict": "violated",
+            "disposition": "waived"
+          }
+        ]
+      },
+      {
+        "commitDate": "2027-01-15T12:00:00Z",
+        "mode": "enforcing",
+        "overall": "block",
+        "obligations": [
+          {
+            "fragment": "AccountService/ProtectFunds/MinimumBalance",
+            "verdict": "violated",
+            "disposition": "block"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "fixture": "F33",
+  "section": "Semantic contract, section 7.4",
+  "stage": 6,
+  "expect": {
+    "assessments": [
+      {
+        "fragment": "AccountService/ProtectFunds/MinimumBalance",
+        "verdict": "unknown",
+        "reasonsInclude": [
+          "evidence-rejected"
+        ],
+        "evidenceApplicability": "inapplicable"
+      },
+      {
+        "fragment": "AccountService/ProtectFunds/RejectInsufficientFunds",
+        "verdict": "unknown",
+        "reasonsInclude": [
+          "evidence-rejected"
+        ],
+        "evidenceApplicability": "inapplicable"
+      }
+    ]
+  }
+}

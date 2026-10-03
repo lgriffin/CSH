@@ -1,0 +1,20 @@
+{
+  "fixture": "F40",
+  "section": "Semantic contract, section 7.5",
+  "stage": 7,
+  "expect": {
+    "steps": 2,
+    "assessments": [
+      {
+        "fragment": "AccountService/ProtectFunds/MinimumBalance",
+        "authority": "candidate",
+        "applicability": "stale"
+      },
+      {
+        "fragment": "AccountService/ProtectFunds/RejectInsufficientFunds",
+        "authority": "approved",
+        "applicability": "current"
+      }
+    ]
+  }
+}

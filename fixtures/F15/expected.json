@@ -1,0 +1,29 @@
+{
+  "fixture": "F15",
+  "section": "Semantic contract, section 7.2",
+  "stage": 3,
+  "expect": {
+    "check": {
+      "findingsExact": true,
+      "findings": [
+        {
+          "kind": "example-conflict",
+          "members": [
+            "AccountService/ProtectFunds/AcceptsWithdrawal",
+            "AccountService/ProtectFunds/MinimumBalance"
+          ],
+          "collisionTermsInclude": [
+            "Account.balance@post"
+          ]
+        },
+        {
+          "kind": "example-conflict",
+          "members": [
+            "AccountService/ProtectFunds/AcceptsWithdrawal",
+            "AccountService/ProtectFunds/RejectInsufficientFunds"
+          ]
+        }
+      ]
+    }
+  }
+}

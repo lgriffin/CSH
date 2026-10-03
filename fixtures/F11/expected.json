@@ -1,0 +1,54 @@
+{
+  "fixture": "F11",
+  "section": "Semantic contract, section 7.2",
+  "stage": 3,
+  "expect": {
+    "check": {
+      "findingsExact": true,
+      "findings": [
+        {
+          "kind": "not-preserved",
+          "members": [
+            "AccountService/#transition/Withdraw",
+            "AccountService/ProtectFunds/MinimumBalance"
+          ],
+          "scope": "specification",
+          "counterexample": true
+        },
+        {
+          "kind": "not-met",
+          "members": [
+            "AccountService/#transition/Withdraw",
+            "AccountService/ProtectFunds/RejectInsufficientFunds"
+          ],
+          "scope": "specification",
+          "counterexample": true
+        }
+      ],
+      "gaps": [
+        {
+          "kind": "unconstrained-after",
+          "subject": "Account.balance",
+          "detailIncludes": "otherwise"
+        },
+        {
+          "kind": "unconstrained-after",
+          "subject": "Account.floor",
+          "detailIncludes": "otherwise"
+        }
+      ]
+    },
+    "assessments": [
+      {
+        "fragment": "AccountService/ProtectFunds/MinimumBalance",
+        "verdict": "violated",
+        "scope": "specification"
+      },
+      {
+        "fragment": "AccountService/ProtectFunds/RejectInsufficientFunds",
+        "verdict": "violated",
+        "scope": "specification"
+      }
+    ]
+  }
+}

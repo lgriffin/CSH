@@ -1,0 +1,30 @@
+{
+  "fixture": "F24",
+  "section": "Semantic contract, section 7.3",
+  "stage": 4,
+  "expect": {
+    "check": {
+      "gaps": [
+        {
+          "kind": "unliftable",
+          "subject": "Withdraw",
+          "detailIncludes": "inputs/witnesses.ndjson:1"
+        }
+      ],
+      "cells": [
+        {
+          "subject": "Withdraw",
+          "source": "UnitTests",
+          "value": "unliftable"
+        }
+      ],
+      "unliftable": [
+        {
+          "source": "UnitTests",
+          "reason": "unknown-term",
+          "spanIncludes": "inputs/witnesses.ndjson:1"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "spec": "spec/account.csl.ts",
+  "mode": "advisory",
+  "budgetMs": 5000,
+  "implementationPaths": ["src"],
+  "specPaths": ["spec"]
+}

@@ -1,0 +1,16 @@
+%% C4 level 3: components of the ledger and authority container.
+C4Component
+  title Ledger and authority: components
+  Container_Boundary(lg, "Ledger and authority (ledger)") {
+    Component(port, "Version-control and signature port", "ledger/src/vcs.ts", "gitVcs (%G?, %GF, %GP) and memoryVcs for tests")
+    Component(maint, "Maintainers reader", "ledger/src/ledger.ts (maintainersHistory)", "Identities as of a given commit; changes signed by a listed person")
+    Component(validator, "Entry validator", "ledger/src/ledger.ts (readLedger)", "Append-only, signed, person key, ledger-only commit, sequence, actor, role, self-approval, waiver, countersign")
+    Component(resolver, "Authority resolver", "ledger/src/authority.ts", "Fragment name and digest to approved, candidate or retired; waivers; authorship")
+    Component(drafter, "Drafter", "ledger/src/write.ts", "Appends a decision line; never commits or signs")
+  }
+  System_Ext(git, "git and gpg")
+  Rel(port, git, "Runs")
+  Rel(maint, port, "Files at commits")
+  Rel(validator, maint, "Identities at the parent commit")
+  Rel(validator, port, "Commits and signatures")
+  Rel(resolver, validator, "Valid entries")

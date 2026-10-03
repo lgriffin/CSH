@@ -1,0 +1,29 @@
+{
+  "fixture": "F13",
+  "section": "Semantic contract, section 7.2",
+  "stage": 3,
+  "expect": {
+    "check": {
+      "findingsExact": true,
+      "findings": [
+        {
+          "kind": "state-conflict",
+          "members": [
+            "AccountService/ProtectFunds/BelowFloor",
+            "AccountService/ProtectFunds/MinimumBalance"
+          ]
+        }
+      ]
+    },
+    "assessments": [
+      {
+        "fragment": "AccountService/ProtectFunds/MinimumBalance",
+        "verdict": "conflicting"
+      },
+      {
+        "fragment": "AccountService/ProtectFunds/BelowFloor",
+        "verdict": "conflicting"
+      }
+    ]
+  }
+}

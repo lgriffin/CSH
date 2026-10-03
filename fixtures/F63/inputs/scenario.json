@@ -1,0 +1,61 @@
+{
+  "identities": {
+    "owner": {
+      "kind": "person",
+      "roles": [
+        "intent-owner",
+        "domain-reviewer"
+      ]
+    },
+    "reviewer": {
+      "kind": "person",
+      "roles": [
+        "intent-owner",
+        "domain-reviewer"
+      ]
+    }
+  },
+  "commits": [
+    {
+      "signer": "owner",
+      "message": "root of trust",
+      "maintainers": [
+        "owner"
+      ],
+      "spec": true
+    },
+    {
+      "signer": "owner",
+      "message": "solo approval",
+      "ledger": [
+        {
+          "kind": "approve",
+          "fragment": "AccountService/ProtectFunds/MinimumBalance",
+          "actor": "owner",
+          "selfApproved": true
+        }
+      ]
+    },
+    {
+      "signer": "owner",
+      "message": "second maintainer",
+      "maintainers": [
+        "owner",
+        "reviewer"
+      ],
+      "checkpoint": "beforeCountersign"
+    },
+    {
+      "signer": "reviewer",
+      "message": "countersign",
+      "ledger": [
+        {
+          "kind": "countersign",
+          "fragment": "AccountService/ProtectFunds/MinimumBalance",
+          "actor": "reviewer",
+          "refers": 1
+        }
+      ]
+    }
+  ]
+}

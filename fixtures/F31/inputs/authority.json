@@ -1,0 +1,6 @@
+{
+  "approve": "all",
+  "except": [
+    "#binding/"
+  ]
+}

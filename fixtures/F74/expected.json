@@ -1,0 +1,31 @@
+{
+  "fixture": "F74",
+  "section": "Main tab, section 6.3",
+  "stage": 8,
+  "ownerReview": true,
+  "expect": {
+    "emit": {
+      "ok": true
+    },
+    "composition": {
+      "refinements": [
+        {
+          "obligation": "AccountService/ProtectFunds/MinimumBalance",
+          "result": "strengthens"
+        }
+      ]
+    },
+    "check": {
+      "findings": [
+        {
+          "kind": "not-preserved",
+          "members": [
+            "AccountService/#transition/Withdraw",
+            "AccountService/ProtectFunds/MinimumBalance"
+          ],
+          "counterexample": true
+        }
+      ]
+    }
+  }
+}

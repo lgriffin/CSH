@@ -1,0 +1,17 @@
+%% C4 level 3: components of the kernel.
+C4Component
+  title Kernel: components
+  Container_Boundary(kn, "Kernel (kernel)") {
+    Component(model, "Model types", "kernel/src/model.ts", "csh-ir/v1: vocabulary, intents, obligations, examples, transitions, bindings, claims")
+    Component(typing, "Typing", "kernel/src/typing.ts", "Types and units of expressions; phase rules")
+    Component(canon, "Canonical form", "kernel/src/canonical.ts", "Ordering, canonical JSON, stable JSON, digests")
+    Component(frag, "Fragments", "kernel/src/fragments.ts", "Named fragments and their digests, including referenced declarations")
+    Component(refs, "References", "kernel/src/refs.ts", "Terms an expression references")
+    Component(validate, "IR rules", "kernel/src/validate.ts", "Rules S1 to S8 as far as the IR shows them; phase table; naming")
+    Component(eval, "Evaluator", "kernel/src/evaluate.ts", "Exact evaluation of an expression on concrete values")
+  }
+  Rel(typing, model, "Reads")
+  Rel(frag, canon, "Digests")
+  Rel(eval, model, "Reads")
+  Rel(validate, typing, "Uses")
+  Rel(frag, refs, "Referenced declarations")

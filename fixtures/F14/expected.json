@@ -1,0 +1,21 @@
+{
+  "fixture": "F14",
+  "section": "Semantic contract, section 7.2",
+  "stage": 3,
+  "expect": {
+    "check": {
+      "findingsExact": true,
+      "findings": [
+        {
+          "kind": "vacuous",
+          "members": [
+            "AccountService/ProtectFunds/RejectInsufficientFunds"
+          ],
+          "context": [
+            "AccountService/ProtectFunds/PositiveAmount"
+          ]
+        }
+      ]
+    }
+  }
+}

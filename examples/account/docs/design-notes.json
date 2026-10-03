@@ -1,0 +1,13 @@
+{
+  "source": "DesignNotes",
+  "assumptions": [],
+  "obligations": [],
+  "examples": [],
+  "unliftable": [
+    {
+      "span": "docs/design-notes.json:1",
+      "reason": "unknown-term",
+      "text": "Premium accounts may overdraw the balance to an agreed limit."
+    }
+  ]
+}

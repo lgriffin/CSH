@@ -1,0 +1,14 @@
+{
+  "steps": [
+    {
+      "spec": "spec.csl.ts",
+      "approve": "all"
+    },
+    {
+      "spec": "spec.csl.ts",
+      "replace": {
+        "inputs/requirements.md": "inputs/requirements-reworded.md"
+      }
+    }
+  ]
+}

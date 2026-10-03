@@ -1,0 +1,18 @@
+{
+  "fixture": "F23",
+  "section": "Semantic contract, section 7.3",
+  "stage": 5,
+  "expect": {
+    "check": {
+      "findings": [],
+      "findingsExact": true,
+      "notComparable": [
+        {
+          "fragment": "AccountService/@LegacyLedger/LegacyNonNegative",
+          "source": "LegacyLedger",
+          "reason": "unit-mismatch"
+        }
+      ]
+    }
+  }
+}

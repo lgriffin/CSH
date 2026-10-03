@@ -1,0 +1,23 @@
+{
+  "name": "csh-workspace",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "check": "pnpm typecheck && pnpm test"
+  },
+  "devDependencies": {
+    "@csh/witness": "workspace:*",
+    "@types/node": "22.20.5",
+    "csl": "workspace:*",
+    "fast-check": "4.10.2",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}

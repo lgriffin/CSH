@@ -1,0 +1,20 @@
+{
+  "fixture": "F60",
+  "section": "Authority and ledger, section 8",
+  "stage": 7,
+  "expect": {
+    "git": true,
+    "invalidEntries": [
+      {
+        "seq": 1,
+        "reason": "mixed-commit"
+      }
+    ],
+    "authority": [
+      {
+        "fragment": "AccountService/ProtectFunds/MinimumBalance",
+        "authority": "candidate"
+      }
+    ]
+  }
+}

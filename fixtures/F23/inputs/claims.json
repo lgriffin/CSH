@@ -1,0 +1,29 @@
+[
+  {
+    "source": "LegacyLedger",
+    "assumptions": [],
+    "examples": [],
+    "unliftable": [],
+    "obligations": [
+      {
+        "kind": "invariant",
+        "name": "LegacyNonNegative",
+        "state": "Account",
+        "body": {
+          "k": "ge",
+          "l": {
+            "k": "field",
+            "state": "Account",
+            "field": "balance",
+            "at": "now"
+          },
+          "r": {
+            "k": "int",
+            "v": "0",
+            "unit": "minor(USD)"
+          }
+        }
+      }
+    ]
+  }
+]

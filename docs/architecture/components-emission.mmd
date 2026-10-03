@@ -1,0 +1,18 @@
+%% C4 level 3: components of the emission sandbox.
+C4Component
+  title Emission sandbox: components
+  Container_Boundary(em, "Emission sandbox (emit, csl, print)") {
+    Component(lang, "Language surface", "csl/src", "Units, handles, builders for states, events, intents, examples, packs")
+    Component(typecheck, "Static rules S1 to S5", "emit/src/typecheck.ts", "TypeScript compiler in strict mode over the module")
+    Component(launcher, "Launcher", "emit/src/emit.ts (runSandboxed)", "Starts the subprocess with access denied; time limit")
+    Component(loader, "Loader", "emit/src/runner.ts", "Locks down clock, randomness, env, network; imports the module; checks the default export")
+    Component(rules, "Rule checker", "emit/src/emit.ts with kernel validate.ts", "Rules S6 to S9, phase table, naming, composition, lock")
+    Component(writer, "Canonical writer", "kernel canonical.ts via emit", "Canonical JSON and digests; double emission")
+    Component(printer, "Canonical printer", "print/src/print.ts", "Model back to canonical TypeScript")
+  }
+  Rel(typecheck, launcher, "Then")
+  Rel(launcher, loader, "Subprocess, IPC")
+  Rel(loader, lang, "Module code calls")
+  Rel(loader, rules, "Raw model")
+  Rel(rules, writer, "Checked model")
+  Rel(printer, writer, "Round trip keeps the digest")

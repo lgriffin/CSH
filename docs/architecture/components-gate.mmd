@@ -1,0 +1,12 @@
+%% C4 level 3: components of the gate.
+C4Component
+  title Gate: components
+  Container_Boundary(gt, "Gate (gate)") {
+    Component(snapshot, "Snapshot builder", "gate/src/gate.ts (Snapshot, snapshotDigest)", "Commit, module digest, ledger head, config and lock digests, tool versions")
+    Component(stale, "Staleness checker", "check/src/evidence.ts and cli/src/project.ts", "Dependency digests and implementation changes since a witness's commit")
+    Component(table, "Disposition table", "gate/src/gate.ts (gate)", "Verdict, applicability and waiver to allow, review, block or waived")
+    Component(writer, "Decision writer", "gate/src/gate.ts (formatDecision, acceptDecision)", "csh-gate/v1; refuses a decision for another snapshot")
+  }
+  Rel(snapshot, table, "Snapshot digest")
+  Rel(stale, table, "Applicability")
+  Rel(table, writer, "Decision")

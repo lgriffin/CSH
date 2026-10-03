@@ -1,0 +1,14 @@
+%% C4 level 3: components of the command line.
+C4Component
+  title Command line: components
+  Container_Boundary(cl, "Command line (cli)") {
+    Component(csl, "csl command", "cli/src/csl.ts", "emit, print, lock")
+    Component(csh, "csh command", "cli/src/csh.ts", "check, gaps, explain, approve, reject, retire, waive, countersign, gate")
+    Component(project, "Project", "cli/src/project.ts", "Config, lock, HEAD and dirty state, ledger from history, snapshot")
+    Component(sources, "Source runner", "cli/src/sources.ts", "Reads source files; runs each adapter isolated; claims-json")
+    Component(pipeline, "Pipeline", "cli/src/pipeline.ts", "Emit, run sources, resolve authority, check")
+  }
+  Rel(csh, project, "Loads")
+  Rel(csh, pipeline, "Runs")
+  Rel(pipeline, sources, "Runs")
+  Rel(csl, project, "Loads")

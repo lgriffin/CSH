@@ -1,0 +1,22 @@
+{
+  "fixture": "F50",
+  "section": "Evidence and adapters, section 8",
+  "stage": 4,
+  "expect": {
+    "check": {
+      "gaps": [
+        {
+          "kind": "uncited",
+          "subject": "Requirements/ACC-007"
+        }
+      ]
+    },
+    "items": [
+      {
+        "source": "Requirements",
+        "id": "ACC-007",
+        "pattern": "event-driven"
+      }
+    ]
+  }
+}

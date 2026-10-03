@@ -1,0 +1,10 @@
+{
+  "approve": "all",
+  "waive": [
+    {
+      "fragment": "AccountService/ProtectFunds/MinimumBalance",
+      "scope": "AccountService/ProtectFunds/MinimumBalance",
+      "expires": "2026-12-31"
+    }
+  ]
+}

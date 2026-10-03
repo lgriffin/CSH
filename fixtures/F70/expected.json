@@ -1,0 +1,27 @@
+{
+  "fixture": "F70",
+  "section": "Main tab, section 6.3",
+  "stage": 8,
+  "ownerReview": true,
+  "expect": {
+    "emit": {
+      "ok": true
+    },
+    "check": {
+      "findings": [],
+      "findingsExact": true
+    },
+    "composition": {
+      "uses": [
+        {
+          "pack": "FundsSafety",
+          "version": "1.0.0"
+        }
+      ],
+      "inheritedInclude": [
+        "AccountService/ProtectFunds/MinimumBalance",
+        "AccountService/ProtectFunds/RejectInsufficientFunds"
+      ]
+    }
+  }
+}

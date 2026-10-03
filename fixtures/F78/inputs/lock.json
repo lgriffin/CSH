@@ -1,0 +1,9 @@
+{
+  "schema": "csh-lock/v1",
+  "packs": {
+    "FundsSafety": {
+      "version": "1.0.0",
+      "digest": "sha256:8c497bc806a59d84cfc4293cff420cce4466c7aeb591dce32c9ae10dec765d5a"
+    }
+  }
+}

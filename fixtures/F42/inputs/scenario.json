@@ -1,0 +1,32 @@
+{
+  "identities": {
+    "owner": {
+      "kind": "person",
+      "roles": [
+        "intent-owner",
+        "domain-reviewer"
+      ]
+    }
+  },
+  "commits": [
+    {
+      "signer": "owner",
+      "message": "root of trust",
+      "maintainers": [
+        "owner"
+      ],
+      "spec": true
+    },
+    {
+      "signer": null,
+      "message": "approve without a signature",
+      "ledger": [
+        {
+          "kind": "approve",
+          "fragment": "AccountService/ProtectFunds/MinimumBalance",
+          "actor": "owner"
+        }
+      ]
+    }
+  ]
+}

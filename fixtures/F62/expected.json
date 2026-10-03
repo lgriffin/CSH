@@ -1,0 +1,20 @@
+{
+  "fixture": "F62",
+  "section": "Authority and ledger, section 8",
+  "stage": 7,
+  "expect": {
+    "git": true,
+    "invalidEntries": [
+      {
+        "seq": 1,
+        "reason": "self-approval-ended"
+      }
+    ],
+    "authority": [
+      {
+        "fragment": "AccountService/ProtectFunds/MinimumBalance",
+        "authority": "candidate"
+      }
+    ]
+  }
+}
