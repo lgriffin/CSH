@@ -1,0 +1,20 @@
+{
+  "fixture": "F88",
+  "section": "Anchor, harnesses and A3, section 6.1",
+  "stage": 13,
+  "expect": {
+    "check": {
+      "findingsExact": true,
+      "findings": [
+        {
+          "kind": "example-divergence",
+          "members": [
+            "SignInService/@Scenarios/ThirdFailureLocks",
+            "SignInService/@UnitTests/ThirdFailureAllowed"
+          ],
+          "inputs": "overlapping"
+        }
+      ]
+    }
+  }
+}

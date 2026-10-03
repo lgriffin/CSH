@@ -3,9 +3,10 @@
 Places where the documents are silent, ambiguous or contradictory (Implementer's brief, rule 2). Each entry gives
 the options, what each implies, and the answer chosen, registered in [ASSUMPTIONS.md](ASSUMPTIONS.md).
 
-**All seventeen are decided.** On 3 October 2026 the owner accepted the answer the build had taken for every question,
-including the composition fixtures F70 to F78 as written. No question is open. A new question gets the next number
-and stays open until the owner answers it.
+**Q-01 to Q-17 are decided.** On 3 October 2026 the owner accepted the answer the build had taken for each of them,
+including the composition fixtures F70 to F78 as written. **Q-18 is open**: it came from verifying the anchor design
+([09](docs/spec/09-anchor-harness-a3.md), section 14.1). A new question gets the next number and stays open until the
+owner answers it.
 
 ## Q-01 Which Node release is "the current long-term-support release"?
 
@@ -159,3 +160,17 @@ disagreement, strengthening, silent weakening, explicit relaxation, a second unr
 local and inherited obligations.
 
 Decided on 3 October 2026: the chosen option. Recorded as A-32.
+
+## Q-18 How does a packed package run from `node_modules`?
+
+The anchor design (09, section 10.4) installs the harness from tarballs made by `pnpm pack`. Verified on 3 October 2026
+with Node 22.22: `pnpm pack` packs a package marked private, and Node refuses to strip types from a file under
+`node_modules` (`ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`). A packed package whose exports point at TypeScript
+source therefore cannot run. [ADR-18](docs/adr/ADR-18-no-build-step.md) says the tool runs TypeScript directly, with no
+build step.
+
+- **Compile only when packing (chosen).** The workspace keeps running TypeScript directly, as ADR-18 says. Packing compiles each package to JavaScript with `tsc` and points the packed package's exports at the compiled files (`publishConfig`). The tarballs are the only place compiled code exists, and fixture F96 tests them.
+- **Compile always.** Every package exports compiled JavaScript, and the workspace builds before it runs. This reverses ADR-18.
+- **Ship source and require a loader.** Users would run Node with a TypeScript loader; nothing in Node supports this under `node_modules` without a third-party dependency.
+
+Open. Recorded as A-40; stage 16 builds the chosen option.

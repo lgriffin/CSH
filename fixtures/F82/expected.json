@@ -1,0 +1,23 @@
+{
+  "fixture": "F82",
+  "section": "Anchor, harnesses and A3, sections 3.2 and 6.3",
+  "stage": 11,
+  "expect": {
+    "executions": [
+      {
+        "witness": "w1",
+        "localResult": "failed"
+      },
+      {
+        "witness": "w2",
+        "localResult": "passed"
+      }
+    ],
+    "absent": [
+      "SignInService/@UnitTests/WitnessW1"
+    ],
+    "present": [
+      "SignInService/@UnitTests/WitnessW2"
+    ]
+  }
+}

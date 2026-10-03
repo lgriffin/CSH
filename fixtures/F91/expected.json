@@ -1,0 +1,14 @@
+{
+  "fixture": "F91",
+  "section": "Anchor, harnesses and A3, section 5.2",
+  "stage": 14,
+  "expect": {
+    "a3": {
+      "problems": [
+        {
+          "kind": "unclassified"
+        }
+      ]
+    }
+  }
+}

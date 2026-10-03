@@ -1,0 +1,10 @@
+{
+  "schema": "csh-component/v1",
+  "name": "SignInService",
+  "spec": "spec.csl.ts",
+  "implementation": ["src"],
+  "practices": [
+    { "id": "ears", "name": "EARS", "kind": "requirements", "sources": ["Product"], "author": "Product owner", "unit": "the sentence" },
+    { "id": "tdd", "name": "TDD", "kind": "tests", "sources": ["UnitTests", "IntegrationTests"], "author": "Developer", "unit": "the test" }
+  ]
+}

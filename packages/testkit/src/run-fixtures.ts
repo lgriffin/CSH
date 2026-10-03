@@ -13,7 +13,7 @@ const results = [];
 for (const id of ids) {
   const r = await runner.run(id);
   results.push(r);
-  process.stdout.write(`${r.pass ? "pass" : r.skipped !== undefined ? "skip" : "FAIL"} ${id}\n`);
+  process.stdout.write(`${r.pass ? "pass" : r.pending !== undefined ? "pending" : r.skipped !== undefined ? "skip" : "FAIL"} ${id}\n`);
 }
 process.stdout.write(`\n${summarise(results)}`);
-process.exit(results.every((r) => r.pass || r.skipped !== undefined) ? 0 : 1);
+process.exit(results.every((r) => r.pass || r.skipped !== undefined || r.pending !== undefined) ? 0 : 1);

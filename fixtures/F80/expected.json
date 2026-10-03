@@ -1,0 +1,15 @@
+{
+  "fixture": "F80",
+  "section": "Anchor, harnesses and A3, section 2.1",
+  "stage": 10,
+  "expect": {
+    "component": {
+      "errors": [
+        {
+          "code": "practice-unknown-source",
+          "detailIncludes": "IntegrationTests"
+        }
+      ]
+    }
+  }
+}

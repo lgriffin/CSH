@@ -1,0 +1,25 @@
+{
+  "fixture": "F85",
+  "section": "Anchor, harnesses and A3, sections 6.2 and 12",
+  "stage": 11,
+  "expect": {
+    "present": [
+      "SignInService/@UnitTests/WitnessW1",
+      "SignInService/@UnitTests/WitnessW2"
+    ],
+    "check": {
+      "errors": [
+        {
+          "code": "dangling-citation",
+          "detailIncludes": "LCK-009"
+        }
+      ],
+      "gapsExclude": [
+        {
+          "kind": "uncited",
+          "subject": "Product/LCK-002"
+        }
+      ]
+    }
+  }
+}
