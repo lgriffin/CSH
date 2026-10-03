@@ -4,6 +4,14 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "exports": { ".": "./src/index.ts" },
-  "dependencies": { "@csh/kernel": "workspace:*","@csh/solver": "workspace:*" }
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@csh/kernel": "workspace:*",
+    "@csh/solver": "workspace:*",
+    "@csh/witness": "workspace:*",
+    "@csh/adapter-witness-files": "workspace:*",
+    "@csh/adapter-ears-markdown": "workspace:*"
+  }
 }

@@ -22,6 +22,15 @@
             "AccountService/ProtectFunds/RejectAtBoundary"
           ],
           "crossSource": true
+        },
+        {
+          "kind": "not-met",
+          "members": [
+            "AccountService/#transition/Withdraw",
+            "AccountService/@ProductRules/AcceptSmallWithdrawals"
+          ],
+          "scope": "specification",
+          "counterexample": true
         }
       ]
     }

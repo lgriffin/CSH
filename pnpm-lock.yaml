@@ -44,12 +44,21 @@ importers:
 
   packages/check:
     dependencies:
+      '@csh/adapter-ears-markdown':
+        specifier: workspace:*
+        version: link:../adapter-ears-markdown
+      '@csh/adapter-witness-files':
+        specifier: workspace:*
+        version: link:../adapter-witness-files
       '@csh/kernel':
         specifier: workspace:*
         version: link:../kernel
       '@csh/solver':
         specifier: workspace:*
         version: link:../solver
+      '@csh/witness':
+        specifier: workspace:*
+        version: link:../witness
 
   packages/cli:
     dependencies:
