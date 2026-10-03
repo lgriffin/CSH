@@ -17,7 +17,8 @@
     "@csh/component": "workspace:*",
     "@csh/ledger": "workspace:*",
     "@csh/gate": "workspace:*",
-    "@csh/run": "workspace:*"
+    "@csh/run": "workspace:*",
+    "@csh/a3": "workspace:*"
   },
   "bin": {
     "csl": "./bin/csl.js",

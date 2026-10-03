@@ -23,7 +23,7 @@ const report = {
     },
   ],
   notComparable: [{ fragment: "S/I/Lock", source: "intent", reason: "unit" }],
-  gapView: { sources: [], rows: [], gaps: [{ kind: "uncited", subject: "Product:LCK-004", fragments: [] }, { kind: "no-rule", subject: "S/@Tests/ThirdFailure", fragments: ["S/@Tests/ThirdFailure"] }] },
+  gapView: { sources: [], rows: [], gaps: [{ kind: "uncited", subject: "Product/LCK-004", fragments: [] }, { kind: "no-rule", subject: "S/@Tests/ThirdFailure", fragments: ["S/@Tests/ThirdFailure"] }] },
   assessments: [],
   unliftable: [],
   errors: [{ code: "dangling-citation", severity: "error", detail: "LCK-009 is not in Product", fragment: "S/@Tests/X", source: "Tests" }],
@@ -84,7 +84,15 @@ describe("matches", () => {
 
   it("matches a gap's subject exactly or by its last segment", () => {
     const u = signals.find((s) => s.kind === "uncited")!;
-    expect(matches(u, { kind: "uncited", subject: "Product:LCK-004" })).toBe(true);
+    expect(matches(u, { kind: "uncited", subject: "Product/LCK-004" })).toBe(true);
     expect(matches(u, { kind: "uncited", subject: "LCK-005" })).toBe(false);
+  });
+});
+
+describe("signals of gaps", () => {
+  it("names the source a gap's subject belongs to", () => {
+    const u = signalsOf(report).find((s) => s.kind === "uncited")!;
+    expect(u.sources).toEqual(["Product"]);
+    expect(u.practices).toEqual(["ears"]);
   });
 });

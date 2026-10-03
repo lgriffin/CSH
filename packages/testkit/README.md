@@ -23,13 +23,14 @@ The test kit is development tooling and is not part of any runtime container. It
 
 ## Depends on and used by
 
-- Depends on: every runtime workspace package: `@csh/kernel`, `csl`, `@csh/emit`, `@csh/print`, `@csh/solver`, `@csh/check`, `@csh/witness`, `@csh/adapter-witness-files`, `@csh/adapter-ears-markdown`, `@csh/ledger`, `@csh/gate`, `@csh/component` and `@csh/run`. External: `git` and `gpg` for the ledger fixtures; Vitest and fast-check in its tests.
+- Depends on: every runtime workspace package: `@csh/kernel`, `csl`, `@csh/emit`, `@csh/print`, `@csh/solver`, `@csh/check`, `@csh/witness`, `@csh/adapter-witness-files`, `@csh/adapter-ears-markdown`, `@csh/ledger`, `@csh/gate`, `@csh/component`, `@csh/run` and `@csh/a3`. External: `git` and `gpg` for the ledger fixtures; Vitest and fast-check in its tests.
 - Used by: no workspace package. The root test run executes its tests.
 
 ## Invariants it protects
 
 - A finding the solver reports is checked again outside the minimiser: counterexamples by exact evaluation, joint conflicts by a fresh query (P8, CSH-019).
 - Each fixture is an accepting or rejecting test of the documents, named by stage and section, so a regression in any earlier stage fails the run (P8).
+- A fixture whose expectation is `a3` is built from `inputs/component.json` and `inputs/csh/a3/<slug>/`: its problems, its stage integrity, and its authority through a real, signed ledger with a test-only key (F91 to F95).
 - A fixture with `inputs/component.json` runs with that manifest, so the component errors and the `unowned-source` gap are compared like any other result.
 - Printing then emitting reproduces the digest of every fixture model without packs and of random models, so what a person approves is what was emitted (P1, CSH-017).
 - Signing keys are test-only and live in a temporary keyring that is deleted afterwards; nothing touches the real repository's keys, commits or `csh/maintainers.json` (P6).

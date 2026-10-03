@@ -75,7 +75,12 @@ export function signalsOf(report: Report, manifest?: PracticeMap): Signal[] {
   }
   for (const n of report.notComparable ?? []) out.push(make("not-comparable", [n.fragment], [n.source], { detail: n.reason }));
   for (const e of report.errors ?? []) out.push(make(e.code, e.fragment !== undefined ? [e.fragment] : [], e.source !== undefined ? [e.source] : [], { subject: e.span, detail: e.detail }));
-  for (const g of report.gapView?.gaps ?? []) out.push(make(g.kind, g.fragments ?? [], [], { subject: g.subject, detail: g.detail }));
+  // A gap's subject names its source when it is an item (Product/LCK-004) or a whole source (an unliftable one).
+  const known = new Set([...(report.gapView?.sources ?? []), ...Object.keys(practiceOf)]);
+  for (const g of report.gapView?.gaps ?? []) {
+    const head = g.subject.split("/")[0]!;
+    out.push(make(g.kind, g.fragments ?? [], known.has(head) ? [head] : [], { subject: g.subject, detail: g.detail }));
+  }
   for (const a of report.assessments ?? []) if (a.verdict === "violated") out.push(make("violated", [a.fragment], [a.source], { detail: a.authority }));
   return out.sort((a, b) => compareCodePoints(a.kind, b.kind) || compareCodePoints(a.id, b.id));
 }

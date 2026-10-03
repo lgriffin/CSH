@@ -1,15 +1,17 @@
 // The csh command (Joint evaluation, section 7; Authority tab, sections 3.4 and 6; Anchor, harnesses and A3, section 7.1).
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { a3Dir, readJudgments } from "@csh/a3";
 import { DIVERGENCE_READINGS, type Finding, renderGaps, renderReport, type Report } from "@csh/check";
 import { exitCode, formatDecision as formatGate, type GateDecision, type Mode } from "@csh/gate";
-import { fragmentsOf, type Module, stableJson } from "@csh/kernel";
+import { digestOf, fragmentsOf, type Module, stableJson } from "@csh/kernel";
 import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons } from "@csh/ledger";
 import { printFragment } from "@csh/print";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
 import { decideGate as decideFor, evaluateProject, GATE_PATH, ledgerOf, loadProject, MODEL_PATH, type Project, REPORT_PATH, runAt, runComponent, type RunResult, specOf } from "@csh/run";
 import { type Args, parseArgs } from "./args.ts";
 import { init } from "./init.ts";
+import { a3Command, a3Fragment } from "./a3.ts";
 
 const USAGE = `csh: the Composable Specification Harness
 
@@ -23,6 +25,7 @@ const USAGE = `csh: the Composable Specification Harness
   csh gaps [spec]                 Print the gap view only.
   csh explain <finding-id>        Print one finding, members rendered through the printer.
   csh approve <fragment> --actor <name> --rationale <text>
+                                  A fragment, or #a3/<slug> for an A3's judgments.
   csh reject <fragment> --actor <name> --rationale <text>
   csh retire <fragment> --actor <name> --rationale <text>
   csh waive <fragment> --scope <finding-id|obligation> --expires <YYYY-MM-DD> --actor <name> --rationale <text>
@@ -31,6 +34,14 @@ const USAGE = `csh: the Composable Specification Harness
                                   csh/ledger.ndjson alone, signed with your own key.
   csh gate [--mode advisory|enforcing] [--out decision.json]
                                   Check and decide for the current snapshot. Exits non-zero only on block in enforcing mode.
+  csh a3 open <slug> [--at <commit>] [--stage <id>]
+                                  Record a run as an A3's first stage and write an empty judgments skeleton under
+                                  csh/a3/<slug>/. Never overwrites judgments.
+  csh a3 stage <slug> <id> --at <commit> [--mode advisory|enforcing]
+                                  Record the run of a commit as a stage, running the commit if no run is stored.
+  csh a3 build <slug> [--check]   Build a3.json, a3.md and a3.html from the stage records and judgments; with
+                                  --check, fail when the committed ones differ.
+  csh a3 verify <slug>            Re-run every stage at its commit and report any that differs.
   csh gate --verify <decision.json>
                                   Recompute the decision; refuse one made for any other snapshot or that differs.
 
@@ -106,6 +117,8 @@ async function decide(kind: DecisionKind, p: Project, a: Args, io: Io): Promise<
     io.err("a decision needs a non-empty --rationale\n");
     return 2;
   }
+  const slug = /^(?:[^/]+\/)?#a3\/([a-z0-9][a-z0-9-]*)$/.exec(target)?.[1];
+  if (slug !== undefined) return decideA3(kind, p, slug, actor, rationale, io);
   const res = await runCheck(p, { ...a, positional: [] }, io);
   if (res === undefined) return 1;
   const { report, model } = res;
@@ -152,6 +165,31 @@ async function decide(kind: DecisionKind, p: Project, a: Args, io: Io): Promise<
   if (refers !== undefined) d.refers = refers;
   const written = appendDecision(join(p.root, LEDGER_PATH), d);
   io.out(`\nAppended seq ${written.seq} to ${LEDGER_PATH}. Nothing is committed or signed.\nTo make it count, commit that file alone, signed with your own key:\n  git add ${LEDGER_PATH} && git commit -S -m "${kind} ${frag.local}"\n`);
+  return 0;
+}
+
+/**
+ * A decision on an A3's judgments (Anchor, harnesses and A3, section 5.6): bound to the digest of the judgments file,
+ * so any edit returns the sheet to candidate. Only approve, reject and retire apply.
+ */
+async function decideA3(kind: DecisionKind, p: Project, slug: string, actor: string, rationale: string, io: Io): Promise<number> {
+  if (kind !== "approve" && kind !== "reject" && kind !== "retire") {
+    io.err(`csh ${kind} does not apply to an A3's judgments\n`);
+    return 2;
+  }
+  const name = p.component?.manifest.name;
+  const read = readJudgments(p.root, slug);
+  if (name === undefined || read === undefined) {
+    io.err(`no judgments for ${slug} under ${a3Dir(p.root, slug).slice(p.root.length + 1)}\n`);
+    return 2;
+  }
+  const fragment = a3Fragment(name, slug);
+  const digest = digestOf(read.bytes);
+  const ledger = await ledgerOf(p, specOf(p, undefined));
+  const solo = ledger === undefined || persons(ledger.maintainers).length <= 1;
+  io.out(`${kind} ${fragment}\n  digest ${digest}\n  the judgments in ${a3Dir(p.root, slug).slice(p.root.length + 1)}/judgments.json: ${read.judgments.title || "(untitled)"}\n  Approving them makes the sheet's root causes and countermeasures approved; any edit returns them to candidate.\n`);
+  const written = appendDecision(join(p.root, LEDGER_PATH), { kind, fragment, digest, rationale, actor, selfApproved: kind === "approve" && solo });
+  io.out(`\nAppended seq ${written.seq} to ${LEDGER_PATH}. Nothing is committed or signed.\nTo make it count, commit that file alone, signed with your own key:\n  git add ${LEDGER_PATH} && git commit -S -m "${kind} #a3/${slug}"\n`);
   return 0;
 }
 
@@ -205,6 +243,14 @@ export async function csh(argv: string[], io: Io): Promise<number> {
       return decide(cmd, p, a, io);
     case "gate":
       return runGate(p, a, io);
+    case "a3": {
+      const solver = await (io.solver ?? defaultSolver)();
+      return a3Command(p, a, {
+        out: io.out,
+        err: io.err,
+        runOptions: async () => ({ root: p.root, solver, ...(a.options.budget !== undefined ? { budgetMs: Number(a.options.budget) } : {}), ...(a.flags.has("no-cache") ? { noCache: true } : {}), harnessOutput: (x: string) => io.err(x) }),
+      });
+    }
     default:
       io.err(`unknown command ${cmd}\n${USAGE}`);
       return 2;
@@ -278,6 +324,8 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
   lines.push(`  obligations ${(report.assessments ?? []).length}: conflicting ${v("conflicting")}, violated ${v("violated")}, satisfied ${v("satisfied")}, unknown ${v("unknown")}`);
   lines.push(`  gate ${decision.overall} (${decision.mode})`);
   lines.push(`  stored ${r.dir.slice(p.root.length + 1)}`);
+  // A cross-source conflict or an enforcing block is a problem worth a sheet (Anchor, harnesses and A3, section 5.8).
+  if (report.findings.some((f) => f.crossSource && f.kind.endsWith("-conflict")) || (decision.mode === "enforcing" && decision.overall === "block")) lines.push("  to read it as one problem: csh a3 open <slug>");
   io.out(`${lines.join("\n")}\n`);
   return exitCode(decision);
 }

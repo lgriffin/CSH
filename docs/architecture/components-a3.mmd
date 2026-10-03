@@ -1,0 +1,20 @@
+%% C4 level 3: components of the A3 package (Anchor, harnesses and A3, section 5).
+C4Component
+  title A3: components
+  Container_Boundary(a3, "A3 (a3)") {
+    Component(stages, "Stage records", "a3/src/stages.ts", "run.json, report.json and gate.json per stage; integrity against the run record; the judgments file")
+    Component(build, "Builder", "a3/src/build.ts", "Signals placed by cause and lane, Pareto, decision points, evidence, countermeasure status, problems")
+    Component(measures, "Measures", "a3/src/measures.ts", "The eight default measures, each with an id and an overridable target")
+    Component(skeleton, "Skeleton", "a3/src/skeleton.ts", "The judgments csh a3 open writes: one stage, one lane per practice, every judged section empty")
+    Component(md, "Markdown renderer", "a3/src/markdown.ts", "a3.md from the model alone")
+    Component(html, "HTML renderer", "a3/src/html.ts, a3.css", "One self-contained page with a stage picker, from the model alone")
+  }
+  Container_Ext(cli, "Command line", "cli: csh a3", "Finds stored runs, authority from the ledger and files at a commit")
+  Container_Ext(check, "Check engine", "check", "signalsOf and matches")
+  Rel(cli, stages, "Reads and records stages")
+  Rel(cli, build, "Judgments, stages, authority, files at a commit")
+  Rel(build, check, "Signals and matching")
+  Rel(build, measures, "Stages and targets")
+  Rel(build, md, "Model")
+  Rel(build, html, "Model")
+  Rel(cli, skeleton, "csh a3 open")

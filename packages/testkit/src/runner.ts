@@ -6,7 +6,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { type Assessment, type AuthorityResolver, cachingSolver, makeRefiner, type Finding, MemoryEvidenceStore, type Report, SolverCache } from "@csh/check";
 import { emit, type Lock, readLock, typeCheck } from "@csh/emit";
 import { acceptDecision, gate, type Snapshot, type Waiver } from "@csh/gate";
-import { digestJson, type Fragment, fragmentsOf, type Module, stableJson } from "@csh/kernel";
+import { digestJson, digestOf, type Fragment, fragmentsOf, type Module, stableJson } from "@csh/kernel";
 import { authorship, formatDecision, gitVcs, LEDGER_PATH, MAINTAINERS_PATH, readLedger, resolveAuthority, type Decision, type LedgerState, type Role } from "@csh/ledger";
 import { printModule } from "@csh/print";
 import type { SolverPort } from "@csh/solver";
@@ -14,6 +14,7 @@ import { createTestRepo, gpgAvailable, type TestRepo } from "./git.ts";
 import { checkModule, evaluateSpec, type FixtureConfig, readConfig } from "@csh/run";
 import { verifyCounterexample, verifyNoOutcome } from "./verify.ts";
 import { type ComponentProblem, parseComponent } from "@csh/component";
+import { buildA3, readJudgments, readStage, stageDir, stageIntegrity, type StageRecord } from "@csh/a3";
 
 export interface FixtureResult {
   id: string;
@@ -31,7 +32,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 13;
+export const BUILT_THROUGH_STAGE = 14;
 
 /** The stage a fixture belongs to, from its expected result. */
 export function fixtureStage(fixturesDir: string, id: string): number {
@@ -109,9 +110,10 @@ export class FixtureRunner {
     }
     try {
       const e = doc.expect;
-      if ((e.git === true || e.steps !== undefined) && !gpgAvailable()) {
+      if ((e.git === true || e.steps !== undefined || e.a3?.authority !== undefined) && !gpgAvailable()) {
         res.skipped = "gpg is not installed";
-      } else if (e.git === true) await this.git(dir, e, failures);
+      } else if (e.a3 !== undefined) await this.a3(dir, e.a3, failures);
+      else if (e.git === true) await this.git(dir, e, failures);
       else if (e.steps !== undefined) await this.steps(dir, e, failures);
       else await this.single(dir, e, failures);
     } catch (err) {
@@ -347,6 +349,69 @@ export class FixtureRunner {
       if (acceptDecision(d, snapshot).accepted !== true) failures.push("gateReplay: decision refused for its own snapshot");
       const other = acceptDecision(d, { ...snapshot, commit: e.gateReplay.otherCommit });
       if ((other.accepted === false) !== e.gateReplay.refused) failures.push(`gateReplay: refused ${!other.accepted}, expected ${e.gateReplay.refused}`);
+    }
+  }
+
+  // ---------------------------------------------------------------- A3 fixtures
+
+  /**
+   * An A3 from inputs/component.json and inputs/csh/a3/<slug>/: problems from the builder, stage integrity from verify
+   * (no commit exists to re-run, so an intact stage is unverifiable), and authority through a real, signed ledger.
+   */
+  private async a3(dir: string, x: Exp, failures: string[]): Promise<void> {
+    const inputs = join(dir, "inputs");
+    const slug = readdirSync(join(inputs, "csh", "a3"))[0]!;
+    const loaded = parseComponent(readFileSync(join(inputs, "component.json")));
+    if (loaded.component === undefined) throw new Error(`fixture manifest unusable: ${JSON.stringify(loaded.problems)}`);
+    const manifest = loaded.component.manifest;
+    const read = readJudgments(inputs, slug);
+    if (read === undefined || read.problems.length > 0) throw new Error(`fixture judgments unusable: ${JSON.stringify(read?.problems)}`);
+    const stages = read.judgments.stages.map((s) => readStage(stageDir(inputs, slug, s.id), s.id)).filter((s): s is StageRecord => s !== undefined);
+    if (x.problems !== undefined) {
+      const model = buildA3({ slug, judgments: read.judgments, judgmentsDigest: digestOf(read.bytes), component: { name: manifest.name, practices: manifest.practices }, stages, authority: { authority: "candidate" } });
+      for (const want of x.problems as { kind: string; subject?: string; stage?: string }[]) {
+        if (!model.problems.some((p) => p.kind === want.kind && (want.subject === undefined || p.subject.includes(want.subject)) && (want.stage === undefined || p.stage === want.stage))) {
+          failures.push(`a3 problem ${JSON.stringify(want)} not reported; got ${JSON.stringify(model.problems)}`);
+        }
+      }
+    }
+    if (x.verify !== undefined) {
+      const got = stages.map((s) => ({ stage: s.id, problem: stageIntegrity(s)?.problem ?? "stage-unverifiable" }));
+      for (const want of x.verify as { stage: string; problem: string }[]) {
+        if (!got.some((g) => g.stage === want.stage && g.problem === want.problem)) failures.push(`verify ${want.stage}: expected ${want.problem}, got ${JSON.stringify(got)}`);
+      }
+    }
+    if (x.authority !== undefined) await this.a3Authority(inputs, slug, manifest.name, x.authority, failures);
+  }
+
+  /** Approve an A3's judgments with a test-only key, then edit them unsigned (section 5.6). */
+  private async a3Authority(inputs: string, slug: string, component: string, want: { after: string; authority: string; selfApproved?: boolean }[], failures: string[]): Promise<void> {
+    const repo = createTestRepo(join(this.o.workDir, "repos"), ["Owner"]);
+    try {
+      const file = `csh/a3/${slug}/judgments.json`;
+      const name = `${component}/#a3/${slug}`;
+      repo.write(MAINTAINERS_PATH, `${JSON.stringify(repo.maintainers(["Owner"], { Owner: { kind: "person", roles: ["intent-owner", "domain-reviewer"] } }), null, 2)}\n`);
+      repo.commit("Maintainers", "Owner");
+      const original = readFileSync(join(inputs, "csh", "a3", slug, "judgments.json"), "utf8");
+      repo.write(file, original);
+      repo.commit("Judgments", null);
+      const d: Decision = { schema: "csh-decision/v1", seq: 1, kind: "approve", fragment: name, digest: digestOf(original), rationale: "the sheet's root causes are right", actor: "Owner", selfApproved: true };
+      repo.write(LEDGER_PATH, `${formatDecision(d)}\n`);
+      repo.commit("Approve the judgments", "Owner");
+      const check = (after: string) => {
+        const text = readFileSync(join(repo.dir, file), "utf8");
+        const a = resolveAuthority(readLedger(gitVcs(repo.dir, { env: repo.env })), { name, digest: digestOf(text), cites: [] });
+        for (const w of want.filter((x) => x.after === after)) {
+          if (a.authority !== w.authority) failures.push(`after ${after}: authority ${a.authority}, expected ${w.authority}`);
+          if (w.selfApproved !== undefined && a.selfApproved !== w.selfApproved) failures.push(`after ${after}: selfApproved ${String(a.selfApproved)}, expected ${String(w.selfApproved)}`);
+        }
+      };
+      check("approve");
+      repo.write(file, original.replace('"problem": "', '"problem": "Edited. '));
+      repo.commit("Edit the judgments", null);
+      check("edit");
+    } finally {
+      repo.dispose();
     }
   }
 

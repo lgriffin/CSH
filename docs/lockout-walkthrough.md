@@ -18,7 +18,7 @@ harness reads the scenarios; it does not execute them against the code.
 The intent block in `spec/lockout.csl.ts` holds three predicates a person wrote from the EARS sentences, each citing
 the sentence it claims to express. Until section 8 there is deliberately no formal model of the transition: the three
 practices are the only voices, so everything the harness reports is a disagreement between them. The Lean reading of the same output is
-[the A3](lockout-a3.md).
+[the A3](../examples/lockout/csh/a3/three-practices/a3.md).
 
 The scenarios are read by `@csh/adapter-gherkin`, which the BDD practice names in `csh/component.json`, with the
 example's own step table, `csh/steps.ts`. The table does what Cucumber's step definitions do. It maps each step phrase
@@ -40,12 +40,13 @@ summary:
 
 ```text
 $ csh run
-run SignInService at c014161737c32cec70ab3a659f3571308514049d
+run SignInService at 793bdcbdf0e7fbcf0c1a504616569ed1402d37f1
   harness tdd: node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=@csh/harness/reporter --test-reporter-destination=stdout test/lockout.test.ts  exit 0, 4 witnesses, 4 executions (not sandboxed)
   findings 5 (4 conflicts, 1 divergence, 4 cross-source); gaps 8; not comparable 1; errors 2
   obligations 3: conflicting 3, violated 0, satisfied 0, unknown 0
   gate allow (advisory)
-  stored .csh-cache/runs/ebb554a5e2f5a9fb6f7c71eb844bc927b62f26dfab628a71fc3ea24dd655c5f7
+  stored .csh-cache/runs/a71ef065123aed8d92512bd0919347fec42d50753c44ad4b76e3a23ab6cdf3fa
+  to read it as one problem: csh a3 open <slug>
 ```
 
 The sections below show the same evaluation step by step, as the separate commands `csh check` and `csh gate`, which
@@ -53,12 +54,13 @@ compute exactly what `csh run` does after the harness. The last stage, with the 
 
 ```text
 $ csh run --mode enforcing
-run SignInService at 6877324652170b94bb9e8486b9942f6735e8bc9d
+run SignInService at 3ddf75879ae42c681d04559d41e3f866223119be
   harness tdd: node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=@csh/harness/reporter --test-reporter-destination=stdout test/lockout.test.ts  exit 0, 4 witnesses, 4 executions (not sandboxed)
   findings 3 (1 conflict, 2 divergences, 3 cross-source); gaps 8; not comparable 0; errors 0
   obligations 4: conflicting 0, violated 1, satisfied 3, unknown 0
   gate block (enforcing)
-  stored .csh-cache/runs/250831f1398bee884a3d54f3fdc64674a213d03ec970d13c521f43e31394ac70
+  stored .csh-cache/runs/02a50b320be98941c063873d3c5c59a5c039aaeff05ae487c52ea8856e87728c
+  to read it as one problem: csh a3 open <slug>
 ```
 
 In the commands below, `csh` and `csl` stand for `node packages/cli/bin/csh.js` and `node packages/cli/bin/csl.js`.
@@ -228,8 +230,8 @@ How to read this report, one practice pair at a time:
   - `LCK-004` (email the holder) is uncited, and `LCK-005` (WHERE two-factor sign-in is enabled) is unliftable with reason `feature-scope` as well as uncited. The scenario `Support unlocks a locked account` is unliftable with reason `unknown-step`.
 
 `csh check` exited 0. Reporting and judging are separate powers ([ADR-11](adr/ADR-11-check-never-blocks.md)). The
-script itself checks the report against the counts above and fails if they move, so CI notices when a change to the
-example or the harness changes this story.
+A3's committed sheet holds every count above, and `csh a3 build --check` fails if one moves, so CI notices when a
+change to the example or the harness changes this story.
 
 ## 4. Explain the joint conflict
 
@@ -317,7 +319,7 @@ agreed scenarios and five reviewed sentences carry no authority until a person a
 
 ## 7. After the countermeasures
 
-The script then applies the countermeasures of [the A3](lockout-a3.md), section 5, as one commit. They take the
+The script then applies the countermeasures of [the A3](../examples/lockout/csh/a3/three-practices/a3.md), section 5, as one commit. They take the
 owner's side in each decision as an assumption, since only the owner can decide: the third failure locks, and a
 locked account is refused even with the correct password.
 
@@ -504,28 +506,44 @@ gate block (enforcing)
   allow   SignInService/StopPasswordGuessing/RefuseWhileLocked  satisfied
 ```
 
-The gate exits 1, and the script fails if it does not. The verdict names the implementation, not the rule: the rule
+The gate exits 1. The script does not check that itself: the A3's committed sheet records the block at this stage,
+and `csh a3 build --check` fails if it changes. The verdict names the implementation, not the rule: the rule
 is approved and the evidence is current, so the witness is what disagrees.
 
 ## 10. Build the A3
 
-The script keeps each stage's `csh-report.json` and `csh-gate.json`, then builds the A3 from them:
+After each stage's run the script records it as a stage of the A3, `csh/a3/three-practices/`, and commits the record:
 
-```
-$ node examples/lockout/a3/build.ts --stages <stages> --out <stages>/a3
-wrote lockout-a3.html and lockout-a3.md for 4 stages
-docs/lockout-a3.md and docs/lockout-a3.html match the reports.
+```text
+$ csh a3 stage three-practices <stage> --at HEAD
 ```
 
-`examples/lockout/a3/a3.json` holds what only a person can say: the background, the root causes, the countermeasures
-and the plan, and a rule for each kind of signal saying where on the sheet it belongs. Every count, every Pareto bar,
-every verdict and the status of each countermeasure is computed from the reports. A signal no rule places shows up as
-unclassified. CI runs the script and fails when the committed A3 differs from the one it builds, so a change to the
-example or the harness that moves a number has to update the sheet in the same change:
+That copies the stored run of the commit, `run.json`, `report.json` and `gate.json`, into
+`csh/a3/three-practices/stages/<stage>/`, so the sheet still reads correctly after the branches are gone. Then it
+builds the sheet and checks it against the committed one, and re-runs every stage at its commit:
+
+```text
+$ csh a3 build three-practices --check
+csh/a3/three-practices: a3.json, a3.md and a3.html match the stage records and judgments
+  no problems with the judgments
+
+$ csh a3 verify three-practices
+  verified before: a fresh run at 793bdcbdf0e7 gives the same snapshot, report and gate decision
+  verified countermeasures: a fresh run at a422e87374cc gives the same snapshot, report and gate decision
+  verified approved: a fresh run at 501f7f37ecfe gives the same snapshot, report and gate decision
+  verified regression: a fresh run at 3ddf75879ae4 gives the same snapshot, report and gate decision
+```
+
+`examples/lockout/csh/a3/three-practices/judgments.json` holds what only a person can say: the background, the root
+causes, the countermeasures and the plan, and a structured rule for each kind of signal saying where on the sheet it
+belongs. Every count, every Pareto bar, every verdict and the status of each countermeasure is computed from the stage
+records. A signal no cause places shows up as unclassified, and a rule that places nothing at any stage is reported as
+dead. The committed `a3.json` holds every count the walkthrough documents, so CI fails when a change to the example or
+the harness moves one without updating the sheet in the same change:
 
 ```sh
 examples/lockout/walkthrough.sh --update
 ```
 
-To evolve the example, change a source, a judgment in `a3.json`, or the harness, run that command, and read the diff of
-`docs/lockout-a3.md`.
+To evolve the example, change a source, a judgment, or the harness, run that command, and read the diff of
+[`a3.md`](../examples/lockout/csh/a3/three-practices/a3.md).

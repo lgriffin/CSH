@@ -6,6 +6,7 @@ C4Container
   System_Boundary(csh, "Composable Specification Harness") {
     Container(cli, "Command line", "cli", "csl and csh commands; csh init; argument parsing and printing")
     Container(run, "Run", "run", "Harnesses, sources, the pipeline, the gate decision and the run record")
+    Container(a3, "A3", "a3", "Stage records and judgments to one model; Markdown and HTML renderings; checks on the judgments")
     Container(component, "Component", "component", "The component manifest: practices, the sources each owns, harnesses")
     Container(emission, "Emission sandbox", "emit, csl, print", "Locked-down subprocess per module; rules S6 to S9; canonical printer")
     Container(harness, "Harnesses", "harness", "Probe in the project's tests; reporter for Node's test runner (runs in the test process)")
@@ -21,6 +22,9 @@ C4Container
   Rel(user, cli, "Runs")
   Rel(cli, run, "Evaluate, run, decide")
   Rel(cli, component, "csh init writes the manifest")
+  Rel(cli, a3, "csh a3: stage records, authority, files at a commit")
+  Rel(a3, check, "Report types, signals and matching")
+  Rel(a3, component, "Practices")
   Rel(run, component, "Manifest, owners of sources")
   Rel(run, emission, "Model of each module")
   Rel(run, adapters, "Source bytes in, claims out (IPC)")
