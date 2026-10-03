@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildWitness, parseWitnesses, recordWitness, validateWitness, type Witness, witnessDigest } from "../src/index.ts";
+import { buildWitness, outcomeOf, parseExecutions, parseWitnesses, recordWitness, validateWitness, type Witness, witnessDigest } from "../src/index.ts";
 
 const base = (): Witness =>
   buildWitness(
@@ -57,4 +57,25 @@ describe("witness format", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it("writes version 2 with no outcome unless one is given, and still reads version 1", () => {
+    const w = base();
+    expect(w.schema).toBe("csh-witness/v2");
+    expect(outcomeOf(w)).toBe("unknown");
+    expect(outcomeOf(buildWitness({ event: "E", args: {}, pre: {}, post: {}, mocked: [], localResult: "failed" }))).toBe("failed");
+    const v1 = { ...w, schema: "csh-witness/v1", execution: { localResult: "passed", mocked: [] } };
+    expect(validateWitness(v1)).toBeUndefined();
+    expect(validateWitness({ ...v1, execution: { mocked: [] } })).toMatch(/version 1 needs localResult/);
+    expect(validateWitness({ ...v1, cites: ["R-1"] })).toMatch(/cites needs csh-witness\/v2/);
+    expect(validateWitness({ ...w, cites: ["R-1"] })).toBeUndefined();
+    expect(validateWitness({ ...w, cites: [""] })).toMatch(/cites/);
+  });
+
+  it("parses execution lines and reports malformed ones", () => {
+    const text = [JSON.stringify({ schema: "csh-execution/v1", test: "t::a", outcome: "passed" }), "x", JSON.stringify({ schema: "csh-execution/v1", test: "t::b", outcome: "skipped" })].join("\n");
+    const r = parseExecutions(text);
+    expect(r.executions.map((x) => [x.e.test, x.line])).toEqual([["t::a", 1]]);
+    expect(r.problems.map((p) => p.line)).toEqual([2, 3]);
+  });
 });
+

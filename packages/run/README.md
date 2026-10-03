@@ -6,7 +6,7 @@
 
 ## Where it sits
 
-It is the "Run" container, shown in the [containers diagram](../../docs/architecture/containers.mmd). Its components (project, source runner, adapter runner, pipeline, evaluation, harness runner, run store, past-commit runner) are in [components-run.mmd](../../docs/architecture/components-run.mmd). It runs in the main process and is trusted; the harness commands, adapters and specification modules it starts are not.
+It is the "Run" container, shown in the [containers diagram](../../docs/architecture/containers.mmd). Its components (project, source runner, adapter runner, pipeline, evaluation, harness runner, run store, past-commit runner) are in [components-run.mmd](../../docs/architecture/components-run.mmd), and one run in order is [run-sequence.mmd](../../docs/architecture/run-sequence.mmd). It runs in the main process and is trusted; the harness commands, adapters and specification modules it starts are not.
 
 ## Public interface
 

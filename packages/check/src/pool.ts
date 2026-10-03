@@ -39,6 +39,8 @@ export interface Prepared {
   witnesses: SourcedWitness[];
   items: (SourceItem & { source: string })[];
   diagnostics: { source: string; code: string; severity: string; message: string; span?: string }[];
+  /** Execution lines read beside witness sources (Anchor, harnesses and A3, section 3.2). */
+  executions: { source: string; test: string; outcome: string; span: string }[];
   runs: SourceRun[];
 }
 
@@ -62,7 +64,7 @@ function typeCheckClaim(m: Module, c: Claim): { code: string; message: string } 
 
 export function prepare(emitted: Module, runs: SourceRun[]): Prepared {
   const module: Module = structuredClone(emitted);
-  const out: Prepared = { module, fragments: [], notComparable: [], unliftable: [], witnesses: [], items: [], diagnostics: [], runs };
+  const out: Prepared = { module, fragments: [], notComparable: [], unliftable: [], witnesses: [], items: [], diagnostics: [], executions: [], runs };
   // Add adapter claims to the claim set of their source.
   for (const r of runs) {
     for (const d of r.output.diagnostics) {
@@ -77,6 +79,7 @@ export function prepare(emitted: Module, runs: SourceRun[]): Prepared {
       out.witnesses.push(sw);
     }
     for (const it of r.output.items ?? []) out.items.push({ ...it, source: r.source });
+    for (const e of r.output.executions ?? []) out.executions.push({ ...e, source: r.source });
     const lifted = r.output.claims;
     if (lifted === undefined) continue;
     let set = module.claims.find((c) => c.source === r.source);

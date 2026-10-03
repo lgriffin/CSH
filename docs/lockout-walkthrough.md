@@ -13,7 +13,7 @@ harness reads the scenarios; it does not execute them against the code.
 | --- | --- | --- | --- |
 | `Product` | EARS | The product owner | Five requirement sentences, `LCK-001` to `LCK-005`, in `docs/requirements.md` |
 | `Scenarios` | BDD | The three amigos | Five Gherkin scenarios in `features/lockout.feature`, tagged with the requirement each illustrates |
-| `UnitTests` | TDD | The developer, test first | Four unit tests that record witnesses through `recordWitness` |
+| `UnitTests` | TDD | The developer, test first | Four unit tests whose calls a probe records as witnesses |
 
 The intent block in `spec/lockout.csl.ts` holds three predicates a person wrote from the EARS sentences, each citing
 the sentence it claims to express. Until section 8 there is deliberately no formal model of the transition: the three
@@ -34,14 +34,15 @@ examples/lockout/walkthrough.sh
 ```
 
 Since stage 10 the script runs each stage with one command, `csh run`. It reads `csh/component.json`, runs the TDD
-practice's harness (the unit tests, which record witnesses), then checks, decides the gate and stores the run under
+practice's harness (the unit tests, whose probe records witnesses, and a reporter that records each test's
+outcome), then checks, decides the gate and stores the run under
 `.csh-cache/runs/<snapshot digest>/`. For the example as written it prints the test lines on standard error and this
 summary:
 
 ```text
 $ csh run
 run SignInService at 77bced731172e48036f51fb3920f0ea48f0597ef
-  harness tdd: node --test --test-reporter=spec test/lockout.test.ts  exit 0, 4 witnesses, 0 executions (not sandboxed)
+  harness tdd: node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=@csh/harness/reporter --test-reporter-destination=stdout test/lockout.test.ts  exit 0, 4 witnesses, 4 executions (not sandboxed)
   findings 4 (4 conflicts, 3 cross-source); gaps 8; not comparable 1; errors 2
   obligations 3: conflicting 3, violated 0, satisfied 0, unknown 0
   gate allow (advisory)
@@ -54,7 +55,7 @@ compute exactly what `csh run` does after the harness. The last stage, with the 
 ```text
 $ csh run --mode enforcing
 run SignInService at 77fc5274040025fd9ccb5f3dfb8036b785f9ee2c
-  harness tdd: node --test --test-reporter=spec test/lockout.test.ts  exit 0, 4 witnesses, 0 executions (not sandboxed)
+  harness tdd: node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=@csh/harness/reporter --test-reporter-destination=stdout test/lockout.test.ts  exit 0, 4 witnesses, 4 executions (not sandboxed)
   findings 1 (1 conflicts, 1 cross-source); gaps 8; not comparable 0; errors 0
   obligations 4: conflicting 0, violated 1, satisfied 3, unknown 0
   gate block (enforcing)
@@ -73,7 +74,7 @@ sha256:66743add5a384c68a39afc17e1465bde853b18de8195a77de10a23fa9484f20e
 ## 2. Run the tests, which record witnesses
 
 ```text
-$ CSH_COMMIT=$(git rev-parse HEAD) CSH_WITNESS_FILE=reports/witnesses.ndjson node --test test/lockout.test.ts
+$ CSH_COMMIT=$(git rev-parse HEAD) CSH_WITNESS_FILE=reports/witnesses.ndjson CSH_EXECUTIONS_FILE=reports/executions.ndjson node --test --test-reporter=spec --test-reporter=@csh/harness/reporter test/lockout.test.ts
 ✔ allows three failed attempts before locking
 ✔ locks on the fourth failed attempt
 ✔ refuses a locked account even with the correct password
@@ -105,8 +106,8 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit da4553a247e1af112384a82c76
     2. A context is missing (an assumption that would separate the cases).
     3. The intent is undecided, and a person must decide it.
 
-[example-conflict] 776bf7df8a4c2145  (cross-source)  from Q-EX(SignInService/@UnitTests/WitnessAllowsThreeFailures)
-  - SignInService/@UnitTests/WitnessAllowsThreeFailures  source UnitTests, candidate
+[example-conflict] 7e5ab121a94c21fd  (cross-source)  from Q-EX(SignInService/@UnitTests/WitnessAllowsThreeFailedAttemptsBeforeLocking)
+  - SignInService/@UnitTests/WitnessAllowsThreeFailedAttemptsBeforeLocking  source UnitTests, candidate
   - SignInService/StopPasswordGuessing/LockOnThirdFailure  source intent, candidate
   context: SignInService/StopPasswordGuessing/CountNeverNegative
   collision terms: Login.failures@pre, Login.lockSeconds@post, Login.locked@post, SignIn.args.passwordOk, SignIn.result
@@ -115,8 +116,8 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit da4553a247e1af112384a82c76
     2. A context is missing (an assumption that would separate the cases).
     3. The intent is undecided, and a person must decide it.
 
-[example-conflict] 3531cd9fa8be09b9  (cross-source)  from Q-EX(SignInService/@UnitTests/WitnessRefusesWhenLocked)
-  - SignInService/@UnitTests/WitnessRefusesWhenLocked  source UnitTests, candidate
+[example-conflict] 5e3cfe7d6faa2c29  (cross-source)  from Q-EX(SignInService/@UnitTests/WitnessRefusesALockedAccountEvenWithTheCorrectPassword)
+  - SignInService/@UnitTests/WitnessRefusesALockedAccountEvenWithTheCorrectPassword  source UnitTests, candidate
   - SignInService/StopPasswordGuessing/AcceptCorrectPassword  source intent, candidate
   context: SignInService/StopPasswordGuessing/CountNeverNegative
   collision terms: Login.failures@post, SignIn.args.passwordOk, SignIn.result
@@ -158,7 +159,7 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit da4553a247e1af112384a82c76
   Derived gaps (a gap is not a failure):
   - unliftable  Product: Product docs/requirements.md:9: feature-scope
   - unliftable  Scenarios: Scenarios features/lockout.feature:35: unknown-step
-  - no-rule  SignInService/@UnitTests/WitnessLocksOnFourth: no requirement on SignIn has a trigger this example meets
+  - no-rule  SignInService/@UnitTests/WitnessLocksOnTheFourthFailedAttempt: no requirement on SignIn has a trigger this example meets
   - single-source  SignInService/StopPasswordGuessing/AcceptCorrectPassword: Login.failures, SignIn.args.passwordOk, SignIn.result asserted only by intent
   - single-source  SignInService/StopPasswordGuessing/LockOnThirdFailure: Login.failures, Login.lockSeconds, Login.locked, SignIn.args.passwordOk, SignIn.result asserted only by intent
   - single-source  SignInService/StopPasswordGuessing/RefuseWhileLocked: Login.locked, SignIn.result asserted only by intent
@@ -167,8 +168,8 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit da4553a247e1af112384a82c76
 
 == Obligations
 
-  conflicting (specification)  SignInService/StopPasswordGuessing/AcceptCorrectPassword  [candidate; evidence inapplicable]  joint-conflict: 6aa446d724b76ed9; example-conflict: c897987617527744; example-conflict: 3531cd9fa8be09b9; joint-conflict; example-conflict
-  conflicting (specification)  SignInService/StopPasswordGuessing/LockOnThirdFailure  [candidate; evidence inapplicable]  example-conflict: 776bf7df8a4c2145; example-conflict
+  conflicting (specification)  SignInService/StopPasswordGuessing/AcceptCorrectPassword  [candidate; evidence inapplicable]  joint-conflict: 6aa446d724b76ed9; example-conflict: c897987617527744; example-conflict: 5e3cfe7d6faa2c29; joint-conflict; example-conflict
+  conflicting (specification)  SignInService/StopPasswordGuessing/LockOnThirdFailure  [candidate; evidence inapplicable]  example-conflict: 7e5ab121a94c21fd; example-conflict
   conflicting (specification)  SignInService/StopPasswordGuessing/RefuseWhileLocked  [candidate; evidence inapplicable]  joint-conflict: 6aa446d724b76ed9; joint-conflict
 
 == Errors and warnings
@@ -185,7 +186,7 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit da4553a247e1af112384a82c76
 
 How to read this report, one practice pair at a time:
 
-- **TDD against EARS.** `WitnessAllowsThreeFailures` is the unit test that lets a third wrong password through
+- **TDD against EARS.** `WitnessAllowsThreeFailedAttemptsBeforeLocking` is the unit test that lets a third wrong password through
   unlocked. `LockOnThirdFailure`, written from `LCK-001`, says the third one locks. Five collision terms: the two
   practices agree on the input and disagree on everything that follows. This is an off-by-one that would ship green.
 - **EARS against EARS.** The joint conflict needs no evidence at all. `LCK-002` (refuse while locked) and `LCK-003`
@@ -193,10 +194,10 @@ How to read this report, one practice pair at a time:
   both, and the solver prints exactly that input. Each sentence was right when it was written, but nobody wrote them
   together.
 - **BDD and TDD against EARS.** The scenario `A locked account is refused even with the correct password` and the
-  unit test `refuses-when-locked` both conflict with `AcceptCorrectPassword`. Both practices took the side of `LCK-002`
+  unit test `refuses a locked account even with the correct password` both conflict with `AcceptCorrectPassword`. Both practices took the side of `LCK-002`
   without saying so. Their two conflicts are the joint conflict seen from below.
 - **BDD against TDD.** No finding names them together. The scenario `Third failed attempt locks the account` and the
-  unit test `allows-three-failures` start from the same state with the same input and assert opposite results. The
+  unit test `allows three failed attempts before locking` start from the same state with the same input and assert opposite results. The
   harness sees that only through `LockOnThirdFailure`, because Q-EX compares an example with rules, never with another
   example. Where EARS is silent, two examples can contradict each other unseen.
 - **Not comparable.** `The lock lasts fifteen minutes` states minutes, and the model counts seconds. The harness
@@ -207,7 +208,7 @@ How to read this report, one practice pair at a time:
 - **The gap view.**
   - `Product` is silent on every row. EARS sentences are cited, never translated ([ADR-14](adr/ADR-14-cite-not-translate.md)), so the product owner's voice reaches the model only through the person who wrote the predicates.
   - All three rules are `single-source`: BDD and TDD contribute examples and never a rule, so every rule rests on EARS alone.
-  - `WitnessLocksOnFourth` has `no-rule`: the test pins down behaviour that no sentence and no scenario covers.
+  - `WitnessLocksOnTheFourthFailedAttempt` has `no-rule`: the test pins down behaviour that no sentence and no scenario covers.
   - `LCK-004` (email the holder) is uncited, and `LCK-005` (WHERE two-factor sign-in is enabled) is unliftable with reason `feature-scope` as well as uncited. The scenario `Support unlocks a locked account` is unliftable with reason `unknown-step`.
 
 `csh check` exited 0. Reporting and judging are separate powers ([ADR-11](adr/ADR-11-check-never-blocks.md)). The
@@ -254,11 +255,11 @@ chooses none.
 ## 5. Explain the off-by-one
 
 ```text
-$ csh explain 776bf7df8a4c2145
-example-conflict 776bf7df8a4c2145 (cross-source), from Q-EX(SignInService/@UnitTests/WitnessAllowsThreeFailures)
+$ csh explain 7e5ab121a94c21fd
+example-conflict 7e5ab121a94c21fd (cross-source), from Q-EX(SignInService/@UnitTests/WitnessAllowsThreeFailedAttemptsBeforeLocking)
 
-SignInService/@UnitTests/WitnessAllowsThreeFailures  source UnitTests, candidate, sha256:ec666614c78719e45f7470ddb1b6401ca63282738c327a21acb53fcbc674e5b7
-    i.example("WitnessAllowsThreeFailures", {
+SignInService/@UnitTests/WitnessAllowsThreeFailedAttemptsBeforeLocking  source UnitTests, candidate, sha256:43d068c68258e8c8aa60f3b073d1ad8ff20f8d70aade66d92e2504ae637cfbca
+    i.example("WitnessAllowsThreeFailedAttemptsBeforeLocking", {
       given: { failures: u_count_attempts(2), lockSeconds: u_time_s(0), locked: truth(false) },
       when: SignIn({ passwordOk: truth(false) }),
       then: ({ pre, post, args, result }) => and(result.eq(Outcome.Refused), post.failures.eq(u_count_attempts(3)), post.lockSeconds.eq(u_time_s(0)), post.locked.eq(truth(false))),
@@ -322,7 +323,7 @@ $ git show --stat --format= HEAD
 - `features/units.json`: the team's decision that a minute is 60 seconds, recorded in the source where a reviewer sees it. The adapter applies it, so the fifteen-minute scenario becomes comparable.
 
 ```text
-$ CSH_COMMIT=$(git rev-parse HEAD) CSH_WITNESS_FILE=reports/witnesses.ndjson node --test test/lockout.test.ts
+$ CSH_COMMIT=$(git rev-parse HEAD) CSH_WITNESS_FILE=reports/witnesses.ndjson CSH_EXECUTIONS_FILE=reports/executions.ndjson node --test --test-reporter=spec --test-reporter=@csh/harness/reporter test/lockout.test.ts
 ✔ locks on the third failed attempt
 ✔ refuses a wrong password on a locked account without counting it
 ✔ refuses a locked account even with the correct password
@@ -471,11 +472,11 @@ The approved rule is outside the change, so the harness sees it:
 ```
 $ csh check
 ...
-[example-conflict] 36c73253a3c7724b  (cross-source)  from Q-EX(SignInService/@UnitTests/WitnessAllowsThird)
-  - SignInService/@UnitTests/WitnessAllowsThird  source UnitTests, candidate
+[example-conflict] 17baf74885f66bc7  (cross-source)  from Q-EX(SignInService/@UnitTests/WitnessAllowsAThirdFailedAttempt)
+  - SignInService/@UnitTests/WitnessAllowsAThirdFailedAttempt  source UnitTests, candidate
   - SignInService/StopPasswordGuessing/LockOnThirdFailure  source intent, approved
 ...
-  violated (implementation)  SignInService/StopPasswordGuessing/LockOnThirdFailure  [approved, self-approved; evidence current]  witness allows-third makes it false
+  violated (implementation)  SignInService/StopPasswordGuessing/LockOnThirdFailure  [approved, self-approved; evidence current]  witness allows-a-third-failed-attempt makes it false
 
 $ csh gate --mode enforcing
 gate block (enforcing)

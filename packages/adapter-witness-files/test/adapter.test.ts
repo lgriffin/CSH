@@ -18,9 +18,22 @@ const bindings: AdapterInput["bindings"] = [
 ];
 
 const w = (id: string, patch: Partial<Witness> = {}): Witness => ({
-  ...buildWitness({ event: "Withdraw", args: { amount: 30 }, pre: { balance: 100 }, post: { balance: 70 }, result: "Ok", mocked: [], id }, { commit: "c", environment: "t", now: () => new Date(0) }),
+  ...buildWitness({ event: "Withdraw", args: { amount: 30 }, pre: { balance: 100 }, post: { balance: 70 }, result: "Ok", mocked: [], id, localResult: "passed" }, { commit: "c", environment: "t", now: () => new Date(0) }),
   ...patch,
 });
+
+const bytesOf = (text: string) => {
+  const bytes = new TextEncoder().encode(text);
+  return { digest: digestOf(bytes), bytes };
+};
+
+/** A version 2 record with no outcome, recorded by the test `test`. */
+const v2 = (id: string, test: string, patch: Partial<Witness> = {}): Witness => {
+  const x = w(id, patch);
+  return { ...x, execution: { mocked: [], test } };
+};
+
+const executions = (...lines: [string, string][]) => [{ path: "e.ndjson", ...bytesOf(lines.map(([test, outcome]) => JSON.stringify({ schema: "csh-execution/v1", test, outcome })).join("\n")) }];
 
 function input(files: Record<string, Witness[] | string>): AdapterInput {
   return {
@@ -88,4 +101,42 @@ describe("witness-files adapter", () => {
     expect(liftValue(1, { kind: "bool" }).ok).toBe(false);
     expect(exampleName("deposit-then-withdraw_2")).toBe("WitnessDepositThenWithdraw2");
   });
+
+  it("joins a record with no outcome to its test's execution line", () => {
+    const out = run({ ...input({ "a.ndjson": [v2("w1", "t::fails"), v2("w2", "t::passes")] }), executions: executions(["t::fails", "failed"], ["t::passes", "passed"]) });
+    expect(out.witnesses!.map((x) => x.execution.localResult)).toEqual(["failed", "passed"]);
+    expect(out.claims!.examples.map((e) => e.name)).toEqual(["WitnessW2"]);
+    expect(out.executions).toEqual([
+      { test: "t::fails", outcome: "failed", span: "e.ndjson:1" },
+      { test: "t::passes", outcome: "passed", span: "e.ndjson:2" },
+    ]);
+  });
+
+  it("never treats a record with no outcome as passed", () => {
+    const out = run({ ...input({ "a.ndjson": [v2("w1", "t::silent")] }), executions: executions() });
+    expect(out.witnesses![0]!.execution.localResult).toBeUndefined();
+    expect(out.claims!.examples).toEqual([]);
+  });
+
+  it("makes a test identity that finished twice with different outcomes unknown", () => {
+    const out = run({ ...input({ "a.ndjson": [v2("w1", "t::twice")] }), executions: executions(["t::twice", "passed"], ["t::twice", "failed"]) });
+    expect(out.witnesses![0]!.execution.localResult).toBeUndefined();
+    expect(out.diagnostics.map((d) => d.code)).toContain("ambiguous-test-identity");
+  });
+
+  it("keeps a stated outcome, and reports a malformed execution line", () => {
+    const out = run({ ...input({ "a.ndjson": [w("w1")] }), executions: [{ path: "e.ndjson", ...bytesOf("not json") }] });
+    expect(out.claims!.examples).toHaveLength(1);
+    expect(out.diagnostics.find((d) => d.code === "malformed-execution")?.span).toBe("e.ndjson:1");
+  });
+
+  it("carries a witness's citations onto its example, in the source the practice names", () => {
+    const cited = { ...w("w1"), schema: "csh-witness/v2" as const, cites: ["R-1"] };
+    const out = run({ ...input({ "a.ndjson": [cited] }), config: { cites: "Product" } });
+    expect(out.claims!.examples[0]!.cites).toEqual([{ source: "Product", id: "R-1" }]);
+    const uncited = run(input({ "a.ndjson": [cited] }));
+    expect(uncited.claims!.examples[0]!.cites).toBeUndefined();
+    expect(uncited.diagnostics.map((d) => d.code)).toContain("citation-without-source");
+  });
 });
+

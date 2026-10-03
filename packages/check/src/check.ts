@@ -4,6 +4,7 @@ import type { Fragment, Module } from "@csh/kernel";
 import type { SolverPort } from "@csh/solver";
 import { assess, toolDigest } from "./assess.ts";
 import { type EvidenceStore, MemoryEvidenceStore } from "./evidence.ts";
+import { outcomeOf } from "@csh/witness";
 import { gapView } from "./gaps.ts";
 import { prepare, type Prepared, type SourceRun } from "./pool.ts";
 import { buildPool, runQueries } from "./run.ts";
@@ -75,7 +76,7 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
     errors: gaps.errors,
     diagnostics: prepared.diagnostics,
     executions: prepared.witnesses.map((w) => {
-      const e: Report["executions"][number] = { witness: w.witness.id, source: w.source, event: w.witness.event, localResult: w.witness.execution.localResult };
+      const e: Report["executions"][number] = { witness: w.witness.id, source: w.source, event: w.witness.event, localResult: outcomeOf(w.witness) };
       if (w.witness.execution.test !== undefined) e.test = w.witness.execution.test;
       if (w.span !== undefined) e.span = w.span;
       return e;

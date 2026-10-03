@@ -149,7 +149,8 @@ node packages/testkit/src/run-fixtures.ts       # the fixtures alone, with a sum
 
 | Path | Contents |
 | --- | --- |
-| `packages/` | Fifteen packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `ledger`, `gate`, `component`, `run`, `cli`, `testkit` |
+| `packages/` | Sixteen packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `ledger`, `gate`, `component`, `run`, `harness`, `cli`, `testkit` |
+| `docs/guides/` | How to write a component manifest and a probe |
 | `fixtures/` | Golden fixtures, one directory each, plus the shared bases and the test pack |
 | `examples/account/` | The walkthrough example |
 | `docs/spec/` | The specification, read-only |

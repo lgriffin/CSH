@@ -1,0 +1,16 @@
+%% C4 level 3: components of the harnesses (Anchor, harnesses and A3, sections 3.1 and 3.2).
+C4Component
+  title Harnesses: components
+  Container_Boundary(h, "Harnesses (harness), in the project's test process") {
+    Component(probe, "Probe", "harness/src/probe.ts", "Wraps the function under test; records each call as a v2 witness with no outcome")
+    Component(identity, "Test identity", "harness/src/identity.ts", "file::full name, shared by witnesses and execution lines")
+    Component(reporter, "Reporter", "harness/src/reporter.ts", "One csh-execution/v1 line per finished test; prints nothing")
+  }
+  System_Ext(runner, "Node's test runner", "node --test")
+  Container_Ext(adapters, "Adapters", "adapter-witness-files", "Joins witnesses to outcomes by identity")
+  Rel(runner, probe, "Test calls through the probe")
+  Rel(runner, reporter, "test:start, test:pass, test:fail")
+  Rel(probe, identity, "Uses")
+  Rel(reporter, identity, "Uses")
+  Rel(probe, adapters, "CSH_WITNESS_FILE")
+  Rel(reporter, adapters, "CSH_EXECUTIONS_FILE")
