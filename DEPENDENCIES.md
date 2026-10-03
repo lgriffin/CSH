@@ -8,7 +8,7 @@ each `package.json`, and `pnpm-lock.yaml` pins the full tree. The kernel has no 
 | Dependency | Version | Used by | Purpose |
 | --- | --- | --- | --- |
 | [z3-solver](https://www.npmjs.com/package/z3-solver) | 5.2.0 | `@csh/solver` | Z3's official JavaScript bindings (WebAssembly). Decides every query in linear integer arithmetic (D15, [ADR-09](docs/adr/ADR-09-z3-lia.md)). |
-| [typescript](https://www.npmjs.com/package/typescript) | 5.9.3 | `@csh/emit` | The compiler API checks rules S1 to S5 and units at emission time ([ADR-04](docs/adr/ADR-04-internal-dsl.md)). Also the workspace type checker. |
+| [typescript](https://www.npmjs.com/package/typescript) | 5.9.3 | `@csh/emit`, `@csh/testkit` | The compiler API checks rules S1 to S5 and units at emission time ([ADR-04](docs/adr/ADR-04-internal-dsl.md)). Also the workspace type checker, and the compiler that turns each package into JavaScript when it is packed ([A-40](ASSUMPTIONS.md)). |
 
 ## Development
 

@@ -2,7 +2,7 @@
 // JSON and the digest, then emit again in a fresh subprocess and compare (Language reference, section 7).
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { canonicalJson, canonicalModule, moduleDigest, validateModule, type Digest, type Module, type Obligation } from "@csh/kernel";
 import { typeCheck, type CompileDiagnostic } from "./typecheck.ts";
@@ -57,11 +57,19 @@ export type EmitResult =
   | { ok: true; module: Module; digest: Digest; canonical: string; composition: CompositionReport }
   | { ok: false; errors: EmitError[]; diagnostics?: CompileDiagnostic[] };
 
-const here = dirname(fileURLToPath(import.meta.url));
-const RUNNER = join(here, "runner.ts");
+const self = fileURLToPath(import.meta.url);
+const here = dirname(self);
+// runner.ts in the workspace, runner.js in a packed package (A-40): the same extension as this file.
+const RUNNER = join(here, `runner${extname(self)}`);
 
-/** The repository's packages and node_modules: what the sandbox needs to load the language itself. */
+/**
+ * What the sandbox needs to load the language itself: the repository's packages and node_modules, or, when the tool
+ * is installed, the node_modules directory it is installed in.
+ */
 function toolReadable(): string[] {
+  const parts = here.split(sep);
+  const nmAt = parts.lastIndexOf("node_modules");
+  if (nmAt >= 0) return [parts.slice(0, nmAt + 1).join(sep)];
   const pkgs = resolve(here, "..", "..");
   const repo = resolve(pkgs, "..");
   const out = [pkgs];

@@ -28,3 +28,20 @@ place each signal, and `csh a3 build` writes `a3.json`, `a3.md` and `a3.html` fr
 The stage records are written and committed in the scratch repository the script makes, not here, because their
 commit hashes differ from run to run. `walkthrough.sh --update` rewrites the committed sheet.
 This is the example to change first when the harness changes: run it, and the A3's diff shows what moved.
+
+## Containers it exercises
+
+Checked against [the container diagram](../../docs/architecture/containers.mmd) and the commands this example runs
+(`packages/testkit/test/triangle.test.ts`).
+
+- `cli`: the `csl` and `csh` commands
+- `kernel`: the model, canonical JSON and digests, under every command
+- `emission`: `csl emit`, and the emission inside every evaluation
+- `adapters`: the witness, EARS and Gherkin adapters, inside every evaluation
+- `check`: the queries, the gap view and the report
+- `gate`: the gate decision
+- `run`: `csh run`: harness, sources, check, gate and the stored record
+- `component`: `csh/component.json`, read by `csh run`
+- `ledger`: `csh approve` drafting ledger lines, and authority from signed commits
+- `a3`: `csh a3 stage`, `build` and `verify`
+- `harness`: the probe in the unit tests, and the reporter

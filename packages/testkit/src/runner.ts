@@ -1,7 +1,9 @@
 // The golden-fixture runner: each fixture's expected.json is an accepting or rejecting test
 // (Semantic contract, section 7). It drives the real pipeline and compares observed with
 // expected, collecting every mismatch rather than stopping at the first.
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { type Assessment, type AuthorityResolver, cachingSolver, makeRefiner, type Finding, MemoryEvidenceStore, type Report, SolverCache } from "@csh/check";
 import { emit, type Lock, readLock, typeCheck } from "@csh/emit";
@@ -13,6 +15,7 @@ import type { SolverPort } from "@csh/solver";
 import { createTestRepo, gpgAvailable, type TestRepo } from "./git.ts";
 import { checkModule, evaluateSpec, type FixtureConfig, readConfig } from "@csh/run";
 import { verifyCounterexample, verifyNoOutcome } from "./verify.ts";
+import { packWorkspace } from "./pack.ts";
 import { type ComponentProblem, parseComponent } from "@csh/component";
 import { buildA3, readJudgments, readStage, stageDir, stageIntegrity, type StageRecord } from "@csh/a3";
 
@@ -32,7 +35,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 15;
+export const BUILT_THROUGH_STAGE = 16;
 
 /** The stage a fixture belongs to, from its expected result. */
 export function fixtureStage(fixturesDir: string, id: string): number {
@@ -113,6 +116,7 @@ export class FixtureRunner {
       if ((e.git === true || e.steps !== undefined || e.a3?.authority !== undefined) && !gpgAvailable()) {
         res.skipped = "gpg is not installed";
       } else if (e.a3 !== undefined) await this.a3(dir, e.a3, failures);
+      else if (e.starter !== undefined) this.starter(e.starter, failures);
       else if (e.git === true) await this.git(dir, e, failures);
       else if (e.steps !== undefined) await this.steps(dir, e, failures);
       else await this.single(dir, e, failures);
@@ -358,6 +362,36 @@ export class FixtureRunner {
    * An A3 from inputs/component.json and inputs/csh/a3/<slug>/: problems from the builder, stage integrity from verify
    * (no commit exists to re-run, so an intact stage is unverifiable), and authority through a real, signed ledger.
    */
+  // ---------------------------------------------------------------- the starter (09, sections 10.3 and 10.4)
+
+  /**
+   * Copy examples/starter to an empty directory outside the repository, install the tool there from tarballs packed
+   * from this workspace, and run csh run with the installed command. Packages outside the workspace (TypeScript, Z3,
+   * Node's types) come from the npm registry, as a user's install would.
+   */
+  private starter(x: { run: "completed" }, failures: string[]): void {
+    const repo = resolve(this.o.fixturesDir, "..");
+    const work = mkdtempSync(join(tmpdir(), "csh-starter-"));
+    try {
+      const packs = join(work, "packs");
+      const project = join(work, "starter");
+      const tarballs = packWorkspace(packs, repo);
+      cpSync(join(repo, "examples", "starter"), project, { recursive: true, filter: (p) => !/[\\/](node_modules|reports|\.csh-cache)$/.test(p) });
+      const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith("CSH_")));
+      const sh = (cmd: string, args: string[]) => spawnSync(cmd, args, { cwd: project, encoding: "utf8", env });
+      const npm = sh("npm", ["install", "--save-dev", "--no-audit", "--no-fund", ...tarballs]);
+      if (npm.status !== 0) {
+        failures.push(`npm install failed (${npm.status}): ${npm.stderr.slice(0, 2000)}`);
+        return;
+      }
+      const run = sh(join(project, "node_modules", ".bin", "csh"), ["run"]);
+      const completed = run.status === 0 && existsSync(join(project, ".csh-cache", "runs")) && readdirSync(join(project, ".csh-cache", "runs")).length > 0;
+      if ((completed ? "completed" : "failed") !== x.run) failures.push(`csh run in the starter: expected ${x.run}, exit ${run.status}\n${run.stdout}\n${run.stderr.slice(-2000)}`);
+    } finally {
+      rmSync(work, { recursive: true, force: true });
+    }
+  }
+
   private async a3(dir: string, x: Exp, failures: string[]): Promise<void> {
     const inputs = join(dir, "inputs");
     const slug = readdirSync(join(inputs, "csh", "a3"))[0]!;

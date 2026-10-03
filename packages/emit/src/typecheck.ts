@@ -12,7 +12,18 @@ export interface CompileDiagnostic {
 }
 
 const here = dirname(fileURLToPath(import.meta.url));
-const repo = resolve(here, "..", "..", "..");
+
+/**
+ * The installation's @types directory, the nearest one above this file: the repository's own when the workspace runs
+ * from source, the project's when the tool is installed under its node_modules.
+ */
+function typesDir(): string {
+  for (let d = here; ; d = dirname(d)) {
+    const t = join(d, "node_modules", "@types");
+    if (existsSync(t)) return t;
+    if (dirname(d) === d) return join(resolve(here, "..", "..", ".."), "node_modules", "@types");
+  }
+}
 
 export const COMPILER_OPTIONS: ts.CompilerOptions = {
   target: ts.ScriptTarget.ES2023,
@@ -28,7 +39,7 @@ export const COMPILER_OPTIONS: ts.CompilerOptions = {
   isolatedModules: true,
   skipLibCheck: true,
   types: ["node"],
-  typeRoots: [join(repo, "node_modules", "@types")],
+  typeRoots: [typesDir()],
 };
 
 let previous: ts.Program | undefined;

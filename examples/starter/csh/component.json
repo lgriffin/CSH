@@ -1,0 +1,14 @@
+{
+  "schema": "csh-component/v1",
+  "name": "Shop",
+  "spec": "spec/shipping.csl.ts",
+  "implementation": ["src"],
+  "practices": [
+    { "id": "ears", "name": "EARS", "kind": "requirements", "sources": ["Requirements"], "author": "Product owner", "unit": "the sentence" },
+    { "id": "tdd", "name": "Unit tests", "kind": "tests", "sources": ["UnitTests"], "author": "Developer", "unit": "the test", "cites": "Requirements",
+      "harness": {
+        "run": ["node", "--test", "--test-reporter=spec", "--test-reporter-destination=stdout", "--test-reporter=@csh/harness/reporter", "--test-reporter-destination=stdout", "test/shipping.test.ts"],
+        "witnesses": "reports/witnesses.ndjson"
+      } }
+  ]
+}
