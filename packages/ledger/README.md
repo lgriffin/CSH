@@ -53,6 +53,6 @@ Authority lives in a ledger of signed commits ([ADR-15](../../docs/adr/ADR-15-le
 ## Known limits
 
 - Only the OpenPGP signing path is exercised by the fixtures; SSH depends on git configuration ([A-26](../../ASSUMPTIONS.md)).
-- Unless `rootCommit` is pinned outside the repository, the trusted root is taken from the repository itself ([A-28](../../ASSUMPTIONS.md)).
+- Unless CI pins the root with `CSH_ROOT_COMMIT`, the trusted root is the first commit that added the maintainers file ([A-28](../../ASSUMPTIONS.md)).
 - Authorship emits the specification at every commit that touched it, which grows with history; it runs only once a second person is listed.
 - Waiver expiry is not judged here; the gate compares it with the snapshot commit date.

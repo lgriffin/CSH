@@ -62,3 +62,11 @@ export const MAINTAINERS_PATH = "csh/maintainers.json";
 export function persons(m: Maintainers): Identity[] {
   return m.identities.filter((i) => i.kind === "person");
 }
+
+/** A real calendar date written YYYY-MM-DD, such as a waiver expiry. */
+export function isCalendarDate(s: unknown): s is string {
+  if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const [y, m, d] = s.split("-").map(Number) as [number, number, number];
+  const t = new Date(Date.UTC(y, m - 1, d));
+  return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
+}

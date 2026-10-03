@@ -2,9 +2,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { cachingSolver, type Finding, loadEvidenceStore, renderGaps, renderReport, type Report, saveEvidenceStore, SolverCache, TOOL_VERSION } from "@csh/check";
-import { acceptDecision, exitCode, formatDecision as formatGate, gate, type GateDecision, type Mode, snapshotDigest, type Waiver } from "@csh/gate";
+import { exitCode, formatDecision as formatGate, gate, type GateDecision, type Mode, snapshotDigest, type Waiver } from "@csh/gate";
 import { fragmentsOf, type Module, stableJson } from "@csh/kernel";
-import { appendDecision, type DecisionKind, LEDGER_PATH, persons, waiversFor } from "@csh/ledger";
+import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons, waiversFor } from "@csh/ledger";
 import { printFragment } from "@csh/print";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
 import { type Args, parseArgs } from "./args.ts";
@@ -24,10 +24,10 @@ const USAGE = `csh: the Composable Specification Harness
   csh countersign <seq> --actor <name> --rationale <text>
                                   Draft a ledger line. The tool never commits or signs: commit
                                   csh/ledger.ndjson alone, signed with your own key.
-  csh gate [--mode advisory|enforcing] [--report path] [--out decision.json]
-                                  Decide for the current snapshot. Exits non-zero only on block in enforcing mode.
+  csh gate [--mode advisory|enforcing] [--out decision.json]
+                                  Check and decide for the current snapshot. Exits non-zero only on block in enforcing mode.
   csh gate --verify <decision.json>
-                                  Refuse a decision made for any other snapshot.
+                                  Recompute the decision; refuse one made for any other snapshot or that differs.
 
 Options common to all: --root <dir> (default: the git repository or the current directory).
 `;
@@ -159,7 +159,7 @@ async function decide(kind: DecisionKind, p: Project, a: Args, io: Io): Promise<
     d.cited = frag.cites.map((c) => ({ source: c.source, id: c.id, textDigest: report.items.find((i) => i.source === c.source && i.id === c.id)?.textDigest ?? "missing" }));
   }
   if (kind === "waive") {
-    if (a.options.scope === undefined || a.options.expires === undefined || !/^\d{4}-\d{2}-\d{2}$/.test(a.options.expires)) {
+    if (a.options.scope === undefined || a.options.expires === undefined || !isCalendarDate(a.options.expires)) {
       io.err("csh waive needs --scope <finding-id|obligation> and --expires <YYYY-MM-DD>\n");
       return 2;
     }
@@ -173,6 +173,10 @@ async function decide(kind: DecisionKind, p: Project, a: Args, io: Io): Promise<
 
 export async function csh(argv: string[], io: Io): Promise<number> {
   const a = parseArgs(argv);
+  if (a.errors.length > 0) {
+    io.err(`${a.errors.join("\n")}\n`);
+    return 2;
+  }
   const cmd = a.positional.shift();
   if (cmd === undefined || cmd === "help" || a.flags.has("help")) {
     io.out(USAGE);
@@ -220,36 +224,46 @@ export async function csh(argv: string[], io: Io): Promise<number> {
   }
 }
 
-async function runGate(p: Project, a: Args, io: Io): Promise<number> {
+/**
+ * Decide for the current snapshot. The gate never trusts a report file: it runs the check itself, so an
+ * edited report cannot change the decision (CSH-010).
+ */
+async function decideGate(p: Project, a: Args, io: Io): Promise<GateDecision | undefined> {
+  const res = await runCheck(p, { ...a, positional: [] }, io);
+  if (res === undefined) return undefined;
+  const { report } = res;
   const solver = await (io.solver ?? defaultSolver)();
-  const spec = specOf(p, undefined);
-  const ledger = await ledgerOf(p, spec);
-  if (a.options.verify !== undefined) {
-    const d = JSON.parse(readFileSync(join(p.root, a.options.verify), "utf8")) as GateDecision;
-    const report = readReport(p, a);
-    const verdict = acceptDecision(d, snapshotOf(p, report.moduleDigest, ledger, solver.id, TOOL_VERSION));
-    if (!verdict.accepted) {
-      io.err(`refused: ${verdict.reason}\n`);
-      return 3;
-    }
-    io.out("accepted: the decision is for this snapshot\n");
-    return exitCode(d);
-  }
-  const report = readReport(p, a);
+  const ledger = await ledgerOf(p, specOf(p, undefined));
   const snapshot = snapshotOf(p, report.moduleDigest, ledger, solver.id, TOOL_VERSION);
-  // The report must be for the snapshot being gated (CSH-010).
-  if (report.snapshot?.digest !== snapshotDigest(snapshot)) {
-    io.err(`refused: the report is for snapshot ${report.snapshot?.digest ?? "none"}, not ${snapshotDigest(snapshot)}; run csh check on this commit\n`);
-    return 3;
-  }
   const waivers: Waiver[] = [];
   for (const as of report.assessments ?? []) {
     for (const w of ledger === undefined ? [] : waiversFor(ledger, { name: as.fragment, digest: as.digest })) waivers.push({ seq: w.seq, fragment: w.fragment, digest: w.digest, scope: w.waiver!.scope, expires: w.waiver!.expires });
   }
   const mode = (a.options.mode ?? p.config.mode ?? "advisory") as Mode;
-  const d = gate({ report, snapshot, mode, waivers, commitDate: p.commitDate });
+  return gate({ report, snapshot, mode, waivers, commitDate: p.commitDate });
+}
+
+async function runGate(p: Project, a: Args, io: Io): Promise<number> {
+  if (a.options.verify !== undefined) {
+    const given = JSON.parse(readFileSync(join(p.root, a.options.verify), "utf8")) as GateDecision;
+    // Recompute the decision for this snapshot, in the mode the decision claims, and accept only an identical one.
+    const fresh = await decideGate(p, { ...a, options: { ...a.options, mode: given.mode } }, io);
+    if (fresh === undefined) return 1;
+    if (given.snapshotDigest !== fresh.snapshotDigest) {
+      io.err(`refused: decision is for snapshot ${given.snapshotDigest}, not ${fresh.snapshotDigest}\n`);
+      return 3;
+    }
+    if (formatGate(given) !== formatGate(fresh)) {
+      io.err("refused: the decision does not match the one computed for this snapshot\n");
+      return 3;
+    }
+    io.out("accepted: the decision is for this snapshot and matches a fresh computation\n");
+    return exitCode(fresh);
+  }
+  const d = await decideGate(p, a, io);
+  if (d === undefined) return 1;
   write(join(p.root, a.options.out ?? "reports/csh-gate.json"), formatGate(d));
-  io.out(`gate ${d.overall} (${mode})\n${d.obligations.map((o) => `  ${o.disposition.padEnd(7)} ${o.fragment}  ${o.because}${o.recommends !== undefined ? `; recommends ${o.recommends}` : ""}`).join("\n")}\n`);
+  io.out(`gate ${d.overall} (${d.mode})\n${d.obligations.map((o) => `  ${o.disposition.padEnd(7)} ${o.fragment}  ${o.because}${o.recommends !== undefined ? `; recommends ${o.recommends}` : ""}`).join("\n")}\n`);
   if (d.candidates.obligations.length > 0) io.out(`  candidate, never blocking: ${d.candidates.obligations.join(", ")}\n`);
   if (d.invalidLedgerEntries.length > 0) io.out(`  ignored ledger entries: ${d.invalidLedgerEntries.map((e) => `seq ${e.seq} (${e.reason})`).join(", ")}\n`);
   return exitCode(d);

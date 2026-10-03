@@ -2,6 +2,7 @@
 // decision record. A decision is valid for its snapshot digest only.
 import { digestJson, stableJson } from "@csh/kernel";
 import type { Assessment, Report } from "@csh/check";
+import { isCalendarDate } from "@csh/ledger";
 
 export interface Snapshot {
   commit: string;
@@ -60,7 +61,8 @@ export interface GateInput {
 
 /** A waiver is valid through its expiry date, compared with the date of the snapshot commit. */
 export function waiverValid(w: Waiver, commitDate: string): boolean {
-  return commitDate.slice(0, 10) <= w.expires.slice(0, 10);
+  // An expiry that is not a real calendar date never validates a waiver.
+  return isCalendarDate(w.expires) && commitDate.slice(0, 10) <= w.expires;
 }
 
 function waiverFor(a: Assessment, input: GateInput): Waiver | undefined {

@@ -245,8 +245,17 @@ async function guarded(fn: () => Promise<QueryResult>): Promise<QueryResult> {
 /** Q-STATE: A and I(s) satisfiable. */
 export function qState(env: QueryEnv, assumptions: QAssumption[], invariants: QInvariant[]): Promise<QueryResult> {
   return guarded(async () => {
-    if (invariants.length === 0) return { status: "wanted" };
     const budget = new Budget(env.budgetMs);
+    // Assumptions that contradict each other on their own are the conflict, and are named as its members.
+    if (assumptions.length > 0) {
+      const asInsts = assumptions.map((a) => ({ iid: a.id, member: a.id, f: assumptionF(a, STATE) }));
+      const alone = await run(env, budget, [], asInsts.map((i) => ({ id: i.iid, f: i.f })));
+      if (alone.status === "unsat") {
+        const { sets, incomplete } = await unsatSets(env, budget, [], asInsts);
+        return { status: "failed", sets, incomplete, context: [] };
+      }
+    }
+    if (invariants.length === 0) return { status: "wanted" };
     const hard = assumptions.map((a) => assumptionF(a, STATE));
     const insts = invariants.map((i) => ({ iid: i.id, member: i.id, f: invariantF(i, STATE) }));
     const r = await run(env, budget, hard, insts.map((i) => ({ id: i.iid, f: i.f })));

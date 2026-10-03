@@ -105,3 +105,28 @@ describe("no silent satisfaction", () => {
     expect(satisfied(r)).toEqual([]);
   });
 });
+
+describe("source locations", () => {
+  it("refuses a source outside the project root, even through a link", async () => {
+    const d = fresh("outside");
+    const e = await emit(join(d, "spec.csl.ts"), { root: d, readable: [resolve(d, "..")] });
+    if (!e.ok) throw new Error("emit failed");
+    const { symlinkSync } = await import("node:fs");
+    symlinkSync(resolve(d, ".."), join(d, "inputs", "up"));
+    for (const at of ["../base", "/etc/hostname", "inputs/up"]) {
+      const m = { ...e.module, sources: [{ name: "UnitTests", kind: "Witnesses", at }] };
+      const runs = await runSources(m, { root: d, isolated: false });
+      expect(runs[0]!.output.diagnostics[0]!.code, at).toBe("source-outside-root");
+    }
+  });
+
+  it("runs a project-local adapter in isolation", async () => {
+    const d = fresh("local-adapter");
+    mkdirSync(join(d, "adapters"));
+    writeFileSync(join(d, "adapters", "local.mjs"), 'export const adapter = { manifest: { id: "local", version: "0", ir: "csh-ir/v1", produces: [], inputKinds: ["Witnesses"] }, run: () => ({ diagnostics: [{ code: "local-ran", severity: "info", message: "ok" }] }) };\n');
+    const e = await emit(join(d, "spec.csl.ts"), { root: d, readable: [resolve(d, "..")] });
+    if (!e.ok) throw new Error("emit failed");
+    const runs = await runSources(e.module, { root: d, adapters: { Witnesses: "./adapters/local.mjs" } });
+    expect(runs.find((r) => r.source === "UnitTests")!.output.diagnostics[0]!.code).toBe("local-ran");
+  }, 20000);
+});

@@ -13,8 +13,6 @@ export interface ProjectConfig {
   spec?: string;
   budgetMs?: number;
   mode?: "advisory" | "enforcing";
-  /** The commit holding the first, trusted maintainers file (normally pinned in CI instead). */
-  rootCommit?: string;
   /** Paths whose change makes a witness from an earlier commit stale (Authority tab, section 5). */
   implementationPaths?: string[];
   /** Paths whose history decides who authored a fragment (default: the specification's directory). */
@@ -120,7 +118,10 @@ export async function ledgerOf(p: Project, spec: string): Promise<LedgerState | 
   if (p.vcs === undefined) return undefined;
   const vcs = p.vcs;
   if (vcs.commitsTouching(LEDGER_PATH).length === 0 && vcs.commitsTouching(MAINTAINERS_PATH).length === 0) return undefined;
-  const opts = p.config.rootCommit !== undefined ? { rootCommit: p.config.rootCommit } : {};
+  // The trusted root is pinned outside the repository (CI sets CSH_ROOT_COMMIT), never by a file a
+  // contributor can edit. Without it, the first commit that added the maintainers file is the root (A-28).
+  const pinned = process.env.CSH_ROOT_COMMIT;
+  const opts = pinned !== undefined && pinned !== "" ? { rootCommit: pinned } : {};
   const plain = readLedger(vcs, opts);
   // Authorship matters only once a second person is listed (Authority tab, section 3.3).
   if (persons(plain.maintainers).length < 2) return plain;

@@ -42,11 +42,11 @@ It is the "Gate" container, shown in the [containers diagram](../../docs/archite
 ## How it is tested
 
 - `test/gate.test.ts`: the disposition table in both modes; advisory mode records what enforcing would do; candidates are ignored and listed; a waiver applies until it expires, judged by commit date and by date only; a waiver at another digest does not apply; a finding-scoped waiver applies only to that finding's obligation; a decision for another snapshot is refused.
-- `packages/cli/test/cli.test.ts`: `csh gate` decides for the current snapshot and refuses a decision for a later commit.
+- `packages/cli/test/cli.test.ts`: `csh gate` decides for the current snapshot and refuses a decision for a later commit or a forged one.
 - Fixtures: F44 (a valid waiver on one violated obligation), F45 (a decision presented for another snapshot).
 
 ## Known limits
 
-- The staleness checker drawn in the gate's component diagram is implemented in `@csh/check` (`evidence.ts`) and `@csh/cli` (`project.ts`): the gate reads each assessment's applicability and does not compare dependency digests itself. `csh gate` refuses a report whose snapshot digest differs from the current snapshot.
+- The staleness checker drawn in the gate's component diagram is implemented in `@csh/check` (`evidence.ts`) and `@csh/cli` (`project.ts`): the gate reads each assessment's applicability and does not compare dependency digests itself. `csh gate` computes the report it decides on, rather than reading one from disk ([A-34](../../ASSUMPTIONS.md)).
 - The gate has no notion of partial delivery; `overall` is the worst disposition.
 - A snapshot from a working tree with uncommitted changes carries the commit `HEAD-dirty` ([A-16](../../ASSUMPTIONS.md)).

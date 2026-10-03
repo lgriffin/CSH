@@ -100,5 +100,7 @@ describe("gate dispositions (Authority tab, section 6)", () => {
   it("compares expiry by date only", () => {
     expect(waiverValid(waiver, "2026-10-15T23:59:59Z")).toBe(true);
     expect(waiverValid(waiver, "2026-10-16")).toBe(false);
+    expect(waiverValid({ ...waiver, expires: "2026-02-31" }, "2026-01-01")).toBe(false);
+    expect(waiverValid({ ...waiver, expires: "2099-12-31junk" }, "2026-01-01")).toBe(false);
   });
 });

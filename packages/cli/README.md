@@ -33,7 +33,8 @@ It is the "Command line" container, shown in the [containers diagram](../../docs
 - `csh check` exits 0 whenever the run completes, whatever it found; only `csh gate` in enforcing mode exits non-zero on block (P7, CSH-011).
 - Decision commands print the fragment through the canonical printer with its digest, findings and gaps, append a draft line and stop. They never commit or sign (P1, P6, CSH-015).
 - A decision needs a non-empty rationale and, for a waiver, a scope and an expiry date (P9, CSH-013).
-- `csh gate` refuses a report whose snapshot digest differs from the current snapshot, and `--verify` refuses a decision made for another snapshot (P5, CSH-010).
+- `csh gate` runs the check itself and never trusts a report file; `--verify` recomputes the decision and refuses one made for another snapshot or one that differs (P5, CSH-010, [A-34](../../ASSUMPTIONS.md)).
+- Sources are read only from inside the project root ([A-33](../../ASSUMPTIONS.md)), and the trusted maintainers root comes from `CSH_ROOT_COMMIT`, never from `csh/config.json` ([A-28](../../ASSUMPTIONS.md)).
 - Adapters run in a subprocess with file reads limited to the tool's own code, an empty environment and a time limit; they receive bytes, the vocabulary and bindings, never paths or the ledger (P6; Evidence tab, section 4).
 - A source with no adapter, a missing source file, an adapter crash or an adapter timeout is reported as a diagnostic and leaves obligations unknown (P3, CSH-006).
 - A working tree with uncommitted changes gives the snapshot commit `HEAD-dirty`, against which no witness is current (P5, CSH-007).
@@ -44,7 +45,7 @@ Sources and the pipeline live here rather than in the check engine, so `@csh/che
 
 ## How it is tested
 
-- `test/cli.test.ts` (in a throwaway git repository): `csh check` exits 0 and writes the report and model; `csh gate` decides for the current snapshot and refuses a decision for a later commit; `csh approve` drafts a ledger line and commits nothing; a decision with no rationale is refused; `csl emit` fails on F07 and prints the digest of a valid specification.
+- `test/cli.test.ts` (in a throwaway git repository): `csh check` exits 0 and writes the report and model; `csh gate` decides for the current snapshot and refuses a decision for a later commit or a forged one; an option without its value is a usage error; `csh approve` drafts a ledger line and commits nothing; a decision with no rationale is refused; `csl emit` fails on F07 and prints the digest of a valid specification.
 - `test/faults.test.ts` ("no silent satisfaction", on a copy of F34): a missing witness file, a malformed witness file, an adapter that crashes (`test/adapters/crash.ts`), an adapter that never returns (`test/adapters/hang.ts`) and a witness for another commit with no history each leave obligations unknown, never satisfied.
 - Fixtures: every fixture runs through `evaluateSpec` in `@csh/testkit`. F23 exercises the claims-json path; F42 to F45 and F60 to F64 exercise `ledgerOf` and the gate path.
 

@@ -1,7 +1,7 @@
 // Reading the ledger from history (Authority tab, section 3.1). Validity is decided per
 // commit from what the repository shows, never from what the ledger file claims about itself.
 import { type CommitInfo, normaliseFingerprint, type VcsPort } from "./vcs.ts";
-import { type Decision, type Identity, type InvalidEntry, LEDGER_PATH, type LedgerState, type Maintainers, MAINTAINERS_PATH, persons, type ValidEntry } from "./types.ts";
+import { type Decision, type Identity, type InvalidEntry, isCalendarDate, LEDGER_PATH, type LedgerState, type Maintainers, MAINTAINERS_PATH, persons, type ValidEntry } from "./types.ts";
 
 export interface ReadOptions {
   ledgerPath?: string;
@@ -31,7 +31,12 @@ function parseMaintainers(text: string | undefined): Maintainers | undefined {
   try {
     const m = JSON.parse(text) as Maintainers;
     if (m.schema !== "csh-maintainers/v1" || !Array.isArray(m.identities)) return undefined;
-    return m;
+    const strings = (x: unknown) => Array.isArray(x) && x.every((y) => typeof y === "string");
+    const wellFormed = (i: unknown): boolean => {
+      const r = i as Partial<Identity> | null;
+      return typeof r === "object" && r !== null && typeof r.name === "string" && (r.kind === "person" || r.kind === "agent") && strings(r.keys) && strings(r.roles);
+    };
+    return m.identities.every(wellFormed) ? m : undefined;
   } catch {
     return undefined;
   }
@@ -55,11 +60,19 @@ export function maintainersHistory(vcs: VcsPort, opts: ReadOptions = {}): { vers
     const m = parseMaintainers(vcs.fileAt(root, path));
     if (m !== undefined) versions.push({ commit: root, m });
   }
+  // Only the pinned root, or else the first commit that added the file, can be the unsigned root.
+  // If that file is malformed there is no trusted root, and no later change can become one.
+  let rootDecided = opts.rootCommit !== undefined;
   for (const c of commits) {
     const m = parseMaintainers(vcs.fileAt(c, path));
-    if (versions.length === 0) {
+    if (!rootDecided) {
+      rootDecided = true;
       if (m !== undefined) versions.push({ commit: c, m });
       else invalid.push({ commit: c, reason: "malformed" });
+      continue;
+    }
+    if (versions.length === 0) {
+      invalid.push({ commit: c, reason: "no-trusted-root" });
       continue;
     }
     const info = vcs.commit(c);
@@ -168,7 +181,7 @@ export function readLedger(vcs: VcsPort, opts: ReadOptions = {}): LedgerState {
           continue;
         }
       }
-      if (d.kind === "waive" && (d.waiver === undefined || typeof d.waiver.scope !== "string" || !/^\d{4}-\d{2}-\d{2}/.test(d.waiver.expires ?? ""))) {
+      if (d.kind === "waive" && (d.waiver === undefined || typeof d.waiver.scope !== "string" || !isCalendarDate(d.waiver.expires))) {
         bad("malformed-waiver");
         continue;
       }

@@ -163,8 +163,9 @@ gate allow (advisory)
 
 The gate considers approved obligations only. Both obligations are candidate, so nothing can block, and the gate lists
 them as never blocking. An agent cannot make the gate block, or pass, by writing candidate fragments
-([ADR-28](adr/ADR-28-candidates-never-block.md)). The decision is written to `reports/csh-gate.json` and bound to the
-snapshot digest. A later commit gets a refusal from `csh gate --verify`.
+([ADR-28](adr/ADR-28-candidates-never-block.md)). The gate runs the check itself rather than trusting a report file. The decision is written to
+`reports/csh-gate.json` and bound to the snapshot digest. `csh gate --verify` recomputes it and refuses a decision
+for a later commit, or one that was edited.
 
 ## 6. Draft an approval
 

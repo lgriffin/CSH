@@ -2,7 +2,7 @@
 // files; the adapter sees only their bytes, the vocabulary and the bindings.
 import { spawn } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
-import { dirname, join, relative, resolve, sep } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { compareCodePoints, digestOf, type Binding, type ClaimSet, type Module, type Source } from "@csh/kernel";
@@ -31,17 +31,31 @@ export interface RunSourcesOptions {
   timeoutMs?: number;
 }
 
-function filesAt(root: string, at: string): { path: string; abs: string }[] | undefined {
+/** True when `p` is `root` or lies inside it. */
+function inside(root: string, p: string): boolean {
+  const r = relative(root, p);
+  return r === "" || (!r.startsWith("..") && !isAbsolute(r));
+}
+
+/**
+ * The files of a source, read only from inside the project root. A location that is absolute, climbs out
+ * of the root, or reaches outside it through a symbolic link is refused (`outside: true`).
+ */
+function filesAt(root: string, at: string): { files?: { path: string; abs: string }[]; outside?: true } {
+  const realRoot = realpathSync(root);
   const abs = resolve(root, at);
-  if (!existsSync(abs)) return undefined;
+  if (isAbsolute(at) || !inside(resolve(root), abs)) return { outside: true };
+  if (!existsSync(abs)) return {};
+  if (!inside(realRoot, realpathSync(abs))) return { outside: true };
   const out: { path: string; abs: string }[] = [];
   const walk = (p: string) => {
+    if (!inside(realRoot, realpathSync(p))) return; // a link out of the project is never followed
     if (statSync(p).isDirectory()) {
       for (const e of readdirSync(p).sort(compareCodePoints)) walk(join(p, e));
     } else out.push({ path: relative(root, p).split(sep).join("/"), abs: p });
   };
   walk(abs);
-  return out;
+  return { files: out };
 }
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -56,7 +70,9 @@ function toolReadable(): string[] {
 
 /** Run one adapter in an isolated subprocess. */
 export function runIsolated(adapterUrl: string, input: AdapterInput, timeoutMs = 30000): Promise<AdapterOutput> {
-  const args = ["--permission", ...toolReadable().map((p) => `--allow-fs-read=${p}`), "--disable-warning=ExperimentalWarning", "--no-addons", RUNNER];
+  // A project-local adapter may also read its own directory, and nothing else of the project.
+  const own = adapterUrl.startsWith("file:") ? [realpathSync(dirname(fileURLToPath(adapterUrl)))] : [];
+  const args = ["--permission", ...[...toolReadable(), ...own].map((p) => `--allow-fs-read=${p}`), "--disable-warning=ExperimentalWarning", "--no-addons", RUNNER];
   return new Promise((done, fail) => {
     const child = spawn(process.execPath, args, { stdio: ["ignore", "ignore", "pipe", "ipc"], env: {}, serialization: "advanced" });
     let settled = false;
@@ -115,8 +131,13 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
   const runs: SourceRun[] = [];
   const bindings = module.bindings.map((b) => ({ ...b, authority: opts.bindingAuthority?.(b) ?? "candidate" }));
   for (const source of [...module.sources].sort((a, b) => compareCodePoints(a.name, b.name))) {
-    const found = filesAt(opts.root, source.at);
+    const located = filesAt(opts.root, source.at);
     const base = { source: source.name, kind: source.kind };
+    if (located.outside === true) {
+      runs.push({ ...base, files: [], output: { diagnostics: [{ code: "source-outside-root", severity: "error", message: `${source.at} is outside the project root; sources are read only from inside it` }] } });
+      continue;
+    }
+    const found = located.files;
     if (found === undefined) {
       runs.push({ ...base, files: [], output: { diagnostics: [{ code: "source-missing", severity: "info", message: `nothing found at ${source.at}; the source contributes only claims written in the specification` }] } });
       continue;

@@ -16,15 +16,36 @@ type Ctx = "now" | "step" | "assumption";
 
 const METHOD: Record<string, string> = { add: "plus", sub: "minus", eq: "eq", ne: "ne", lt: "lt", le: "lte", gt: "gt", ge: "gte", implies: "implies" };
 
-function unitConst(id: string): string {
+function readableUnitConst(id: string): string {
   return `u_${id.replace(/[^A-Za-z0-9]+/g, "_").replace(/_+$/, "")}`;
+}
+
+/** One constant name per unit id, distinct even when two ids differ only in punctuation. */
+function unitConsts(ids: string[]): Map<string, string> {
+  const names = new Map<string, string>();
+  const taken = new Set<string>();
+  for (const id of [...ids].sort(compareCodePoints)) {
+    const base = readableUnitConst(id);
+    let name = base;
+    for (let i = 2; taken.has(name); i++) name = `${base}_${i}`;
+    taken.add(name);
+    names.set(id, name);
+  }
+  return names;
+}
+
+const IDENT = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
+
+/** Property access that stays correct for any member name. */
+function member(owner: string, name: string): string {
+  return IDENT.test(name) ? `${owner}.${name}` : `${owner}[${JSON.stringify(name)}]`;
 }
 
 function str(s: string): string {
   return JSON.stringify(s);
 }
 
-function intLiteral(v: string, unit: string | undefined): string {
+function intLiteral(v: string, unit: string | undefined, unitConst: (id: string) => string): string {
   const n = BigInt(v);
   const safe = n <= BigInt(Number.MAX_SAFE_INTEGER) && n >= BigInt(Number.MIN_SAFE_INTEGER);
   const text = safe ? v : `${v}n`;
@@ -33,9 +54,11 @@ function intLiteral(v: string, unit: string | undefined): string {
 
 export class Printer {
   private readonly sourceConst = new Map<string, string>();
+  private readonly units: Map<string, string>;
   private readonly m: Module;
   constructor(m: Module) {
     this.m = canonicalModule(m);
+    this.units = unitConsts(this.m.vocabulary.units.map((u) => u.id));
     const taken = new Set<string>([...this.m.vocabulary.enums.map((e) => e.name), ...this.m.vocabulary.states.map((s) => s.name), ...this.m.vocabulary.events.map((e) => e.name)]);
     for (const s of this.m.sources) {
       let name = s.name;
@@ -45,14 +68,18 @@ export class Printer {
     }
   }
 
+  unitConst(id: string): string {
+    return this.units.get(id) ?? readableUnitConst(id);
+  }
+
   expr(e: Expr, ctx: Ctx): string {
     switch (e.k) {
       case "int":
-        return intLiteral(e.v, e.unit);
+        return intLiteral(e.v, e.unit, (id) => this.unitConst(id));
       case "bool":
         return `truth(${e.v ? "true" : "false"})`;
       case "enum":
-        return `${e.enum}.${e.member}`;
+        return member(e.enum, e.member);
       case "field":
         if (e.at === "now") return `${e.state}.${e.field}`;
         return `${e.at}.${e.field}`;
@@ -80,7 +107,7 @@ export class Printer {
   }
 
   type(t: Type): string {
-    if (t.kind === "int") return t.unit === undefined ? "int()" : `int(${unitConst(t.unit)})`;
+    if (t.kind === "int") return t.unit === undefined ? "int()" : `int(${this.unitConst(t.unit)})`;
     if (t.kind === "bool") return "bool()";
     return t.enum;
   }
@@ -172,7 +199,7 @@ export class Printer {
     const m = this.m;
     const out: string[] = [`import { system, int, bool, unit, lit, truth, and, or } from "csl";`, ""];
     // Units.
-    for (const u of m.vocabulary.units) out.push(`const ${unitConst(u.id)} = unit(${str(u.dimension)}, ${str(u.symbol)});`);
+    for (const u of m.vocabulary.units) out.push(`const ${this.unitConst(u.id)} = unit(${str(u.dimension)}, ${str(u.symbol)});`);
     if (m.vocabulary.units.length > 0) out.push("");
     out.push(`export default system(${str(m.system)}, (s) => {`);
     // Enumerations, states, events.

@@ -129,6 +129,37 @@ describe("ledger rules", () => {
   });
 });
 
+describe("trust root and malformed files", () => {
+  it("never lets a later change become the root when the first maintainers file is malformed", () => {
+    seq = 0;
+    const vcs = memoryVcs([
+      { hash: "c0", files: { [MAINTAINERS_PATH]: "{not json" } },
+      { hash: "c1", parent: "c0", files: { [MAINTAINERS_PATH]: maintainers(ben) } },
+      { hash: "c2", parent: "c1", signer: "BBBB", files: { [LEDGER_PATH]: `${formatDecision(dec({ actor: "ben" }))}\n` } },
+    ]);
+    const s = readLedger(vcs);
+    expect(s.invalidMaintainerChanges).toEqual([{ commit: "c0", reason: "malformed" }, { commit: "c1", reason: "no-trusted-root" }]);
+    expect(s.entries).toEqual([]);
+    expect(s.invalid.map((x) => x.reason)).toEqual(["unknown-key"]);
+  });
+
+  it("treats an identity without keys as a malformed file, not a crash", () => {
+    seq = 0;
+    const vcs = memoryVcs([
+      { hash: "c0", files: { [MAINTAINERS_PATH]: JSON.stringify({ schema: "csh-maintainers/v1", identities: [{}] }) } },
+      { hash: "c1", parent: "c0", signer: "AAAA", files: { [LEDGER_PATH]: `${formatDecision(dec())}\n` } },
+    ]);
+    expect(() => readLedger(vcs)).not.toThrow();
+    expect(readLedger(vcs).invalidMaintainerChanges).toEqual([{ commit: "c0", reason: "malformed" }]);
+  });
+
+  it.each(["2026-02-31", "2026-99-99", "2099-12-31junk"])("rejects a waiver expiring %s", (expires) => {
+    seq = 0;
+    const s = readLedger(history([ana], [{ lines: [dec({ kind: "waive", waiver: { scope: "x", expires } })], signer: "AAAA" }]));
+    expect(s.invalid.map((x) => x.reason)).toEqual(["malformed-waiver"]);
+  });
+});
+
 describe("authority", () => {
   const ledger = (lines: Decision[]) => readLedger(history([ana], [{ lines, signer: "AAAA" }]));
   const f = { name: "Account/#invariant/NonNegative", digest: "sha256:1", cites: [{ source: "Product", id: "R1" }] };

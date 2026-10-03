@@ -88,3 +88,30 @@ describe("printer round trip", () => {
 
 
 });
+
+describe("printer round trip on awkward names", () => {
+  it("keeps unit ids that differ only in punctuation, and enum members that are not identifiers", async () => {
+    const m = emptyModule("Awkward");
+    m.vocabulary = {
+      units: [{ id: "a-b(c)", dimension: "a-b", symbol: "c" }, { id: "a_b(c)", dimension: "a_b", symbol: "c" }],
+      enums: [{ name: "Mode", members: ["not-valid", "ok"] }],
+      states: [{ name: "Box", fields: { x: { kind: "int", unit: "a-b(c)" }, y: { kind: "int", unit: "a_b(c)" }, mode: { kind: "enum", enum: "Mode" } } }],
+      events: [],
+    };
+    m.policies = [{ name: "Policy", require: ["SolverCheck"], reject: [] }];
+    m.intents = [{
+      name: "Keep",
+      owner: "Owner",
+      value: "awkward names",
+      assurance: "Policy",
+      assumptions: [],
+      obligations: [
+        { kind: "invariant", name: "X", state: "Box", body: { k: "ge", l: { k: "field", state: "Box", field: "x", at: "now" }, r: { k: "int", v: "0", unit: "a-b(c)" } } },
+        { kind: "invariant", name: "M", state: "Box", body: { k: "ne", l: { k: "field", state: "Box", field: "mode", at: "now" }, r: { k: "enum", enum: "Mode", member: "not-valid" } } },
+      ],
+      examples: [],
+    }] as unknown as Module["intents"];
+    expect(validateModule(m)).toEqual([]);
+    expect(await reemit(m, "awkward")).toBe(moduleDigest(m));
+  });
+});

@@ -79,6 +79,24 @@ describe("minimal conflicting sets", () => {
   });
 });
 
+describe("Q-STATE with contradictory assumptions", () => {
+  it("names the assumptions that contradict each other, not an empty set", async () => {
+    const env = { solver: z3, vocabulary: vocab, budgetMs: 10000 };
+    const now = (f: string): Expr => ({ k: "field", state: "S", field: f, at: "now" });
+    const assumptions = [
+      { id: "Low", body: { k: "lt", l: now("x"), r: lit(0n) } as Expr },
+      { id: "High", body: { k: "gt", l: now("x"), r: lit(10n) } as Expr },
+      { id: "Other", body: { k: "ge", l: now("y"), r: lit(0n) } as Expr },
+    ];
+    const inv: QInvariant = { id: "I", state: "S", body: { k: "ge", l: now("y"), r: lit(0n) } };
+    for (const invs of [[inv], []]) {
+      const r = await qState(env, assumptions, invs);
+      expect(r.status).toBe("failed");
+      if (r.status === "failed") expect(r.sets.map((x) => x.members)).toEqual([["High", "Low"]]);
+    }
+  });
+});
+
 describe("no answer is read as a wanted outcome", () => {
   const inv: QInvariant = { id: "I", state: "S", body: { k: "ge", l: { k: "field", state: "S", field: "x", at: "now" }, r: lit(0n) } };
   for (const behaviour of ["crash", "timeout", "unknown", "garbage"] as const) {

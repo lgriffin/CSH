@@ -26,6 +26,10 @@ interface Io {
 
 export async function csl(argv: string[], io: Io): Promise<number> {
   const a = parseArgs(argv);
+  if (a.errors.length > 0) {
+    io.err(`${a.errors.join("\n")}\n`);
+    return 2;
+  }
   const cmd = a.positional.shift();
   const file = a.positional[0];
   if (cmd === undefined || file === undefined || a.flags.has("help")) {

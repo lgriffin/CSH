@@ -65,8 +65,8 @@ csh approve | reject | retire <fragment> --actor <name> --rationale <text>
 csh waive <fragment> --scope <finding|obligation> --expires <YYYY-MM-DD> --actor <name> --rationale <text>
 csh countersign <seq> --actor <name> --rationale <text>
                                             Draft one ledger line. The tool never commits or signs.
-csh gate [--mode advisory|enforcing]        Decide for the current snapshot. Non-zero only on block in enforcing mode.
-csh gate --verify <decision.json>           Refuse a decision made for any other snapshot.
+csh gate [--mode advisory|enforcing]        Check and decide for the current snapshot. Non-zero only on block in enforcing mode.
+csh gate --verify <decision.json>           Recompute; refuse a decision for another snapshot or one that differs.
 ```
 
 Run them as `node packages/cli/bin/csh.js` and `node packages/cli/bin/csl.js`. A project keeps its settings in
@@ -105,7 +105,7 @@ self-approved, until a second person joins. See the [Authority tab](docs/spec/05
 - **Reserved constructs.** Architectural and temporal obligations are carried and reported, but not evaluated.
 - **Two adapters.** Version 1 ships adapters for witness files and EARS requirements in Markdown. Anything else must arrive as claim sets in IR form, or it stays unliftable.
 - **Unknown is common.** A solver timeout, a missing binding or an unapproved binding all give unknown. That is a correct answer, not a malfunction.
-- **Protection depends on keys.** It also depends on where the gate runs: CI should pin the root maintainers commit outside the repository.
+- **Protection depends on keys.** It also depends on where the gate runs: CI should pin the root maintainers commit with `CSH_ROOT_COMMIT`, outside the repository ([A-28](ASSUMPTIONS.md)).
 - **SSH signatures are untested.** Their verification is implemented through git but no fixture covers it ([Q-16](QUESTIONS.md)).
 - **Choices made during the build are provisional.** They are registered in [ASSUMPTIONS.md](ASSUMPTIONS.md), with open questions in [QUESTIONS.md](QUESTIONS.md).
 

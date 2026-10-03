@@ -44,22 +44,33 @@ describe("csh", () => {
     expect(o.out).toMatch(/Obligations/i);
   }, 60000);
 
-  it("gate decides for the current snapshot and refuses a decision for another", async () => {
+  it("gate decides for the current snapshot and refuses a decision for another, or a forged one", async () => {
     const a = io(proj);
     expect(await csh(["gate"], a.io)).toBe(0); // no approved obligations: nothing blocks
-    expect(existsSync(join(proj, "reports", "csh-gate.json"))).toBe(true);
+    const file = join(proj, "reports", "csh-gate.json");
+    expect(existsSync(file)).toBe(true);
     const ok = io(proj);
     expect(await csh(["gate", "--verify", "reports/csh-gate.json"], ok.io)).toBe(0);
+    // A forged decision for this snapshot: an obligation row that the computation does not produce.
+    const forged = JSON.parse(readFileSync(file, "utf8"));
+    forged.obligations.push({ fragment: "X", verdict: "satisfied", applicability: "current", disposition: "allow", selfApproved: false, because: "satisfied" });
+    writeFileSync(join(proj, "reports", "forged.json"), JSON.stringify(forged));
+    const f = io(proj);
+    expect(await csh(["gate", "--verify", "reports/forged.json"], f.io)).toBe(3);
+    expect(f.o.err).toMatch(/does not match/);
     writeFileSync(join(proj, "notes.txt"), "a later change\n");
     git("add", "notes.txt");
     git("commit", "-q", "-m", "later");
     const refused = io(proj);
     expect(await csh(["gate", "--verify", "reports/csh-gate.json"], refused.io)).toBe(3);
-    expect(refused.o.err).toMatch(/refused/);
-    const stale = io(proj);
-    expect(await csh(["gate"], stale.io)).toBe(3);
-    expect(stale.o.err).toMatch(/run csh check on this commit/);
-  }, 60000);
+    expect(refused.o.err).toMatch(/refused: decision is for snapshot/);
+  }, 120000);
+
+  it("reports an option given without its value", async () => {
+    const { o, io: x } = io(proj);
+    expect(await csh(["check", "--budget"], x)).toBe(2);
+    expect(o.err).toMatch(/--budget needs a value/);
+  });
 
   it("approve drafts a ledger line and commits nothing", async () => {
     const head = git("rev-parse", "HEAD");
