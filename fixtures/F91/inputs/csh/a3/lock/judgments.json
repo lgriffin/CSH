@@ -1,0 +1,111 @@
+{
+  "schema": "csh-a3-judgments/v1",
+  "title": "Two failures, one lock",
+  "problem": "The rule locks on the second failure and the test allows it.",
+  "background": [
+    "A fixture sheet."
+  ],
+  "stages": [
+    {
+      "id": "first",
+      "name": "First",
+      "what": "The component as written."
+    }
+  ],
+  "cannotSay": {
+    "rules": "A concrete value",
+    "tests": "Which rule it serves"
+  },
+  "lanes": [
+    {
+      "id": "rules",
+      "practice": "rules",
+      "step": 1,
+      "title": "Owner writes rules",
+      "where": "docs/requirements.md",
+      "match": [
+        {
+          "kind": "uncited"
+        }
+      ]
+    },
+    {
+      "id": "tests",
+      "practice": "tests",
+      "step": 1,
+      "title": "Developer writes tests",
+      "where": "test/",
+      "match": [
+        {
+          "kind": "example-conflict",
+          "practice": "tests"
+        }
+      ]
+    }
+  ],
+  "causes": [
+    {
+      "id": "count",
+      "name": "A count read two ways",
+      "match": [
+        {
+          "kind": "example-conflict"
+        }
+      ]
+    }
+  ],
+  "decisionPoints": [
+    {
+      "point": "Second failure",
+      "class": "contradiction",
+      "says": {
+        "rules": {
+          "mark": "says",
+          "text": "lock"
+        },
+        "tests": {
+          "mark": "clash",
+          "text": "allowed"
+        }
+      },
+      "match": [
+        {
+          "kind": "example-conflict",
+          "fragment": "LockOnSecondFailure"
+        }
+      ]
+    }
+  ],
+  "goal": "One reading of the count.",
+  "rca": [
+    {
+      "id": "Q1",
+      "q": "Why do they disagree?",
+      "a": "Each read the count alone.",
+      "depth": "Evidence stops."
+    }
+  ],
+  "whys": [],
+  "countermeasures": [
+    {
+      "id": "C1",
+      "kind": "requirement",
+      "what": "State the count as a state.",
+      "answers": [
+        "Q1"
+      ],
+      "clears": [
+        {
+          "kind": "example-conflict"
+        }
+      ]
+    }
+  ],
+  "plan": [
+    {
+      "what": "Rewrite the rule",
+      "who": "Owner",
+      "when": "Next change"
+    }
+  ]
+}

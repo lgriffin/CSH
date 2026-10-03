@@ -1,15 +1,15 @@
-/* Layout: one Lean A3 sheet read left to right. Andon tiles on top, Plan (1-4) then Do/Check/Act (5-7), as in the tutors-release-harness A3. */
+/* Layout: one Lean A3 sheet read left to right. Andon tiles on top, Plan (1-4) then Do/Check/Act (5-7). Practices take the colours --p0 to --p4 in manifest order. */
 [hidden]{display:none !important}
 :root{color-scheme:light;--bg:#f4f3ef;--sheet:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#7a7873;--rule:#dddbd4;--box:#ffffff;
 --pass:#2f7a4f;--warn:#8a6119;--fail:#a12a2a;--vital:#2a78d6;--trivial:#b9b7b0;--accent:#2a78d6;--hatch:#c9c7c0;
---ears:#2a78d6;--bdd:#8a4fc4;--tdd:#b04e12;--on:#ffffff;--soft-fail:#f7e3e3;--soft-warn:#f6ecd9;--soft-pass:#e3f0e8;--soft-mute:#ecebe6;
+--p0:#2a78d6;--p1:#8a4fc4;--p2:#b04e12;--p3:#2f7a4f;--p4:#8a6119;--on:#ffffff;--soft-fail:#f7e3e3;--soft-warn:#f6ecd9;--soft-pass:#e3f0e8;--soft-mute:#ecebe6;
 --font:system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,Menlo,Consolas,monospace}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#121211;--sheet:#1a1a19;--ink:#ffffff;--ink2:#c3c2b7;--muted:#9a988f;--rule:#383835;--box:#232322;
 --pass:#3f9a66;--warn:#c28a2a;--fail:#d05050;--vital:#3987e5;--trivial:#5a5953;--accent:#3987e5;--hatch:#4a4945;
---ears:#4f94e8;--bdd:#a77ad8;--tdd:#ec8a45;--on:#1a1a19;--soft-fail:#3a1f1f;--soft-warn:#3a2f1a;--soft-pass:#1d3326;--soft-mute:#26261f}}
+--p0:#4f94e8;--p1:#a77ad8;--p2:#ec8a45;--p3:#3f9a66;--p4:#c28a2a;--on:#1a1a19;--soft-fail:#3a1f1f;--soft-warn:#3a2f1a;--soft-pass:#1d3326;--soft-mute:#26261f}}
 :root[data-theme="dark"]{color-scheme:dark;--bg:#121211;--sheet:#1a1a19;--ink:#ffffff;--ink2:#c3c2b7;--muted:#9a988f;--rule:#383835;--box:#232322;
 --pass:#3f9a66;--warn:#c28a2a;--fail:#d05050;--vital:#3987e5;--trivial:#5a5953;--accent:#3987e5;--hatch:#4a4945;
---ears:#4f94e8;--bdd:#a77ad8;--tdd:#ec8a45;--on:#1a1a19;--soft-fail:#3a1f1f;--soft-warn:#3a2f1a;--soft-pass:#1d3326;--soft-mute:#26261f}
+--p0:#4f94e8;--p1:#a77ad8;--p2:#ec8a45;--p3:#3f9a66;--p4:#c28a2a;--on:#1a1a19;--soft-fail:#3a1f1f;--soft-warn:#3a2f1a;--soft-pass:#1d3326;--soft-mute:#26261f}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--font)}
 a{color:var(--accent)} a:focus-visible,summary:focus-visible{outline:2px solid currentColor;outline-offset:2px}
@@ -42,7 +42,7 @@ th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink2
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .src{font-size:11.5px;color:var(--ink2)}
 .tag{display:inline-block;padding:0 7px;border-radius:4px;font-size:11.5px;font-weight:700;color:var(--on);white-space:nowrap}
-.tag.ears{background:var(--ears)} .tag.bdd{background:var(--bdd)} .tag.tdd{background:var(--tdd)}
+.tag.p0{background:var(--p0)} .tag.p1{background:var(--p1)} .tag.p2{background:var(--p2)} .tag.p3{background:var(--p3)} .tag.p4{background:var(--p4)}
 .cell{display:block;padding:3px 6px;border-radius:4px;font-size:12px}
 .cell.says{background:var(--soft-pass)} .cell.clash{background:var(--soft-fail)} .cell.drift{background:var(--soft-warn)} .cell.silent{background:var(--soft-mute);color:var(--muted)}
 .chip{display:inline-block;padding:0 7px;border-radius:4px;font-size:11.5px;font-weight:700;white-space:nowrap;border:1px solid}
@@ -60,7 +60,7 @@ figure{margin:12px 0 0} figcaption{display:flex;flex-wrap:wrap;gap:2px 12px;alig
 .lanes .hub{fill:var(--soft-pass);stroke:var(--pass)}
 .lanes .arrow{stroke:var(--ink2);fill:none;stroke-width:1.4} .lanes .head{fill:var(--ink2)}
 .lanes .andon rect{fill:var(--fail)} .lanes .andon text{fill:#fff;font-weight:700;font-size:11px}
-.lanes .lane-ears{fill:var(--ears)} .lanes .lane-bdd{fill:var(--bdd)} .lanes .lane-tdd{fill:var(--tdd)}
+.lanes .lane-p0{fill:var(--p0)} .lanes .lane-p1{fill:var(--p1)} .lanes .lane-p2{fill:var(--p2)} .lanes .lane-p3{fill:var(--p3)} .lanes .lane-p4{fill:var(--p4)}
 .pareto{max-width:760px}
 .phead,.bars li{display:grid;grid-template-columns:minmax(0,15rem) minmax(40px,1fr) 2.6rem 3rem;gap:8px;align-items:center}
 .phead{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)} .phead span:nth-child(n+3){text-align:right}
@@ -101,3 +101,6 @@ footer{font-size:12px;color:var(--ink2);margin-top:14px}
 .verdict{display:inline-block;padding:0 8px;border-radius:4px;font-weight:700;font-size:11.5px;letter-spacing:.03em;text-transform:uppercase;color:#fff}
 .verdict.allow,.verdict.satisfied{background:var(--pass)} .verdict.review,.verdict.unknown{background:var(--warn)} .verdict.block,.verdict.violated,.verdict.conflicting{background:var(--fail)}
 .none{color:var(--muted)}
+.unwritten{color:var(--muted);font-style:italic}
+.problems li{font-size:12.5px} .problems code{font-size:12px}
+.authority{font-weight:700} .authority.candidate{color:var(--warn)} .authority.approved{color:var(--pass)}

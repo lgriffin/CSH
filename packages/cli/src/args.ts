@@ -7,7 +7,7 @@ export interface Args {
   errors: string[];
 }
 
-const FLAGS = new Set(["json", "no-cache", "help", "force-nondeterminism"]);
+const FLAGS = new Set(["json", "no-cache", "help", "force-nondeterminism", "check"]);
 
 export function parseArgs(argv: string[]): Args {
   const a: Args = { positional: [], options: {}, flags: new Set(), errors: [] };

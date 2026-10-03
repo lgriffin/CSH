@@ -21,6 +21,7 @@ It is the main part of the "Check engine" container, with `@csh/solver`, shown i
 - `gapView(input)`, `GapInput`, `subjectsOf`: the gap view, plus citation errors.
 - `SolverCache`, `cachingSolver`: a caching solver port that keeps only `sat` and `unsat`.
 - `renderReport(report)`, `renderGaps(report)`, `DIVERGENCE_READINGS`: the human-readable report, generated from the report JSON alone, and the four readings of a divergence.
+- `Report.examples` (extension): every example in the pool with its source and the items it cites, for the A3's measure "examples that cite a requirement".
 - `signalsOf(report, manifest?)`, `matches(signal, rule)`, `Signal`, `Match`, `PracticeMap`: every item of a report a reader may have to place, with its fragments, sources and practices, and the structured rule that places it.
 - `makeRefiner(solver, budgetMs)`, `Replacement`: the refinement check that `@csh/emit` calls for replaced inherited obligations.
 

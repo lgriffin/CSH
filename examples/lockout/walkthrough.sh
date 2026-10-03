@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Reproduce docs/lockout-walkthrough.md: copy the example to a scratch repository, make each stage a commit and run
-# it with csh run, then build the A3 (docs/lockout-a3.md and .html) from the run of each stage.
+# Reproduce docs/lockout-walkthrough.md: copy the example to a scratch repository, make each stage a commit, run it
+# with csh run and record it as a stage of the A3 with csh a3 stage, then build the A3 with csh a3 build. The A3's
+# committed output (examples/lockout/csh/a3/three-practices/a3.json, a3.md and a3.html) holds every count the
+# walkthrough documents, so csh a3 build --check is the test: no step of this script decides anything itself.
 # The copy lives under .csh-cache/ so that the specification resolves the csl package.
 # The approval stage signs with a throwaway key made for this run only; it never touches your own keys.
 #
@@ -26,35 +28,17 @@ run() {
   cat .csh-cache/run.out
   return "$rc"
 }
-# Keep each stage's report and gate decision for the A3.
-save_stage() {
-  mkdir -p "$WORK.stages/$1"
-  cp reports/csh-report.json "$WORK.stages/$1/report.json"
-  cp reports/csh-gate.json "$WORK.stages/$1/gate.json"
-}
-# csh check exits 0 whatever it finds, so the script checks the report itself: the walkthrough documents these
-# counts, and CI fails if a change to the example or the harness moves them.
-expect() {
-  node -e '
-    const r = require("./reports/csh-report.json");
-    const want = JSON.parse(process.argv[1]);
-    const got = {
-      findings: r.findings.map((f) => f.kind).sort().join(","),
-      notComparable: r.notComparable.length,
-      errors: (r.errors ?? []).map((e) => e.code).sort().join(","),
-      gaps: r.gapView.gaps.map((g) => g.kind).sort().join(","),
-    };
-    const bad = Object.keys(want).filter((k) => JSON.stringify(got[k]) !== JSON.stringify(want[k]));
-    if (bad.length > 0) {
-      console.error("walkthrough: the report differs from the documented one");
-      for (const k of bad) console.error(`  ${k}: expected ${JSON.stringify(want[k])}, got ${JSON.stringify(got[k])}`);
-      process.exit(1);
-    }' "$1"
+# Record the run of HEAD as a stage of the A3, and commit the record: a sheet must read correctly after its branches
+# are gone (Anchor, harnesses and A3, section 5.7).
+stage() {
+  csh a3 stage three-practices "$1" --at HEAD >/dev/null
+  git_ add csh/a3
+  git_ commit -q -m "A3 stage $1"
 }
 
 rm -rf "$WORK" "$WORK.stages" && mkdir -p "$(dirname "$WORK")"
 cp -r "$REPO/examples/lockout" "$WORK"
-rm -rf "$WORK/countermeasures" "$WORK/model" "$WORK/regression" "$WORK/a3"
+rm -rf "$WORK/countermeasures" "$WORK/model" "$WORK/regression" "$WORK/csh/a3/three-practices/stages"
 cd "$WORK"
 printf 'reports/\n.csh-cache/\n' > .gitignore
 git init -q -b main
@@ -66,7 +50,6 @@ csl emit spec/lockout.csl.ts
 
 step csh run
 run
-expect '{"findings":"example-conflict,example-conflict,example-conflict,example-divergence,joint-conflict","notComparable":1,"errors":"dangling-citation,shape-mismatch","gaps":"no-rule,single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
 
 # Explain the joint conflict and the conflict that holds the off-by-one.
 for id in $(node -e 'const r=require("./reports/csh-report.json");console.log(r.findings.filter(f=>f.kind==="joint-conflict"||f.members.some(m=>m.fragment.endsWith("/WitnessAllowsThreeFailedAttemptsBeforeLocking"))).map(f=>f.id).join(" "))'); do
@@ -74,7 +57,7 @@ for id in $(node -e 'const r=require("./reports/csh-report.json");console.log(r.
   csh explain "$id" || true
 done
 
-save_stage before
+stage before
 
 # The countermeasures of the A3 (docs/lockout-a3.md, section 5), applied as one change.
 printf '\n== After the countermeasures\n'
@@ -88,8 +71,7 @@ git show --stat --format= HEAD
 
 step csh run
 run
-expect '{"findings":"","notComparable":0,"errors":"","gaps":"single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
-save_stage countermeasures
+stage countermeasures
 
 # The countermeasures leave every rule candidate and unknown: nothing models the sign-in, and nobody has approved
 # anything. A model of the agreed behaviour lets the solver check each rule; a signed approval makes them count.
@@ -104,7 +86,6 @@ csl emit spec/lockout.csl.ts
 
 step csh run
 run
-expect '{"findings":"","notComparable":0,"errors":"","gaps":"single-source,single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
 
 # A throwaway OpenPGP key stands in for the owner's. In a real repository the key lives on a token the agent
 # cannot reach (docs/spec/05-authority-and-ledger.md, section 1); here it exists for this run only.
@@ -141,8 +122,7 @@ signed -m "Approve the lockout rules and bindings"
 
 step csh run --mode enforcing
 run --mode enforcing
-expect '{"findings":"","notComparable":0,"errors":"","gaps":"single-source,single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
-save_stage approved
+stage approved
 
 # An agent later rereads "three failed attempts" as three allowed, and edits the code and its test together. The
 # tests stay green. Its commit is unsigned and touches nothing the owner approved, so only the evidence changes.
@@ -156,24 +136,20 @@ step git show --stat --format= HEAD
 git show --stat --format= HEAD
 
 step csh run --mode enforcing
-if run --mode enforcing; then
-  echo "walkthrough: the enforcing gate allowed the regression" >&2
-  exit 1
-fi
-expect '{"findings":"example-conflict,example-divergence,example-divergence","notComparable":0,"errors":"","gaps":"single-source,single-source,single-source,single-source,uncited,uncited,unliftable,unliftable"}'
-save_stage regression
+# The enforcing gate blocks here; the A3's committed counts say so, and csh a3 build --check holds the script to them.
+run --mode enforcing || true
+stage regression
 
-# The A3 is built from the four stages' reports and the judgments in a3/a3.json.
+# The A3 is built from the four stage records and the judgments in csh/a3/three-practices/judgments.json.
 printf '\n== The A3\n'
-step "node examples/lockout/a3/build.ts --stages <stages> --out <stages>/a3"
-node "$REPO/examples/lockout/a3/build.ts" --stages "$WORK.stages" --out "$WORK.stages/a3"
-for f in lockout-a3.md lockout-a3.html; do
-  if [ "$UPDATE" = 1 ]; then
-    cp "$WORK.stages/a3/$f" "$REPO/docs/$f"
-  elif ! diff -q "$WORK.stages/a3/$f" "$REPO/docs/$f" >/dev/null; then
-    echo "walkthrough: docs/$f is out of date; run examples/lockout/walkthrough.sh --update" >&2
-    diff -u "$REPO/docs/$f" "$WORK.stages/a3/$f" | head -40 >&2 || true
-    exit 1
-  fi
-done
-echo "docs/lockout-a3.md and docs/lockout-a3.html match the reports."
+if [ "$UPDATE" = 1 ]; then
+  step csh a3 build three-practices
+  csh a3 build three-practices
+  for f in a3.json a3.md a3.html; do cp "csh/a3/three-practices/$f" "$REPO/examples/lockout/csh/a3/three-practices/$f"; done
+else
+  step csh a3 build three-practices --check
+  csh a3 build three-practices --check
+fi
+
+step csh a3 verify three-practices
+csh a3 verify three-practices 2>/dev/null

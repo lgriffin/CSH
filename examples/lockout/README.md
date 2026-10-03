@@ -10,7 +10,7 @@ agree with the others:
 Each is signed off on its own terms: the tests pass, the scenarios are agreed, and the sentences are reviewed. The
 harness reads the scenarios rather than executing them. Read together, the three disagree in nine places.
 [docs/lockout-walkthrough.md](../../docs/lockout-walkthrough.md) runs the harness on it with real output, and
-[docs/lockout-a3.md](../../docs/lockout-a3.md) is the Lean A3 that reads the findings as one problem.
+[the A3](csh/a3/three-practices/a3.md) reads the findings as one problem.
 
 The example is one run in four stages, each an overlay applied as a commit on top of the last:
 
@@ -21,6 +21,10 @@ The example is one run in four stages, each an overlay applied as a commit on to
 | Model and approval | `model/` | A model of the sign-in, then nine approvals signed by a throwaway key | Every rule satisfied; enforcing gate allows |
 | Regression | `regression/` | Code and test edited together back to three allowed | Tests green; enforcing gate blocks |
 
-`a3/` builds [the A3](../../docs/lockout-a3.md) from the four stages' reports and the judgments in `a3/a3.json`.
-`walkthrough.sh` runs all of it and fails if the committed A3 is out of date; `walkthrough.sh --update` rewrites it.
+`csh/a3/three-practices/` is the A3: `judgments.json` holds what only a person can say and the structured rules that
+place each signal, and `csh a3 build` writes `a3.json`, `a3.md` and `a3.html` from it and the four stages' records.
+`walkthrough.sh` makes each stage a commit, runs it with `csh run`, records it with `csh a3 stage`, and ends with
+`csh a3 build --check` and `csh a3 verify`; the committed sheet holds every count, so the script itself decides nothing.
+The stage records are written and committed in the scratch repository the script makes, not here, because their
+commit hashes differ from run to run. `walkthrough.sh --update` rewrites the committed sheet.
 This is the example to change first when the harness changes: run it, and the A3's diff shows what moved.

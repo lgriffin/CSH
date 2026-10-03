@@ -81,6 +81,7 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
       if (w.span !== undefined) e.span = w.span;
       return e;
     }),
+    examples: prepared.fragments.filter((f) => f.kind === "example").map((f) => ({ fragment: f.name, source: f.source, cites: f.cites.map((c) => `${c.source}/${c.id}`) })),
     items: prepared.items.map((i) => {
       const it: Report["items"][number] = { source: i.source, id: i.id, span: i.span, textDigest: i.textDigest };
       if (i.pattern !== undefined) it.pattern = i.pattern;

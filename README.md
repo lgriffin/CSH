@@ -64,8 +64,9 @@ examples/lockout/walkthrough.sh
 
 The script runs one example in four stages, each with `csh run`: as written, after the countermeasures, with a model and signed approvals
 (the enforcing gate allows), and after a regression that keeps the tests green (the enforcing gate blocks).
-[docs/lockout-walkthrough.md](docs/lockout-walkthrough.md) shows the run, and [docs/lockout-a3.md](docs/lockout-a3.md)
-is the Lean A3 built from its reports, with an A3 sheet and a stage picker in [docs/lockout-a3.html](docs/lockout-a3.html).
+[docs/lockout-walkthrough.md](docs/lockout-walkthrough.md) shows the run, and
+[the A3](examples/lockout/csh/a3/three-practices/a3.md) is the Lean A3 that `csh a3 build` makes from its stage records,
+with an A3 sheet and a stage picker in [a3.html](examples/lockout/csh/a3/three-practices/a3.html).
 
 ## Commands
 
@@ -79,11 +80,16 @@ csh run [--at <commit>] [--mode advisory|enforcing] [--budget ms] [--no-cache]
                                             Run each practice's harness, check, decide, and store the run under
                                             .csh-cache/runs/<snapshot digest>/. Non-zero only on block in enforcing mode,
                                             or 3 when a past commit needs other dependencies than the installed ones.
+csh a3 open <slug> [--at <commit>]         Record a run as the first stage of an A3 under csh/a3/<slug>/, with an
+                                            empty judgments skeleton in which every signal is unclassified.
+csh a3 stage <slug> <id> --at <commit>      Record the run of a commit as a stage, running it if no run is stored.
+csh a3 build <slug> [--check]               Build a3.json, a3.md and a3.html; with --check, fail when they differ.
+csh a3 verify <slug>                        Re-run every stage at its commit and report any that differs.
 csh check [spec] [--json] [--budget ms] [--no-cache]
                                             Run every check; write reports/csh-report.json. Exits 0 when it completes.
 csh gaps [spec]                             Print the gap view only.
 csh explain <finding-id>                    Print one finding, members rendered through the printer.
-csh approve | reject | retire <fragment> --actor <name> --rationale <text>
+csh approve | reject | retire <fragment | #a3/slug> --actor <name> --rationale <text>
 csh waive <fragment> --scope <finding|obligation> --expires <YYYY-MM-DD> --actor <name> --rationale <text>
 csh countersign <seq> --actor <name> --rationale <text>
                                             Draft one ledger line. The tool never commits or signs.
@@ -149,8 +155,8 @@ node packages/testkit/src/run-fixtures.ts       # the fixtures alone, with a sum
 
 | Path | Contents |
 | --- | --- |
-| `packages/` | Seventeen packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `adapter-gherkin`, `ledger`, `gate`, `component`, `run`, `harness`, `cli`, `testkit` |
-| `docs/guides/` | How to write a component manifest, a probe and a step table |
+| `packages/` | Eighteen packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `adapter-gherkin`, `ledger`, `gate`, `component`, `run`, `harness`, `a3`, `cli`, `testkit` |
+| `docs/guides/` | How to write a component manifest, a probe, a step table and an A3 |
 | `fixtures/` | Golden fixtures, one directory each, plus the shared bases and the test pack |
 | `examples/account/` | The walkthrough example |
 | `docs/spec/` | The specification, read-only |

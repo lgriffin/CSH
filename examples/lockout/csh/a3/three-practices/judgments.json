@@ -1,0 +1,717 @@
+{
+  "schema": "csh-a3-judgments/v1",
+  "title": "Three practices, one lockout",
+  "problem": "EARS, BDD and TDD are each designed to pin behaviour down and bring people onto one understanding. On sign-in lockout each is signed off on its own terms, yet read together they disagree, and the code ships one of the readings nobody agreed.",
+  "background": [
+    "A sign-in service must stop password guessing without locking out the real account holder. Three practices describe that behaviour, and each promises alignment. EARS promises one unambiguous way to write a requirement. BDD promises one shared example that business and engineering agree on. TDD promises that design and verification move together. Each unifies inside its own boundary. None of them is judged against the others.",
+    "How each practice is judged on its own terms: EARS sentences by review, BDD scenarios by agreement among the three amigos (here they are read by CSH, not run), and TDD tests by the code they drove into being. In CSH a sentence is cited, never translated, and a person writes the predicate; a scenario is an example lifted through the step table; a test is an example and a witness."
+  ],
+  "stages": [
+    {
+      "id": "before",
+      "name": "Before",
+      "what": "The three practices as written, each signed off on its own terms."
+    },
+    {
+      "id": "countermeasures",
+      "name": "Countermeasures",
+      "what": "C2 to C6 applied as one change, taking the owner's side in each decision as an assumption."
+    },
+    {
+      "id": "approved",
+      "name": "Model and approval",
+      "what": "A model of the agreed behaviour, then the rules and bindings approved in one signed commit by a test-only owner key."
+    },
+    {
+      "id": "regression",
+      "name": "Regression",
+      "what": "A later change edits the code and its test together, so the suite stays green. The enforcing gate must stop it."
+    }
+  ],
+  "cannotSay": {
+    "ears": "A concrete value, or how two sentences combine",
+    "bdd": "A rule; and a step means nothing until defined",
+    "tdd": "Which requirement it serves"
+  },
+  "lanes": [
+    {
+      "id": "ears-sentence",
+      "practice": "ears",
+      "step": 1,
+      "title": "Product owner writes EARS sentences",
+      "where": "docs/requirements.md",
+      "match": [
+        {
+          "kind": "joint-conflict"
+        },
+        {
+          "kind": "uncited"
+        },
+        {
+          "kind": "unliftable",
+          "source": "Product"
+        }
+      ]
+    },
+    {
+      "id": "ears-predicate",
+      "practice": "ears",
+      "step": 2,
+      "title": "A person writes predicates that cite them",
+      "where": "spec/lockout.csl.ts",
+      "match": [
+        {
+          "kind": "shape-mismatch"
+        }
+      ]
+    },
+    {
+      "id": "bdd-scenario",
+      "practice": "bdd",
+      "step": 1,
+      "title": "Three amigos agree Gherkin scenarios",
+      "where": "features/lockout.feature",
+      "match": [
+        {
+          "kind": "unliftable",
+          "source": "Scenarios"
+        },
+        {
+          "kind": "dangling-citation"
+        }
+      ]
+    },
+    {
+      "id": "bdd-steps",
+      "practice": "bdd",
+      "step": 2,
+      "title": "Step definitions map phrases to keys",
+      "where": "csh/steps.ts",
+      "match": [
+        {
+          "kind": "not-comparable"
+        }
+      ]
+    },
+    {
+      "id": "tdd-test",
+      "practice": "tdd",
+      "step": 1,
+      "title": "Developer writes tests, then code",
+      "where": "test/ and src/lockout.ts",
+      "match": [
+        {
+          "kind": "example-conflict",
+          "practice": "tdd",
+          "not": {
+            "kind": "example-conflict",
+            "fragment": "AcceptCorrectPassword"
+          }
+        },
+        {
+          "kind": "no-rule"
+        },
+        {
+          "kind": "violated"
+        }
+      ]
+    },
+    {
+      "id": "tdd-binding",
+      "practice": "tdd",
+      "step": 2,
+      "title": "Witness keys map to model terms",
+      "where": "s.bind(...) in the spec",
+      "match": []
+    },
+    {
+      "id": "hub",
+      "practice": "hub",
+      "step": 3,
+      "title": "CSH: one pool",
+      "where": "rules from EARS, examples from BDD and TDD",
+      "match": [
+        {
+          "kind": "example-conflict",
+          "fragment": "AcceptCorrectPassword"
+        },
+        {
+          "kind": "example-divergence"
+        },
+        {
+          "kind": "single-source"
+        }
+      ]
+    }
+  ],
+  "causes": [
+    {
+      "id": "silence",
+      "name": "No practice owns the case",
+      "match": [
+        {
+          "kind": "uncited"
+        },
+        {
+          "kind": "unliftable"
+        },
+        {
+          "kind": "no-rule"
+        }
+      ]
+    },
+    {
+      "id": "one-voice",
+      "name": "Rules come from one practice only",
+      "match": [
+        {
+          "kind": "single-source"
+        }
+      ]
+    },
+    {
+      "id": "together",
+      "name": "Sentences never checked together",
+      "match": [
+        {
+          "kind": "joint-conflict"
+        },
+        {
+          "kind": "example-conflict",
+          "fragment": "AcceptCorrectPassword"
+        }
+      ]
+    },
+    {
+      "id": "drift",
+      "name": "Meaning drifts between notations",
+      "match": [
+        {
+          "kind": "shape-mismatch"
+        },
+        {
+          "kind": "dangling-citation"
+        },
+        {
+          "kind": "not-comparable"
+        }
+      ]
+    },
+    {
+      "id": "count",
+      "name": "A count in prose read two ways",
+      "match": [
+        {
+          "kind": "example-conflict",
+          "fragment": "LockOnThirdFailure"
+        },
+        {
+          "kind": "violated",
+          "fragment": "LockOnThirdFailure"
+        },
+        {
+          "kind": "example-divergence"
+        }
+      ]
+    }
+  ],
+  "decisionPoints": [
+    {
+      "point": "Third wrong password (2 before it)",
+      "class": "contradiction",
+      "says": {
+        "ears": {
+          "mark": "says",
+          "text": "LCK-001: lock"
+        },
+        "bdd": {
+          "mark": "says",
+          "text": "locked"
+        },
+        "tdd": {
+          "mark": "clash",
+          "text": "refused, not locked"
+        }
+      },
+      "note": "BDD and TDD contradict each other on the same input. The divergence query (C7) now reports it directly, with no rule needed between them.",
+      "match": [
+        {
+          "kind": "example-conflict",
+          "fragment": "LockOnThirdFailure"
+        },
+        {
+          "kind": "violated",
+          "fragment": "LockOnThirdFailure"
+        },
+        {
+          "kind": "example-divergence"
+        }
+      ]
+    },
+    {
+      "point": "Correct password on a locked account",
+      "class": "contradiction",
+      "says": {
+        "ears": {
+          "mark": "clash",
+          "text": "LCK-002: refuse · LCK-003: accept"
+        },
+        "bdd": {
+          "mark": "says",
+          "text": "refused"
+        },
+        "tdd": {
+          "mark": "says",
+          "text": "refused"
+        }
+      },
+      "note": "BDD and TDD each took the side of LCK-002 without saying so.",
+      "match": [
+        {
+          "kind": "joint-conflict"
+        },
+        {
+          "kind": "example-conflict",
+          "fragment": "AcceptCorrectPassword"
+        }
+      ]
+    },
+    {
+      "point": "How long the lock lasts",
+      "class": "drift",
+      "says": {
+        "ears": {
+          "mark": "says",
+          "text": "15 minutes, written as 900 s"
+        },
+        "bdd": {
+          "mark": "drift",
+          "text": "\"15 minutes\""
+        },
+        "tdd": {
+          "mark": "says",
+          "text": "900 s"
+        }
+      },
+      "note": "Kept out of every conflict rather than guessed.",
+      "match": [
+        {
+          "kind": "not-comparable"
+        }
+      ]
+    },
+    {
+      "point": "LCK-002's WHILE clause",
+      "class": "drift",
+      "says": {
+        "ears": {
+          "mark": "drift",
+          "text": "WHILE, translated as and"
+        },
+        "bdd": {
+          "mark": "silent",
+          "text": "n/a"
+        },
+        "tdd": {
+          "mark": "silent",
+          "text": "n/a"
+        }
+      },
+      "match": [
+        {
+          "kind": "shape-mismatch"
+        }
+      ]
+    },
+    {
+      "point": "Successful sign-in resets the count",
+      "class": "drift",
+      "says": {
+        "ears": {
+          "mark": "says",
+          "text": "LCK-003"
+        },
+        "bdd": {
+          "mark": "drift",
+          "text": "says it, tagged @LOCK-3"
+        },
+        "tdd": {
+          "mark": "says",
+          "text": "resets"
+        }
+      },
+      "match": [
+        {
+          "kind": "dangling-citation"
+        }
+      ]
+    },
+    {
+      "point": "Fourth wrong password",
+      "class": "silence",
+      "says": {
+        "ears": {
+          "mark": "silent",
+          "text": "silent"
+        },
+        "bdd": {
+          "mark": "silent",
+          "text": "silent"
+        },
+        "tdd": {
+          "mark": "says",
+          "text": "locks here"
+        }
+      },
+      "match": [
+        {
+          "kind": "no-rule"
+        }
+      ]
+    },
+    {
+      "point": "Email the holder on lock",
+      "class": "silence",
+      "says": {
+        "ears": {
+          "mark": "says",
+          "text": "LCK-004"
+        },
+        "bdd": {
+          "mark": "silent",
+          "text": "silent"
+        },
+        "tdd": {
+          "mark": "silent",
+          "text": "silent"
+        }
+      },
+      "match": [
+        {
+          "kind": "uncited",
+          "subject": "LCK-004"
+        }
+      ]
+    },
+    {
+      "point": "Two-factor sign-in",
+      "class": "silence",
+      "says": {
+        "ears": {
+          "mark": "says",
+          "text": "LCK-005 (WHERE)"
+        },
+        "bdd": {
+          "mark": "silent",
+          "text": "silent"
+        },
+        "tdd": {
+          "mark": "silent",
+          "text": "silent"
+        }
+      },
+      "match": [
+        {
+          "kind": "uncited",
+          "subject": "LCK-005"
+        },
+        {
+          "kind": "unliftable",
+          "source": "Product"
+        }
+      ]
+    },
+    {
+      "point": "Support unlocks an account",
+      "class": "silence",
+      "says": {
+        "ears": {
+          "mark": "silent",
+          "text": "silent"
+        },
+        "bdd": {
+          "mark": "says",
+          "text": "scenario"
+        },
+        "tdd": {
+          "mark": "silent",
+          "text": "silent"
+        }
+      },
+      "match": [
+        {
+          "kind": "unliftable",
+          "source": "Scenarios"
+        }
+      ]
+    }
+  ],
+  "goal": "Every decision point has one rule that all three practices agree with and a person has approved, every translation between notations is visible and reviewed, and every case one practice cannot express is a recorded decision.",
+  "rca": [
+    {
+      "id": "Q1",
+      "q": "Why can all three be signed off while they disagree?",
+      "a": "Each is judged by its own oracle. Tests pass against the code they drove. Scenarios are agreed in a meeting, and when they run, they run against their own step definitions. Sentences pass review one at a time. No oracle reads another practice's artefact.",
+      "depth": "Evidence stops: this is the condition, the questions below explain it."
+    },
+    {
+      "id": "Q2",
+      "q": "Why do they disagree on the third attempt?",
+      "a": "All three translated \"three failed attempts\" from the story independently. An ordinal in prose reads two ways: the third one locks, or three are allowed.",
+      "evidence": {
+        "file": "src/lockout.ts",
+        "text": "failedAttempts > MAX_FAILED_ATTEMPTS",
+        "stage": "before"
+      },
+      "depth": "5 Whys to the root, below."
+    },
+    {
+      "id": "Q3",
+      "q": "Why does EARS contradict itself?",
+      "a": "Each sentence was written and reviewed alone, and EARS has no rule for how two sentences combine. The WHILE clause that would separate them was left out of LCK-003.",
+      "depth": "Evidence stops: reading 2, a missing context. Only the owner can confirm it."
+    },
+    {
+      "id": "Q4",
+      "q": "Why does meaning drift between notations?",
+      "a": "Every hand-off is a translation by a person or a table: WHILE became and, minutes became seconds, identifiers were renumbered. Bindings and step definitions are code that nobody reviews as requirements.",
+      "depth": "Evidence stops: the translations exist only as code."
+    },
+    {
+      "id": "Q5",
+      "q": "Why are some cases nobody's?",
+      "a": "Each practice can express things the others cannot. EARS can say WHERE and talk about email, BDD can describe a support workflow, and TDD can pin down the fourth attempt. What one practice says alone has nothing to agree or disagree with.",
+      "depth": "Evidence stops: these are scope decisions for the owner."
+    },
+    {
+      "id": "Q6",
+      "q": "Why would a BDD and TDD contradiction go unseen even with CSH?",
+      "a": "Until C7, Q-EX compared an example only with rules, never with another example, so the scenario and the test on the third attempt collided only through LCK-001's predicate. With C7 built, the divergence query reports them directly at the first stage, with no rule between them.",
+      "evidence": {
+        "finding": "d7620e8595d774a2",
+        "stage": "before"
+      },
+      "depth": "Ends in a tool: countermeasure C7, now built."
+    },
+    {
+      "id": "Q7",
+      "q": "Why does a green suite not protect the agreed behaviour after approval?",
+      "a": "A change can edit the code and its test together, so both agree with each other and nothing in either practice notices. Only an approved rule outside the change can.",
+      "evidence": {
+        "finding": "17baf74885f66bc7",
+        "stage": "regression"
+      },
+      "depth": "Ends in a tool: the enforcing gate, countermeasure C9."
+    }
+  ],
+  "whys": [
+    {
+      "q": "Why does the shipped code lock on the fourth failure?",
+      "a": "It was written to pass \"allows three failed attempts before locking\", the first test written."
+    },
+    {
+      "q": "Why did the test allow three?",
+      "a": "The developer read \"three failed attempts\" in the story as a limit (MAX_FAILED_ATTEMPTS = 3 with >). The test came from the story, not from LCK-001 or the agreed scenario."
+    },
+    {
+      "q": "Why from the story and not from the agreed artefacts?",
+      "a": "A unit test had no way to cite a requirement or a scenario. The witness format carried no citation, so nothing linked the test to LCK-001. Countermeasure C8 gives witnesses citations."
+    },
+    {
+      "q": "Why did the scenario, which agrees with LCK-001, not catch it?",
+      "a": "The scenario and the test are both examples, and nothing compared examples with each other: not the BDD runner, not the test runner, and not Q-EX in CSH. Countermeasure C7 adds that comparison."
+    },
+    {
+      "q": "Why does it take a rule for two practices to meet?",
+      "a": "The three practices share no artefact between the story and the code. Each translates the story on its own, so they are parallel lanes, not a chain.",
+      "root": "Root cause, in a process: no shared hub. Countermeasures C1 (process) and C7, C8 (harness)."
+    }
+  ],
+  "countermeasures": [
+    {
+      "id": "C1",
+      "kind": "process",
+      "what": "Make the EARS sentence the hub. A story is ready only when its sentences have identifiers, and every scenario and test names the one it illustrates.",
+      "answers": [
+        "Q2",
+        "Q5"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "requirement",
+      "what": "LCK-003 gains \"WHILE the account is not locked\" (reading 2).",
+      "answers": [
+        "Q3"
+      ],
+      "clears": [
+        {
+          "kind": "joint-conflict"
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "requirement",
+      "what": "State counts as states, not ordinals: LCK-001 \"fails when the account already has 2 failed attempts\".",
+      "answers": [
+        "Q2"
+      ],
+      "clears": [
+        {
+          "kind": "example-conflict",
+          "fragment": "LockOnThirdFailure"
+        }
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "test",
+      "what": "Lock on the third failure in code and test; the fourth-attempt test becomes a locked-account test.",
+      "answers": [
+        "Q2"
+      ],
+      "clears": [
+        {
+          "kind": "no-rule"
+        }
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "binding",
+      "what": "Record unit conversions in the source (features/units.json), where they are reviewed like bindings.",
+      "answers": [
+        "Q4"
+      ],
+      "clears": [
+        {
+          "kind": "not-comparable"
+        }
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "binding",
+      "what": "Translate WHILE with while; retag @LOCK-3 as @LCK-003.",
+      "answers": [
+        "Q4"
+      ],
+      "clears": [
+        {
+          "kind": "shape-mismatch"
+        },
+        {
+          "kind": "dangling-citation"
+        }
+      ]
+    },
+    {
+      "id": "C7",
+      "kind": "harness",
+      "what": "Add an example-to-example query: two examples from different sources whose inputs can coincide and whose outcomes cannot both hold.",
+      "answers": [
+        "Q6"
+      ],
+      "expects": [
+        {
+          "kind": "example-divergence"
+        }
+      ]
+    },
+    {
+      "id": "C8",
+      "kind": "harness",
+      "what": "Let a witness cite a requirement, so a unit test carries the same link a scenario tag does.",
+      "answers": [
+        "Q2",
+        "Q6"
+      ],
+      "measure": "cited"
+    },
+    {
+      "id": "C9",
+      "kind": "process",
+      "what": "Approve the rules and run the enforcing gate on every change, so a disagreement stops the change that introduces it.",
+      "answers": [
+        "Q1",
+        "Q7"
+      ],
+      "stage": "approved"
+    },
+    {
+      "id": "C10",
+      "kind": "scope",
+      "what": "The owner decides LCK-004, LCK-005 and the support unlock: model each one, or record it as out of scope.",
+      "answers": [
+        "Q5"
+      ]
+    }
+  ],
+  "plan": [
+    {
+      "what": "Decide the two contradictions (C2, C3)",
+      "who": "Security owner",
+      "when": "Before any predicate is approved"
+    },
+    {
+      "what": "Rewrite the sentences, fix code and test, retag (C2 to C6)",
+      "who": "Product owner, developer, three amigos",
+      "when": "In one change, after the decision"
+    },
+    {
+      "what": "Model the agreed behaviour; approve the rules and bindings, signed (C9)",
+      "who": "Security owner",
+      "when": "After the change is clean in csh check"
+    },
+    {
+      "what": "Hub rule (C1)",
+      "who": "Team lead",
+      "when": "Next story"
+    },
+    {
+      "what": "Example-to-example query and witness citations (C7, C8)",
+      "who": "Harness maintainer",
+      "when": "Built in stages 11 and 13 of the anchor design"
+    },
+    {
+      "what": "Scope decisions (C10)",
+      "who": "Product owner",
+      "when": "Before release"
+    }
+  ],
+  "terms": [
+    {
+      "term": "A3",
+      "meaning": "the whole problem on one sheet: background, current condition, goal, root cause, countermeasures, plan, follow-up"
+    },
+    {
+      "term": "Gemba",
+      "meaning": "go and see: the decision-point table reads what each artefact actually says, not what its author meant"
+    },
+    {
+      "term": "Andon",
+      "meaning": "the red marks on the lanes: the hand-offs where signals were injected"
+    },
+    {
+      "term": "Pareto",
+      "meaning": "the vital few causes, those up to 80% of the signals, above the dashed line"
+    },
+    {
+      "term": "5 Whys",
+      "meaning": "asked until the answer is a process or a tool, never a person"
+    },
+    {
+      "term": "Jidoka",
+      "meaning": "stop the line where the defect starts: the enforcing gate blocks the regression stage"
+    },
+    {
+      "term": "Muda of translation",
+      "meaning": "three parallel translations of one story is rework done three times, with three chances to drift"
+    },
+    {
+      "term": "PDCA",
+      "meaning": "each stage of the run is one turn of plan, do, check, act; the sheet is rebuilt from every stage's report"
+    }
+  ]
+}

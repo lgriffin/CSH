@@ -1,0 +1,1879 @@
+{
+  "authority": {
+    "authority": "candidate"
+  },
+  "background": [
+    "A sign-in service must stop password guessing without locking out the real account holder. Three practices describe that behaviour, and each promises alignment. EARS promises one unambiguous way to write a requirement. BDD promises one shared example that business and engineering agree on. TDD promises that design and verification move together. Each unifies inside its own boundary. None of them is judged against the others.",
+    "How each practice is judged on its own terms: EARS sentences by review, BDD scenarios by agreement among the three amigos (here they are read by CSH, not run), and TDD tests by the code they drove into being. In CSH a sentence is cited, never translated, and a person writes the predicate; a scenario is an example lifted through the step table; a test is an example and a witness."
+  ],
+  "component": "SignInService",
+  "countermeasures": [
+    {
+      "answers": [
+        "Q2",
+        "Q5"
+      ],
+      "id": "C1",
+      "kind": "process",
+      "status": "proposed",
+      "what": "Make the EARS sentence the hub. A story is ready only when its sentences have identifiers, and every scenario and test names the one it illustrates."
+    },
+    {
+      "answers": [
+        "Q3"
+      ],
+      "id": "C2",
+      "kind": "requirement",
+      "status": "verified",
+      "what": "LCK-003 gains \"WHILE the account is not locked\" (reading 2)."
+    },
+    {
+      "answers": [
+        "Q2"
+      ],
+      "id": "C3",
+      "kind": "requirement",
+      "status": "verified",
+      "what": "State counts as states, not ordinals: LCK-001 \"fails when the account already has 2 failed attempts\"."
+    },
+    {
+      "answers": [
+        "Q2"
+      ],
+      "id": "C4",
+      "kind": "test",
+      "status": "verified",
+      "what": "Lock on the third failure in code and test; the fourth-attempt test becomes a locked-account test."
+    },
+    {
+      "answers": [
+        "Q4"
+      ],
+      "id": "C5",
+      "kind": "binding",
+      "status": "verified",
+      "what": "Record unit conversions in the source (features/units.json), where they are reviewed like bindings."
+    },
+    {
+      "answers": [
+        "Q4"
+      ],
+      "id": "C6",
+      "kind": "binding",
+      "status": "verified",
+      "what": "Translate WHILE with while; retag @LOCK-3 as @LCK-003."
+    },
+    {
+      "answers": [
+        "Q6"
+      ],
+      "id": "C7",
+      "kind": "harness",
+      "status": "verified",
+      "what": "Add an example-to-example query: two examples from different sources whose inputs can coincide and whose outcomes cannot both hold."
+    },
+    {
+      "answers": [
+        "Q2",
+        "Q6"
+      ],
+      "id": "C8",
+      "kind": "harness",
+      "status": "verified",
+      "what": "Let a witness cite a requirement, so a unit test carries the same link a scenario tag does."
+    },
+    {
+      "answers": [
+        "Q1",
+        "Q7"
+      ],
+      "id": "C9",
+      "kind": "process",
+      "status": "verified",
+      "what": "Approve the rules and run the enforcing gate on every change, so a disagreement stops the change that introduces it."
+    },
+    {
+      "answers": [
+        "Q5"
+      ],
+      "id": "C10",
+      "kind": "scope",
+      "status": "owner decides",
+      "what": "The owner decides LCK-004, LCK-005 and the support unlock: model each one, or record it as out of scope."
+    }
+  ],
+  "decisionPoints": [
+    {
+      "class": "contradiction",
+      "note": "BDD and TDD contradict each other on the same input. The divergence query (C7) now reports it directly, with no rule needed between them.",
+      "point": "Third wrong password (2 before it)",
+      "says": {
+        "bdd": {
+          "mark": "says",
+          "text": "locked"
+        },
+        "ears": {
+          "mark": "says",
+          "text": "LCK-001: lock"
+        },
+        "tdd": {
+          "mark": "clash",
+          "text": "refused, not locked"
+        }
+      },
+      "signals": [
+        [
+          "7e5ab121a94c21fd",
+          "d7620e8595d774a2"
+        ],
+        [],
+        [],
+        [
+          "17baf74885f66bc7",
+          "825ab3e7631a766c",
+          "d3b14091a05a18c8",
+          "3716f56495558948"
+        ]
+      ]
+    },
+    {
+      "class": "contradiction",
+      "note": "BDD and TDD each took the side of LCK-002 without saying so.",
+      "point": "Correct password on a locked account",
+      "says": {
+        "bdd": {
+          "mark": "says",
+          "text": "refused"
+        },
+        "ears": {
+          "mark": "clash",
+          "text": "LCK-002: refuse · LCK-003: accept"
+        },
+        "tdd": {
+          "mark": "says",
+          "text": "refused"
+        }
+      },
+      "signals": [
+        [
+          "5e3cfe7d6faa2c29",
+          "c897987617527744",
+          "6aa446d724b76ed9"
+        ],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "class": "drift",
+      "note": "Kept out of every conflict rather than guessed.",
+      "point": "How long the lock lasts",
+      "says": {
+        "bdd": {
+          "mark": "drift",
+          "text": "\"15 minutes\""
+        },
+        "ears": {
+          "mark": "says",
+          "text": "15 minutes, written as 900 s"
+        },
+        "tdd": {
+          "mark": "says",
+          "text": "900 s"
+        }
+      },
+      "signals": [
+        [
+          "4eab9cdc5a260c6a"
+        ],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "class": "drift",
+      "point": "LCK-002's WHILE clause",
+      "says": {
+        "bdd": {
+          "mark": "silent",
+          "text": "n/a"
+        },
+        "ears": {
+          "mark": "drift",
+          "text": "WHILE, translated as and"
+        },
+        "tdd": {
+          "mark": "silent",
+          "text": "n/a"
+        }
+      },
+      "signals": [
+        [
+          "ff99956cd0985dcb"
+        ],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "class": "drift",
+      "point": "Successful sign-in resets the count",
+      "says": {
+        "bdd": {
+          "mark": "drift",
+          "text": "says it, tagged @LOCK-3"
+        },
+        "ears": {
+          "mark": "says",
+          "text": "LCK-003"
+        },
+        "tdd": {
+          "mark": "says",
+          "text": "resets"
+        }
+      },
+      "signals": [
+        [
+          "55d2ec357fcc00f8"
+        ],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "class": "silence",
+      "point": "Fourth wrong password",
+      "says": {
+        "bdd": {
+          "mark": "silent",
+          "text": "silent"
+        },
+        "ears": {
+          "mark": "silent",
+          "text": "silent"
+        },
+        "tdd": {
+          "mark": "says",
+          "text": "locks here"
+        }
+      },
+      "signals": [
+        [
+          "9bf93f99db948467"
+        ],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "class": "silence",
+      "point": "Email the holder on lock",
+      "says": {
+        "bdd": {
+          "mark": "silent",
+          "text": "silent"
+        },
+        "ears": {
+          "mark": "says",
+          "text": "LCK-004"
+        },
+        "tdd": {
+          "mark": "silent",
+          "text": "silent"
+        }
+      },
+      "signals": [
+        [
+          "87488c7b8933dd6b"
+        ],
+        [
+          "87488c7b8933dd6b"
+        ],
+        [
+          "87488c7b8933dd6b"
+        ],
+        [
+          "87488c7b8933dd6b"
+        ]
+      ]
+    },
+    {
+      "class": "silence",
+      "point": "Two-factor sign-in",
+      "says": {
+        "bdd": {
+          "mark": "silent",
+          "text": "silent"
+        },
+        "ears": {
+          "mark": "says",
+          "text": "LCK-005 (WHERE)"
+        },
+        "tdd": {
+          "mark": "silent",
+          "text": "silent"
+        }
+      },
+      "signals": [
+        [
+          "87e909e7daa894c8",
+          "f35a16c89b8c5fb6"
+        ],
+        [
+          "87e909e7daa894c8",
+          "f35a16c89b8c5fb6"
+        ],
+        [
+          "87e909e7daa894c8",
+          "f35a16c89b8c5fb6"
+        ],
+        [
+          "87e909e7daa894c8",
+          "f35a16c89b8c5fb6"
+        ]
+      ]
+    },
+    {
+      "class": "silence",
+      "point": "Support unlocks an account",
+      "says": {
+        "bdd": {
+          "mark": "says",
+          "text": "scenario"
+        },
+        "ears": {
+          "mark": "silent",
+          "text": "silent"
+        },
+        "tdd": {
+          "mark": "silent",
+          "text": "silent"
+        }
+      },
+      "signals": [
+        [
+          "706941b706f018f8"
+        ],
+        [
+          "706941b706f018f8"
+        ],
+        [
+          "706941b706f018f8"
+        ],
+        [
+          "706941b706f018f8"
+        ]
+      ]
+    }
+  ],
+  "followUp": {
+    "gate": {
+      "mode": "enforcing",
+      "overall": "block"
+    },
+    "returned": []
+  },
+  "goal": "Every decision point has one rule that all three practices agree with and a person has approved, every translation between notations is visible and reviewed, and every case one practice cannot express is a recorded decision.",
+  "judgmentsDigest": "sha256:040542c2af908564e184b6555255006110c72ddd22ffc20e244ee6907146bba8",
+  "lanes": [
+    {
+      "counts": [
+        4,
+        3,
+        3,
+        3
+      ],
+      "id": "ears-sentence",
+      "practice": "ears",
+      "step": 1,
+      "title": "Product owner writes EARS sentences",
+      "where": "docs/requirements.md"
+    },
+    {
+      "counts": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "id": "ears-predicate",
+      "practice": "ears",
+      "step": 2,
+      "title": "A person writes predicates that cite them",
+      "where": "spec/lockout.csl.ts"
+    },
+    {
+      "counts": [
+        2,
+        1,
+        1,
+        1
+      ],
+      "id": "bdd-scenario",
+      "practice": "bdd",
+      "step": 1,
+      "title": "Three amigos agree Gherkin scenarios",
+      "where": "features/lockout.feature"
+    },
+    {
+      "counts": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "id": "bdd-steps",
+      "practice": "bdd",
+      "step": 2,
+      "title": "Step definitions map phrases to keys",
+      "where": "csh/steps.ts"
+    },
+    {
+      "counts": [
+        2,
+        0,
+        0,
+        2
+      ],
+      "id": "tdd-test",
+      "practice": "tdd",
+      "step": 1,
+      "title": "Developer writes tests, then code",
+      "where": "test/ and src/lockout.ts"
+    },
+    {
+      "counts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "id": "tdd-binding",
+      "practice": "tdd",
+      "step": 2,
+      "title": "Witness keys map to model terms",
+      "where": "s.bind(...) in the spec"
+    },
+    {
+      "counts": [
+        6,
+        3,
+        4,
+        6
+      ],
+      "id": "hub",
+      "practice": "hub",
+      "step": 3,
+      "title": "CSH: one pool",
+      "where": "rules from EARS, examples from BDD and TDD"
+    }
+  ],
+  "measures": [
+    {
+      "id": "conflicts",
+      "name": "Conflicts between claims",
+      "target": "0",
+      "values": [
+        {
+          "met": false,
+          "value": "4"
+        },
+        {
+          "met": true,
+          "value": "0"
+        },
+        {
+          "met": true,
+          "value": "0"
+        },
+        {
+          "met": false,
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "id": "not-comparable",
+      "name": "Not comparable",
+      "target": "0",
+      "values": [
+        {
+          "met": false,
+          "value": "1"
+        },
+        {
+          "met": true,
+          "value": "0"
+        },
+        {
+          "met": true,
+          "value": "0"
+        },
+        {
+          "met": true,
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": "drift",
+      "name": "Shape mismatches and dangling citations",
+      "target": "0",
+      "values": [
+        {
+          "met": false,
+          "value": "2"
+        },
+        {
+          "met": true,
+          "value": "0"
+        },
+        {
+          "met": true,
+          "value": "0"
+        },
+        {
+          "met": true,
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": "no-rule",
+      "name": "Examples with no rule",
+      "target": "0",
+      "values": [
+        {
+          "met": false,
+          "value": "1"
+        },
+        {
+          "met": true,
+          "value": "0"
+        },
+        {
+          "met": true,
+          "value": "0"
+        },
+        {
+          "met": true,
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": "silences",
+      "name": "Silences without an owner decision",
+      "target": "0",
+      "values": [
+        {
+          "met": false,
+          "value": "4"
+        },
+        {
+          "met": false,
+          "value": "3"
+        },
+        {
+          "met": false,
+          "value": "3"
+        },
+        {
+          "met": false,
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "id": "satisfied",
+      "name": "Rules satisfied on approved evidence",
+      "target": "all",
+      "values": [
+        {
+          "met": false,
+          "value": "0 of 3"
+        },
+        {
+          "met": false,
+          "value": "0 of 3"
+        },
+        {
+          "met": true,
+          "value": "4 of 4"
+        },
+        {
+          "met": false,
+          "value": "3 of 4"
+        }
+      ]
+    },
+    {
+      "id": "gate",
+      "name": "Enforcing gate allows",
+      "target": "allow",
+      "values": [
+        {
+          "met": false,
+          "value": "allow (advisory)"
+        },
+        {
+          "met": false,
+          "value": "allow (advisory)"
+        },
+        {
+          "met": true,
+          "value": "allow"
+        },
+        {
+          "met": false,
+          "value": "block"
+        }
+      ]
+    },
+    {
+      "id": "cited",
+      "name": "Examples that cite a requirement",
+      "target": "all",
+      "values": [
+        {
+          "met": false,
+          "value": "2 of 7"
+        },
+        {
+          "met": true,
+          "value": "8 of 8"
+        },
+        {
+          "met": true,
+          "value": "8 of 8"
+        },
+        {
+          "met": true,
+          "value": "8 of 8"
+        }
+      ]
+    }
+  ],
+  "pareto": [
+    {
+      "bars": [
+        {
+          "cause": "silence",
+          "cumulative": 0.3125,
+          "n": 5,
+          "name": "No practice owns the case",
+          "vital": true
+        },
+        {
+          "cause": "one-voice",
+          "cumulative": 0.5,
+          "n": 3,
+          "name": "Rules come from one practice only",
+          "vital": true
+        },
+        {
+          "cause": "together",
+          "cumulative": 0.6875,
+          "n": 3,
+          "name": "Sentences never checked together",
+          "vital": true
+        },
+        {
+          "cause": "drift",
+          "cumulative": 0.875,
+          "n": 3,
+          "name": "Meaning drifts between notations",
+          "vital": true
+        },
+        {
+          "cause": "count",
+          "cumulative": 1,
+          "n": 2,
+          "name": "A count in prose read two ways",
+          "vital": false
+        }
+      ],
+      "stage": "before"
+    },
+    {
+      "bars": [
+        {
+          "cause": "silence",
+          "cumulative": 0.5714285714285714,
+          "n": 4,
+          "name": "No practice owns the case",
+          "vital": true
+        },
+        {
+          "cause": "one-voice",
+          "cumulative": 1,
+          "n": 3,
+          "name": "Rules come from one practice only",
+          "vital": true
+        }
+      ],
+      "stage": "countermeasures"
+    },
+    {
+      "bars": [
+        {
+          "cause": "silence",
+          "cumulative": 0.5,
+          "n": 4,
+          "name": "No practice owns the case",
+          "vital": true
+        },
+        {
+          "cause": "one-voice",
+          "cumulative": 1,
+          "n": 4,
+          "name": "Rules come from one practice only",
+          "vital": true
+        }
+      ],
+      "stage": "approved"
+    },
+    {
+      "bars": [
+        {
+          "cause": "silence",
+          "cumulative": 0.3333333333333333,
+          "n": 4,
+          "name": "No practice owns the case",
+          "vital": true
+        },
+        {
+          "cause": "one-voice",
+          "cumulative": 0.6666666666666666,
+          "n": 4,
+          "name": "Rules come from one practice only",
+          "vital": true
+        },
+        {
+          "cause": "count",
+          "cumulative": 1,
+          "n": 4,
+          "name": "A count in prose read two ways",
+          "vital": true
+        }
+      ],
+      "stage": "regression"
+    }
+  ],
+  "plan": [
+    {
+      "what": "Decide the two contradictions (C2, C3)",
+      "when": "Before any predicate is approved",
+      "who": "Security owner"
+    },
+    {
+      "what": "Rewrite the sentences, fix code and test, retag (C2 to C6)",
+      "when": "In one change, after the decision",
+      "who": "Product owner, developer, three amigos"
+    },
+    {
+      "what": "Model the agreed behaviour; approve the rules and bindings, signed (C9)",
+      "when": "After the change is clean in csh check",
+      "who": "Security owner"
+    },
+    {
+      "what": "Hub rule (C1)",
+      "when": "Next story",
+      "who": "Team lead"
+    },
+    {
+      "what": "Example-to-example query and witness citations (C7, C8)",
+      "when": "Built in stages 11 and 13 of the anchor design",
+      "who": "Harness maintainer"
+    },
+    {
+      "what": "Scope decisions (C10)",
+      "when": "Before release",
+      "who": "Product owner"
+    }
+  ],
+  "practices": [
+    {
+      "author": "Product owner",
+      "cannotSay": "A concrete value, or how two sentences combine",
+      "id": "ears",
+      "kind": "requirements",
+      "name": "EARS",
+      "sources": [
+        "Product"
+      ],
+      "unit": "the sentence"
+    },
+    {
+      "author": "Three amigos",
+      "cannotSay": "A rule; and a step means nothing until defined",
+      "id": "bdd",
+      "kind": "scenarios",
+      "name": "BDD",
+      "sources": [
+        "Scenarios"
+      ],
+      "unit": "the scenario"
+    },
+    {
+      "author": "Developer",
+      "cannotSay": "Which requirement it serves",
+      "id": "tdd",
+      "kind": "tests",
+      "name": "TDD",
+      "sources": [
+        "UnitTests"
+      ],
+      "unit": "the test"
+    }
+  ],
+  "problem": "EARS, BDD and TDD are each designed to pin behaviour down and bring people onto one understanding. On sign-in lockout each is signed off on its own terms, yet read together they disagree, and the code ships one of the readings nobody agreed.",
+  "problems": [],
+  "rca": [
+    {
+      "a": "Each is judged by its own oracle. Tests pass against the code they drove. Scenarios are agreed in a meeting, and when they run, they run against their own step definitions. Sentences pass review one at a time. No oracle reads another practice's artefact.",
+      "depth": "Evidence stops: this is the condition, the questions below explain it.",
+      "id": "Q1",
+      "q": "Why can all three be signed off while they disagree?"
+    },
+    {
+      "a": "All three translated \"three failed attempts\" from the story independently. An ordinal in prose reads two ways: the third one locks, or three are allowed.",
+      "depth": "5 Whys to the root, below.",
+      "evidence": {
+        "file": "src/lockout.ts",
+        "resolves": true,
+        "stage": "before",
+        "text": "failedAttempts > MAX_FAILED_ATTEMPTS"
+      },
+      "id": "Q2",
+      "q": "Why do they disagree on the third attempt?"
+    },
+    {
+      "a": "Each sentence was written and reviewed alone, and EARS has no rule for how two sentences combine. The WHILE clause that would separate them was left out of LCK-003.",
+      "depth": "Evidence stops: reading 2, a missing context. Only the owner can confirm it.",
+      "id": "Q3",
+      "q": "Why does EARS contradict itself?"
+    },
+    {
+      "a": "Every hand-off is a translation by a person or a table: WHILE became and, minutes became seconds, identifiers were renumbered. Bindings and step definitions are code that nobody reviews as requirements.",
+      "depth": "Evidence stops: the translations exist only as code.",
+      "id": "Q4",
+      "q": "Why does meaning drift between notations?"
+    },
+    {
+      "a": "Each practice can express things the others cannot. EARS can say WHERE and talk about email, BDD can describe a support workflow, and TDD can pin down the fourth attempt. What one practice says alone has nothing to agree or disagree with.",
+      "depth": "Evidence stops: these are scope decisions for the owner.",
+      "id": "Q5",
+      "q": "Why are some cases nobody's?"
+    },
+    {
+      "a": "Until C7, Q-EX compared an example only with rules, never with another example, so the scenario and the test on the third attempt collided only through LCK-001's predicate. With C7 built, the divergence query reports them directly at the first stage, with no rule between them.",
+      "depth": "Ends in a tool: countermeasure C7, now built.",
+      "evidence": {
+        "finding": "d7620e8595d774a2",
+        "resolves": true,
+        "stage": "before"
+      },
+      "id": "Q6",
+      "q": "Why would a BDD and TDD contradiction go unseen even with CSH?"
+    },
+    {
+      "a": "A change can edit the code and its test together, so both agree with each other and nothing in either practice notices. Only an approved rule outside the change can.",
+      "depth": "Ends in a tool: the enforcing gate, countermeasure C9.",
+      "evidence": {
+        "finding": "17baf74885f66bc7",
+        "resolves": true,
+        "stage": "regression"
+      },
+      "id": "Q7",
+      "q": "Why does a green suite not protect the agreed behaviour after approval?"
+    }
+  ],
+  "schema": "csh-a3/v1",
+  "slug": "three-practices",
+  "stages": [
+    {
+      "conflicts": 4,
+      "examples": {
+        "citing": 2,
+        "total": 7
+      },
+      "gate": {
+        "mode": "advisory",
+        "overall": "allow"
+      },
+      "id": "before",
+      "name": "Before",
+      "rules": [
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "SignInService/StopPasswordGuessing/AcceptCorrectPassword",
+          "name": "AcceptCorrectPassword",
+          "selfApproved": false,
+          "verdict": "conflicting"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "SignInService/StopPasswordGuessing/LockOnThirdFailure",
+          "name": "LockOnThirdFailure",
+          "selfApproved": false,
+          "verdict": "conflicting"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "SignInService/StopPasswordGuessing/RefuseWhileLocked",
+          "name": "RefuseWhileLocked",
+          "selfApproved": false,
+          "verdict": "conflicting"
+        }
+      ],
+      "signals": [
+        {
+          "cause": "drift",
+          "detail": "SignInService/@Scenarios/ScenarioASuccessfulSignInClearsTheFailedAttempts cites Product/LOCK-3, which does not exist",
+          "fragments": [
+            "SignInService/@Scenarios/ScenarioASuccessfulSignInClearsTheFailedAttempts"
+          ],
+          "id": "55d2ec357fcc00f8",
+          "kind": "dangling-citation",
+          "label": "dangling-citation: SignInService/@Scenarios/ScenarioASuccessfulSignInClearsTheFailedAttempts cites Product/LOCK-3, which does not exist",
+          "lane": "bdd-scenario",
+          "practices": [
+            "bdd",
+            "ears"
+          ],
+          "sources": [
+            "Product",
+            "Scenarios"
+          ]
+        },
+        {
+          "cause": "together",
+          "detail": "Q-EX(SignInService/@UnitTests/WitnessRefusesALockedAccountEvenWithTheCorrectPassword)",
+          "fragments": [
+            "SignInService/@UnitTests/WitnessRefusesALockedAccountEvenWithTheCorrectPassword",
+            "SignInService/StopPasswordGuessing/AcceptCorrectPassword"
+          ],
+          "id": "5e3cfe7d6faa2c29",
+          "kind": "example-conflict",
+          "label": "example-conflict 5e3cfe7d6faa2c29: WitnessRefusesALockedAccountEvenWithTheCorrectPassword × AcceptCorrectPassword",
+          "lane": "hub",
+          "practices": [
+            "tdd"
+          ],
+          "sources": [
+            "UnitTests",
+            "intent"
+          ]
+        },
+        {
+          "cause": "count",
+          "detail": "Q-EX(SignInService/@UnitTests/WitnessAllowsThreeFailedAttemptsBeforeLocking)",
+          "fragments": [
+            "SignInService/@UnitTests/WitnessAllowsThreeFailedAttemptsBeforeLocking",
+            "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+          ],
+          "id": "7e5ab121a94c21fd",
+          "kind": "example-conflict",
+          "label": "example-conflict 7e5ab121a94c21fd: WitnessAllowsThreeFailedAttemptsBeforeLocking × LockOnThirdFailure",
+          "lane": "tdd-test",
+          "practices": [
+            "tdd"
+          ],
+          "sources": [
+            "UnitTests",
+            "intent"
+          ]
+        },
+        {
+          "cause": "together",
+          "detail": "Q-EX(SignInService/@Scenarios/ScenarioALockedAccountIsRefusedEvenWithTheCorrectPassword)",
+          "fragments": [
+            "SignInService/@Scenarios/ScenarioALockedAccountIsRefusedEvenWithTheCorrectPassword",
+            "SignInService/StopPasswordGuessing/AcceptCorrectPassword"
+          ],
+          "id": "c897987617527744",
+          "kind": "example-conflict",
+          "label": "example-conflict c897987617527744: ScenarioALockedAccountIsRefusedEvenWithTheCorrectPassword × AcceptCorrectPassword",
+          "lane": "hub",
+          "practices": [
+            "bdd"
+          ],
+          "sources": [
+            "Scenarios",
+            "intent"
+          ]
+        },
+        {
+          "cause": "count",
+          "detail": "Q-DIV(SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessAllowsThreeFailedAttemptsBeforeLocking); inputs overlapping",
+          "fragments": [
+            "SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount",
+            "SignInService/@UnitTests/WitnessAllowsThreeFailedAttemptsBeforeLocking"
+          ],
+          "id": "d7620e8595d774a2",
+          "kind": "example-divergence",
+          "label": "example-divergence d7620e8595d774a2: ScenarioThirdFailedAttemptLocksTheAccount × WitnessAllowsThreeFailedAttemptsBeforeLocking",
+          "lane": "hub",
+          "practices": [
+            "bdd",
+            "tdd"
+          ],
+          "sources": [
+            "Scenarios",
+            "UnitTests"
+          ]
+        },
+        {
+          "cause": "together",
+          "detail": "Q-FEAS(SignIn)",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/AcceptCorrectPassword",
+            "SignInService/StopPasswordGuessing/RefuseWhileLocked"
+          ],
+          "id": "6aa446d724b76ed9",
+          "kind": "joint-conflict",
+          "label": "joint-conflict 6aa446d724b76ed9: AcceptCorrectPassword × RefuseWhileLocked",
+          "lane": "ears-sentence",
+          "practices": [],
+          "sources": [
+            "intent"
+          ]
+        },
+        {
+          "cause": "silence",
+          "detail": "no requirement on SignIn has a trigger this example meets",
+          "fragments": [
+            "SignInService/@UnitTests/WitnessLocksOnTheFourthFailedAttempt"
+          ],
+          "id": "9bf93f99db948467",
+          "kind": "no-rule",
+          "label": "no-rule: WitnessLocksOnTheFourthFailedAttempt",
+          "lane": "tdd-test",
+          "practices": [
+            "tdd"
+          ],
+          "sources": [
+            "UnitTests"
+          ],
+          "subject": "SignInService/@UnitTests/WitnessLocksOnTheFourthFailedAttempt"
+        },
+        {
+          "cause": "drift",
+          "detail": "unit-mismatch",
+          "fragments": [
+            "SignInService/@Scenarios/ScenarioTheLockLastsFifteenMinutes"
+          ],
+          "id": "4eab9cdc5a260c6a",
+          "kind": "not-comparable",
+          "label": "not comparable: ScenarioTheLockLastsFifteenMinutes (unit-mismatch)",
+          "lane": "bdd-steps",
+          "practices": [
+            "bdd"
+          ],
+          "sources": [
+            "Scenarios"
+          ]
+        },
+        {
+          "cause": "drift",
+          "detail": "Product/LCK-002 is complex with a while clause; SignInService/StopPasswordGuessing/RefuseWhileLocked has no while",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/RefuseWhileLocked"
+          ],
+          "id": "ff99956cd0985dcb",
+          "kind": "shape-mismatch",
+          "label": "shape-mismatch: Product/LCK-002 is complex with a while clause; SignInService/StopPasswordGuessing/RefuseWhileLocked has no while",
+          "lane": "ears-predicate",
+          "practices": [
+            "ears"
+          ],
+          "sources": [
+            "Product",
+            "intent"
+          ],
+          "subject": "docs/requirements.md:6"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Login.failures, SignIn.args.passwordOk, SignIn.result asserted only by intent",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/AcceptCorrectPassword"
+          ],
+          "id": "0cad9c9720d0f82c",
+          "kind": "single-source",
+          "label": "single-source: AcceptCorrectPassword",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "SignInService/StopPasswordGuessing/AcceptCorrectPassword"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Login.failures, Login.lockSeconds, Login.locked, SignIn.args.passwordOk, SignIn.result asserted only by intent",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+          ],
+          "id": "ed8af5dbf8963783",
+          "kind": "single-source",
+          "label": "single-source: LockOnThirdFailure",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Login.locked, SignIn.result asserted only by intent",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/RefuseWhileLocked"
+          ],
+          "id": "fca806ab831fe61c",
+          "kind": "single-source",
+          "label": "single-source: RefuseWhileLocked",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "SignInService/StopPasswordGuessing/RefuseWhileLocked"
+        },
+        {
+          "cause": "silence",
+          "detail": "docs/requirements.md:8: no fragment cites it",
+          "fragments": [],
+          "id": "87488c7b8933dd6b",
+          "kind": "uncited",
+          "label": "uncited: LCK-004",
+          "lane": "ears-sentence",
+          "practices": [
+            "ears"
+          ],
+          "sources": [
+            "Product"
+          ],
+          "subject": "Product/LCK-004"
+        },
+        {
+          "cause": "silence",
+          "detail": "docs/requirements.md:9: no fragment cites it",
+          "fragments": [],
+          "id": "87e909e7daa894c8",
+          "kind": "uncited",
+          "label": "uncited: LCK-005",
+          "lane": "ears-sentence",
+          "practices": [
+            "ears"
+          ],
+          "sources": [
+            "Product"
+          ],
+          "subject": "Product/LCK-005"
+        },
+        {
+          "cause": "silence",
+          "detail": "Scenarios features/lockout.feature:35: unknown-step",
+          "fragments": [],
+          "id": "706941b706f018f8",
+          "kind": "unliftable",
+          "label": "unliftable: Scenarios (unknown-step)",
+          "lane": "bdd-scenario",
+          "practices": [
+            "bdd"
+          ],
+          "sources": [
+            "Scenarios"
+          ],
+          "subject": "Scenarios"
+        },
+        {
+          "cause": "silence",
+          "detail": "Product docs/requirements.md:9: feature-scope",
+          "fragments": [],
+          "id": "f35a16c89b8c5fb6",
+          "kind": "unliftable",
+          "label": "unliftable: Product (feature-scope)",
+          "lane": "ears-sentence",
+          "practices": [
+            "ears"
+          ],
+          "sources": [
+            "Product"
+          ],
+          "subject": "Product"
+        }
+      ],
+      "tests": {
+        "passed": 4,
+        "total": 4
+      },
+      "what": "The three practices as written, each signed off on its own terms."
+    },
+    {
+      "conflicts": 0,
+      "examples": {
+        "citing": 8,
+        "total": 8
+      },
+      "gate": {
+        "mode": "advisory",
+        "overall": "allow"
+      },
+      "id": "countermeasures",
+      "name": "Countermeasures",
+      "rules": [
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "SignInService/StopPasswordGuessing/AcceptCorrectPassword",
+          "name": "AcceptCorrectPassword",
+          "selfApproved": false,
+          "verdict": "unknown"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "SignInService/StopPasswordGuessing/LockOnThirdFailure",
+          "name": "LockOnThirdFailure",
+          "selfApproved": false,
+          "verdict": "unknown"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "SignInService/StopPasswordGuessing/RefuseWhileLocked",
+          "name": "RefuseWhileLocked",
+          "selfApproved": false,
+          "verdict": "unknown"
+        }
+      ],
+      "signals": [
+        {
+          "cause": "one-voice",
+          "detail": "Login.failures, Login.locked, SignIn.args.passwordOk, SignIn.result asserted only by intent",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/AcceptCorrectPassword"
+          ],
+          "id": "0cad9c9720d0f82c",
+          "kind": "single-source",
+          "label": "single-source: AcceptCorrectPassword",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "SignInService/StopPasswordGuessing/AcceptCorrectPassword"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Login.failures, Login.lockSeconds, Login.locked, SignIn.args.passwordOk, SignIn.result asserted only by intent",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+          ],
+          "id": "ed8af5dbf8963783",
+          "kind": "single-source",
+          "label": "single-source: LockOnThirdFailure",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Login.locked, SignIn.result asserted only by intent",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/RefuseWhileLocked"
+          ],
+          "id": "fca806ab831fe61c",
+          "kind": "single-source",
+          "label": "single-source: RefuseWhileLocked",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "SignInService/StopPasswordGuessing/RefuseWhileLocked"
+        },
+        {
+          "cause": "silence",
+          "detail": "docs/requirements.md:8: no fragment cites it",
+          "fragments": [],
+          "id": "87488c7b8933dd6b",
+          "kind": "uncited",
+          "label": "uncited: LCK-004",
+          "lane": "ears-sentence",
+          "practices": [
+            "ears"
+          ],
+          "sources": [
+            "Product"
+          ],
+          "subject": "Product/LCK-004"
+        },
+        {
+          "cause": "silence",
+          "detail": "docs/requirements.md:9: no fragment cites it",
+          "fragments": [],
+          "id": "87e909e7daa894c8",
+          "kind": "uncited",
+          "label": "uncited: LCK-005",
+          "lane": "ears-sentence",
+          "practices": [
+            "ears"
+          ],
+          "sources": [
+            "Product"
+          ],
+          "subject": "Product/LCK-005"
+        },
+        {
+          "cause": "silence",
+          "detail": "Scenarios features/lockout.feature:35: unknown-step",
+          "fragments": [],
+          "id": "706941b706f018f8",
+          "kind": "unliftable",
+          "label": "unliftable: Scenarios (unknown-step)",
+          "lane": "bdd-scenario",
+          "practices": [
+            "bdd"
+          ],
+          "sources": [
+            "Scenarios"
+          ],
+          "subject": "Scenarios"
+        },
+        {
+          "cause": "silence",
+          "detail": "Product docs/requirements.md:9: feature-scope",
+          "fragments": [],
+          "id": "f35a16c89b8c5fb6",
+          "kind": "unliftable",
+          "label": "unliftable: Product (feature-scope)",
+          "lane": "ears-sentence",
+          "practices": [
+            "ears"
+          ],
+          "sources": [
+            "Product"
+          ],
+          "subject": "Product"
+        }
+      ],
+      "tests": {
+        "passed": 4,
+        "total": 4
+      },
+      "what": "C2 to C6 applied as one change, taking the owner's side in each decision as an assumption."
+    },
+    {
+      "conflicts": 0,
+      "examples": {
+        "citing": 8,
+        "total": 8
+      },
+      "gate": {
+        "mode": "enforcing",
+        "overall": "allow"
+      },
+      "id": "approved",
+      "name": "Model and approval",
+      "rules": [
+        {
+          "authority": "approved",
+          "disposition": "allow",
+          "fragment": "SignInService/StopPasswordGuessing/AcceptCorrectPassword",
+          "name": "AcceptCorrectPassword",
+          "selfApproved": true,
+          "verdict": "satisfied"
+        },
+        {
+          "authority": "approved",
+          "disposition": "allow",
+          "fragment": "SignInService/StopPasswordGuessing/LockHasDuration",
+          "name": "LockHasDuration",
+          "selfApproved": true,
+          "verdict": "satisfied"
+        },
+        {
+          "authority": "approved",
+          "disposition": "allow",
+          "fragment": "SignInService/StopPasswordGuessing/LockOnThirdFailure",
+          "name": "LockOnThirdFailure",
+          "selfApproved": true,
+          "verdict": "satisfied"
+        },
+        {
+          "authority": "approved",
+          "disposition": "allow",
+          "fragment": "SignInService/StopPasswordGuessing/RefuseWhileLocked",
+          "name": "RefuseWhileLocked",
+          "selfApproved": true,
+          "verdict": "satisfied"
+        }
+      ],
+      "signals": [
+        {
+          "cause": "one-voice",
+          "detail": "Login.failures, Login.locked, SignIn.args.passwordOk, SignIn.result asserted only by intent",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/AcceptCorrectPassword"
+          ],
+          "id": "0cad9c9720d0f82c",
+          "kind": "single-source",
+          "label": "single-source: AcceptCorrectPassword",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "SignInService/StopPasswordGuessing/AcceptCorrectPassword"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Login.lockSeconds, Login.locked asserted only by intent",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/LockHasDuration"
+          ],
+          "id": "956d27be4a53010f",
+          "kind": "single-source",
+          "label": "single-source: LockHasDuration",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "SignInService/StopPasswordGuessing/LockHasDuration"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Login.failures, Login.lockSeconds, Login.locked, SignIn.args.passwordOk, SignIn.result asserted only by intent",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+          ],
+          "id": "ed8af5dbf8963783",
+          "kind": "single-source",
+          "label": "single-source: LockOnThirdFailure",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Login.locked, SignIn.result asserted only by intent",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/RefuseWhileLocked"
+          ],
+          "id": "fca806ab831fe61c",
+          "kind": "single-source",
+          "label": "single-source: RefuseWhileLocked",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "SignInService/StopPasswordGuessing/RefuseWhileLocked"
+        },
+        {
+          "cause": "silence",
+          "detail": "docs/requirements.md:8: no fragment cites it",
+          "fragments": [],
+          "id": "87488c7b8933dd6b",
+          "kind": "uncited",
+          "label": "uncited: LCK-004",
+          "lane": "ears-sentence",
+          "practices": [
+            "ears"
+          ],
+          "sources": [
+            "Product"
+          ],
+          "subject": "Product/LCK-004"
+        },
+        {
+          "cause": "silence",
+          "detail": "docs/requirements.md:9: no fragment cites it",
+          "fragments": [],
+          "id": "87e909e7daa894c8",
+          "kind": "uncited",
+          "label": "uncited: LCK-005",
+          "lane": "ears-sentence",
+          "practices": [
+            "ears"
+          ],
+          "sources": [
+            "Product"
+          ],
+          "subject": "Product/LCK-005"
+        },
+        {
+          "cause": "silence",
+          "detail": "Scenarios features/lockout.feature:35: unknown-step",
+          "fragments": [],
+          "id": "706941b706f018f8",
+          "kind": "unliftable",
+          "label": "unliftable: Scenarios (unknown-step)",
+          "lane": "bdd-scenario",
+          "practices": [
+            "bdd"
+          ],
+          "sources": [
+            "Scenarios"
+          ],
+          "subject": "Scenarios"
+        },
+        {
+          "cause": "silence",
+          "detail": "Product docs/requirements.md:9: feature-scope",
+          "fragments": [],
+          "id": "f35a16c89b8c5fb6",
+          "kind": "unliftable",
+          "label": "unliftable: Product (feature-scope)",
+          "lane": "ears-sentence",
+          "practices": [
+            "ears"
+          ],
+          "sources": [
+            "Product"
+          ],
+          "subject": "Product"
+        }
+      ],
+      "tests": {
+        "passed": 4,
+        "total": 4
+      },
+      "what": "A model of the agreed behaviour, then the rules and bindings approved in one signed commit by a test-only owner key."
+    },
+    {
+      "conflicts": 1,
+      "examples": {
+        "citing": 8,
+        "total": 8
+      },
+      "gate": {
+        "mode": "enforcing",
+        "overall": "block"
+      },
+      "id": "regression",
+      "name": "Regression",
+      "rules": [
+        {
+          "authority": "approved",
+          "disposition": "allow",
+          "fragment": "SignInService/StopPasswordGuessing/AcceptCorrectPassword",
+          "name": "AcceptCorrectPassword",
+          "selfApproved": true,
+          "verdict": "satisfied"
+        },
+        {
+          "authority": "approved",
+          "disposition": "allow",
+          "fragment": "SignInService/StopPasswordGuessing/LockHasDuration",
+          "name": "LockHasDuration",
+          "selfApproved": true,
+          "verdict": "satisfied"
+        },
+        {
+          "authority": "approved",
+          "disposition": "block",
+          "fragment": "SignInService/StopPasswordGuessing/LockOnThirdFailure",
+          "name": "LockOnThirdFailure",
+          "selfApproved": true,
+          "verdict": "violated"
+        },
+        {
+          "authority": "approved",
+          "disposition": "allow",
+          "fragment": "SignInService/StopPasswordGuessing/RefuseWhileLocked",
+          "name": "RefuseWhileLocked",
+          "selfApproved": true,
+          "verdict": "satisfied"
+        }
+      ],
+      "signals": [
+        {
+          "cause": "count",
+          "detail": "Q-EX(SignInService/@UnitTests/WitnessAllowsAThirdFailedAttempt)",
+          "fragments": [
+            "SignInService/@UnitTests/WitnessAllowsAThirdFailedAttempt",
+            "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+          ],
+          "id": "17baf74885f66bc7",
+          "kind": "example-conflict",
+          "label": "example-conflict 17baf74885f66bc7: WitnessAllowsAThirdFailedAttempt × LockOnThirdFailure",
+          "lane": "tdd-test",
+          "practices": [
+            "tdd"
+          ],
+          "sources": [
+            "UnitTests",
+            "intent"
+          ]
+        },
+        {
+          "cause": "count",
+          "detail": "Q-DIV(SignInService/@Scenarios/ScenarioTheLockLastsFifteenMinutes, SignInService/@UnitTests/WitnessAllowsAThirdFailedAttempt); inputs overlapping",
+          "fragments": [
+            "SignInService/@Scenarios/ScenarioTheLockLastsFifteenMinutes",
+            "SignInService/@UnitTests/WitnessAllowsAThirdFailedAttempt"
+          ],
+          "id": "825ab3e7631a766c",
+          "kind": "example-divergence",
+          "label": "example-divergence 825ab3e7631a766c: ScenarioTheLockLastsFifteenMinutes × WitnessAllowsAThirdFailedAttempt",
+          "lane": "hub",
+          "practices": [
+            "bdd",
+            "tdd"
+          ],
+          "sources": [
+            "Scenarios",
+            "UnitTests"
+          ]
+        },
+        {
+          "cause": "count",
+          "detail": "Q-DIV(SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessAllowsAThirdFailedAttempt); inputs overlapping",
+          "fragments": [
+            "SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount",
+            "SignInService/@UnitTests/WitnessAllowsAThirdFailedAttempt"
+          ],
+          "id": "d3b14091a05a18c8",
+          "kind": "example-divergence",
+          "label": "example-divergence d3b14091a05a18c8: ScenarioThirdFailedAttemptLocksTheAccount × WitnessAllowsAThirdFailedAttempt",
+          "lane": "hub",
+          "practices": [
+            "bdd",
+            "tdd"
+          ],
+          "sources": [
+            "Scenarios",
+            "UnitTests"
+          ]
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Login.failures, Login.locked, SignIn.args.passwordOk, SignIn.result asserted only by intent",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/AcceptCorrectPassword"
+          ],
+          "id": "0cad9c9720d0f82c",
+          "kind": "single-source",
+          "label": "single-source: AcceptCorrectPassword",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "SignInService/StopPasswordGuessing/AcceptCorrectPassword"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Login.lockSeconds, Login.locked asserted only by intent",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/LockHasDuration"
+          ],
+          "id": "956d27be4a53010f",
+          "kind": "single-source",
+          "label": "single-source: LockHasDuration",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "SignInService/StopPasswordGuessing/LockHasDuration"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Login.failures, Login.lockSeconds, Login.locked, SignIn.args.passwordOk, SignIn.result asserted only by intent",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+          ],
+          "id": "ed8af5dbf8963783",
+          "kind": "single-source",
+          "label": "single-source: LockOnThirdFailure",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Login.locked, SignIn.result asserted only by intent",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/RefuseWhileLocked"
+          ],
+          "id": "fca806ab831fe61c",
+          "kind": "single-source",
+          "label": "single-source: RefuseWhileLocked",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "SignInService/StopPasswordGuessing/RefuseWhileLocked"
+        },
+        {
+          "cause": "silence",
+          "detail": "docs/requirements.md:8: no fragment cites it",
+          "fragments": [],
+          "id": "87488c7b8933dd6b",
+          "kind": "uncited",
+          "label": "uncited: LCK-004",
+          "lane": "ears-sentence",
+          "practices": [
+            "ears"
+          ],
+          "sources": [
+            "Product"
+          ],
+          "subject": "Product/LCK-004"
+        },
+        {
+          "cause": "silence",
+          "detail": "docs/requirements.md:9: no fragment cites it",
+          "fragments": [],
+          "id": "87e909e7daa894c8",
+          "kind": "uncited",
+          "label": "uncited: LCK-005",
+          "lane": "ears-sentence",
+          "practices": [
+            "ears"
+          ],
+          "sources": [
+            "Product"
+          ],
+          "subject": "Product/LCK-005"
+        },
+        {
+          "cause": "silence",
+          "detail": "Scenarios features/lockout.feature:35: unknown-step",
+          "fragments": [],
+          "id": "706941b706f018f8",
+          "kind": "unliftable",
+          "label": "unliftable: Scenarios (unknown-step)",
+          "lane": "bdd-scenario",
+          "practices": [
+            "bdd"
+          ],
+          "sources": [
+            "Scenarios"
+          ],
+          "subject": "Scenarios"
+        },
+        {
+          "cause": "silence",
+          "detail": "Product docs/requirements.md:9: feature-scope",
+          "fragments": [],
+          "id": "f35a16c89b8c5fb6",
+          "kind": "unliftable",
+          "label": "unliftable: Product (feature-scope)",
+          "lane": "ears-sentence",
+          "practices": [
+            "ears"
+          ],
+          "sources": [
+            "Product"
+          ],
+          "subject": "Product"
+        },
+        {
+          "cause": "count",
+          "detail": "approved",
+          "fragments": [
+            "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+          ],
+          "id": "3716f56495558948",
+          "kind": "violated",
+          "label": "violated: LockOnThirdFailure (approved)",
+          "lane": "tdd-test",
+          "practices": [],
+          "sources": [
+            "intent"
+          ]
+        }
+      ],
+      "tests": {
+        "passed": 4,
+        "total": 4
+      },
+      "what": "A later change edits the code and its test together, so the suite stays green. The enforcing gate must stop it."
+    }
+  ],
+  "terms": [
+    {
+      "meaning": "the whole problem on one sheet: background, current condition, goal, root cause, countermeasures, plan, follow-up",
+      "term": "A3"
+    },
+    {
+      "meaning": "go and see: the decision-point table reads what each artefact actually says, not what its author meant",
+      "term": "Gemba"
+    },
+    {
+      "meaning": "the red marks on the lanes: the hand-offs where signals were injected",
+      "term": "Andon"
+    },
+    {
+      "meaning": "the vital few causes, those up to 80% of the signals, above the dashed line",
+      "term": "Pareto"
+    },
+    {
+      "meaning": "asked until the answer is a process or a tool, never a person",
+      "term": "5 Whys"
+    },
+    {
+      "meaning": "stop the line where the defect starts: the enforcing gate blocks the regression stage",
+      "term": "Jidoka"
+    },
+    {
+      "meaning": "three parallel translations of one story is rework done three times, with three chances to drift",
+      "term": "Muda of translation"
+    },
+    {
+      "meaning": "each stage of the run is one turn of plan, do, check, act; the sheet is rebuilt from every stage's report",
+      "term": "PDCA"
+    }
+  ],
+  "title": "Three practices, one lockout",
+  "whys": [
+    {
+      "a": "It was written to pass \"allows three failed attempts before locking\", the first test written.",
+      "q": "Why does the shipped code lock on the fourth failure?"
+    },
+    {
+      "a": "The developer read \"three failed attempts\" in the story as a limit (MAX_FAILED_ATTEMPTS = 3 with >). The test came from the story, not from LCK-001 or the agreed scenario.",
+      "q": "Why did the test allow three?"
+    },
+    {
+      "a": "A unit test had no way to cite a requirement or a scenario. The witness format carried no citation, so nothing linked the test to LCK-001. Countermeasure C8 gives witnesses citations.",
+      "q": "Why from the story and not from the agreed artefacts?"
+    },
+    {
+      "a": "The scenario and the test are both examples, and nothing compared examples with each other: not the BDD runner, not the test runner, and not Q-EX in CSH. Countermeasure C7 adds that comparison.",
+      "q": "Why did the scenario, which agrees with LCK-001, not catch it?"
+    },
+    {
+      "a": "The three practices share no artefact between the story and the code. Each translates the story on its own, so they are parallel lanes, not a chain.",
+      "q": "Why does it take a rule for two practices to meet?",
+      "root": "Root cause, in a process: no shared hub. Countermeasures C1 (process) and C7, C8 (harness)."
+    }
+  ]
+}

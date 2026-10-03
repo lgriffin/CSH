@@ -38,3 +38,4 @@ Records ADR-01 to ADR-16 are the rows of the Rationale tab. ADR-17 onward record
 | [ADR-32](ADR-32-local-only-distribution.md) | Distribution is local only; nothing is published |
 | [ADR-33](ADR-33-run-package.md) | The pipeline and the run live in their own package (supersedes ADR-24) |
 | [ADR-34](ADR-34-example-divergence.md) | Examples are compared with examples, and disagreement is a divergence |
+| [ADR-35](ADR-35-a3-package.md) | The A3 is a pure function of files; the command line finds its inputs |

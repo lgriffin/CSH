@@ -143,6 +143,11 @@ export interface Report {
   diagnostics: { source: string; code: string; severity: string; message: string; span?: string }[];
   /** Extension: test executions, stored and reported, never entering a verdict (P2). */
   executions: { witness: string; source: string; event: string; localResult: string; test?: string; span?: string }[];
+  /**
+   * Extension: every example in the pool, with its source and the items it cites as source/id (Anchor, harnesses and
+   * A3, section 12: the measure "examples that cite a requirement").
+   */
+  examples?: { fragment: string; source: string; cites: string[] }[];
   /** Extension: identified source items (adapter B). */
   items: { source: string; id: string; pattern?: string; span: string; textDigest: string }[];
   /** Extension: invalid ledger entries, present from stage 7. */
