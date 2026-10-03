@@ -96,9 +96,15 @@ describe("csh a3", () => {
     git("add", "-A");
     git("commit", "-q", "-m", "an enforcing stage");
     expect(await csh(["run"], io(proj).io)).toBe(0);
+    // A damaged stored run of another commit is skipped, and an uncommitted judgments file is the A3's own.
+    mkdirSync(join(proj, ".csh-cache/runs/damaged"), { recursive: true });
+    for (const f of ["run.json", "report.json", "gate.json"]) writeFileSync(join(proj, ".csh-cache/runs/damaged", f), "{");
+    const judgments = join(proj, "csh/a3/lockout/judgments.json");
+    writeFileSync(judgments, readFileSync(judgments, "utf8").replace('"title": ""', '"title": "edited"'));
     const reuse = io(proj);
     expect(await csh(["a3", "stage", "lockout", "reuse", "--at", "HEAD"], reuse.io)).toBe(0);
     expect(reuse.o.err).toBe(""); // the stored run is copied; nothing runs
+    rmSync(join(proj, ".csh-cache/runs/damaged"), { recursive: true });
     writeFileSync(join(proj, "untracked.txt"), "read by no one, but the run cannot show that\n");
     const dirty = io(proj);
     expect(await csh(["a3", "stage", "lockout", "dirty", "--at", "HEAD"], dirty.io)).toBe(0);

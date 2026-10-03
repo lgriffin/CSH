@@ -1,7 +1,7 @@
 // The component manifest (Anchor, harnesses and A3, section 2.1): one named unit of software under evaluation, the
 // practices that describe it and the sources each practice feeds. It says what is evaluated, never what is right: it
 // holds no judgment and no authority.
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { join, posix } from "node:path";
 import { compareCodePoints, digestOf, type Module } from "@csh/kernel";
 
@@ -150,7 +150,8 @@ export function parseComponent(bytes: Uint8Array): { component?: LoadedComponent
  * practice citing a source it lacks, a harness writing a file none of its sources read, and a name that differs from
  * the system's are errors. A source no practice names is not an error: it is the gap unowned-source, returned here.
  */
-export function checkAgainstModule(manifest: ComponentManifest, m: Module): { errors: ComponentProblem[]; unowned: string[] } {
+/** With `root`, a source that is a file there is never read as a directory holding the witness file. */
+export function checkAgainstModule(manifest: ComponentManifest, m: Module, root?: string): { errors: ComponentProblem[]; unowned: string[] } {
   const errors: ComponentProblem[] = [];
   const declared = new Map(m.sources.map((s) => [s.name, s]));
   if (manifest.name !== m.system) errors.push({ code: "component-name-mismatch", detail: `the manifest names ${manifest.name}; the specification's system is ${m.system}` });
@@ -161,7 +162,7 @@ export function checkAgainstModule(manifest: ComponentManifest, m: Module): { er
       if (!declared.has(s)) errors.push({ code: "practice-unknown-source", detail: `practice ${p.id} names source ${s}, which the specification does not declare` });
     }
     if (p.cites !== undefined && !declared.has(p.cites)) errors.push({ code: "practice-unknown-source", detail: `practice ${p.id} cites source ${p.cites}, which the specification does not declare` });
-    if (p.harness !== undefined && !p.sources.some((s) => declared.get(s) !== undefined && reads(declared.get(s)!.at, p.harness!.witnesses))) {
+    if (p.harness !== undefined && !p.sources.some((s) => declared.get(s) !== undefined && reads(declared.get(s)!.at, p.harness!.witnesses, root))) {
       errors.push({ code: "harness-file-unread", detail: `practice ${p.id} writes ${p.harness.witnesses}, which none of its sources reads` });
     }
   }
@@ -173,10 +174,12 @@ export function checkAgainstModule(manifest: ComponentManifest, m: Module): { er
 const norm = (p: string) => posix.normalize(p.split("\\").join("/")).replace(/^\.(\/|$)/, "").replace(/\/$/, "");
 
 /** True when a source at `at` reads the file `file`: it is that file, or a directory that holds it. */
-function reads(at: string, file: string): boolean {
+function reads(at: string, file: string, root?: string): boolean {
   const a = norm(at);
   const f = norm(file);
-  return a === f || a === "" || f.startsWith(`${a}/`);
+  if (a === f) return true;
+  if (root !== undefined && existsSync(join(root, a)) && !statSync(join(root, a)).isDirectory()) return false;
+  return a === "" || f.startsWith(`${a}/`);
 }
 
 /** The practice that owns each source, by source name. */

@@ -141,5 +141,7 @@ describe("rendering", () => {
     const md = renderMarkdown(m);
     expect(md).not.toMatch(/(^|[^\\])<(img|b|i)\b/);
     expect(md).toMatch(/# A3: \\<img/);
+    const slashed = renderMarkdown(buildA3(input({ title: "\\<img src=x onerror=alert(1)>" })));
+    expect(slashed).toMatch(/# A3: \\\\\\<img/);
   });
 });

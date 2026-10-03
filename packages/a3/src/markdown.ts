@@ -4,7 +4,7 @@ import type { A3Model } from "./types.ts";
 export const UNWRITTEN = "Not yet written.";
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 // Judgment text is data: a "<" is escaped so that no raw HTML reaches a viewer, and a backtick never opens a code span.
-const md = (s: string) => s.replaceAll("<", "\\<");
+const md = (s: string) => s.replaceAll("\\", "\\\\").replaceAll("<", "\\<");
 const code = (s: string) => (s.includes("`") ? md(s) : `\`${s}\``);
 const row = (cells: string[]) => `| ${cells.map((c) => md(c).replaceAll("|", "\\|").replaceAll("\n", " ")).join(" | ")} |`;
 const or = (s: string) => (s.trim() === "" ? `_${UNWRITTEN}_` : s);

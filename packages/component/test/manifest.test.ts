@@ -1,5 +1,8 @@
 // The component manifest (Anchor, harnesses and A3, section 2.1): structural validation, the digest of its bytes, and
 // the check against the emitted specification.
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { Module } from "@csh/kernel";
 import { checkAgainstModule, type ComponentManifest, ownersOf, parseComponent, practiceOf, validateManifest } from "../src/index.ts";
@@ -88,6 +91,20 @@ describe("checkAgainstModule", () => {
     expect(at("./inputs/", "inputs/witnesses.ndjson")).toEqual([]);
     expect(at("inputs/witnesses.ndjson", "./inputs/witnesses.ndjson")).toEqual([]);
     expect(at("input", "inputs/witnesses.ndjson")).toEqual(["harness-file-unread"]);
+  });
+
+  it("never reads a source that is a file as a directory holding the witness file", () => {
+    const root = mkdtempSync(join(tmpdir(), "csh-manifest-"));
+    try {
+      mkdirSync(join(root, "inputs"));
+      writeFileSync(join(root, "inputs", "witnesses.ndjson"), "");
+      const m = { ...good, practices: [good.practices[0]!, { ...good.practices[1]!, harness: { run: ["node"], witnesses: "inputs/witnesses.ndjson/out.ndjson" } }] };
+      expect(checkAgainstModule(m, signIn, root).errors.map((e) => e.code)).toEqual(["harness-file-unread"]);
+      const dir = { ...signIn, sources: [signIn.sources[0]!, { ...signIn.sources[1]!, at: "inputs" }] } as Module;
+      expect(checkAgainstModule({ ...m, practices: [good.practices[0]!, { ...good.practices[1]!, harness: { run: ["node"], witnesses: "inputs/witnesses.ndjson" } }] }, dir, root).errors).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it("returns a source no practice names as unowned, not as an error", () => {

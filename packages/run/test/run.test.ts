@@ -191,6 +191,11 @@ describe("runAt", () => {
       const d = await runAt({ root: pkg, solver: z3, commit: sibling });
       expect(d.ok ? "ok" : d.code).toBe("workspace-differs");
       expect(d.ok ? "" : d.message).toMatch(/packages\/lib/);
+      // Deleted since the commit: the link dangles, and the run is refused just the same.
+      rmSync(join(ws, "packages", "lib"), { recursive: true });
+      const gone = await runAt({ root: pkg, solver: z3, commit: sibling });
+      expect(gone.ok ? "ok" : gone.code).toBe("workspace-differs");
+      expect(gone.ok ? "" : gone.message).toMatch(/packages\/lib/);
     } finally {
       rmSync(ws, { recursive: true, force: true });
     }
@@ -221,7 +226,7 @@ describe("runHarnesses", () => {
       const recs = await runHarnesses({ root: dir, commit: "c" } as Project, { ...manifest, practices } as ComponentManifest, () => undefined);
       expect(readFileSync(join(dir, "reports", "executions.ndjson"), "utf8")).toBe("a\nb\n");
       expect(readFileSync(join(dir, "reports", "w.ndjson"), "utf8")).toBe("a\nb\n");
-      expect(recs.map((r) => [r.exitCode, r.executions])).toEqual([[0, 1], [0, 2]]);
+      expect(recs.map((r) => [r.exitCode, r.witnesses, r.executions])).toEqual([[0, 1, 1], [0, 1, 1]]);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

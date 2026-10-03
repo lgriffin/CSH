@@ -4,7 +4,7 @@
 import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { a3Dir, type Authority, buildA3, type Judgments, readJudgments, readStage, renderHtml, renderMarkdown, skeleton, SLUG, STAGE_FILES, stageDir, stageIntegrity, type StageRecord } from "@csh/a3";
+import { A3_DIR, a3Dir, type Authority, buildA3, type Judgments, readJudgments, readStage, renderHtml, renderMarkdown, skeleton, SLUG, STAGE_FILES, stageDir, stageIntegrity, type StageRecord } from "@csh/a3";
 import type { Mode } from "@csh/gate";
 import { digestOf, stableJson } from "@csh/kernel";
 import { resolveAuthority } from "@csh/ledger";
@@ -43,15 +43,24 @@ const git = (p: Project, ...args: string[]) => execFileSync("git", args, { cwd: 
 function storedRun(p: Project, commit: string, mode: Mode | undefined): string | undefined {
   const runs = join(p.root, RUNS_DIR);
   if (!existsSync(runs)) return undefined;
-  if (commit === p.head && git(p, "status", "--porcelain", "--", ".") !== "") return undefined;
+  // The A3's own files are left out: no run reads them, and authoring one leaves them uncommitted.
+  if (commit === p.head && git(p, "status", "--porcelain", "--", ".", `:(exclude)${A3_DIR}`) !== "") return undefined;
   const found: { dir: string; at: number }[] = [];
   for (const d of readdirSync(runs)) {
     const dir = join(runs, d);
     const file = join(dir, "run.json");
     if (!existsSync(file) || !STAGE_FILES.every((f) => existsSync(join(dir, f)))) continue;
-    const rec = JSON.parse(readFileSync(file, "utf8")) as { snapshot?: { commit?: string } };
-    const gate = JSON.parse(readFileSync(join(dir, "gate.json"), "utf8")) as { mode?: string };
-    if (rec.snapshot?.commit === commit && (mode === undefined || gate.mode === mode)) found.push({ dir, at: statSync(file).mtimeMs });
+    // A stored run that cannot be read is skipped, never fatal: another can be copied, or the commit run again.
+    let rec: { snapshot?: { commit?: string } };
+    let gate: { mode?: string };
+    try {
+      rec = JSON.parse(readFileSync(file, "utf8"));
+      if (rec.snapshot?.commit !== commit) continue;
+      gate = JSON.parse(readFileSync(join(dir, "gate.json"), "utf8"));
+    } catch {
+      continue;
+    }
+    if (mode === undefined || gate.mode === mode) found.push({ dir, at: statSync(file).mtimeMs });
   }
   found.sort((a, b) => b.at - a.at);
   return found[0]?.dir;

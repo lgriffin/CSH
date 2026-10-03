@@ -3,7 +3,7 @@
 // the run record is stored under .csh-cache/runs/<snapshot digest>/. A harness's exit code is stored as an execution
 // fact and never enters a verdict (P2).
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { type ComponentManifest, DEFAULT_EXECUTIONS } from "@csh/component";
 import type { Report } from "@csh/check";
@@ -21,9 +21,9 @@ export interface HarnessRecord {
   argv: string[];
   /** The command's exit code; null when it ended by a signal or could not start. */
   exitCode: number | null;
-  /** Lines in the witness file after the run. */
+  /** Lines the run added to the witness file. */
   witnesses: number;
-  /** Lines in the executions file after the run. */
+  /** Lines the run added to the executions file. */
   executions: number;
   /** The harness runs with the project's own permissions, exactly as running the tests by hand would. */
   sandbox: "none";
@@ -87,8 +87,10 @@ export async function runHarnesses(p: Project, manifest: ComponentManifest, out:
     const witnesses = resolve(p.root, h.witnesses);
     const executions = resolve(p.root, h.executions ?? DEFAULT_EXECUTIONS);
     const env = { ...process.env, CSH_COMMIT: p.commit, CSH_WITNESS_FILE: witnesses, CSH_EXECUTIONS_FILE: executions };
+    // A shared file already holds an earlier harness's lines: each record counts only the lines its own run added.
+    const before = [countLines(witnesses), countLines(executions)] as const;
     const r = await exec(h.run, p.root, env, out);
-    const rec: HarnessRecord = { practice: practice.id, argv: [...h.run], exitCode: r.exitCode, witnesses: countLines(witnesses), executions: countLines(executions), sandbox: "none" };
+    const rec: HarnessRecord = { practice: practice.id, argv: [...h.run], exitCode: r.exitCode, witnesses: countLines(witnesses) - before[0], executions: countLines(executions) - before[1], sandbox: "none" };
     if (r.error !== undefined) rec.error = r.error;
     records.push(rec);
   }
@@ -163,14 +165,26 @@ function workspaceChanges(top: string, prefix: string, commit: string): string[]
     if (!existsSync(nm)) continue;
     const entries = readdirSync(nm).flatMap((e) => (e.startsWith("@") ? readdirSync(join(nm, e)).map((x) => join(nm, e, x)) : e.startsWith(".") ? [] : [join(nm, e)]));
     for (const e of entries) {
+      const inWorkspace = (rel: string) => !rel.startsWith("..") && !isAbsolute(rel) && !rel.split("/").includes("node_modules");
       let real: string;
       try {
         real = realpathSync(e);
       } catch {
+        // A link whose target is gone: a workspace package deleted since the commit differs from it.
+        let gone: string | undefined;
+        try {
+          gone = relative(top, resolve(dirname(e), readlinkSync(e))).split("\\").join("/");
+        } catch {
+          gone = undefined;
+        }
+        if (gone !== undefined && inWorkspace(gone) && !seen.has(gone)) {
+          seen.add(gone);
+          changed.push(gone || ".");
+        }
         continue;
       }
       const rel = relative(top, real).split("\\").join("/");
-      if (rel.startsWith("..") || isAbsolute(rel) || rel.split("/").includes("node_modules") || seen.has(rel)) continue;
+      if (!inWorkspace(rel) || seen.has(rel)) continue;
       seen.add(rel);
       queue.push(join(real, "node_modules"));
       let differs = git(top, "ls-files", "--others", "--exclude-standard", "--", rel || ".").trim() !== "";
