@@ -10,7 +10,7 @@ import type { Report } from "@csh/check";
 import { formatDecision, type GateDecision, type Mode, type Snapshot } from "@csh/gate";
 import { digestOf, stableJson } from "@csh/kernel";
 import type { SolverPort } from "@csh/solver";
-import { decideGate, evaluateProject } from "./evaluate.ts";
+import { decideGate, emissionProblem, emitProject, evaluateProject } from "./evaluate.ts";
 import { CACHE_DIR, loadProject, MODEL_PATH, type Project, REPORT_PATH } from "./project.ts";
 
 export const RUNS_DIR = `${CACHE_DIR}/runs`;
@@ -132,8 +132,14 @@ export async function runComponent(o: RunOptions & { storeRoot?: string }): Prom
   const p = loadProject(o.root, o.root);
   if (p.component === undefined && p.componentProblems.length === 0) return { ok: false, code: "no-component", message: `no csh/component.json under ${p.root}; csh run evaluates a component (csh init writes one)` };
   if (p.componentProblems.length > 0 || p.component === undefined) return { ok: false, code: "component-unusable", message: `the component manifest cannot be used:\n${p.componentProblems.map((e) => `  ${e.code}: ${e.detail}`).join("\n")}` };
+  const eo = { solver: o.solver, ...(o.budgetMs !== undefined ? { budgetMs: o.budgetMs } : {}), ...(o.noCache === true ? { noCache: true } : {}) };
+  // A component that will be refused runs none of its test commands: the manifest is checked against the
+  // specification first, and that emission is the one evaluated (#18).
+  const emission = await emitProject(p, eo);
+  const refused = emissionProblem(emission);
+  if (refused !== undefined) return { ok: false, code: "evaluation-failed", message: refused };
   const harnesses = await runHarnesses(p, p.component.manifest, o.harnessOutput ?? (() => undefined));
-  const e = await evaluateProject(p, { solver: o.solver, ...(o.budgetMs !== undefined ? { budgetMs: o.budgetMs } : {}), ...(o.noCache === true ? { noCache: true } : {}) });
+  const e = await evaluateProject(p, { ...eo, emission });
   if (!e.ok) return { ok: false, code: "evaluation-failed", message: e.message };
   const mode = o.mode ?? p.config.mode ?? "advisory";
   const decision = decideGate(p, e, mode);

@@ -6,7 +6,7 @@ import { gate, type GateDecision, type Mode, type Snapshot, snapshotDigest, type
 import type { Module } from "@csh/kernel";
 import { type LedgerState, waiversFor } from "@csh/ledger";
 import type { SolverPort } from "@csh/solver";
-import { evaluateSpec } from "./pipeline.ts";
+import { type Emission, emitSpec, evaluateSpec } from "./pipeline.ts";
 import { CACHE_DIR, ledgerOf, type Project, snapshotOf, specOf, unchangedSince } from "./project.ts";
 
 export interface EvaluateOptions {
@@ -16,6 +16,8 @@ export interface EvaluateOptions {
   budgetMs?: number;
   /** Run without the solver cache. */
   noCache?: boolean;
+  /** The specification as emitProject emitted it for these options, reused rather than emitted again. */
+  emission?: Emission;
 }
 
 export type Evaluation =
@@ -23,6 +25,19 @@ export type Evaluation =
   | { ok: false; message: string };
 
 const formatProblems = (title: string, ps: { code: string; detail: string }[]) => `${title}:\n${ps.map((e) => `  ${e.code}: ${e.detail}`).join("\n")}\n`;
+
+/** Why an emission cannot be evaluated: it failed, or the manifest does not match it. Undefined when it can. */
+export function emissionProblem(e: Emission): string | undefined {
+  if (!e.emitted.ok) return `emission failed:\n${e.emitted.errors.map((x) => `  ${x.code}${x.path !== undefined ? ` at ${x.path}` : ""}${x.line !== undefined ? `:${x.line}` : ""}: ${x.message}`).join("\n")}\n`;
+  if (e.componentErrors !== undefined) return formatProblems("the component manifest does not match the specification", e.componentErrors);
+  return undefined;
+}
+
+/** Emit the project's specification and check its manifest against it, exactly as evaluateProject begins. */
+export function emitProject(p: Project, o: EvaluateOptions): Promise<Emission> {
+  const budget = o.budgetMs ?? p.config.budgetMs;
+  return emitSpec(specOf(p, o.spec), { root: p.root, solver: o.solver, config: budget !== undefined ? { budgetMs: budget } : {}, ...(p.lock !== undefined ? { lock: p.lock } : {}), ...(p.component !== undefined ? { component: p.component } : {}) });
+}
 
 export async function evaluateProject(p: Project, o: EvaluateOptions): Promise<Evaluation> {
   if (p.componentProblems.length > 0) return { ok: false, message: formatProblems("the component manifest cannot be used", p.componentProblems) };
@@ -35,23 +50,25 @@ export async function evaluateProject(p: Project, o: EvaluateOptions): Promise<E
   const ledger = await ledgerOf(p, spec);
   const cfg = { ...(budget !== undefined ? { budgetMs: budget } : {}), ...(p.config.requirementIdPattern !== undefined ? { requirementIdPattern: p.config.requirementIdPattern } : {}) };
   const impl = unchangedSince(p);
-  const r = await evaluateSpec(spec, {
-    root: p.root,
-    solver: o.solver,
-    config: cfg,
-    ...(p.lock !== undefined ? { lock: p.lock } : {}),
-    ...(ledger !== undefined ? { ledgerState: ledger } : {}),
-    evidence,
-    solverWrap: (s) => cachingSolver(s, cache),
-    snapshot: { commit: p.commit, ledgerHead: String(ledger?.head ?? 0) },
-    ...(impl !== undefined ? { unchangedSince: impl } : {}),
-    ...(p.config.adapters !== undefined ? { adapters: p.config.adapters } : {}),
-    ...(p.component !== undefined ? { component: p.component } : {}),
-  });
-  if (!r.emitted.ok) {
-    return { ok: false, message: `emission failed:\n${r.emitted.errors.map((e) => `  ${e.code}${e.path !== undefined ? ` at ${e.path}` : ""}${e.line !== undefined ? `:${e.line}` : ""}: ${e.message}`).join("\n")}\n` };
-  }
-  if (r.componentErrors !== undefined) return { ok: false, message: formatProblems("the component manifest does not match the specification", r.componentErrors) };
+  const r = await evaluateSpec(
+    spec,
+    {
+      root: p.root,
+      solver: o.solver,
+      config: cfg,
+      ...(p.lock !== undefined ? { lock: p.lock } : {}),
+      ...(ledger !== undefined ? { ledgerState: ledger } : {}),
+      evidence,
+      solverWrap: (s) => cachingSolver(s, cache),
+      snapshot: { commit: p.commit, ledgerHead: String(ledger?.head ?? 0) },
+      ...(impl !== undefined ? { unchangedSince: impl } : {}),
+      ...(p.config.adapters !== undefined ? { adapters: p.config.adapters } : {}),
+      ...(p.component !== undefined ? { component: p.component } : {}),
+    },
+    o.emission,
+  );
+  const problem = emissionProblem(r);
+  if (problem !== undefined) return { ok: false, message: problem };
   const report = r.checked!.report;
   // The module digest is known only after emission; the snapshot digest is filled in after it.
   const snapshot = snapshotOf(p, report.moduleDigest, ledger, o.solver.id, TOOL_VERSION);

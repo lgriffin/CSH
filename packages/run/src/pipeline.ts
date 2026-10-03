@@ -53,18 +53,30 @@ export interface PipelineResult {
   checked?: CheckResult;
 }
 
-export async function evaluateSpec(spec: string, opts: PipelineOptions): Promise<PipelineResult> {
-  const file = resolve(spec);
+/** An emitted specification with the component manifest checked against it: the first half of evaluateSpec. */
+export interface Emission {
+  emitted: EmitResult;
+  /** Errors in the component manifest against the emitted model. Nothing is checked while there is one. */
+  componentErrors?: ComponentProblem[];
+}
+
+/** Emit and check the manifest, without reading any source: csh run does this before any harness runs (#18). */
+export async function emitSpec(spec: string, opts: PipelineOptions): Promise<Emission> {
   const emitOpts: EmitOptions = { root: opts.root, refine: makeRefiner(opts.solver, opts.config?.budgetMs ?? 5000), ...(opts.emit ?? {}) };
   if (opts.lock !== undefined) emitOpts.lock = opts.lock;
-  const emitted = await emit(file, emitOpts);
-  if (!emitted.ok) return { emitted };
+  const emitted = await emit(resolve(spec), emitOpts);
+  if (!emitted.ok || opts.component === undefined) return { emitted };
+  const errors = checkAgainstModule(opts.component.manifest, emitted.module, opts.root).errors;
+  return errors.length > 0 ? { emitted, componentErrors: errors } : { emitted };
+}
+
+/** The whole pipeline; `emission`, when given, is one emitSpec already made for the same options and is reused. */
+export async function evaluateSpec(spec: string, opts: PipelineOptions, emission?: Emission): Promise<PipelineResult> {
+  const pre = emission ?? (await emitSpec(spec, opts));
+  const emitted = pre.emitted;
+  if (!emitted.ok || pre.componentErrors !== undefined) return pre;
   const m = emitted.module;
   const composition = m.uses.length > 0 || (m.relaxations ?? []).length > 0 ? { uses: m.uses, inherited: emitted.composition.inherited.map((x) => x.name), relaxed: m.relaxations ?? [], refinements: emitted.composition.refinements } : undefined;
-  if (opts.component !== undefined) {
-    const errors = checkAgainstModule(opts.component.manifest, m, opts.root).errors;
-    if (errors.length > 0) return { emitted, componentErrors: errors };
-  }
   return { emitted, ...(await checkModule(m, emitted.digest, composition !== undefined ? { ...opts, composition } : opts)) };
 }
 

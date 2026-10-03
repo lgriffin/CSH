@@ -103,6 +103,23 @@ describe("runComponent", () => {
     }
   }, 120000);
 
+  it("refuses a manifest that does not match the specification before any harness runs (#18)", async () => {
+    const file = join(proj, "csh", "component.json");
+    writeFileSync(file, JSON.stringify({ ...manifest, name: "OtherService" }, null, 2));
+    writeFileSync(join(proj, "inputs", "witnesses.ndjson"), "kept\n");
+    try {
+      let output = "";
+      const r = await runComponent({ root: proj, solver: z3, harnessOutput: (s) => void (output += s) });
+      expect(r.ok ? "ok" : r.code).toBe("evaluation-failed");
+      expect(r.ok ? "" : r.message).toMatch(/component-name-mismatch/);
+      expect(output).toBe("");
+      // Not even the old witness file is removed: nothing of the run happened.
+      expect(readFileSync(join(proj, "inputs", "witnesses.ndjson"), "utf8")).toBe("kept\n");
+    } finally {
+      writeFileSync(file, JSON.stringify(manifest, null, 2));
+    }
+  }, 120000);
+
   it("refuses a root without a manifest, and a manifest that cannot be used", async () => {
     const empty = mkdtempSync(join(REPO, ".csh-cache", "run-empty-"));
     try {
