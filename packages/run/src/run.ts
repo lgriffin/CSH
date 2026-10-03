@@ -3,15 +3,15 @@
 // the run record is stored under .csh-cache/runs/<snapshot digest>/. A harness's exit code is stored as an execution
 // fact and never enters a verdict (P2).
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { type ComponentManifest, DEFAULT_EXECUTIONS, DEFAULT_HARNESS_TIMEOUT_MS } from "@csh/component";
+import { COMPONENT_PATH, type ComponentManifest, DEFAULT_EXECUTIONS, DEFAULT_HARNESS_TIMEOUT_MS } from "@csh/component";
 import type { Report } from "@csh/check";
 import { formatDecision, type GateDecision, type Mode, type Snapshot } from "@csh/gate";
-import { digestOf, stableJson } from "@csh/kernel";
+import { digestOf, type Module, stableJson } from "@csh/kernel";
 import type { SolverPort } from "@csh/solver";
 import { decideGate, emissionProblem, emitProject, evaluateProject } from "./evaluate.ts";
-import { CACHE_DIR, loadProject, MODEL_PATH, type Project, REPORT_PATH } from "./project.ts";
+import { CACHE_DIR, CONFIG_PATH, loadProject, LOCK_PATH, MODEL_PATH, type Project, REPORT_PATH, specOf } from "./project.ts";
 
 export const RUNS_DIR = `${CACHE_DIR}/runs`;
 export const GATE_PATH = "reports/csh-gate.json";
@@ -114,6 +114,47 @@ export async function runHarnesses(p: Project, manifest: ComponentManifest, out:
   return records;
 }
 
+/** Relative imports of a module file, read lexically: `from "./x"`, `import "./x"`, `import("./x")`. */
+const RELATIVE_IMPORT = /(?:\bfrom|\bimport)\s*\(?\s*["'](\.{1,2}\/[^"']+)["']/g;
+/** Directories no input is read from. */
+const NOT_INPUTS = new Set([".git", "node_modules", CACHE_DIR]);
+
+/**
+ * What a run evaluates, by project path, with each file's digest: the specification and the files it imports, every
+ * source no harness writes, the manifest, the configuration and the lock. A harness's own sources and output files are
+ * left out, since writing them is its job.
+ */
+export function inputDigests(p: Project, manifest: ComponentManifest, m: Module): Map<string, string> {
+  const root = resolve(p.root);
+  const harnessed = manifest.practices.filter((x) => x.harness !== undefined);
+  const written = new Set(harnessed.flatMap((x) => [x.harness!.witnesses, x.harness!.executions ?? DEFAULT_EXECUTIONS]).map((f) => resolve(root, f)));
+  const theirs = new Set(harnessed.flatMap((x) => x.sources));
+  const out = new Map<string, string>();
+  const add = (abs: string, follow: boolean): void => {
+    const rel = relative(root, abs).split("\\").join("/");
+    if (rel.startsWith("..") || isAbsolute(rel) || written.has(abs) || out.has(rel)) return;
+    if (!existsSync(abs)) return void out.set(rel, "absent");
+    const st = lstatSync(abs);
+    if (st.isSymbolicLink()) return void out.set(rel, `link ${readlinkSync(abs)}`);
+    if (st.isDirectory()) {
+      for (const e of readdirSync(abs)) if (!NOT_INPUTS.has(e)) add(join(abs, e), false);
+      return;
+    }
+    const bytes = readFileSync(abs);
+    out.set(rel, digestOf(bytes));
+    if (follow) for (const i of bytes.toString("utf8").matchAll(RELATIVE_IMPORT)) add(resolve(dirname(abs), i[1]!), true);
+  };
+  add(specOf(p, undefined), true);
+  for (const s of m.sources) if (!theirs.has(s.name)) add(resolve(root, s.at), false);
+  for (const f of [COMPONENT_PATH, CONFIG_PATH, LOCK_PATH]) add(join(root, f), false);
+  return out;
+}
+
+/** The paths whose digest differs between two inputDigests, in order. */
+export function changedInputs(before: Map<string, string>, after: Map<string, string>): string[] {
+  return [...new Set([...before.keys(), ...after.keys()])].filter((k) => (before.get(k) ?? "absent") !== (after.get(k) ?? "absent")).sort();
+}
+
 function write(path: string, text: string): void {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, text);
@@ -138,7 +179,13 @@ export async function runComponent(o: RunOptions & { storeRoot?: string }): Prom
   const emission = await emitProject(p, eo);
   const refused = emissionProblem(emission);
   if (refused !== undefined) return { ok: false, code: "evaluation-failed", message: refused };
+  if (!emission.emitted.ok) return { ok: false, code: "evaluation-failed", message: "emission failed" };
+  const inputs = inputDigests(p, p.component.manifest, emission.emitted.module);
   const harnesses = await runHarnesses(p, p.component.manifest, o.harnessOutput ?? (() => undefined));
+  // The snapshot and the emission were taken before the harnesses: a harness that changed what they were taken from
+  // would make the record describe files other than the ones evaluated (#17).
+  const moved = changedInputs(inputs, inputDigests(p, p.component.manifest, emission.emitted.module));
+  if (moved.length > 0) return { ok: false, code: "inputs-changed-by-harness", message: `the harnesses changed ${moved.join(", ")}, which the run evaluates; a harness may write only its witness and executions files (A-57)` };
   const e = await evaluateProject(p, { ...eo, emission });
   if (!e.ok) return { ok: false, code: "evaluation-failed", message: e.message };
   const mode = o.mode ?? p.config.mode ?? "advisory";

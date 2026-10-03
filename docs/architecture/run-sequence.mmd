@@ -13,6 +13,7 @@ sequenceDiagram
   Run->>Run: load csh/component.json and check it against the emitted specification
   Run->>Harness: argv per practice, with CSH_COMMIT, CSH_WITNESS_FILE, CSH_EXECUTIONS_FILE
   Harness-->>Run: exit code (a fact, never a verdict), witness and execution files
+  Run->>Run: digest the specification, sources, manifest and configuration again; refuse inputs-changed-by-harness if they moved
   Run->>Adapters: source bytes, execution bytes, vocabulary, bindings
   Adapters-->>Run: claims, witnesses with joined outcomes, items, diagnostics
   Run->>Check: module, adapter output, authority, owners of sources

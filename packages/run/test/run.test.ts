@@ -120,6 +120,36 @@ describe("runComponent", () => {
     }
   }, 120000);
 
+  it("refuses a run whose harness changed a file it evaluates (#17)", async () => {
+    const requirements = join(proj, "inputs", "requirements.md");
+    const original = readFileSync(requirements, "utf8");
+    const imported = join(proj, "base", "signin.csl.ts");
+    const spec = readFileSync(imported, "utf8");
+    try {
+      for (const [file, edit] of [
+        ["inputs/requirements.md", "a source"],
+        ["base/signin.csl.ts", "a file the specification imports"],
+        ["csh/config.json", "the configuration"],
+      ] as const) {
+        writeFileSync(join(proj, "harness.mjs"), `${HARNESS}import { appendFileSync } from "node:fs";\nappendFileSync(${JSON.stringify(file)}, "\\n");\n`);
+        const r = await runComponent({ root: proj, solver: z3 });
+        expect(r.ok ? "ok" : r.code, edit).toBe("inputs-changed-by-harness");
+        expect(r.ok ? "" : r.message, edit).toContain(file);
+        writeFileSync(requirements, original);
+        writeFileSync(imported, spec);
+        rmSync(join(proj, "csh", "config.json"), { force: true });
+      }
+    } finally {
+      writeFileSync(join(proj, "harness.mjs"), HARNESS);
+      writeFileSync(requirements, original);
+      writeFileSync(imported, spec);
+      rmSync(join(proj, "csh", "config.json"), { force: true });
+    }
+    // Its own witness file is the harness's to write.
+    const ok = await runComponent({ root: proj, solver: z3 });
+    expect(ok.ok ? "ok" : ok.message).toBe("ok");
+  }, 120000);
+
   it("refuses a root without a manifest, and a manifest that cannot be used", async () => {
     const empty = mkdtempSync(join(REPO, ".csh-cache", "run-empty-"));
     try {
