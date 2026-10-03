@@ -1,0 +1,34 @@
+{
+  "fixture": "F12",
+  "section": "Semantic contract, section 7.2",
+  "stage": 5,
+  "expect": {
+    "check": {
+      "findingsExact": true,
+      "findings": [
+        {
+          "kind": "not-preserved",
+          "members": [
+            "AccountService/#transition/Withdraw",
+            "AccountService/ProtectFunds/MinimumBalance"
+          ],
+          "scope": "specification",
+          "counterexample": true
+        }
+      ],
+      "gaps": [
+        {
+          "kind": "unconstrained-after",
+          "subject": "Account.floor",
+          "detailIncludes": "then"
+        }
+      ],
+      "gapsExclude": [
+        {
+          "kind": "unconstrained-after",
+          "subject": "Account.balance"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "fixture": "F51",
+  "section": "Evidence and adapters, section 8",
+  "stage": 7,
+  "expect": {
+    "steps": 2,
+    "authority": [
+      {
+        "fragment": "AccountService/ProtectFunds/RejectInsufficientFunds",
+        "authority": "candidate",
+        "reason": "source-text-changed"
+      },
+      {
+        "fragment": "AccountService/ProtectFunds/MinimumBalance",
+        "authority": "approved"
+      }
+    ]
+  }
+}

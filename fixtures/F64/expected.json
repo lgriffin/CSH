@@ -1,0 +1,9 @@
+{
+  "fixture": "F64",
+  "section": "Authority and ledger, section 8",
+  "stage": 7,
+  "expect": {
+    "steps": 2,
+    "incrementalEqualsFull": true
+  }
+}

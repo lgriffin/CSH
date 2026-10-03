@@ -1,0 +1,12 @@
+{
+  "fixture": "F04",
+  "section": "Semantic contract, section 7.1",
+  "stage": 2,
+  "expect": {
+    "compile": {
+      "ok": false,
+      "rule": "S5",
+      "markedLine": true
+    }
+  }
+}

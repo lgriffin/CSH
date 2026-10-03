@@ -1,0 +1,21 @@
+{
+  "fixture": "F52",
+  "section": "Evidence and adapters, section 8",
+  "stage": 4,
+  "expect": {
+    "check": {
+      "errors": [
+        {
+          "code": "dangling-citation",
+          "detailIncludes": "ACC-999"
+        }
+      ],
+      "gaps": [
+        {
+          "kind": "uncited",
+          "subject": "Requirements/ACC-007"
+        }
+      ]
+    }
+  }
+}

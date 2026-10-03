@@ -1,0 +1,11 @@
+{
+  "fixture": "F22",
+  "section": "Semantic contract, section 7.3",
+  "stage": 5,
+  "expect": {
+    "check": {
+      "findings": [],
+      "findingsExact": true
+    }
+  }
+}

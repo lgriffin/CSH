@@ -1,0 +1,11 @@
+{
+  "steps": [
+    {
+      "spec": "spec.csl.ts",
+      "approve": "all"
+    },
+    {
+      "spec": "inputs/changed.csl.ts"
+    }
+  ]
+}

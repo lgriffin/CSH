@@ -1,0 +1,29 @@
+{
+  "fixture": "F21",
+  "section": "Semantic contract, section 7.3",
+  "stage": 5,
+  "expect": {
+    "check": {
+      "findingsExact": true,
+      "findings": [
+        {
+          "kind": "joint-conflict",
+          "members": [
+            "AccountService/@ProductRules/AcceptSmallWithdrawals",
+            "AccountService/ProtectFunds/RejectInsufficientFunds"
+          ],
+          "crossSource": true,
+          "noOutcomeWitness": true
+        },
+        {
+          "kind": "example-conflict",
+          "members": [
+            "AccountService/@ProductRules/AcceptSmallWithdrawals",
+            "AccountService/ProtectFunds/RejectAtBoundary"
+          ],
+          "crossSource": true
+        }
+      ]
+    }
+  }
+}

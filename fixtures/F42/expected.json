@@ -1,0 +1,20 @@
+{
+  "fixture": "F42",
+  "section": "Semantic contract, section 7.5",
+  "stage": 7,
+  "expect": {
+    "git": true,
+    "invalidEntries": [
+      {
+        "seq": 1,
+        "reason": "unsigned"
+      }
+    ],
+    "authority": [
+      {
+        "fragment": "AccountService/ProtectFunds/MinimumBalance",
+        "authority": "candidate"
+      }
+    ]
+  }
+}

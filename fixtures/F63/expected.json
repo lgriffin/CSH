@@ -1,0 +1,25 @@
+{
+  "fixture": "F63",
+  "section": "Authority and ledger, section 8",
+  "stage": 7,
+  "expect": {
+    "git": true,
+    "invalidEntries": [],
+    "authority": [
+      {
+        "fragment": "AccountService/ProtectFunds/MinimumBalance",
+        "authority": "approved",
+        "selfApproved": true,
+        "needsReview": false
+      }
+    ],
+    "beforeCountersign": [
+      {
+        "fragment": "AccountService/ProtectFunds/MinimumBalance",
+        "authority": "approved",
+        "selfApproved": true,
+        "needsReview": true
+      }
+    ]
+  }
+}

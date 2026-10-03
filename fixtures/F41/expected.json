@@ -1,0 +1,11 @@
+{
+  "fixture": "F41",
+  "section": "Semantic contract, section 7.5",
+  "stage": 7,
+  "expect": {
+    "steps": 2,
+    "sameDigest": true,
+    "allApproved": true,
+    "noneStale": true
+  }
+}

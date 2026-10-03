@@ -1,0 +1,11 @@
+{
+  "fixture": "F45",
+  "section": "Semantic contract, section 7.5",
+  "stage": 9,
+  "expect": {
+    "gateReplay": {
+      "otherCommit": "beef000000000000000000000000000000000000",
+      "refused": true
+    }
+  }
+}

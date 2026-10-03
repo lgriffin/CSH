@@ -1,0 +1,23 @@
+{
+  "fixture": "F10",
+  "section": "Semantic contract, section 7.2",
+  "stage": 3,
+  "expect": {
+    "compile": {
+      "ok": true
+    },
+    "emit": {
+      "ok": true
+    },
+    "roundTrip": true,
+    "check": {
+      "findings": [],
+      "findingsExact": true,
+      "gapsExclude": [
+        {
+          "kind": "unconstrained-after"
+        }
+      ]
+    }
+  }
+}

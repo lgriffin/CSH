@@ -1,0 +1,27 @@
+{
+  "fixture": "F20",
+  "section": "Semantic contract, section 7.3",
+  "stage": 5,
+  "expect": {
+    "check": {
+      "findingsExact": true,
+      "findings": [
+        {
+          "kind": "example-conflict",
+          "members": [
+            "AccountService/@LedgerModel/MinimumBalance",
+            "AccountService/@UnitTests/AcceptsWithdrawal"
+          ],
+          "sources": [
+            "LedgerModel",
+            "UnitTests"
+          ],
+          "crossSource": true,
+          "collisionTermsInclude": [
+            "Account.balance@post"
+          ]
+        }
+      ]
+    }
+  }
+}

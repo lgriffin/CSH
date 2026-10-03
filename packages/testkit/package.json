@@ -1,0 +1,9 @@
+{
+  "name": "@csh/testkit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@csh/kernel": "workspace:*","csl": "workspace:*","@csh/emit": "workspace:*","@csh/print": "workspace:*","@csh/solver": "workspace:*","@csh/check": "workspace:*","@csh/witness": "workspace:*","@csh/adapter-witness-files": "workspace:*","@csh/adapter-ears-markdown": "workspace:*","@csh/ledger": "workspace:*","@csh/gate": "workspace:*" }
+}

@@ -1,0 +1,23 @@
+{
+  "fixture": "F32",
+  "section": "Semantic contract, section 7.4",
+  "stage": 6,
+  "expect": {
+    "assessments": [
+      {
+        "fragment": "AccountService/ProtectFunds/MinimumBalance",
+        "verdict": "unknown",
+        "reasonsInclude": [
+          "key-missing"
+        ]
+      },
+      {
+        "fragment": "AccountService/ProtectFunds/RejectInsufficientFunds",
+        "verdict": "unknown",
+        "reasonsInclude": [
+          "key-missing"
+        ]
+      }
+    ]
+  }
+}

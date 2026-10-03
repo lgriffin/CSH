@@ -1,0 +1,19 @@
+{
+  "fixture": "F34",
+  "section": "Semantic contract, section 7.4",
+  "stage": 6,
+  "expect": {
+    "assessments": [
+      {
+        "fragment": "AccountService/ProtectFunds/MinimumBalance",
+        "verdict": "satisfied",
+        "applicability": "current"
+      },
+      {
+        "fragment": "AccountService/ProtectFunds/RejectInsufficientFunds",
+        "verdict": "satisfied",
+        "applicability": "current"
+      }
+    ]
+  }
+}

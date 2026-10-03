@@ -1,0 +1,29 @@
+{
+  "fixture": "F30",
+  "section": "Semantic contract, section 7.4",
+  "stage": 6,
+  "expect": {
+    "executions": [
+      {
+        "witness": "w1",
+        "localResult": "passed"
+      }
+    ],
+    "assessments": [
+      {
+        "fragment": "AccountService/ProtectFunds/MinimumBalance",
+        "authority": "approved",
+        "verdict": "violated",
+        "scope": "implementation",
+        "applicability": "current"
+      },
+      {
+        "fragment": "AccountService/ProtectFunds/RejectInsufficientFunds",
+        "authority": "approved",
+        "verdict": "violated",
+        "scope": "implementation",
+        "applicability": "current"
+      }
+    ]
+  }
+}

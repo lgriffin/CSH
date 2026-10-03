@@ -1,0 +1,24 @@
+{
+  "fixture": "F61",
+  "section": "Authority and ledger, section 8",
+  "stage": 7,
+  "expect": {
+    "git": true,
+    "invalidEntries": [
+      {
+        "seq": 2,
+        "reason": "not-append-only"
+      }
+    ],
+    "authority": [
+      {
+        "fragment": "AccountService/ProtectFunds/MinimumBalance",
+        "authority": "approved"
+      },
+      {
+        "fragment": "AccountService/ProtectFunds/RejectInsufficientFunds",
+        "authority": "candidate"
+      }
+    ]
+  }
+}
