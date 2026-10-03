@@ -2,7 +2,7 @@
 // practices that describe it and the sources each practice feeds. It says what is evaluated, never what is right: it
 // holds no judgment and no authority.
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, posix } from "node:path";
 import { compareCodePoints, digestOf, type Module } from "@csh/kernel";
 
 export const COMPONENT_PATH = "csh/component.json";
@@ -161,12 +161,22 @@ export function checkAgainstModule(manifest: ComponentManifest, m: Module): { er
       if (!declared.has(s)) errors.push({ code: "practice-unknown-source", detail: `practice ${p.id} names source ${s}, which the specification does not declare` });
     }
     if (p.cites !== undefined && !declared.has(p.cites)) errors.push({ code: "practice-unknown-source", detail: `practice ${p.id} cites source ${p.cites}, which the specification does not declare` });
-    if (p.harness !== undefined && !p.sources.some((s) => declared.get(s)?.at === p.harness!.witnesses)) {
+    if (p.harness !== undefined && !p.sources.some((s) => declared.get(s) !== undefined && reads(declared.get(s)!.at, p.harness!.witnesses))) {
       errors.push({ code: "harness-file-unread", detail: `practice ${p.id} writes ${p.harness.witnesses}, which none of its sources reads` });
     }
   }
   const unowned = m.sources.map((s) => s.name).filter((s) => !owned.has(s)).sort(compareCodePoints);
   return { errors, unowned };
+}
+
+/** A project path as one spelling: forward slashes, no "./", no trailing slash ("" for the root). */
+const norm = (p: string) => posix.normalize(p.split("\\").join("/")).replace(/^\.(\/|$)/, "").replace(/\/$/, "");
+
+/** True when a source at `at` reads the file `file`: it is that file, or a directory that holds it. */
+function reads(at: string, file: string): boolean {
+  const a = norm(at);
+  const f = norm(file);
+  return a === f || a === "" || f.startsWith(`${a}/`);
 }
 
 /** The practice that owns each source, by source name. */

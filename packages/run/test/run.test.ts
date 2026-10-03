@@ -4,9 +4,10 @@ import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { ComponentManifest } from "@csh/component";
 import { digestOf } from "@csh/kernel";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { type RunRecord, runAt, runComponent } from "../src/index.ts";
+import { type Project, type RunRecord, runAt, runComponent, runHarnesses, unchangedSince } from "../src/index.ts";
 
 const REPO = resolve(import.meta.dirname, "../../..");
 let proj: string;
@@ -194,4 +195,35 @@ describe("runAt", () => {
       rmSync(ws, { recursive: true, force: true });
     }
   }, 120000);
+});
+
+describe("unchangedSince", () => {
+  it("counts every file outside csh/ when the implementation list is empty, as when it is absent", () => {
+    const vcs = { isAncestor: () => true, changedBetween: () => ["src/signin.ts"] };
+    const at = (implementation: string[]) => unchangedSince({ vcs, config: {}, component: { manifest: { ...manifest, implementation }, digest: "" } } as unknown as Project)!("a", "b");
+    expect(at([])).toBe(false);
+    expect(at(["src"])).toBe(false);
+    expect(at(["lib"])).toBe(true);
+  });
+});
+
+describe("runHarnesses", () => {
+  it("clears each file once before any harness, so harnesses sharing a file both keep their lines", async () => {
+    const dir = mkdtempSync(join(REPO, ".csh-cache", "run-harnesses-"));
+    try {
+      mkdirSync(join(dir, "reports"));
+      writeFileSync(join(dir, "reports", "executions.ndjson"), "stale\n");
+      const line = (s: string) => ["node", "-e", `const f=require("fs");f.appendFileSync(process.env.CSH_EXECUTIONS_FILE,"${s}\\n");f.appendFileSync(process.env.CSH_WITNESS_FILE,"${s}\\n")`];
+      const practices = [
+        { id: "a", name: "A", kind: "tests" as const, sources: ["A"], harness: { run: line("a"), witnesses: "reports/w.ndjson" } },
+        { id: "b", name: "B", kind: "tests" as const, sources: ["B"], harness: { run: line("b"), witnesses: "reports/w.ndjson" } },
+      ];
+      const recs = await runHarnesses({ root: dir, commit: "c" } as Project, { ...manifest, practices } as ComponentManifest, () => undefined);
+      expect(readFileSync(join(dir, "reports", "executions.ndjson"), "utf8")).toBe("a\nb\n");
+      expect(readFileSync(join(dir, "reports", "w.ndjson"), "utf8")).toBe("a\nb\n");
+      expect(recs.map((r) => [r.exitCode, r.executions])).toEqual([[0, 1], [0, 2]]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });

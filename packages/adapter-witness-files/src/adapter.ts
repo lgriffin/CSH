@@ -116,7 +116,8 @@ function readExecutions(input: AdapterInput, diagnostics: Diagnostic[]): { outco
       lines.push({ test: e.test, outcome: e.outcome, span: `${file.path}:${line}` });
     }
   }
-  return { outcomes, lines };
+  // Each line reports the outcome the join uses: unknown for every line of an identity whose lines disagree.
+  return { outcomes, lines: lines.map((l) => ({ ...l, outcome: outcomes.get(l.test)! })) };
 }
 
 /** The record with the outcome the join gives it. A stated outcome is kept (version 1, or a hand-written record). */

@@ -168,8 +168,10 @@ export function snapshotOf(p: Project, moduleDigest: string, ledger: LedgerState
 export function unchangedSince(p: Project): ((a: string, b: string) => boolean) | undefined {
   const vcs = p.vcs;
   if (vcs === undefined) return undefined;
-  // Conservative default (ASSUMPTIONS.md): with no implementation paths configured, every file outside csh/ counts.
-  const impl = p.component?.manifest.implementation ?? p.config.implementationPaths;
+  // Conservative default (ASSUMPTIONS.md): with no implementation paths configured, every file outside csh/ counts. An
+  // empty list configures none (csh init writes one for a blank answer), so it never makes every witness current.
+  const listed = p.component?.manifest.implementation ?? p.config.implementationPaths;
+  const impl = listed !== undefined && listed.length > 0 ? listed : undefined;
   return (a, b) => {
     const target = b.replace(/-dirty$/, "");
     if (!vcs.isAncestor(a, target)) return false;

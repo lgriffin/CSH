@@ -82,6 +82,14 @@ describe("checkAgainstModule", () => {
     expect(checkAgainstModule(m, signIn).errors.map((e) => e.code)).toEqual(["component-name-mismatch", "practice-unknown-source", "practice-unknown-source", "harness-file-unread"]);
   });
 
+  it("accepts a witness file inside a directory source, or spelt another way", () => {
+    const at = (at: string, witnesses: string) => checkAgainstModule({ ...good, practices: [good.practices[0]!, { ...good.practices[1]!, harness: { run: ["node"], witnesses } }] }, { ...signIn, sources: [signIn.sources[0]!, { ...signIn.sources[1]!, at }] } as Module).errors.map((e) => e.code);
+    expect(at("inputs", "inputs/witnesses.ndjson")).toEqual([]);
+    expect(at("./inputs/", "inputs/witnesses.ndjson")).toEqual([]);
+    expect(at("inputs/witnesses.ndjson", "./inputs/witnesses.ndjson")).toEqual([]);
+    expect(at("input", "inputs/witnesses.ndjson")).toEqual(["harness-file-unread"]);
+  });
+
   it("returns a source no practice names as unowned, not as an error", () => {
     const r = checkAgainstModule({ ...good, practices: [good.practices[0]!] }, signIn);
     expect(r).toEqual({ errors: [], unowned: ["UnitTests"] });

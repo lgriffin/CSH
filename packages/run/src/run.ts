@@ -73,15 +73,19 @@ function exec(argv: string[], cwd: string, env: NodeJS.ProcessEnv, out: (s: stri
 /** Run each practice's harness. Old witness and execution files are removed first, so a run never reads stale ones. */
 export async function runHarnesses(p: Project, manifest: ComponentManifest, out: (s: string) => void): Promise<HarnessRecord[]> {
   const records: HarnessRecord[] = [];
-  for (const practice of manifest.practices) {
-    const h = practice.harness;
-    if (h === undefined) continue;
+  const harnessed = manifest.practices.filter((x) => x.harness !== undefined);
+  // Every file is removed once, before any harness runs: two harnesses sharing a file (the default executions file
+  // most often) both keep their lines.
+  for (const x of harnessed) {
+    for (const f of [x.harness!.witnesses, x.harness!.executions ?? DEFAULT_EXECUTIONS]) {
+      rmSync(resolve(p.root, f), { force: true });
+      mkdirSync(dirname(resolve(p.root, f)), { recursive: true });
+    }
+  }
+  for (const practice of harnessed) {
+    const h = practice.harness!;
     const witnesses = resolve(p.root, h.witnesses);
     const executions = resolve(p.root, h.executions ?? DEFAULT_EXECUTIONS);
-    for (const f of [witnesses, executions]) {
-      rmSync(f, { force: true });
-      mkdirSync(dirname(f), { recursive: true });
-    }
     const env = { ...process.env, CSH_COMMIT: p.commit, CSH_WITNESS_FILE: witnesses, CSH_EXECUTIONS_FILE: executions };
     const r = await exec(h.run, p.root, env, out);
     const rec: HarnessRecord = { practice: practice.id, argv: [...h.run], exitCode: r.exitCode, witnesses: countLines(witnesses), executions: countLines(executions), sandbox: "none" };
