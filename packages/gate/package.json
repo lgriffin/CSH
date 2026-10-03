@@ -4,6 +4,16 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "exports": { ".": "./src/index.ts" },
-  "dependencies": { "@csh/kernel": "workspace:*","@csh/check": "workspace:*","@csh/ledger": "workspace:*" }
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@csh/kernel": "workspace:*",
+    "@csh/check": "workspace:*",
+    "@csh/ledger": "workspace:*"
+  },
+  "devDependencies": {
+    "@csh/harness": "workspace:*",
+    "csl": "workspace:*"
+  }
 }

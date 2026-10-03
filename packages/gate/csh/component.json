@@ -1,0 +1,15 @@
+{
+  "schema": "csh-component/v1",
+  "name": "Gate",
+  "spec": "spec/gate.csl.ts",
+  "implementation": ["src"],
+  "practices": [
+    { "id": "ears", "name": "EARS", "kind": "requirements", "sources": ["Authority"], "author": "Gate owner", "unit": "the sentence" },
+    { "id": "tdd", "name": "Unit tests", "kind": "tests", "sources": ["UnitTests"], "author": "Developer", "unit": "the test", "cites": "Authority",
+      "harness": {
+        "run": ["node", "--test", "--test-reporter=spec", "--test-reporter-destination=stdout", "--test-reporter=@csh/harness/reporter", "--test-reporter-destination=stdout", "test/gate.probe.ts"],
+        "witnesses": "reports/witnesses.ndjson",
+        "executions": "reports/executions.ndjson"
+      } }
+  ]
+}

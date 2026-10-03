@@ -158,6 +158,13 @@ importers:
       '@csh/ledger':
         specifier: workspace:*
         version: link:../ledger
+    devDependencies:
+      '@csh/harness':
+        specifier: workspace:*
+        version: link:../harness
+      csl:
+        specifier: workspace:*
+        version: link:../csl
 
   packages/harness:
     dependencies:
