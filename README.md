@@ -50,6 +50,23 @@ the model cannot express. The harness reports:
 - A test with no rule behind it, and a requirement sentence that nothing cites.
 - Both obligations `candidate` and `conflicting`, because nobody has approved anything yet.
 
+## Three practices, one lockout
+
+[examples/lockout](examples/lockout) is a second named example. It describes sign-in lockout three ways: EARS
+requirements, BDD scenarios read by a project-local Gherkin adapter, and unit tests written test first. Each practice
+is signed off on its own. Read together they disagree on nine decision points: an off-by-one between the tests and the
+requirements, two EARS sentences that cannot both hold, a unit the scenarios state in minutes, and cases only one
+practice can express.
+
+```sh
+examples/lockout/walkthrough.sh
+```
+
+The script runs one example in four stages: as written, after the countermeasures, with a model and signed approvals
+(the enforcing gate allows), and after a regression that keeps the tests green (the enforcing gate blocks).
+[docs/lockout-walkthrough.md](docs/lockout-walkthrough.md) shows the run, and [docs/lockout-a3.md](docs/lockout-a3.md)
+is the Lean A3 built from its reports, with an A3 sheet and a stage picker in [docs/lockout-a3.html](docs/lockout-a3.html).
+
 ## Commands
 
 ```
