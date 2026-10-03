@@ -48,9 +48,12 @@ function sheetStage(j: Judgments, rec: StageRecord, def: Judgments["stages"][num
     return { ...s, label: labelOf(s, report), ...(cause !== undefined ? { cause: cause.id } : {}), ...(lane !== undefined ? { lane: lane.id } : {}) };
   });
   // A test that calls the probed function several times has one execution per witness; it counts once, and passes
-  // only when every one of its executions passed.
+  // only when every one of its executions passed. A test identity is relative to its harness, so it is kept per source.
   const tests = new Map<string, boolean>();
-  for (const e of report.executions ?? []) tests.set(e.test ?? e.witness, (tests.get(e.test ?? e.witness) ?? true) && e.localResult === "passed");
+  for (const e of report.executions ?? []) {
+    const key = `${e.source}\u0000${e.test ?? e.witness}`;
+    tests.set(key, (tests.get(key) ?? true) && e.localResult === "passed");
+  }
   const disposition = new Map((rec.gate.obligations ?? []).map((o) => [o.fragment, o.disposition]));
   const owned = new Set(Object.keys(Object.keys(sources).length > 0 ? sources : (report.component?.sources ?? {})));
   const items = new Set((report.items ?? []).map((i) => `${i.source}/${i.id}`));

@@ -31,17 +31,26 @@ export async function a3Authority(p: Project, slug: string, digest: string): Pro
   return a.reason !== undefined ? { authority: "candidate", reason: a.reason } : { authority: "candidate" };
 }
 
-/** The stored run of a commit, if csh run has made one; the newest by modification when there are several. */
-function storedRun(p: Project, commit: string): string | undefined {
+const MODES: readonly string[] = ["advisory", "enforcing"];
+
+const git = (p: Project, ...args: string[]) => execFileSync("git", args, { cwd: p.root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+
+/**
+ * The stored run of a commit in a mode, if csh run has made one; the newest by modification when there are several.
+ * None while the working tree differs from HEAD in any way: a run names HEAD even when it read untracked files (A-54).
+ */
+function storedRun(p: Project, commit: string, mode: Mode): string | undefined {
   const runs = join(p.root, RUNS_DIR);
   if (!existsSync(runs)) return undefined;
+  if (commit === p.head && git(p, "status", "--porcelain", "--", ".") !== "") return undefined;
   const found: { dir: string; at: number }[] = [];
   for (const d of readdirSync(runs)) {
     const dir = join(runs, d);
     const file = join(dir, "run.json");
     if (!existsSync(file) || !STAGE_FILES.every((f) => existsSync(join(dir, f)))) continue;
     const rec = JSON.parse(readFileSync(file, "utf8")) as { snapshot?: { commit?: string } };
-    if (rec.snapshot?.commit === commit) found.push({ dir, at: statSync(file).mtimeMs });
+    const gate = JSON.parse(readFileSync(join(dir, "gate.json"), "utf8")) as { mode?: string };
+    if (rec.snapshot?.commit === commit && gate.mode === mode) found.push({ dir, at: statSync(file).mtimeMs });
   }
   found.sort((a, b) => b.at - a.at);
   return found[0]?.dir;
@@ -49,7 +58,7 @@ function storedRun(p: Project, commit: string): string | undefined {
 
 function resolveCommit(p: Project, at: string): string | undefined {
   try {
-    return execFileSync("git", ["rev-parse", "--verify", `${at}^{commit}`], { cwd: p.root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    return git(p, "rev-parse", "--verify", `${at}^{commit}`);
   } catch {
     return undefined;
   }
@@ -62,7 +71,7 @@ async function recordStage(p: Project, slug: string, id: string, at: string, io:
     io.err(`csh a3: ${at} is not a commit of the repository at ${p.root}\n`);
     return false;
   }
-  let from = storedRun(p, commit);
+  let from = storedRun(p, commit, mode ?? p.config.mode ?? "advisory");
   if (from === undefined) {
     const r = await runAt({ ...(await io.runOptions()), root: p.root, commit, ...(mode !== undefined ? { mode } : {}) });
     if (!r.ok) {
@@ -93,6 +102,12 @@ export async function buildOutputs(p: Project, slug: string): Promise<{ files: R
     const rec = readStage(stageDir(p.root, slug, s.id), s.id);
     if (rec !== undefined) stages.push(rec);
   }
+  // A stage whose report or gate decision is not the file its run record names is refused, not read (section 5.7).
+  const altered = stages.flatMap((rec) => {
+    const own = stageIntegrity(rec);
+    return own === undefined ? [] : [`${own.problem} ${rec.id}: ${own.detail}`];
+  });
+  if (altered.length > 0) return { error: `the stage records cannot be used:\n${altered.map((x) => `  ${x}`).join("\n")}` };
   const digest = digestOf(read.bytes);
   const vcs = p.vcs;
   const model = buildA3({
@@ -134,6 +149,10 @@ export async function a3Command(p: Project, a: Args, io: A3Io): Promise<number> 
     return 1;
   }
   const mode = a.options.mode as Mode | undefined;
+  if (mode !== undefined && !MODES.includes(mode)) {
+    io.err("--mode is advisory or enforcing\n");
+    return 2;
+  }
   const dir = a3Dir(p.root, slug);
   switch (sub) {
     case "open": {
@@ -220,6 +239,11 @@ async function verify(p: Project, slug: string, io: A3Io): Promise<number> {
     const own = stageIntegrity(rec);
     if (own !== undefined) {
       io.out(`  ${own.problem} ${s.id}: ${own.detail}\n`);
+      bad++;
+      continue;
+    }
+    if (!MODES.includes(rec.gate.mode)) {
+      io.out(`  stage-unverifiable ${s.id}: gate.json names mode ${JSON.stringify(rec.gate.mode)}, which is neither advisory nor enforcing\n`);
       bad++;
       continue;
     }

@@ -13,7 +13,8 @@ export const A3_DIR = "csh/a3";
  */
 export type Pointer = { file: string; text: string; stage?: string } | { finding: string; stage: string };
 
-export type Mark = "says" | "clash" | "drift" | "silent";
+export const MARKS = ["says", "clash", "drift", "silent"] as const;
+export type Mark = (typeof MARKS)[number];
 
 export interface Judgments {
   schema: typeof JUDGMENTS_SCHEMA;
