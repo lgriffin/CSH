@@ -109,7 +109,9 @@ export function runSandboxed(file: string, opts: EmitOptions = {}): Promise<Runn
     child.stdout?.on("data", (d: Buffer) => (stdout += d.toString()));
     child.stderr?.on("data", (d: Buffer) => (stderr += d.toString()));
     child.on("error", (err) => finish({ ok: false, code: "E-EVAL", message: err.message }));
-    child.on("exit", (code) => {
+    // "close", not "exit": it fires only after the IPC channel has delivered every message, so a reply sent
+    // just before the subprocess exits is never mistaken for a silent exit.
+    child.on("close", (code) => {
       if (settled) return;
       const text = `${stderr}\n${stdout}`.trim();
       if (/ERR_ACCESS_DENIED|Access to this API has been restricted/.test(text)) finish({ ok: false, code: "E-ACCESS", message: text.split("\n")[0] ?? text });

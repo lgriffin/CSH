@@ -76,7 +76,8 @@ export function runIsolated(adapterUrl: string, input: AdapterInput, timeoutMs =
       else finish(new Error(m.message ?? "adapter failed"));
     });
     child.on("error", (e) => finish(e));
-    child.on("exit", (code) => finish(new Error(`adapter process exited with ${code}: ${stderr.slice(0, 1000)}`)));
+    // "close", not "exit": a reply sent just before the subprocess exits is delivered first.
+    child.on("close", (code) => finish(new Error(`adapter process exited with ${code}: ${stderr.slice(0, 1000)}`)));
     child.send({ adapter: adapterUrl, input });
   });
 }
