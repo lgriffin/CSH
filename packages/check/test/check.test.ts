@@ -104,6 +104,14 @@ describe("witness judging and verdicts", () => {
   });
 });
 
+describe("unobserved tests", () => {
+  it("reports each source's missing witness, with the source in the subject (#24)", async () => {
+    const run = (source: string): SourceRun => ({ source, kind: "Witnesses", files: [], output: { witnesses: [], diagnostics: [], executions: [{ test: "t.ts::shared", outcome: "passed", span: "e.ndjson:1" }] } });
+    const r = (await check({ module, moduleDigest: "sha256:test", runs: [run("UnitTests"), run("Integration")], solver: z3 })).report;
+    expect(r.gapView.gaps.filter((g) => g.kind === "unobserved-test").map((g) => g.subject)).toEqual(["Integration/t.ts::shared", "UnitTests/t.ts::shared"]);
+  });
+});
+
 describe("comparability", () => {
   it("a lifted claim in an undeclared unit is not comparable, never a conflict", async () => {
     const claims = { source: "Notes", assumptions: [], examples: [], unliftable: [], obligations: [{ kind: "invariant", name: "UsdFloor", state: "Account", body: { k: "ge", l: { k: "field", state: "Account", field: "balance", at: "now" }, r: { k: "int", v: "0", unit: "minor(USD)" } } }] };
