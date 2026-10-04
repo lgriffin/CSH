@@ -1,6 +1,6 @@
 // Authority from the ledger (Authority tab, sections 3.2 and 3.3).
 import { identityOf, maintainersHistory, type ReadOptions } from "./ledger.ts";
-import { type LedgerState, persons, type ValidEntry } from "./types.ts";
+import { type Identity, type LedgerState, persons, type ValidEntry } from "./types.ts";
 import type { VcsPort } from "./vcs.ts";
 
 export interface AuthorityInfo {
@@ -49,6 +49,70 @@ export function waiversFor(state: LedgerState, f: { name: string; digest: string
   return state.entries.filter((e) => e.kind === "waive" && e.fragment === f.name && e.digest === f.digest);
 }
 
+/** Where a fragment's current digest came from: the commit that last changed it, and who signed that commit. */
+export interface Provenance {
+  commit: string;
+  /** Committer date of that commit, ISO 8601. */
+  date: string;
+  /** The signing identity, as the maintainers file in force before the commit lists it; absent when unsigned or unlisted. */
+  identity?: Identity;
+}
+
+/**
+ * Provenance of each fragment's digest (Authority tab, section 3.3; Next layers, section 6.5): the commit that last
+ * changed it, among the commits that touch `specPaths`, and its signing identity. `digestsAt` emits the specification at
+ * a commit and returns fragment digests by name. Undefined when the digest given is not the one history last gave it,
+ * such as an uncommitted change.
+ */
+export function provenance(
+  vcs: VcsPort,
+  specPaths: string[],
+  digestsAt: (commit: string) => ReadonlyMap<string, string> | undefined,
+  opts: ReadOptions = {},
+): (fragment: string, digest: string, before: string) => Provenance | undefined {
+  const mh = maintainersHistory(vcs, opts);
+  const commits = [...new Set(specPaths.flatMap((p) => vcs.commitsTouching(p)))];
+  // Order by ancestry: oldest first.
+  commits.sort((a, b) => (a === b ? 0 : vcs.isAncestor(a, b) ? -1 : 1));
+  const memo = new Map<string, ReadonlyMap<string, string> | undefined>();
+  const at = (c: string) => {
+    if (!memo.has(c)) memo.set(c, digestsAt(c));
+    return memo.get(c);
+  };
+  return (fragment, digest, before) => {
+    let found: Provenance | undefined;
+    let prev: string | undefined;
+    for (const c of commits) {
+      if (c !== before && !vcs.isAncestor(c, before)) continue;
+      const d = at(c)?.get(fragment);
+      if (d !== prev) {
+        const info = vcs.commit(c);
+        const identity = identityOf(maintainersAt(vcs, mh, c), info.signature);
+        found = d === digest ? { commit: c, date: info.date, ...(identity !== undefined ? { identity } : {}) } : undefined;
+        prev = d;
+      }
+    }
+    return found;
+  };
+}
+
+/**
+ * The maintainers file that names who signed `commit`: the version in force before it, or, for the commit that is the
+ * root of trust, the root's own. A commit older than any maintainers file has none, and its signer is named by no one,
+ * even when a later file lists the key (A-91).
+ */
+export function maintainersAt(vcs: VcsPort, mh: ReturnType<typeof maintainersHistory>, commit: string) {
+  const parent = vcs.commit(commit).parents[0];
+  const before = [...mh.versions].reverse().find((v) => v.commit === parent || (parent !== undefined && vcs.isAncestor(v.commit, parent)));
+  if (before !== undefined) return before.m;
+  return mh.versions[0]?.commit === commit ? mh.versions[0].m : undefined;
+}
+
+export type AuthoredBy = "person" | "agent" | "unknown";
+
+/** Who wrote a fragment's current digest: the kind of the identity that signed it; unknown when unsigned or unlisted. */
+export const authoredByOf = (p: Provenance | undefined): AuthoredBy => p?.identity?.kind ?? "unknown";
+
 /**
  * Authorship (Authority tab, section 3.3): the signing identity of the commit that last
  * changed a fragment's digest. `digestsAt` emits the specification at a commit and returns
@@ -60,28 +124,9 @@ export function authorship(
   digestsAt: (commit: string) => ReadonlyMap<string, string> | undefined,
   opts: ReadOptions = {},
 ): (fragment: string, digest: string, before: string) => string | undefined {
-  const mh = maintainersHistory(vcs, opts);
-  const commits = [...new Set(specPaths.flatMap((p) => vcs.commitsTouching(p)))];
-  // Order by ancestry: oldest first.
-  commits.sort((a, b) => (a === b ? 0 : vcs.isAncestor(a, b) ? -1 : 1));
-  const memo = new Map<string, ReadonlyMap<string, string> | undefined>();
-  const at = (c: string) => {
-    if (!memo.has(c)) memo.set(c, digestsAt(c));
-    return memo.get(c);
-  };
+  const of = provenance(vcs, specPaths, digestsAt, opts);
   return (fragment, digest, before) => {
-    let author: string | undefined;
-    let prev: string | undefined;
-    for (const c of commits) {
-      if (c !== before && !vcs.isAncestor(c, before)) continue;
-      const d = at(c)?.get(fragment);
-      if (d !== prev) {
-        const info = vcs.commit(c);
-        const m = [...mh.versions].reverse().find((v) => v.commit === info.parents[0] || (info.parents[0] !== undefined && vcs.isAncestor(v.commit, info.parents[0])))?.m ?? mh.versions[0]?.m;
-        author = d === digest ? (identityOf(m, info.signature)?.name ?? "unattributed") : undefined;
-        prev = d;
-      }
-    }
-    return author;
+    const p = of(fragment, digest, before);
+    return p === undefined ? undefined : (p.identity?.name ?? "unattributed");
   };
 }

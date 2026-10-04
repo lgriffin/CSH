@@ -16,6 +16,8 @@ export interface BuildInput {
   /** Stage records by id; a stage the judgments list and this lacks is a problem, not an error. */
   stages: StageRecord[];
   authority: Authority;
+  /** Who wrote the judgments, from history; absent leaves it off the sheet. */
+  authoredBy?: "person" | "agent" | "unknown";
   /**
    * The text of a component file as it stood at a stage's commit: a string, undefined when the file is absent, or
    * null when the commit cannot be read. Without it, every file pointer is unresolved.
@@ -188,6 +190,7 @@ export function buildA3(input: BuildInput): A3Model {
     component: input.component.name,
     judgmentsDigest: input.judgmentsDigest,
     authority: input.authority,
+    ...(input.authoredBy !== undefined ? { authoredBy: input.authoredBy } : {}),
     title: j.title,
     problem: j.problem,
     background: j.background,

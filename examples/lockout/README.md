@@ -29,6 +29,17 @@ The stage records are written and committed in the scratch repository the script
 commit hashes differ from run to run. `walkthrough.sh --update` rewrites the committed sheet.
 This is the example to change first when the harness changes: run it, and the A3's diff shows what moved.
 
+## An agent on the regression
+
+A scripted client, with no language model, follows [the agent guide](../../docs/guides/agents.md) on this example
+through the agent tool server: status and run, the regression committed with the agent's own key, run, then diff
+against where it started. The diff says stop, since an approved rule is newly violated. The guide shows the transcript,
+and the test fails if it changes.
+
+```sh
+pnpm vitest run packages/testkit/test/agent-session.test.ts
+```
+
 ## Containers it exercises
 
 Checked against [the container diagram](../../docs/architecture/containers.mmd) and the commands this example runs
@@ -45,4 +56,5 @@ Checked against [the container diagram](../../docs/architecture/containers.mmd) 
 - `ledger`: `csh approve` drafting ledger lines, and authority from signed commits
 - `a3`: `csh a3 stage`, `build` and `verify`
 - `review`: `csh diff` between each pair of stages
+- `agent`: the agent tool server, driven by the scripted session below
 - `harness`: the probe in the unit tests, and the reporter

@@ -23,6 +23,8 @@
     "@csh/run": "workspace:*",
     "@csh/a3": "workspace:*",
     "typescript": "5.9.3",
-    "@csh/review": "workspace:*"
+    "@csh/review": "workspace:*",
+    "@csh/agent": "workspace:*",
+    "@modelcontextprotocol/sdk": "1.32.0"
   }
 }

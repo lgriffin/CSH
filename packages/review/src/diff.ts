@@ -92,20 +92,25 @@ function testsOf(s: RunSide): Set<string> {
   return new Set((s.report.executions ?? []).filter((e) => e.test !== undefined).map((e) => `${e.source}/${e.test}`));
 }
 
-const under = (path: string, root: string) => path === root || path.startsWith(`${root.replace(/\/$/, "")}/`);
+/** A manifest path as git reports it: no leading "./" and no trailing "/". */
+const norm = (path: string) => path.replace(/^(\.\/)+/, "").replace(/\/$/, "");
+const under = (path: string, root: string) => {
+  const r = norm(root);
+  return r === "" || r === "." || path === r || path.startsWith(`${r}/`);
+};
 
 /** The paths a practice's results depend on: its sources, its adapter and step table, and the files its harness names. */
 function practicePaths(p: ManifestView["practices"][number], model: Module | undefined): string[] {
   const out: string[] = [];
   for (const s of p.sources) {
     const at = model?.sources.find((x) => x.name === s)?.at;
-    if (at !== undefined) out.push(at);
+    if (at !== undefined) out.push(norm(at));
   }
-  if (p.adapter !== undefined && (p.adapter.startsWith("./") || p.adapter.startsWith("../"))) out.push(p.adapter.replace(/^\.\//, ""));
-  if (p.steps !== undefined) out.push(p.steps);
+  if (p.adapter !== undefined && (p.adapter.startsWith("./") || p.adapter.startsWith("../"))) out.push(norm(p.adapter));
+  if (p.steps !== undefined) out.push(norm(p.steps));
   // A harness's arguments that read as files of the project: the tests it runs.
-  for (const a of p.harness?.run.slice(1) ?? []) if (!a.startsWith("-") && /[/.]/.test(a) && !a.startsWith("@")) out.push(a.replace(/^\.\//, ""));
-  const written = new Set([p.harness?.witnesses, p.harness?.executions].filter((x): x is string => x !== undefined));
+  for (const a of p.harness?.run.slice(1) ?? []) if (!a.startsWith("-") && /[/.]/.test(a) && !a.startsWith("@")) out.push(norm(a));
+  const written = new Set([p.harness?.witnesses, p.harness?.executions].filter((x): x is string => x !== undefined).map(norm));
   return out.filter((x) => !written.has(x));
 }
 
@@ -121,8 +126,11 @@ function observe(d: RunDiff, ctx: DiffContext): void {
   const changes = ctx.changes;
   const m = ctx.manifest;
   if (changes === undefined || m === undefined) return;
-  const specDir = m.spec.includes("/") ? m.spec.slice(0, m.spec.lastIndexOf("/")) : m.spec;
-  const specTouched = changes.some((c) => c === m.spec || under(c, specDir));
+  // The specification is its own file and the modules beside it that it can import; other files in its directory are not.
+  const spec = norm(m.spec);
+  const specDir = spec.includes("/") ? spec.slice(0, spec.lastIndexOf("/")) : "";
+  const specModule = (c: string) => /\.(csl\.)?[cm]?[jt]s$/.test(c) && (specDir === "" ? !c.includes("/") : c.startsWith(`${specDir}/`) && !c.slice(specDir.length + 1).includes("/"));
+  const specTouched = changes.some((c) => c === spec || specModule(c));
   const implTouched = changes.some((c) => m.implementation.some((i) => under(c, i)));
   const evidenceChanged = m.practices.filter((p) => EVIDENCE_KINDS.has(p.kind) && d.inputs.some((i) => i.practice === p.id && i.changed)).map((p) => p.id);
   const testsChanged = m.practices.filter((p) => p.kind === "tests" || p.kind === "scenarios").some((p) => evidenceChanged.includes(p.id));
@@ -134,6 +142,10 @@ function observe(d: RunDiff, ctx: DiffContext): void {
 /** What a change did, from the base's run to the head's. A side that could not be had is never shown as no change. */
 export function diffRuns(base: RunSide | Unavailable, head: RunSide | Unavailable, ctx: DiffContext = {}): RunDiff {
   const sideOf = (s: RunSide | Unavailable) => (isUnavailable(s) ? { unavailable: s.unavailable } : { commit: s.run.snapshot.commit, snapshotDigest: s.run.snapshotDigest });
+  // Two runs of different components are not two sides of one change: the base is refused, never compared.
+  if (!isUnavailable(base) && !isUnavailable(head) && base.run.component !== head.run.component) {
+    base = { unavailable: `different-component: the base is a run of ${base.run.component}, the head of ${head.run.component}` };
+  }
   const present = !isUnavailable(head) ? head : !isUnavailable(base) ? base : undefined;
   const d: RunDiff = {
     schema: "csh-diff/v1",

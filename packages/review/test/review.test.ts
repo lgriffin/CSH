@@ -49,4 +49,24 @@ describe("diffRuns", () => {
     expect(silent.observations.filter((o) => o.k !== "approval-lost" && o.k !== "evidence-removed")).toEqual([]);
     expect(silent.inputs.every((i) => !i.changed)).toBe(true);
   });
+
+  it("refuses to compare runs of two different components", () => {
+    const b = fx("F108", "base");
+    const h = fx("F108", "head");
+    const other = { ...b, run: { ...b.run, component: `${b.run.component}-other` } };
+    const d = diffRuns(other, h);
+    expect(d.comparison).toBe("base-unavailable");
+    expect(d.base).toEqual({ unavailable: expect.stringMatching(/^different-component: /) });
+  });
+
+  it("counts only the specification and its modules as the specification, and reads paths with a leading ./", () => {
+    const b = fx("F111", "base");
+    const h = fx("F111", "head");
+    const sibling = diffRuns(b, h, { manifest, changes: ["spec/README.md"] });
+    expect(sibling.observations).toContainEqual({ k: "spec-untouched" });
+    const dotted: ManifestView = { ...manifest, spec: `./${manifest.spec}`, implementation: manifest.implementation.map((i) => `./${i}`) };
+    const touched = diffRuns(b, h, { manifest: dotted, changes: ["spec/lockout.csl.ts", "src/lockout.ts", "test/lockout.test.ts"] });
+    expect(touched.observations).not.toContainEqual({ k: "spec-untouched" });
+    expect(touched.observations).toContainEqual({ k: "implementation-and-tests-changed-together" });
+  });
 });

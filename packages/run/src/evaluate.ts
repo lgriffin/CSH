@@ -4,10 +4,10 @@ import { join } from "node:path";
 import { cachingSolver, loadEvidenceStore, type Report, saveEvidenceStore, SolverCache, TOOL_VERSION } from "@csh/check";
 import { gate, type GateDecision, type Mode, type Snapshot, snapshotDigest, type Waiver } from "@csh/gate";
 import type { Module } from "@csh/kernel";
-import { type LedgerState, waiversFor } from "@csh/ledger";
+import { authoredByOf, type LedgerState, waiversFor } from "@csh/ledger";
 import type { SolverPort } from "@csh/solver";
 import { type Emission, emitSpec, evaluateSpec } from "./pipeline.ts";
-import { CACHE_DIR, ledgerOf, type Project, snapshotOf, specOf, unchangedSince } from "./project.ts";
+import { CACHE_DIR, fragmentProvenance, ledgerOf, type Project, snapshotOf, specOf, unchangedSince } from "./project.ts";
 
 export interface EvaluateOptions {
   /** A specification other than the one the project names (csh check <spec>). */
@@ -71,6 +71,8 @@ export async function evaluateProject(p: Project, o: EvaluateOptions): Promise<E
   const problem = emissionProblem(r);
   if (problem !== undefined) return { ok: false, message: problem };
   const report = r.checked!.report;
+  const provenanceOf = await fragmentProvenance(p, spec);
+  if (provenanceOf !== undefined) for (const a of report.assessments ?? []) a.authoredBy = authoredByOf(provenanceOf(a.fragment, a.digest));
   // The module digest is known only after emission; the snapshot digest is filled in after it.
   const snapshot = snapshotOf(p, report.moduleDigest, ledger, o.solver.id, TOOL_VERSION);
   report.snapshot = { commit: p.commit, ledgerHead: String(ledger?.head ?? 0), digest: snapshotDigest(snapshot) };

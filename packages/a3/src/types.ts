@@ -108,6 +108,11 @@ export interface A3Model {
   /** Digest of the judgments file; the fragment the ledger approves is <component>/#a3/<slug>. */
   judgmentsDigest: string;
   authority: Authority;
+  /**
+   * Who wrote the judgments (Next layers, section 6.5): the kind of the identity that signed the commit that last
+   * changed the file; unknown when unsigned, unlisted or uncommitted. It informs the reader and decides nothing.
+   */
+  authoredBy?: "person" | "agent" | "unknown";
   title: string;
   problem: string;
   background: string[];

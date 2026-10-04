@@ -11,6 +11,7 @@ import {
   MAINTAINERS_PATH,
   type MemoryCommit,
   memoryVcs,
+  provenance,
   readLedger,
   resolveAuthority,
   waiversFor,
@@ -206,5 +207,20 @@ describe("drafting", () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe("provenance", () => {
+  it("names no signer for a commit older than the first maintainers file, though a later file lists its key", () => {
+    const vcs = memoryVcs([
+      { hash: "c0", files: { "spec/a.ts": "1" }, signer: "aaaa" },
+      { hash: "c1", parent: "c0", files: { "spec/a.ts": "1", [MAINTAINERS_PATH]: maintainers(ana, bot) } },
+      { hash: "c2", parent: "c1", files: { "spec/a.ts": "2", [MAINTAINERS_PATH]: maintainers(ana, bot) }, signer: "cccc" },
+    ]);
+    const digests: Record<string, Record<string, string>> = { c0: { F: "d1", G: "g1" }, c2: { F: "d1", G: "g2" } };
+    const of = provenance(vcs, ["spec/a.ts"], (c) => new Map(Object.entries(digests[c] ?? {})));
+    expect(of("F", "d1", "c2")?.commit).toBe("c0");
+    expect(of("F", "d1", "c2")?.identity).toBeUndefined();
+    expect(of("G", "g2", "c2")?.identity?.kind).toBe("agent");
   });
 });

@@ -152,7 +152,7 @@ ${stages.map((st, i) => `<p class="stage-what" ${attr(st, i)}>${text(st.what)}</
 ${CSS}</style>
 </head><body>
 <main class="sheet">
-<header class="title"><h1>A3 <span>· ${text(m.title)}</span></h1><span class="meta">Component <code>${esc(m.component)}</code> · built by <code>csh a3 build ${esc(m.slug)}</code> from its stage records and judgments · <span class="authority ${auth}">${esc(authorityLine(m))}</span></span></header>
+<header class="title"><h1>A3 <span>· ${text(m.title)}</span></h1><span class="meta">Component <code>${esc(m.component)}</code> · built by <code>csh a3 build ${esc(m.slug)}</code> from its stage records and judgments · <span class="authority ${auth}">${esc(authorityLine(m))}</span>${m.authoredBy !== undefined ? ` · authored by ${esc(m.authoredBy)}` : ""}</span></header>
 <p class="problem"><strong>Problem.</strong> ${text(m.problem)}</p>
 ${picker}
 ${each(tiles)}

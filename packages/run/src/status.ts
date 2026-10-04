@@ -30,6 +30,11 @@ export interface ComponentStatus {
   maintainers: { name: string; kind: "person" | "agent"; roles: string[]; keys: number }[];
   /** The specification's own fragments by authority; lifted claims are left out, since nobody approves them. */
   fragments: { total: number; approved: number; selfApproved: number; candidate: number; retired: number };
+  /**
+   * The obligations among them (invariants, requirements, architecture and temporal rules), which are what a gate can
+   * block on. An approved binding alone protects nothing, so nothing-approved counts these.
+   */
+  obligations: { total: number; approved: number };
   /** Each A3's judgments, by slug, with the authority of their digest. */
   a3: { slug: string; authority: string; selfApproved: boolean }[];
   ledger: { head: number; invalid: { seq: number; reason: string }[] };
@@ -50,6 +55,8 @@ export const UNSEEN = [
   "who may change .github/workflows, and so remove the gate job",
   "the CSH_ROOT_COMMIT variable itself, which is a setting of the hosting service",
 ];
+
+const OBLIGATION_KINDS = new Set(["invariant", "requirement", "architecture", "temporal"]);
 
 export type StatusResult = { ok: true; status: ComponentStatus } | { ok: false; message: string };
 
@@ -110,10 +117,15 @@ export async function componentStatus(p: Project, solver: SolverPort): Promise<S
   for (const r of runs) for (const it of r.output.items ?? []) items.set(`${r.source}/${it.id}`, it.textDigest);
   const authorityOf = (f: { name: string; digest: string; cites: { source: string; id: string }[] }): AuthorityInfo => (ledger === undefined ? { authority: "candidate" } : resolveAuthority(ledger, f, items));
   const fragments = { total: 0, approved: 0, selfApproved: 0, candidate: 0, retired: 0 };
+  const obligations = { total: 0, approved: 0 };
   for (const f of fragmentsOf(module)) {
     const a = authorityOf(f);
     fragments.total += 1;
     fragments[a.authority] += 1;
+    if (OBLIGATION_KINDS.has(f.kind)) {
+      obligations.total += 1;
+      if (a.authority === "approved") obligations.approved += 1;
+    }
     if (a.authority === "approved" && a.selfApproved === true) fragments.selfApproved += 1;
   }
   const name = p.component.manifest.name;
@@ -129,7 +141,7 @@ export async function componentStatus(p: Project, solver: SolverPort): Promise<S
   if (maintainers.length === 0) reasons.push("no-maintainers");
   if (root.kind !== "pinned") reasons.push("root-not-pinned");
   else if (root.problem !== undefined) reasons.push("pinned-root-unusable");
-  if (fragments.approved === 0) reasons.push("nothing-approved");
+  if (obligations.approved === 0) reasons.push("nothing-approved");
   if (mode !== "enforcing") reasons.push("advisory");
   const status: ComponentStatus = {
     schema: "csh-status/v1",
@@ -137,6 +149,7 @@ export async function componentStatus(p: Project, solver: SolverPort): Promise<S
     root,
     maintainers,
     fragments,
+    obligations,
     a3,
     ledger: { head: ledger?.head ?? 0, invalid: (ledger?.invalid ?? []).map((e) => ({ seq: e.seq, reason: e.reason })) },
     mode,
@@ -154,7 +167,7 @@ const REASON_TEXT: Record<UnprotectedReason, string> = {
   "no-maintainers": "no maintainers file",
   "root-not-pinned": "the root of trust is not pinned (CSH_ROOT_COMMIT is not set)",
   "pinned-root-unusable": "the pinned root cannot be used",
-  "nothing-approved": "nothing is approved",
+  "nothing-approved": "no obligation is approved",
   advisory: "the gate is advisory",
 };
 
@@ -168,7 +181,7 @@ export function renderStatus(s: ComponentStatus, where: string): string {
   lines.push(`  root         ${root}`);
   lines.push(`  maintainers  ${s.maintainers.length === 0 ? "none" : s.maintainers.map((m) => `${m.name} (${m.kind}; ${m.roles.join(", ") || "no roles"}; ${n(m.keys, "key")})`).join(", ")}`);
   const f = s.fragments;
-  lines.push(`  fragments    ${f.approved} approved${f.approved > 0 ? ` (${f.selfApproved} self-approved)` : ""}, ${f.candidate} candidate, ${f.retired} retired, of ${f.total}`);
+  lines.push(`  fragments    ${f.approved} approved${f.approved > 0 ? ` (${f.selfApproved} self-approved)` : ""}, ${f.candidate} candidate, ${f.retired} retired, of ${f.total}; ${s.obligations.approved} of ${n(s.obligations.total, "obligation")} approved`);
   if (s.a3.length > 0) lines.push(`  A3           ${s.a3.map((x) => `${x.slug}: ${x.authority}${x.selfApproved ? " (self-approved)" : ""}`).join(", ")}`);
   lines.push(`  ledger       ${s.ledger.head === 0 ? "no valid entries" : `head ${s.ledger.head}`}${s.ledger.invalid.length > 0 ? `; invalid: ${s.ledger.invalid.map((e) => `seq ${e.seq} (${e.reason})`).join(", ")}` : ""}`);
   lines.push(`  gate mode    ${s.mode}`);

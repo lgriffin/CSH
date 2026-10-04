@@ -105,6 +105,11 @@ export interface Assessment {
   /** For unknown: the missing items. For other verdicts: what decided it. */
   reasons: string[];
   findings: string[];
+  /**
+   * Who wrote the fragment's current digest (Next layers, section 6.5): the kind of the identity that signed the commit
+   * that last changed it. Present once a maintainers file was committed. It informs the reviewer and never a verdict.
+   */
+  authoredBy?: "person" | "agent" | "unknown";
 }
 
 export interface ReportError {

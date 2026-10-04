@@ -23,6 +23,7 @@ It is the "Ledger and authority" container, shown in the [containers diagram](..
 - `resolveAuthority(state, fragment, items)`, `AuthorityInfo`, `FragmentRef`: authority of one fragment, including self-approval and review status.
 - `waiversFor(state, fragment)`: valid waivers at the fragment's current digest.
 - `authorship(vcs, specPaths, digestsAt, opts)`: who last changed a fragment's digest, for the self-approval rule.
+- `provenance(vcs, specPaths, digestsAt, opts)`, `Provenance`, `authoredByOf(provenance)`, `AuthoredBy`: the commit that last changed a fragment's digest, its date and its signing identity; and from it `person`, `agent` or `unknown` ([10](../../docs/spec/10-next-layers.md), section 6.5). An unsigned commit, or a key the maintainers file in force does not list, is `unknown`, never `person`.
 - `nextSeq`, `formatDecision`, `appendDecision`: draft a ledger line with the next sequence number.
 
 ## Depends on and used by

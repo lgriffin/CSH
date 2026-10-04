@@ -158,6 +158,8 @@ csh diff <base> <head> [--json] [--out <dir>]
                                             What a change did to the results, between two runs of one component.
                                             Each side is a stored run's directory, a commit, or . for the working tree.
                                             Decides nothing; non-zero only when the head cannot be run.
+csh queue [--json]                          What awaits the owner's decision, ordered by what approving it unlocks.
+csh-agent [--root <component>]              The agent tool server, over the Model Context Protocol on stdio.
 csh gate [--mode advisory|enforcing]        Check and decide for the current snapshot. Non-zero only on block in enforcing mode.
 csh gate --verify <decision.json>           Recompute; refuse a decision for another snapshot or one that differs.
 ```
@@ -204,6 +206,22 @@ it says `unprotected`, and why.
 node packages/cli/bin/csh.js status --root packages/gate
 ```
 
+What awaits the owner? `csh queue` lists every candidate rule, binding and A3, with who wrote it, how long it has
+waited and what approving it would unlock, and warns when the list outgrows `queueLimit`. For the lockout example as
+written, the bindings come first, since each holds back a rule:
+
+```sh
+node packages/cli/bin/csh.js queue --root examples/lockout
+```
+
+## Agents
+
+An agent works through `csh-agent --root <component>`, a tool server over the Model Context Protocol with eight tools:
+`status`, `run`, `gaps`, `explain`, `diff`, `queue`, `print` and `a3_open`. None approves, rejects, retires, waives or
+countersigns. Text from the component's sources reaches the agent only under keys named `quoted`, to be reported and
+never followed. [The agent guide](docs/guides/agents.md) is the protocol to load as a standing instruction, with a
+scripted session on the lockout regression that ends at "stop".
+
 ## Limits
 
 - **Predicates are limited.** Linear integer arithmetic, enumerations and booleans, over one state per event. No concurrency, no time, no quantifiers in specifications.
@@ -217,9 +235,9 @@ node packages/cli/bin/csh.js status --root packages/gate
 
 ## Status of the build
 
-Stages 1 to 19 are built; stage 20 of [the next layers](docs/spec/10-next-layers.md) is to come. All 84
-golden fixtures of the built stages pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70
-to F78, F80 to F112), as do the unit, property and fault-injection tests; F113 to F117 are written and pending. The composition fixtures
+Stages 1 to 20 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 89 golden
+fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F117), as do
+the unit, property and fault-injection tests. The composition fixtures
 F70 to F78 were written by the implementer and accepted by the owner. [docs/stages](docs/stages) records what each
 stage built and what its fixtures revealed.
 
@@ -236,7 +254,7 @@ with a summary.
 
 | Path | Contents |
 | --- | --- |
-| `packages/` | Twenty-three packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `arch`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `adapter-gherkin`, `adapter-c4-mermaid`, `facts`, `facts-imports`, `ledger`, `gate`, `component`, `run`, `review`, `harness`, `a3`, `cli`, `testkit` |
+| `packages/` | Twenty-four packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `arch`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `adapter-gherkin`, `adapter-c4-mermaid`, `facts`, `facts-imports`, `ledger`, `gate`, `component`, `run`, `review`, `agent`, `harness`, `a3`, `cli`, `testkit` |
 | `docs/guides/` | How to write a component manifest, a probe, a step table, an A3 and architecture rules, and the owner's runbook for authority |
 | `csh/` | The `Workspace` component: the repository's own architecture rules, read against its container diagram and its imports ([examples/workspace](examples/workspace/README.md)) |
 | `fixtures/` | Golden fixtures, one directory each, plus the shared bases and the test pack |

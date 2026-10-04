@@ -60,6 +60,15 @@ describe("csh a3", () => {
     expect(await csh(["a3", "build", "lockout", "--check"], bad.io)).toBe(1);
     expect(bad.o.err).toMatch(/a3\.md differs/);
     git("checkout", "--", "csh/a3/lockout/a3.md");
+    // The signer is known only after the judgments are committed, and only with their key: a sheet built before that
+    // records unknown and one built after records the kind. The check keeps the recorded value rather than recompute it.
+    const sheet = (f: string, from: string, to: string) => writeFileSync(join(proj, "csh/a3/lockout", f), readFileSync(join(proj, "csh/a3/lockout", f), "utf8").replace(from, to));
+    sheet("a3.json", '"authoredBy": "unknown"', '"authoredBy": "person"');
+    sheet("a3.md", "**Authored by.** unknown.", "**Authored by.** person.");
+    sheet("a3.html", "authored by unknown", "authored by person");
+    const recorded = io(proj);
+    expect(await csh(["a3", "build", "lockout", "--check"], recorded.io), recorded.o.err).toBe(0);
+    git("checkout", "--", "csh/a3/lockout");
   }, 60000);
 
   it("stage adds a stage to the judgments, and verify re-runs each stage at its commit", async () => {

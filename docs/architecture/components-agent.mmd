@@ -1,0 +1,22 @@
+%% C4 level 3: components of the agent tool server (Next layers, section 6).
+C4Component
+  title Agent tool server: components
+  Person(agentUser, "AI agent", "Reads docs/guides/agents.md as a standing instruction")
+  Container_Boundary(a, "Agent tool server (agent), outside the trusted base: no tool decides, and no language model") {
+    Component(server, "Server", "agent/src/server.ts (createServer, serve)", "Model Context Protocol over standard input and output, for one component; the low-level server of the SDK")
+    Component(tools, "Tools", "agent/src/tools.ts (TOOLS, callTool)", "status, run, gaps, explain, diff, queue, print, a3_open; a fixed list with no approve, reject, retire, waive or countersign")
+    Component(envelope, "Envelope", "agent/src/envelope.ts (quote, unquotedStrings)", "csh-agent/v1: harness fields, and source text only under quoted, length-limited")
+  }
+  Container_Ext(run, "Run", "run", "componentStatus, runComponent, runAt, componentQueue, evaluateProject")
+  Container_Ext(review, "Change review", "review", "diffProject")
+  Container_Ext(check, "Check engine", "check", "signalsOf")
+  Container_Ext(emission, "Emission", "print", "printFragment")
+  Container_Ext(cli, "Command line", "cli", "csh a3 open")
+  Rel(agentUser, server, "Calls tools")
+  Rel(server, tools, "One call, one envelope")
+  Rel(tools, envelope, "Wraps every result")
+  Rel(tools, run, "Reads, runs")
+  Rel(tools, review, "diff")
+  Rel(tools, check, "Signals")
+  Rel(tools, emission, "print")
+  Rel(tools, cli, "a3_open")

@@ -19,6 +19,8 @@ OUT="$(cd "$OUT" && pwd)"
 WT="$REPO/.csh-cache/diff-base"
 rm -rf "$WT"
 git -C "$REPO" worktree prune
+# The base's worktree goes whatever happens below.
+trap 'git -C "$REPO" worktree remove --force "$WT" >/dev/null 2>&1 || rm -rf "$WT"' EXIT
 base="unavailable:base-unavailable: no run of the merge base was made"
 if git -C "$REPO" worktree add --detach --force "$WT" "$BASE" >/dev/null 2>&1; then
   if [ ! -f "$WT/$COMPONENT/csh/component.json" ]; then
@@ -35,10 +37,13 @@ else
   base="unavailable:base-unavailable: the merge base ${BASE:0:12} could not be checked out"
 fi
 
-csh diff "$base" . --root "$COMPONENT" --out "$OUT"
+# csh diff's exit status says what the diff found or that it could not run; the summary and artifacts are written
+# either way, and the job never fails on it.
+status=0
+csh diff "$base" . --root "$COMPONENT" --out "$OUT" || status=$?
+if [ "$status" -ne 0 ]; then printf 'diff job: csh diff exited %s for %s\n' "$status" "$COMPONENT" >&2; fi
 head_run="$(ls -td "$COMPONENT"/.csh-cache/runs/*/ 2>/dev/null | head -1 || true)"
 if [ -n "$head_run" ]; then cp "$head_run/report.json" "$head_run/gate.json" "$OUT/"; fi
 if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
-  { printf '## csh diff: %s\n\n```text\n' "$COMPONENT"; cat "$OUT/diff.md"; printf '```\n'; } >> "$GITHUB_STEP_SUMMARY"
+  { printf '## csh diff: %s\n\n```text\n' "$COMPONENT"; if [ -f "$OUT/diff.md" ]; then cat "$OUT/diff.md"; else printf 'csh diff exited %s and wrote no diff.md\n' "$status"; fi; printf '```\n'; } >> "$GITHUB_STEP_SUMMARY"
 fi
-git -C "$REPO" worktree remove --force "$WT" >/dev/null 2>&1 || rm -rf "$WT"

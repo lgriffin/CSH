@@ -9,7 +9,7 @@ import { digestOf, fragmentsOf, type Module, stableJson } from "@csh/kernel";
 import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons } from "@csh/ledger";
 import { printFragment } from "@csh/print";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderStatus, ledgerOf, loadProject, MODEL_PATH, type Project, REPORT_PATH, runAt, runComponent, type RunResult, specOf, storedRuns } from "@csh/run";
+import { componentQueue, componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderQueue, renderStatus, ledgerOf, loadProject, MODEL_PATH, type Project, REPORT_PATH, runAt, runComponent, type RunResult, specOf, storedRuns } from "@csh/run";
 import { type Args, parseArgs } from "./args.ts";
 import { init } from "./init.ts";
 import { a3Command, a3Fragment } from "./a3.ts";
@@ -45,6 +45,9 @@ const USAGE = `csh: the Composable Specification Harness
                                   unknown, signals appeared and cleared, observations, counts. Each side is a stored
                                   run's directory, a commit (run when no run of it is stored) or . for the working
                                   tree. A side that cannot be run is unavailable, never an empty diff. Exits 0.
+  csh queue [--json]              What awaits the owner's decision: candidate rules, unapproved bindings and A3
+                                  judgments, each with who wrote it, how long it has waited and what approving it
+                                  would unlock. Warns past csh/config.json's queueLimit. Reads only; exits 0.
   csh gate [--mode advisory|enforcing] [--out decision.json]
                                   Check and decide for the current snapshot. Exits non-zero only on block in enforcing mode.
   csh a3 open <slug> [--at <commit>] [--stage <id>]
@@ -291,6 +294,15 @@ export async function csh(argv: string[], io: Io): Promise<number> {
         return 1;
       }
       io.out(a.flags.has("json") ? stableJson(r.status) : renderStatus(r.status, relative(io.cwd, p.root)));
+      return 0;
+    }
+    case "queue": {
+      const r = await componentQueue(p, await (io.solver ?? defaultSolver)());
+      if (!r.ok) {
+        io.err(`csh queue: ${r.message}`);
+        return 1;
+      }
+      io.out(a.flags.has("json") ? stableJson(r.queue) : renderQueue(r.queue));
       return 0;
     }
     case "diff": {

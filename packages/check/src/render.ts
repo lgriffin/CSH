@@ -40,7 +40,7 @@ function finding(f: Finding): string[] {
 }
 
 function assessment(a: Assessment): string {
-  const flags = [a.authority, a.selfApproved ? "self-approved" : "", a.needsReview ? "needs-review" : "", a.authorityReason ?? ""].filter((x) => x !== "").join(", ");
+  const flags = [a.authority, a.selfApproved ? "self-approved" : "", a.needsReview ? "needs-review" : "", a.authorityReason ?? "", a.authoredBy !== undefined ? `authored by ${a.authoredBy}` : ""].filter((x) => x !== "").join(", ");
   const scope = a.scope !== undefined ? ` (${a.scope})` : "";
   const reasons = a.reasons.length > 0 ? `  ${a.reasons.join("; ")}` : "";
   return `  ${a.verdict}${scope}  ${a.fragment}  [${flags}; evidence ${a.applicability}]${reasons}`;
