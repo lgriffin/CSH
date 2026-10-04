@@ -13,7 +13,7 @@ import { authorship, formatDecision, gitVcs, LEDGER_PATH, MAINTAINERS_PATH, read
 import { printModule } from "@csh/print";
 import type { SolverPort } from "@csh/solver";
 import { createTestRepo, gpgAvailable, type TestRepo } from "./git.ts";
-import { checkModule, evaluateSpec, type FixtureConfig, readConfig } from "@csh/run";
+import { checkModule, componentStatus, evaluateSpec, type FixtureConfig, loadProject, readConfig } from "@csh/run";
 import { verifyCounterexample, verifyNoOutcome } from "./verify.ts";
 import { packWorkspace } from "./pack.ts";
 import { type ComponentProblem, parseComponent } from "@csh/component";
@@ -35,7 +35,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 16;
+export const BUILT_THROUGH_STAGE = 17;
 
 /** The stage a fixture belongs to, from its expected result. */
 export function fixtureStage(fixturesDir: string, id: string): number {
@@ -116,9 +116,10 @@ export class FixtureRunner {
     }
     try {
       const e = doc.expect;
-      if ((e.git === true || e.steps !== undefined || e.a3?.authority !== undefined) && !gpgAvailable()) {
+      if ((e.git === true || e.steps !== undefined || e.a3?.authority !== undefined || e.status?.git === true || e.authoredBy !== undefined || e.agent?.git === true) && !gpgAvailable()) {
         res.skipped = "gpg is not installed";
-      } else if (e.a3 !== undefined) await this.a3(dir, e.a3, failures);
+      } else if (e.status !== undefined) await this.status(dir, e.status, failures);
+      else if (e.a3 !== undefined) await this.a3(dir, e.a3, failures);
       else if (e.starter !== undefined) {
         const skipped = this.starter(e.starter, failures);
         if (skipped !== undefined) res.skipped = skipped;
@@ -406,6 +407,94 @@ export class FixtureRunner {
       rmSync(work, { recursive: true, force: true });
     }
     return undefined;
+  }
+
+  // ---------------------------------------------------------------- next layers: a component in a scratch repository
+
+  /**
+   * A scratch repository holding a fixture's project: fixtures/<project> laid under the fixture's inputs/project, built
+   * commit by commit from inputs/scenario.json (one unsigned commit of the project when there is none). Keys are
+   * test-only and live in the repository's own GNUPGHOME.
+   */
+  private async scenarioRepo(dir: string, project: string): Promise<{ repo: TestRepo; commits: string[]; firstMaintainers?: string }> {
+    const file = join(dir, "inputs", "scenario.json");
+    const sc = (existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : { identities: {}, commits: [{ signer: null, message: "the component", project: true }] }) as {
+      identities: Record<string, { kind: "person" | "agent"; roles: Role[] }>;
+      commits: { signer: string | null; message: string; project?: boolean; spec?: string; maintainers?: string[]; ledger?: Partial<Decision>[] }[];
+    };
+    const repo = createTestRepo(join(this.o.workDir, "repos"), Object.keys(sc.identities));
+    const commits: string[] = [];
+    let firstMaintainers: string | undefined;
+    const manifest = () => JSON.parse(readFileSync(join(repo.dir, "csh", "component.json"), "utf8")) as { spec: string };
+    const ledgerLines: string[] = [];
+    let persons = 0;
+    for (const c of sc.commits) {
+      if (c.project === true) {
+        copyDir(join(this.o.fixturesDir, project), repo.dir);
+        copyDir(join(dir, "inputs", "project"), repo.dir);
+      }
+      if (c.spec !== undefined) repo.write(manifest().spec, readFileSync(join(dir, "inputs", c.spec), "utf8"));
+      if (c.maintainers !== undefined) {
+        repo.write(MAINTAINERS_PATH, `${JSON.stringify(repo.maintainers(c.maintainers, sc.identities), null, 2)}\n`);
+        persons = c.maintainers.filter((n) => sc.identities[n]!.kind === "person").length;
+      }
+      if (c.ledger !== undefined) {
+        const r = await emit(join(repo.dir, manifest().spec), { root: repo.dir, skipTypeCheck: true });
+        if (!r.ok) throw new Error(`scenario spec does not emit: ${JSON.stringify(r.errors)}`);
+        for (const entry of c.ledger) {
+          const f = fragmentsOf(r.module).find((x) => x.name === entry.fragment);
+          const d: Decision = { schema: "csh-decision/v1", seq: ledgerLines.length + 1, kind: entry.kind ?? "approve", fragment: entry.fragment!, digest: f?.digest ?? "sha256:missing", rationale: entry.rationale ?? "in fixture scenario", actor: entry.actor!, selfApproved: entry.selfApproved ?? persons === 1 };
+          ledgerLines.push(formatDecision(d));
+        }
+        repo.write(LEDGER_PATH, ledgerLines.map((l) => `${l}\n`).join(""));
+      }
+      const hash = repo.commit(c.message, c.signer);
+      commits.push(hash);
+      if (c.maintainers !== undefined && firstMaintainers === undefined) firstMaintainers = hash;
+    }
+    return firstMaintainers === undefined ? { repo, commits } : { repo, commits, firstMaintainers };
+  }
+
+  /** Run `f` with the repository's test-only keyring and no pinned root, as a CI runner without the variable would. */
+  private async inRepoEnv<T>(repo: TestRepo, f: () => Promise<T>): Promise<T> {
+    const keys = ["GNUPGHOME", "GIT_CONFIG_GLOBAL", "GIT_CONFIG_NOSYSTEM", "CSH_ROOT_COMMIT"] as const;
+    const saved = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
+    for (const k of keys) {
+      const v = k === "CSH_ROOT_COMMIT" ? undefined : repo.env[k];
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+    try {
+      return await f();
+    } finally {
+      for (const k of keys) {
+        if (saved[k] === undefined) delete process.env[k];
+        else process.env[k] = saved[k];
+      }
+    }
+  }
+
+  /** csh status on a scratch repository (Next layers, section 3.2). */
+  private async status(dir: string, x: Exp, failures: string[]): Promise<void> {
+    const { repo, firstMaintainers } = await this.scenarioRepo(dir, x.project);
+    try {
+      const r = await this.inRepoEnv(repo, () => componentStatus(loadProject(repo.dir, repo.dir), this.o.solver));
+      if (!r.ok) {
+        failures.push(`csh status failed: ${r.message}`);
+        return;
+      }
+      const s = r.status;
+      if (x.protection !== undefined && s.protection !== x.protection) failures.push(`protection ${s.protection}, expected ${x.protection}`);
+      for (const why of x.reasonsInclude ?? []) if (!s.reasons.includes(why)) failures.push(`reason ${why} missing; got ${s.reasons.join(", ")}`);
+      if (x.root !== undefined && s.root.kind !== x.root) failures.push(`root ${s.root.kind}, expected ${x.root}`);
+      if (x.rootIsFirstMaintainersCommit === true && s.root.commit !== firstMaintainers) failures.push(`root ${s.root.commit ?? "none"}, expected the first maintainers commit ${firstMaintainers ?? "none"}`);
+      if (x.maintainers !== undefined && s.maintainers.length !== x.maintainers) failures.push(`${s.maintainers.length} maintainers, expected ${x.maintainers}`);
+      for (const [k, v] of Object.entries((x.fragments ?? {}) as Record<string, number>)) if (s.fragments[k as keyof typeof s.fragments] !== v) failures.push(`fragments ${k} ${s.fragments[k as keyof typeof s.fragments]}, expected ${v}`);
+      if (x.decision !== undefined && s.decision.state !== x.decision) failures.push(`decision ${s.decision.state}, expected ${x.decision}`);
+      for (const e of x.invalidEntries ?? []) if (!s.ledger.invalid.some((y) => y.seq === e.seq && y.reason === e.reason)) failures.push(`invalid entry seq ${e.seq} ${e.reason} not shown; got ${JSON.stringify(s.ledger.invalid)}`);
+    } finally {
+      repo.dispose();
+    }
   }
 
   private async a3(dir: string, x: Exp, failures: string[]): Promise<void> {

@@ -144,6 +144,7 @@ csh approve | reject | retire <fragment | #a3/slug> --actor <name> --rationale <
 csh waive <fragment> --scope <finding|obligation> --expires <YYYY-MM-DD> --actor <name> --rationale <text>
 csh countersign <seq> --actor <name> --rationale <text>
                                             Draft one ledger line. The tool never commits or signs.
+csh status [--json]                         What is and is not protected, for one component. Reads only.
 csh gate [--mode advisory|enforcing]        Check and decide for the current snapshot. Non-zero only on block in enforcing mode.
 csh gate --verify <decision.json>           Recompute; refuse a decision for another snapshot or one that differs.
 ```
@@ -180,6 +181,16 @@ fragment means changes its digest and returns it to candidate. A solo maintainer
 self-approved, until a second person joins. See the [Authority tab](docs/spec/05-authority-and-ledger.md) and
 [ADR-15](docs/adr/ADR-15-ledger-of-signed-commits.md).
 
+Is this repository protected, or only able to be? `csh status` answers for one component: the root of trust, the
+maintainers, what is approved, the gate mode, and whether the stored decision is for the current snapshot. Continuous
+integration runs it for the gate component on every change, as the first step of the gate job
+(`.github/scripts/gate-job.sh`). Until the owner takes the eight steps of [the authority runbook](docs/guides/authority.md),
+it says `unprotected`, and why.
+
+```sh
+node packages/cli/bin/csh.js status --root packages/gate
+```
+
 ## Limits
 
 - **Predicates are limited.** Linear integer arithmetic, enumerations and booleans, over one state per event. No concurrency, no time, no quantifiers in specifications.
@@ -193,8 +204,9 @@ self-approved, until a second person joins. See the [Authority tab](docs/spec/05
 
 ## Status of the build
 
-All sixteen stages are built. All 68 golden fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to
-F52, F60 to F64, F70 to F78, F80 to F96), as do the unit, property and fault-injection tests. The composition fixtures
+Stages 1 to 17 are built; stages 18 to 20 of [the next layers](docs/spec/10-next-layers.md) are to come. All 71
+golden fixtures of the built stages pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70
+to F78, F80 to F99), as do the unit, property and fault-injection tests; F100 to F117 are written and pending. The composition fixtures
 F70 to F78 were written by the implementer and accepted by the owner. [docs/stages](docs/stages) records what each
 stage built and what its fixtures revealed.
 
@@ -212,7 +224,7 @@ with a summary.
 | Path | Contents |
 | --- | --- |
 | `packages/` | Eighteen packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `adapter-gherkin`, `ledger`, `gate`, `component`, `run`, `harness`, `a3`, `cli`, `testkit` |
-| `docs/guides/` | How to write a component manifest, a probe, a step table and an A3 |
+| `docs/guides/` | How to write a component manifest, a probe, a step table and an A3, and the owner's runbook for authority |
 | `fixtures/` | Golden fixtures, one directory each, plus the shared bases and the test pack |
 | `examples/lockout/` | Three practices on one behaviour, run in four stages, and its A3 |
 | `examples/account/` | The first walkthrough example |

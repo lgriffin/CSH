@@ -18,6 +18,7 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 14: A3](stage-14.md)
 - [Stage 15: Anchor](stage-15.md)
 - [Stage 16: Start point](stage-16.md)
+- [Stage 17: Authority](stage-17.md)
 
 Stages 10 to 16 build the anchor design ([09](../spec/09-anchor-harness-a3.md)): a component to anchor on, harnesses,
 runs and the A3. Their fixtures, F80 to F96, were written before any of their code, and the fixture runner reports
