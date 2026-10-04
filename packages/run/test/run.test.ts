@@ -1,8 +1,9 @@
 // csh run (Anchor, harnesses and A3, section 4): a run executes each harness, evaluates, decides and stores one record
 // per snapshot; a run at a past commit uses a throwaway worktree and installs nothing (A-38).
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ComponentManifest } from "@csh/component";
 import { digestOf, type Module } from "@csh/kernel";
@@ -300,6 +301,38 @@ describe("runHarnesses", () => {
       };
       for (let i = 0; i < 50 && alive(); i++) await new Promise((r) => setTimeout(r, 100));
       expect(alive()).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 60000);
+});
+
+describe("an interrupted run", () => {
+  it("takes the harness's whole process tree with it (review of #20)", async () => {
+    const dir = mkdtempSync(join(REPO, ".csh-cache", "run-interrupt-"));
+    try {
+      // csh, in a process of its own, running a harness that starts a grandchild and hangs; each records its pid.
+      const hang = ["node", "-e", 'const {spawn}=require("child_process");const c=spawn(process.execPath,["-e","setInterval(()=>{},1000)"],{stdio:"ignore"});require("fs").writeFileSync("pids",process.pid+" "+c.pid);setInterval(()=>{},1000)'];
+      const practices = [{ id: "a", name: "A", kind: "tests", sources: ["A"], harness: { run: hang, witnesses: "reports/w.ndjson" } }];
+      writeFileSync(join(dir, "csh.mjs"), `import { runHarnesses } from ${JSON.stringify(pathToFileURL(join(REPO, "packages", "run", "src", "index.ts")).href)};\nawait runHarnesses({ root: ${JSON.stringify(dir)}, commit: "c" }, ${JSON.stringify({ ...manifest, practices })}, () => undefined);\n`);
+      const csh = spawn(process.execPath, [join(dir, "csh.mjs")], { stdio: "ignore" });
+      const exited = new Promise((r) => csh.on("exit", r));
+      for (let i = 0; i < 200 && !existsSync(join(dir, "pids")); i++) await new Promise((r) => setTimeout(r, 100));
+      const pids = readFileSync(join(dir, "pids"), "utf8").split(" ").map(Number);
+      csh.kill("SIGINT");
+      await exited;
+      const alive = (pid: number) => {
+        try {
+          process.kill(pid, 0);
+          return true;
+        } catch {
+          return false;
+        }
+      };
+      for (let i = 0; i < 50 && pids.some(alive); i++) await new Promise((r) => setTimeout(r, 100));
+      const left = pids.filter(alive);
+      for (const pid of left) process.kill(pid, "SIGKILL");
+      expect(left).toEqual([]);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

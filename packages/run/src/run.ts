@@ -60,28 +60,45 @@ export type RunResult =
 
 const countLines = (file: string) => (existsSync(file) ? readFileSync(file, "utf8").split("\n").filter((l) => l.trim() !== "").length : 0);
 
+/** Signals that end csh while a harness runs; its process group no longer hears the terminal, so csh passes them on. */
+const PASSED_ON = ["SIGINT", "SIGTERM", "SIGHUP"] as const;
+
 function exec(argv: string[], cwd: string, env: NodeJS.ProcessEnv, out: (s: string) => void, timeoutMs: number): Promise<{ exitCode: number | null; error?: string }> {
   return new Promise((done) => {
     // A process group of its own, so that a timeout kills the command and everything it started (#20).
     const child = spawn(argv[0]!, argv.slice(1), { cwd, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
-    let timedOut = false;
-    const timer = setTimeout(() => {
-      timedOut = true;
+    const kill = (signal: NodeJS.Signals) => {
       try {
-        if (process.platform !== "win32" && child.pid !== undefined) process.kill(-child.pid, "SIGKILL");
-        else child.kill("SIGKILL");
+        if (process.platform !== "win32" && child.pid !== undefined) process.kill(-child.pid, signal);
+        else child.kill(signal);
       } catch {
         // Already gone.
       }
+    };
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      kill("SIGKILL");
     }, timeoutMs);
+    // Interrupted, csh takes the harness's whole tree with it, then ends as the signal would have ended it.
+    const onSignal = (signal: NodeJS.Signals) => {
+      kill(signal);
+      release();
+      process.kill(process.pid, signal);
+    };
+    const release = () => {
+      clearTimeout(timer);
+      for (const sig of PASSED_ON) process.removeListener(sig, onSignal);
+    };
+    for (const sig of PASSED_ON) process.on(sig, onSignal);
     child.stdout.on("data", (d: Buffer) => out(d.toString()));
     child.stderr.on("data", (d: Buffer) => out(d.toString()));
     child.on("error", (e) => {
-      clearTimeout(timer);
+      release();
       done({ exitCode: null, error: e.message });
     });
     child.on("close", (code) => {
-      clearTimeout(timer);
+      release();
       done(timedOut ? { exitCode: null, error: `timed out after ${timeoutMs} ms` } : { exitCode: code });
     });
   });
