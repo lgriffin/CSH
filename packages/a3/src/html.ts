@@ -86,8 +86,11 @@ export function renderHtml(m: A3Model): string {
     if (m.decisionPoints.length === 0) return `<p ${attr(st, i)}>Decision points: ${unwritten}</p>`;
     const body = m.decisionPoints.map((d) => {
       const hits = d.signals[i] ?? [];
+      // A point whose signals an earlier stage carried and this one does not was cleared: its class is the first reading.
+      const cleared = hits.length === 0 && d.signals.slice(0, i).some((x) => x.length > 0);
+      const cls = cleared ? `<span class="chip cleared">cleared</span> <span class="src">first read as ${esc(d.class)}</span>` : `<span class="chip ${esc(d.class)}">${esc(d.class)}</span>`;
       const harness = hits.length === 0 ? `<span class="none">no signal at this stage</span>` : `${hits.map((id) => esc(labelOf(i, id))).join("<br>")}${d.note !== undefined ? `<br><span class="src">${esc(d.note)}</span>` : ""}`;
-      return `<tr><td>${esc(d.point)}</td>${m.practices.map((p) => { const c = d.says[p.id]; return `<td><span class="cell ${MARKS.includes(c?.mark as Mark) ? c!.mark : "silent"}">${esc(c?.text ?? "silent")}</span></td>`; }).join("")}<td>${harness}</td><td><span class="chip ${esc(d.class)}">${esc(d.class)}</span></td></tr>`;
+      return `<tr><td>${esc(d.point)}</td>${m.practices.map((p) => { const c = d.says[p.id]; return `<td><span class="cell ${MARKS.includes(c?.mark as Mark) ? c!.mark : "silent"}">${esc(c?.text ?? "silent")}</span></td>`; }).join("")}<td>${harness}</td><td>${cls}</td></tr>`;
     });
     return `<div class="scroll" ${attr(st, i)}><table><thead><tr><th>Decision point</th>${m.practices.map((p) => `<th>${tag(p.id)}</th>`).join("")}<th>CSH reports at ${esc(name(st).toLowerCase())}</th><th>Class</th></tr></thead><tbody>
 ${body.join("\n")}

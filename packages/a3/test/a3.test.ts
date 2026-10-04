@@ -135,6 +135,15 @@ describe("rendering", () => {
     expect(renderMarkdown(buildA3(input({}, { authority: { authority: "candidate", reason: "digest-changed" } })))).toMatch(/candidate \(digest-changed\)/);
   });
 
+  it("marks a decision point cleared at a stage that no longer carries its signals, keeping the first reading", () => {
+    const html = renderHtml(buildA3(input({ decisionPoints: [{ point: "P", class: "contradiction", says: {}, match: [{ kind: "example-conflict" }] }] })));
+    const row = (stage: string) => html.match(new RegExp(`data-stage="${stage}"[^>]*><table>[\\s\\S]*?<tr><td>P</td>[\\s\\S]*?</tr>`))?.[0] ?? "";
+    expect(row("before")).toMatch(/chip contradiction/);
+    expect(row("after")).toMatch(/chip cleared/);
+    expect(row("after")).toMatch(/first read as contradiction/);
+    expect(row("after")).not.toMatch(/chip contradiction/);
+  });
+
   it("escapes judged text and loads nothing from outside the page", () => {
     const html = renderHtml(buildA3(input({ title: "<script>alert(1)</script>" })));
     expect(html).not.toMatch(/<script>alert/);
