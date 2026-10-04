@@ -121,7 +121,7 @@ const NOT_INPUTS = new Set([".git", "node_modules", CACHE_DIR]);
 
 /**
  * What a run evaluates, by project path, with each file's digest: the specification and the files it imports, every
- * file of every source, the manifest, the configuration and the lock. Only the harnesses' own witness and executions
+ * file of every source, each practice's project-local adapter and step table, the manifest, the configuration and the lock. Only the harnesses' own witness and executions
  * files are left out, since writing them is their job; any other file in a harness's source directory is an input.
  */
 export function inputDigests(p: Project, manifest: ComponentManifest, m: Module): Map<string, string> {
@@ -167,6 +167,11 @@ export function inputDigests(p: Project, manifest: ComponentManifest, m: Module)
   };
   add(specOf(p, undefined), true);
   for (const s of m.sources) add(resolve(root, s.at), false);
+  // A practice's own code runs after the harnesses too: a project-local adapter and a step table, with what they import.
+  for (const x of manifest.practices) {
+    if (x.adapter !== undefined && (x.adapter.startsWith(".") || x.adapter.startsWith("/"))) add(resolve(root, x.adapter), true);
+    if (x.steps !== undefined) add(resolve(root, x.steps), true);
+  }
   for (const f of [COMPONENT_PATH, CONFIG_PATH, LOCK_PATH]) add(join(root, f), false);
   return out;
 }

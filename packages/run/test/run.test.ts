@@ -335,6 +335,17 @@ describe("inputDigests", () => {
     }
   });
 
+  it("digests a practice's project-local adapter and step table, with what they import (review of #17)", () => {
+    const dir = project({ "spec.ts": "", "w/out.ndjson": "", "adapters/a.mjs": 'import { x } from "./helper.mjs";\n', "adapters/helper.mjs": "export const x = 1;\n", "csh/steps.ts": "export {};\n" });
+    try {
+      const c = { ...manifest, spec: "spec.ts", practices: [{ id: "tdd", name: "TDD", kind: "tests", sources: ["UnitTests"], adapter: "./adapters/a.mjs", harness: { run: ["node"], witnesses: "w/out.ndjson" } }, { id: "bdd", name: "BDD", kind: "scenarios", sources: ["Scenarios"], steps: "csh/steps.ts" }] } as ComponentManifest;
+      expect(moved(dir, c, mod("w"), () => writeFileSync(join(dir, "adapters", "helper.mjs"), "export const x = 2;\n"))).toEqual(["adapters/helper.mjs"]);
+      expect(moved(dir, c, mod("w"), () => writeFileSync(join(dir, "csh", "steps.ts"), "export const changed = 1;\n"))).toEqual(["csh/steps.ts"]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("digests what a source link reaches inside the root, and the link itself (review of #17)", () => {
     const dir = project({ "spec.ts": "", "data/real.md": "a\n", "other.md": "b\n" });
     try {
