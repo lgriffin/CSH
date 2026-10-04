@@ -43,6 +43,7 @@ It is the main part of the "Check engine" container, with `@csh/solver`, shown i
 - Two examples from different sources that answer one input two ways are a divergence with four readings; only an event declared `deterministic` turns a divergence on identical inputs into a conflict. Examples from one source are never compared ([A-36](../../ASSUMPTIONS.md), [A-44](../../ASSUMPTIONS.md)).
 - A lifted claim that fails type checking on unit or type is reported `notComparable`, not as a conflict (CSH-021).
 - Content that cannot be lifted is kept in `unliftable` and shown in the gap view, never dropped (P4, CSH-002, CSH-020).
+- A test that finished and recorded no witness is the gap `unobserved-test` once per source, with the subject `<Source>/<file>::<name>`, so two sources sharing a test identity each report their own missing witness ([A-64](../../ASSUMPTIONS.md)).
 - A candidate member never makes an approved obligation conflicting ([A-10](../../ASSUMPTIONS.md)).
 - Verdict and applicability are kept apart and never averaged into a score, so an unknown stays visible in every count (P3; main tab, section 4.3).
 
@@ -61,7 +62,7 @@ A joint conflict is an input with no valid outcome ([ADR-08](../../docs/adr/ADR-
 
 ## Known limits
 
-- The query runner and gap view are unit-tested only through fixtures; witness judging, verdicts, comparability and the cache have their own unit tests.
+- The query runner and gap view are unit-tested only through fixtures, apart from `unobserved-test` per source; witness judging, verdicts, comparability and the cache have their own unit tests.
 - Retired fragments leave the solver pool entirely ([A-03](../../ASSUMPTIONS.md)).
 - Stale evidence is never refreshed; a new witness must be recorded ([A-15](../../ASSUMPTIONS.md)).
 - `architecture` and `temporal` obligations are assessed but never evaluated, so they stay `unknown`.

@@ -29,6 +29,7 @@ It is the "A3" container, shown in the [containers diagram](../../docs/architect
 - A signal no cause places is shown as unclassified and listed as a problem; it is never dropped, so a new kind of finding appears on the sheet the first time it occurs (section 5.2).
 - Checks on the judgments are reported, never repaired: `unclassified`, `dead-rule`, `dangling-pointer`, `unknown-practice`, `unanswered`, `unverifiable`, and `missing-stage` (section 5.5).
 - An empty judged section renders as "Not yet written.", never as blank space, so a half-finished sheet cannot pass for a finished one (section 5.8).
+- A stage's Tests column counts every test that finished: those whose witnesses the report's executions hold, once each, and those that recorded no witness, read from the `unobserved-test` gaps' details, with no change to the report's schema ([A-67](../../ASSUMPTIONS.md)).
 - The model depends only on its inputs: no clock and no commit hash, so continuous integration can compare it with the committed copy.
 - The authority shown is the one given, from the judgments' digest in the ledger; the package cannot make a sheet approved, and an A3 never changes a verdict or a gate decision (section 5.6; [ADR-31](../../docs/adr/ADR-31-a3-judgments-through-the-ledger.md)).
 
@@ -38,7 +39,7 @@ The sheet is computed where it can be and judged where it must be, so an agent c
 
 ## How it is tested
 
-- `test/a3.test.ts`: signals counted and placed by cause and lane; a test counted once however many witnesses it records; countermeasure status for clears, expects, a named stage and scope; every problem kind; a file pointer read at the stage's commit, and one that cannot be read; the eight measures and a target override; the same model for the same inputs; stage integrity; "Not yet written." for a skeleton; the authority line; escaping and no external loads in the page.
+- `test/a3.test.ts`: signals counted and placed by cause and lane; a test counted once however many witnesses it records; a test that recorded no witness counted from its `unobserved-test` gap, with the old subject or the source-qualified one; countermeasure status for clears, expects, a named stage and scope; every problem kind; a file pointer read at the stage's commit, and one that cannot be read; the eight measures and a target override; the same model for the same inputs; stage integrity; "Not yet written." for a skeleton; the authority line; escaping and no external loads in the page.
 - `packages/cli/test/a3.test.ts`: `csh a3 open`, `build --check`, `stage`, `verify` and an approval of `#a3/<slug>` on a copy of the lockout example.
 - Fixtures F91 to F95 through `@csh/testkit`, and the lockout walkthrough, whose committed sheet `csh a3 build --check` compares in CI.
 - The gate component's sheet, opened from its first run and left for its owner ([csh/a3/dispositions](../gate/csh/a3/dispositions/a3.md)), whose committed copy `packages/cli/test/a3.test.ts` compares with a fresh build.

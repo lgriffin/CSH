@@ -239,8 +239,12 @@ export async function gapView(input: GapInput): Promise<{ view: GapView; errors:
     unknown.set(subject, [...(unknown.get(subject) ?? []), `${w.source} ${w.span ?? w.witness.id}`]);
   }
   for (const [subject, at] of unknown) gaps.push({ kind: "outcome-unknown", subject, fragments: [], detail: `${at.join(", ")}: no execution line gives this test's outcome, so its witnesses are not claims` });
+  // One gap per source and test: the subject names the source, so each source's missing witness is reported (#24).
   const unobserved = new Map<string, string>();
-  for (const e of prepared.executions) if (!observed.has(`${e.source}\u0000${e.test}`) && !unobserved.has(e.test)) unobserved.set(e.test, `${e.span}: ${e.outcome}, and no witness from ${e.source}`);
+  for (const e of prepared.executions) {
+    const subject = `${e.source}/${e.test}`;
+    if (!observed.has(`${e.source}\u0000${e.test}`) && !unobserved.has(subject)) unobserved.set(subject, `${e.span}: ${e.outcome}, and no witness from ${e.source}`);
+  }
   for (const [subject, detail] of unobserved) gaps.push({ kind: "unobserved-test", subject, fragments: [], detail });
 
   const order = ["unliftable", "unconstrained-after", "no-example", "no-rule", "single-source", "uncited", "unbound", "reserved", "relaxed", "unowned-source", "outcome-unknown", "unobserved-test"];

@@ -43,6 +43,8 @@ export interface PipelineOptions {
   unchangedSince?: (a: string, b: string) => boolean;
   /** The component manifest: it names each source's practice and adapter (Anchor, harnesses and A3, section 2). */
   component?: LoadedComponent;
+  /** Without a component: the executions file joined to every Witnesses source (csh/config.json's `executions`). */
+  executions?: string;
 }
 
 export interface PipelineResult {
@@ -53,18 +55,30 @@ export interface PipelineResult {
   checked?: CheckResult;
 }
 
-export async function evaluateSpec(spec: string, opts: PipelineOptions): Promise<PipelineResult> {
-  const file = resolve(spec);
+/** An emitted specification with the component manifest checked against it: the first half of evaluateSpec. */
+export interface Emission {
+  emitted: EmitResult;
+  /** Errors in the component manifest against the emitted model. Nothing is checked while there is one. */
+  componentErrors?: ComponentProblem[];
+}
+
+/** Emit and check the manifest, without reading any source: csh run does this before any harness runs (#18). */
+export async function emitSpec(spec: string, opts: PipelineOptions): Promise<Emission> {
   const emitOpts: EmitOptions = { root: opts.root, refine: makeRefiner(opts.solver, opts.config?.budgetMs ?? 5000), ...(opts.emit ?? {}) };
   if (opts.lock !== undefined) emitOpts.lock = opts.lock;
-  const emitted = await emit(file, emitOpts);
-  if (!emitted.ok) return { emitted };
+  const emitted = await emit(resolve(spec), emitOpts);
+  if (!emitted.ok || opts.component === undefined) return { emitted };
+  const errors = checkAgainstModule(opts.component.manifest, emitted.module, opts.root).errors;
+  return errors.length > 0 ? { emitted, componentErrors: errors } : { emitted };
+}
+
+/** The whole pipeline; `emission`, when given, is one emitSpec already made for the same options and is reused. */
+export async function evaluateSpec(spec: string, opts: PipelineOptions, emission?: Emission): Promise<PipelineResult> {
+  const pre = emission ?? (await emitSpec(spec, opts));
+  const emitted = pre.emitted;
+  if (!emitted.ok || pre.componentErrors !== undefined) return pre;
   const m = emitted.module;
   const composition = m.uses.length > 0 || (m.relaxations ?? []).length > 0 ? { uses: m.uses, inherited: emitted.composition.inherited.map((x) => x.name), relaxed: m.relaxations ?? [], refinements: emitted.composition.refinements } : undefined;
-  if (opts.component !== undefined) {
-    const errors = checkAgainstModule(opts.component.manifest, m, opts.root).errors;
-    if (errors.length > 0) return { emitted, componentErrors: errors };
-  }
   return { emitted, ...(await checkModule(m, emitted.digest, composition !== undefined ? { ...opts, composition } : opts)) };
 }
 
@@ -76,7 +90,9 @@ export function sourceSettings(c: LoadedComponent | undefined): RunSourcesOption
     for (const s of p.sources) {
       const set: NonNullable<RunSourcesOptions["perSource"]>[string] = {};
       if (p.adapter !== undefined) set.adapter = p.adapter;
+      // An executions file is joined only where the practice names one: its harness's, or its own (#22).
       if (p.harness !== undefined) set.executions = p.harness.executions ?? DEFAULT_EXECUTIONS;
+      else if (p.executions !== undefined) set.executions = p.executions;
       if (p.cites !== undefined) set.cites = p.cites;
       if (p.steps !== undefined) set.steps = p.steps;
       out[s] = set;
@@ -100,7 +116,7 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
     return opts.authority?.({ name, digest: f?.digest ?? "", kind: "binding", cites: [] }).authority ?? "candidate";
   };
   const perSource = sourceSettings(opts.component);
-  const runs = await runSources(module, { root: opts.root, config: adapterConfig, isolated: opts.isolatedAdapters ?? true, bindingAuthority, ...(opts.adapters !== undefined ? { adapters: opts.adapters } : {}), ...(perSource !== undefined ? { perSource } : {}) });
+  const runs = await runSources(module, { root: opts.root, config: adapterConfig, isolated: opts.isolatedAdapters ?? true, bindingAuthority, ...(opts.adapters !== undefined ? { adapters: opts.adapters } : {}), ...(perSource !== undefined ? { perSource } : {}), ...(opts.executions !== undefined ? { executions: opts.executions } : {}) });
   const items = new Map<string, string>();
   for (const r of runs) for (const it of r.output.items ?? []) items.set(`${r.source}/${it.id}`, it.textDigest);
   const resolver: AuthorityResolver | undefined = state !== undefined ? (f) => resolveAuthority(state, f, items) : opts.authority;

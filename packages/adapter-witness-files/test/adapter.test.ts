@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { digestOf, type Vocabulary } from "@csh/kernel";
 import { type AdapterInput, buildWitness, type Witness } from "@csh/witness";
+import { witnessId } from "@csh/harness";
 import { exampleName, liftValue, run } from "../src/index.ts";
 
 const vocabulary: Vocabulary = {
@@ -86,6 +87,21 @@ describe("witness-files adapter", () => {
     const out = run(input({ "a.ndjson": [w("w-1")], "b.ndjson": [w("w.1")] }));
     expect(out.claims!.examples).toHaveLength(1);
     expect(out.claims!.unliftable.map((u) => u.reason)).toEqual(["duplicate-name"]);
+  });
+
+  it("lifts both of two probe witnesses from files whose paths differ only in punctuation (#25)", () => {
+    const pairs: [string, string, string, string][] = [
+      ["test/a/b.test.ts", "adds", "test/a.b.test.ts", "adds"],
+      ["test/x.ts", "y", "test.x.ts", "y"],
+      ["test/lockout.test.ts", "locks", "test/lockout/test.ts", "locks"],
+      ["a/b", "c", "a", "sb c"],
+    ];
+    for (const [f1, n1, f2, n2] of pairs) {
+      const ids = [witnessId(n1, f1), witnessId(n2, f2)];
+      expect(exampleName(ids[0]!), `${f1} ${f2}`).not.toBe(exampleName(ids[1]!));
+      const out = run(input({ "a.ndjson": [w(ids[0]!)], "b.ndjson": [w(ids[1]!)] }));
+      expect(out.claims!.examples.map((x) => x.name), `${f1} ${f2}`).toEqual(ids.map(exampleName));
+    }
   });
 
   it("is deterministic regardless of file order", () => {

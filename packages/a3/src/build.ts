@@ -54,6 +54,17 @@ function sheetStage(j: Judgments, rec: StageRecord, def: Judgments["stages"][num
     const key = `${e.source}\u0000${e.test ?? e.witness}`;
     tests.set(key, (tests.get(key) ?? true) && e.localResult === "passed");
   }
+  // A test that finished and recorded no witness is in no execution of the report, only in its unobserved-test gap; it
+  // ran all the same, so it counts, with the outcome the gap's detail gives (#27). The subject is <Source>/<test>, or
+  // the bare test in a report from before A-64.
+  for (const g of report.gapView?.gaps ?? []) {
+    const m = g.kind === "unobserved-test" ? /: (\w+), and no witness from (.+)$/.exec(g.detail ?? "") : null;
+    if (m === null) continue;
+    const source = m[2]!;
+    const test = g.subject.startsWith(`${source}/`) ? g.subject.slice(source.length + 1) : g.subject;
+    const key = `${source}\u0000${test}`;
+    if (!tests.has(key)) tests.set(key, m[1] === "passed");
+  }
   const disposition = new Map((rec.gate.obligations ?? []).map((o) => [o.fragment, o.disposition]));
   const owned = new Set(Object.keys(Object.keys(sources).length > 0 ? sources : (report.component?.sources ?? {})));
   const items = new Set((report.items ?? []).map((i) => `${i.source}/${i.id}`));

@@ -41,6 +41,14 @@ describe("buildA3", () => {
     expect(buildA3(input({}, { stages: [stage] })).stages[0]!.tests).toEqual({ passed: 1, total: 2 });
   });
 
+  it("counts a test that recorded no witness, from its unobserved-test gap, old subject or new (#27)", () => {
+    const executions = [{ source: "UnitTests", event: "SignIn", witness: "a", test: "t.ts::a", localResult: "passed" }];
+    const gap = (subject: string, detail: string) => ({ kind: "unobserved-test", subject, fragments: [], detail });
+    const gaps = [gap("UnitTests/t.ts::b", "e.ndjson:2: passed, and no witness from UnitTests"), gap("t.ts::c", "e.ndjson:3: failed, and no witness from UnitTests"), gap("UnitTests/t.ts::a", "e.ndjson:1: passed, and no witness from UnitTests")];
+    const stage = { ...before, report: { ...before.report, executions, gapView: { ...before.report.gapView, gaps: [...before.report.gapView.gaps, ...gaps] } } };
+    expect(buildA3(input({}, { stages: [stage] })).stages[0]!.tests).toEqual({ passed: 2, total: 3 });
+  });
+
   it("computes each countermeasure's status from the stages", () => {
     const cms = (c: Judgments["countermeasures"]) => buildA3(input({ countermeasures: c })).countermeasures.map((x) => x.status);
     expect(cms([{ id: "A", kind: "requirement", what: "", answers: ["Q1"], clears: [{ kind: "example-conflict" }] }])).toEqual(["verified"]);

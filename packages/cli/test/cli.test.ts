@@ -105,25 +105,48 @@ describe("csh init and csh run", () => {
     try {
       const answers = ["SignInService", "spec.csl.ts", "src", "ears", "EARS", "requirements", "Product", "", "", "", "Product owner", "the sentence", "tdd", "TDD", "tests", "UnitTests", "", "node --test test/signin.test.ts", "reports/witnesses.ndjson", "", "Product", "", "", ""];
       const { o, io: x } = io(dir);
-      expect(await csh(["init"], { ...x, ask: async () => answers.shift() ?? "" })).toBe(0);
+      // The directory is inside this repository: --root keeps the manifest out of its top level.
+      expect(await csh(["init", "--root", dir], { ...x, ask: async () => answers.shift() ?? "" })).toBe(0);
       expect(o.out).toMatch(/Wrote csh\/component.json/);
+      expect(o.out).not.toMatch(/csh init wrote/);
       const m = JSON.parse(readFileSync(join(dir, "csh", "component.json"), "utf8"));
       expect(m.practices.map((p: { id: string }) => p.id)).toEqual(["ears", "tdd"]);
       expect(m.practices[1].harness).toEqual({ run: ["node", "--test", "test/signin.test.ts"], witnesses: "reports/witnesses.ndjson" });
       expect(m.practices[1].cites).toBe("Product");
       const again = io(dir);
-      expect(await csh(["init"], { ...again.io, ask: async () => "" })).toBe(2);
+      expect(await csh(["init", "--root", dir], { ...again.io, ask: async () => "" })).toBe(2);
       expect(again.o.err).toMatch(/never overwrites/);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
   });
 
+  it("init in a subfolder writes at the git top level, where run reads it, and says so (#21)", async () => {
+    const dir = mkdtempSync(join(REPO, ".csh-cache", "init-"));
+    try {
+      execFileSync("git", ["init", "-q", "-b", "main"], { cwd: dir });
+      const sub = join(dir, "packages", "signin");
+      mkdirSync(sub, { recursive: true });
+      const answers = ["SignInService", "spec.csl.ts", "src", "tdd", "TDD", "tests", "UnitTests", "", "", "", "", "", ""];
+      const { o, io: x } = io(sub);
+      expect(await csh(["init"], { ...x, ask: async () => answers.shift() ?? "" })).toBe(0);
+      expect(existsSync(join(dir, "csh", "component.json"))).toBe(true);
+      expect(existsSync(join(sub, "csh", "component.json"))).toBe(false);
+      expect(o.out.split("\n").filter((l) => l.startsWith("csh init wrote "))).toEqual([`csh init wrote ${join(dir, "csh", "component.json")}, under the repository's top level, where every csh command reads it, not under ${sub}.`]);
+      // csh run from the same subfolder finds it: the manifest names a specification that is not there, not no-component.
+      const r = io(sub);
+      expect(await csh(["run"], r.io)).toBe(1);
+      expect(r.o.err).not.toMatch(/no-component/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 60000);
+
   it("init writes nothing when the answers do not make a manifest", async () => {
     const dir = mkdtempSync(join(REPO, ".csh-cache", "init-"));
     try {
       const { o, io: x } = io(dir);
-      expect(await csh(["init"], { ...x, ask: async () => "" })).toBe(1);
+      expect(await csh(["init", "--root", dir], { ...x, ask: async () => "" })).toBe(1);
       expect(o.err).toMatch(/Nothing written/);
       expect(existsSync(join(dir, "csh", "component.json"))).toBe(false);
     } finally {

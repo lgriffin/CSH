@@ -11,9 +11,10 @@ It is the "Harnesses" container, shown in the [containers diagram](../../docs/ar
 ## Public interface
 
 - `probe(event, fn, mappers, ctx?)`, `Probe`, `ProbeMappers`, `ProbeContext`: wrap `fn`; `probe.in(t, { cites })` returns the function, recording each call made by the test `t`. The mappers `pre`, `args`, `post` and `result` are the only place that names witness keys; `mocked` lists the test doubles the author states.
-- `witnessId(fullName)`: the witness id from the test's full name, numbering later calls in the same test.
+- `witnessId(fullName, file?)`, `fileSlug(path)`: the witness id from the test file (relative to the harness's directory) and the test's full name, `test0slockout0dtest0dts0e--locks-on-the-third-failure`, numbering later calls in the same test. `fileSlug` is a prefix-free code of letters and digits ending in `0e`, so two files never share an id, nor an example name once the witness-files adapter drops the separators ([A-65](../../ASSUMPTIONS.md)).
+- `testFile(file, cwd?)`: the test file as the identity and the id use it.
 - `testIdentity(file, fullName, cwd?)`: the identity shared by witnesses and execution lines ([A-39](../../ASSUMPTIONS.md)).
-- `@csh/harness/reporter`: the default export is a reporter for `node --test` that writes csh-execution/v1 lines to `CSH_EXECUTIONS_FILE` (default `reports/executions.ndjson`) and prints nothing. `executionOf(event, fullName)` and `nameTracker()` are its parts.
+- `@csh/harness/reporter`: the default export is a reporter for `node --test` that writes csh-execution/v1 lines to `CSH_EXECUTIONS_FILE` (default `reports/executions.ndjson`) and prints nothing. Run by hand before `csh check`, its file must be named explicitly, as a practice's `executions` or `csh/config.json`'s `executions`: no file is joined to a Witnesses source that names none ([A-62](../../ASSUMPTIONS.md)). `executionOf(event, fullName)` and `nameTracker()` are its parts.
 - `HARNESS_TOOL`: the tool id written into each witness.
 
 ## Depends on and used by
@@ -25,8 +26,10 @@ It is the "Harnesses" container, shown in the [containers diagram](../../docs/ar
 
 - The probe calls the real function with the real arguments and returns its real result: it never asserts, retries or alters behaviour (section 3.4).
 - The probe writes no outcome. Only the test runner knows whether a test passed, so the outcome comes from the reporter or not at all (P2).
+- Witness ids never collide across test files, deterministically: Node runs each file in its own process, and the id carries the file. Within a process a later call skips any id already given, so no witness is lost as a duplicate.
 - The probe fills in nothing it did not observe: a call that throws records nothing, and `mocked` is what the author states, since a probe cannot detect a test double (P10).
 - `pre` and `args` are read before the call, so a function that mutates its argument cannot change what was recorded as its input.
+- The reporter appends to its executions file and never truncates it, so two harnesses sharing the file within one `csh run` (which clears it once, first) both keep their lines. Run twice by hand, it accumulates lines: a pass followed by a fail gives one identity two outcomes, which the witness adapter reports as `ambiguous-test-identity` and reads as unknown. Appending fails safe; delete the file before running it by hand ([A-63](../../ASSUMPTIONS.md)).
 - Suites and skipped tests get no execution line; a failure in the test's own code is `failed`, and any other failure (hook, timeout, cancellation) and a todo test are `errored`, so neither can become a claim.
 
 ## Rationale
@@ -35,12 +38,12 @@ A hand-built record lets a test say anything about itself, and its default outco
 
 ## How it is tested
 
-- `test/harness.test.ts`: test identity; the probe returns the real result and records a version 2 witness with no outcome; an awaited result is recorded and a throwing call is not; witness ids number later calls; the reporter's outcome mapping for a pass, a failure in the test, another failure, a todo, a skip and a suite; full names from enclosing tests, per file; and a real run of `node --test` whose execution lines and witnesses join by identity.
+- `test/harness.test.ts`: test identity; the probe returns the real result and records a version 2 witness with no outcome; an awaited result is recorded and a throwing call is not; witness ids carry the file and number later calls, never reusing an id; two files with a same-named test write one witness file and every witness parses; the reporter's outcome mapping for a pass, a failure in the test, another failure, a todo, a skip and a suite; full names from enclosing tests, per file; a real run of `node --test` whose execution lines and witnesses join by identity; and two runs whose lines both stay in the file.
 - Fixtures F82 to F85 cover the join and the two gaps it adds (`outcome-unknown`, `unobserved-test`).
 - `examples/account/walkthrough.sh` and `examples/lockout/walkthrough.sh` run the probe and the reporter.
 
 ## Known limits
 
-- Witness ids come from test names, so two test files with a test of the same full name writing to one witness file give a duplicate id, which the witness reader reports.
 - Only Node's built-in test runner has a reporter.
+- Ids are long: the file is spelled out in the id and in the example's name (`WitnessTest0slockout0dtest0dts0e…`). Tests a file runs concurrently number their calls in the order the calls happen.
 - A test that calls the probed function inside a helper with its own test context must pass the right `t`; the probe cannot find it.

@@ -124,6 +124,7 @@ csl print <model.json | spec.csl.ts>        Print the canonical TypeScript.
 csl lock <spec.csl.ts>                      Write csh/lock.json from the packs the specification uses.
 
 csh init                                    Write csh/component.json by asking for each field. Guesses nothing.
+                                            Writes under --root, or the git top level, as every command reads.
 csh run [--at <commit>] [--mode advisory|enforcing] [--budget ms] [--no-cache]
                                             Run each practice's harness, check, decide, and store the run under
                                             .csh-cache/runs/<snapshot digest>/. Non-zero only on block in enforcing mode,
@@ -136,7 +137,9 @@ csh a3 verify <slug>                        Re-run every stage at its commit and
 csh check [spec] [--json] [--budget ms] [--no-cache]
                                             Run every check; write reports/csh-report.json. Exits 0 when it completes.
 csh gaps [spec]                             Print the gap view only.
-csh explain <finding-id>                    Print one finding, members rendered through the printer.
+csh explain <finding-id> [--run <dir|commit>]
+                                            Print one finding, members rendered through the printer; with
+                                            --run, from a stored run (csh run --at writes no reports/ files).
 csh approve | reject | retire <fragment | #a3/slug> --actor <name> --rationale <text>
 csh waive <fragment> --scope <finding|obligation> --expires <YYYY-MM-DD> --actor <name> --rationale <text>
 csh countersign <seq> --actor <name> --rationale <text>
@@ -182,11 +185,11 @@ self-approved, until a second person joins. See the [Authority tab](docs/spec/05
 - **Predicates are limited.** Linear integer arithmetic, enumerations and booleans, over one state per event. No concurrency, no time, no quantifiers in specifications.
 - **Reserved constructs.** Architectural and temporal obligations are carried and reported, but not evaluated.
 - **Three adapters.** Witness files, EARS requirements in Markdown, and Gherkin scenarios through a step table. Scenarios are read, never executed. Anything else must arrive as claim sets in IR form, or it stays unliftable.
-- **One test runner.** The probe's outcomes come from a reporter for Node's test runner; other runners have none yet ([Q-20](QUESTIONS.md)).
+- **One test runner.** The probe's outcomes come from a reporter for Node's test runner; other runners have none ([Q-20](QUESTIONS.md), decided: the gate's probe is a second file checked against its unit tests).
 - **Unknown is common.** A solver timeout, a missing binding or an unapproved binding all give unknown. That is a correct answer, not a malfunction.
 - **Protection depends on keys.** It also depends on where the gate runs: CI should pin the root maintainers commit with `CSH_ROOT_COMMIT`, outside the repository ([A-28](ASSUMPTIONS.md)).
 - **SSH signatures are untested.** Their verification is implemented through git but no fixture covers it ([Q-16](QUESTIONS.md)).
-- **Choices made during the build are registered.** They are in [ASSUMPTIONS.md](ASSUMPTIONS.md). The owner decided the first seventeen questions in [QUESTIONS.md](QUESTIONS.md) on 3 October 2026; Q-18 to Q-20 are open.
+- **Choices made during the build are registered.** They are in [ASSUMPTIONS.md](ASSUMPTIONS.md). The owner decided every question in [QUESTIONS.md](QUESTIONS.md), Q-01 to Q-20, on 3 October 2026.
 
 ## Status of the build
 

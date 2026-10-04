@@ -7,13 +7,13 @@
       "gaps": [
         {
           "kind": "unobserved-test",
-          "subject": "test/signin.test.ts::counts a wrong password"
+          "subject": "UnitTests/test/signin.test.ts::counts a wrong password"
         }
       ],
       "gapsExclude": [
         {
           "kind": "unobserved-test",
-          "subject": "test/signin.test.ts::accepts the correct password"
+          "subject": "UnitTests/test/signin.test.ts::accepts the correct password"
         }
       ]
     }

@@ -115,6 +115,25 @@ describe("csh a3", () => {
     rmSync(join(proj, "csh/a3/lockout/stages/dirty"), { recursive: true });
   }, 300000);
 
+  it("run --at writes no report files, and explain --run reads the stored run by commit or directory (#19)", async () => {
+    rmSync(join(proj, "reports"), { recursive: true, force: true });
+    const r = io(proj);
+    expect(await csh(["run", "--at", "HEAD"], r.io)).toBe(0);
+    expect(existsSync(join(proj, "reports"))).toBe(false);
+    const dir = /stored (\S+)/.exec(r.o.out)![1]!;
+    expect(existsSync(join(proj, dir, "model.json"))).toBe(true);
+    const id = (JSON.parse(readFileSync(join(proj, dir, "report.json"), "utf8")) as { findings: { id: string }[] }).findings[0]!.id;
+    const byCommit = io(proj);
+    expect(await csh(["explain", id, "--run", "HEAD"], byCommit.io), byCommit.o.err).toBe(0);
+    expect(byCommit.o.out).toContain(id);
+    const byDir = io(proj);
+    expect(await csh(["explain", id, "--run", dir], byDir.io), byDir.o.err).toBe(0);
+    expect(byDir.o.out).toBe(byCommit.o.out);
+    const none = io(proj);
+    expect(await csh(["explain", id, "--run", "no-such-run"], none.io)).toBe(2);
+    expect(none.o.err).toMatch(/neither a stored run's directory nor a commit/);
+  }, 120000);
+
   it("approve refuses judgments that cannot be used and appends nothing", async () => {
     mkdirSync(join(proj, "csh/a3/broken"), { recursive: true });
     writeFileSync(join(proj, "csh/a3/broken/judgments.json"), "{");

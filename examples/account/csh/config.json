@@ -3,5 +3,6 @@
   "mode": "advisory",
   "budgetMs": 5000,
   "implementationPaths": ["src"],
-  "specPaths": ["spec"]
+  "specPaths": ["spec"],
+  "executions": "reports/executions.ndjson"
 }

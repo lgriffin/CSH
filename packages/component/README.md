@@ -10,8 +10,8 @@ It is the "Component" container ([the manifest reference](../../docs/guides/mani
 
 ## Public interface
 
-- `ComponentManifest`, `Practice`, `Harness`: the manifest's types. A harness is an argument vector, never a shell string, and the witness file it writes.
-- `COMPONENT_PATH`, `COMPONENT_SCHEMA`, `PRACTICE_KINDS`, `DEFAULT_EXECUTIONS`: `csh/component.json`, `csh-component/v1`, the four practice kinds, and `reports/executions.ndjson`.
+- `ComponentManifest`, `Practice`, `Harness`: the manifest's types. A harness is an argument vector, never a shell string, and the witness file it writes. A practice without a harness may name `executions`, the file a reporter run by hand writes.
+- `COMPONENT_PATH`, `COMPONENT_SCHEMA`, `PRACTICE_KINDS`, `DEFAULT_EXECUTIONS`, `DEFAULT_HARNESS_TIMEOUT_MS`: `csh/component.json`, `csh-component/v1`, the four practice kinds, `reports/executions.ndjson`, and the ten minutes a harness may run when `harness.timeoutMs` does not say.
 - `validateManifest(v)`: every structural problem, as `{ code, detail }`; codes `malformed-manifest`, `duplicate-practice`, `source-owned-twice`.
 - `loadComponent(root)`, `parseComponent(bytes)`: the manifest and the digest of its bytes, or its problems.
 - `checkAgainstModule(manifest, module)`: errors (`component-name-mismatch`, `practice-unknown-source`, `harness-file-unread`) and the sources no practice names.
@@ -36,7 +36,7 @@ The component, not the project or the specification, is the unit a run evaluates
 
 ## How it is tested
 
-- `test/manifest.test.ts`: a well-formed manifest; a wrong schema, an empty name and a path outside the root; a duplicate practice and a source owned twice; steps outside a scenarios practice and a harness given as a string; the digest follows the bytes; text that is not JSON; the check against a module, with each error code and an unowned source.
+- `test/manifest.test.ts`: a well-formed manifest; a wrong schema, an empty name and a path outside the root; a duplicate practice and a source owned twice; steps outside a scenarios practice and a harness given as a string; a harness timeout that is not a positive whole number; an `executions` file on a practice that has a harness; the digest follows the bytes; text that is not JSON; the check against a module, with each error code and an unowned source.
 - Fixtures: F80 (a practice naming a source the specification lacks) and F81 (an unowned source).
 
 ## Known limits
