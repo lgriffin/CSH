@@ -1,7 +1,7 @@
 // The exit of stage 17 that the implementer can reach (Next layers, section 9): in a scratch copy of the gate component
 // signed by a test-only key, the enforcing CI gate job allows the approved state and blocks the regression commit. The
 // real repository's gate stays as it is: no key, maintainers file or ledger is created there (rule 19, A-78).
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -20,11 +20,15 @@ let rootCommit: string;
 let runnerHome: string;
 
 /** The job as a CI runner runs it: a keyring holding no key at all, the root pinned outside the repository. */
-function runJob(): { status: number | null; out: string; decision: { overall: string; obligations: { fragment: string; disposition: string }[] } | undefined } {
-  const r = spawnSync("bash", [job, repo.dir], { encoding: "utf8", env: { ...process.env, GNUPGHOME: runnerHome, GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1", CSH_ROOT_COMMIT: rootCommit } });
+async function runJob(env: Record<string, string> = {}): Promise<{ status: number | null; out: string; decision: { overall: string; obligations: { fragment: string; disposition: string }[] } | undefined }> {
+  const child = spawn("bash", [job, repo.dir], { env: { ...process.env, GNUPGHOME: runnerHome, GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1", CSH_ROOT_COMMIT: rootCommit, ...env } });
+  let out = "";
+  child.stdout.on("data", (d: Buffer) => (out += d.toString()));
+  child.stderr.on("data", (d: Buffer) => (out += d.toString()));
+  const status = await new Promise<number | null>((done) => child.on("close", done));
   const file = join(repo.dir, "reports", "csh-gate.json");
   const decision = existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as { overall: string; obligations: { fragment: string; disposition: string }[] }) : undefined;
-  return { status: r.status, out: `${r.stdout}\n${r.stderr}`, decision };
+  return { status, out, decision };
 }
 
 describe.skipIf(!gpgAvailable())("the CI gate job on a scratch copy of the gate component", () => {
@@ -72,18 +76,40 @@ describe.skipIf(!gpgAvailable())("the CI gate job on a scratch copy of the gate 
     if (runnerHome !== undefined) rmSync(runnerHome, { recursive: true, force: true });
   });
 
-  it("passes in the approved state, and csh status says the component is protected", () => {
-    const r = runJob();
+  it("passes in the approved state, and csh status says the component is protected", async () => {
+    const r = await runJob();
     expect(r.status, r.out).toBe(0);
     expect(r.out).toMatch(/protection {3}protected\n/);
     expect(r.out).toMatch(/accepted: the decision is for this snapshot/);
     expect(r.decision?.overall).not.toBe("block");
   }, 600_000);
 
-  it("fails on the regression commit, which keeps the probe's tests green", () => {
+  it("fails, rather than passing as unprotected, when the root is not pinned or cannot be used", async () => {
+    const unpinned = await runJob({ CSH_ROOT_COMMIT: "" });
+    expect(unpinned.status, unpinned.out).not.toBe(0);
+    expect(unpinned.out).toMatch(/CSH_ROOT_COMMIT is not set/);
+    const unusable = await runJob({ CSH_ROOT_COMMIT: "0000000000000000000000000000000000000000" });
+    expect(unusable.status, unusable.out).not.toBe(0);
+    expect(unusable.out).toMatch(/CSH_ROOT_COMMIT is set but cannot be used/);
+  }, 600_000);
+
+  it("still enforces when a change deletes the maintainers file from the working tree", async () => {
+    const file = join(repo.dir, MAINTAINERS_PATH);
+    const saved = readFileSync(file, "utf8");
+    rmSync(file);
+    try {
+      const r = await runJob();
+      expect(r.out).not.toMatch(/passing \(rule 20\)/);
+      expect(r.out).toMatch(/csh gate|accepted|block|refused/);
+    } finally {
+      writeFileSync(file, saved);
+    }
+  }, 600_000);
+
+  it("fails on the regression commit, which keeps the probe's tests green", async () => {
     for (const f of ["src/gate.ts", "test/gate.probe.ts"]) copyFileSync(join(gateDir, "regression", f), join(repo.dir, f));
     repo.commit("Simplify: an unknown verdict never blocks", null);
-    const r = runJob();
+    const r = await runJob();
     expect(r.status, r.out).not.toBe(0);
     expect(r.decision?.overall).toBe("block");
     expect(r.decision?.obligations.find((o) => o.fragment === "Gate/NoViolationAllowed/ReviewUnknown")?.disposition).toBe("block");

@@ -52,8 +52,11 @@ git commit -S -m "Gate maintainers: the root of trust"
 git rev-parse HEAD                    # the root commit, for step 3
 ```
 
-From this commit on, the CI gate job no longer passes by default: it runs the component in enforcing mode
-(`.github/scripts/gate-job.sh`). Nothing is approved yet, and candidates never block, so it still allows.
+From this commit on, the CI gate job no longer passes by default. It decides from history, not from whether the file
+is in the working tree, so a change that deletes `csh/maintainers.json` does not turn it off. Until step 3 pins the
+root it fails, saying `CSH_ROOT_COMMIT` is not set, and it fails too when the variable names a commit that does not
+hold the maintainers file ([A-91](../../ASSUMPTIONS.md)). With the root pinned it runs the component in enforcing mode
+(`.github/scripts/gate-job.sh`). Nothing is approved yet, and candidates never block, so it allows.
 
 ## 3. Pin the root outside the repository
 

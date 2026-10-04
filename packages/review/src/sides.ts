@@ -35,7 +35,7 @@ export async function sideOf(p: Project, arg: string, o: SideOptions, which: "ba
   if (arg === ".") {
     const r = await runComponent(await o.runOptions());
     if (!r.ok) return { unavailable: `${r.code}: ${r.message}` };
-    if (o.ci && r.record.snapshot.commit.endsWith("-dirty")) return { unavailable: "dirty-tree: a dirty working tree is refused in continuous integration" };
+    if (o.ci && (r.record.snapshot.commit.endsWith("-dirty") || untracked(p).length > 0)) return { unavailable: "dirty-tree: a dirty working tree is refused in continuous integration" };
     return readStoredRun(r.dir);
   }
   let commit: string;
@@ -51,13 +51,24 @@ export async function sideOf(p: Project, arg: string, o: SideOptions, which: "ba
   return r.ok ? readStoredRun(r.dir) : { unavailable: `${r.code}: ${r.message}` };
 }
 
+/** Files of the component that git does not track and does not ignore. */
+function untracked(p: Project): string[] {
+  try {
+    return git(p, "ls-files", "--others", "--exclude-standard", "--", ".").split("\n").filter((l) => l !== "");
+  } catch {
+    return [];
+  }
+}
+
 /** Paths changed between the two sides' commits, relative to the component root; none when git cannot say. */
-export function changesBetween(p: Project, base: RunSide, head: RunSide): string[] | undefined {
+export function changesBetween(p: Project, base: RunSide, head: RunSide, workingTree = head.run.snapshot.commit.endsWith("-dirty")): string[] | undefined {
   const b = base.run.snapshot.commit.replace(/-dirty$/, "");
   const h = head.run.snapshot.commit;
   try {
     const args = ["diff", "--name-only", "--relative", b, ...(h.endsWith("-dirty") ? [] : [h]), "--", "."];
-    return git(p, ...args).split("\n").filter((l) => l !== "");
+    const changed = git(p, ...args).split("\n").filter((l) => l !== "");
+    // A working-tree head also changed whatever it added without telling git.
+    return workingTree ? [...new Set([...changed, ...untracked(p)])].sort() : changed;
   } catch {
     return undefined;
   }
@@ -70,7 +81,7 @@ export async function diffProject(p: Project, baseArg: string, headArg: string, 
   const ctx: DiffContext = {};
   if (p.component !== undefined) ctx.manifest = p.component.manifest;
   if (!("unavailable" in base) && !("unavailable" in head)) {
-    const changes = changesBetween(p, base, head);
+    const changes = changesBetween(p, base, head, headArg === "." || head.run.snapshot.commit.endsWith("-dirty"));
     if (changes !== undefined) ctx.changes = changes;
   }
   return diffRuns(base, head, ctx);

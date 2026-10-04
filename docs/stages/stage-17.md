@@ -19,8 +19,8 @@ rule 19 says, no key, maintainers file or ledger was created under `packages/gat
   gate, and lists what it cannot see. It reads only, and exits 0 whenever it can read the component.
 - The CI gate job, `.github/scripts/gate-job.sh`, run for `packages/gate` by a new `gate` job in
   `.github/workflows/ci.yml` with `CSH_ROOT_COMMIT` from a repository variable. It imports the public keys under
-  `csh/keys/`, prints `csh status`, and, until the component has a maintainers file, stops there and passes (rule 20).
-  With one, it runs `csh run --mode enforcing` and `csh gate --verify` on the decision the run wrote. The workflow keeps
+  `csh/keys/`, prints `csh status`, and, until a maintainers file was ever committed and while no root is pinned, stops
+  there and passes (rule 20). After that it fails while the root is not pinned or cannot be used (A-91), and otherwise runs `csh run --mode enforcing` and `csh gate --verify` on the decision the run wrote. The workflow keeps
   `contents: read` and asks for nothing else (rule 23).
 - The gate's regression, as files in `packages/gate/regression/` ([A-78](../../ASSUMPTIONS.md),
   [Q-22](../../QUESTIONS.md)): `gate.ts` returns `allow` for an unknown or stale verdict under a policy that is not
