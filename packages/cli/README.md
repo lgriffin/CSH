@@ -14,11 +14,12 @@ It is the "Command line" container, shown in the [containers diagram](../../docs
 - `csl(argv, io)`: the `csl` command; `bin/csl.js` is its entry point.
 - `init(cwd, root, io)`: `csh init`, which writes `csh/component.json` from answers to one question per field, under the root every command uses (`--root`, else the git top level, as `projectRoot` resolves it). `io.ask` replaces standard input in tests.
 - `a3Command(project, args, io)`, `buildOutputs`, `a3Authority`, `a3Fragment`: `csh a3 open | stage | build | verify`. They find an A3's inputs (stored runs, or a run at the commit; authority of the judgments from the ledger; files as they stood at a stage's commit) and hand them to `@csh/a3`. `csh approve #a3/<slug>` drafts a decision on the judgments' digest.
+- `diffCommand(project, args, io)`, `DiffIo`: `csh diff <base> <head>`. Each side is a stored run's directory, a commit (its stored run, else a run at that commit), `.` for the working tree (refused in CI when it is dirty) or `unavailable:<reason>`, which the CI job passes when the merge base cannot be run. It finds the paths changed between the two commits with git and hands everything to `@csh/review`; `--json` prints the model, and `--out <dir>` writes `diff.json` and `diff.md`.
 - `parseArgs(argv)`, `Args`: positionals, `--key value` options and flags.
 
 ## Depends on and used by
 
-- Depends on: `@csh/kernel`, `csl`, `@csh/emit`, `@csh/print`, `@csh/solver`, `@csh/check`, `@csh/component`, `@csh/ledger`, `@csh/gate`, `@csh/run` and `@csh/a3`. External: the `git` executable, through `@csh/run` and `@csh/ledger`.
+- Depends on: `@csh/kernel`, `csl`, `@csh/emit`, `@csh/print`, `@csh/solver`, `@csh/check`, `@csh/component`, `@csh/ledger`, `@csh/gate`, `@csh/run`, `@csh/review` and `@csh/a3`. External: the `git` executable, through `@csh/run` and `@csh/ledger`.
 - Used by: people, through `bin/csh.js` and `bin/csl.js`, and the two example walkthroughs.
 
 ## Invariants it protects
@@ -29,6 +30,7 @@ It is the "Command line" container, shown in the [containers diagram](../../docs
 - Decision commands print the fragment through the canonical printer with its digest, findings and gaps, append a draft line and stop. They never commit or sign (P1, P6, CSH-015).
 - A decision needs a non-empty rationale and, for a waiver, a scope and an expiry date (P9, CSH-013).
 - `csh status` reads only, and exits 0 whenever it can read the component: it is a report, and the gate job decides. It says `unprotected` unless a maintainers file, a pinned root (`CSH_ROOT_COMMIT`), an approved fragment and an enforcing gate are all there, and it names what it cannot see (branch protection, who may edit the workflows, the variable itself).
+- `csh diff` decides nothing and exits 0 whatever it shows; it exits non-zero only when the head cannot be run. A side it could not run is shown as such, never as an empty diff ([A-77](../../ASSUMPTIONS.md)).
 - `csh gate` runs the check itself and never trusts a report file; `--verify` recomputes the decision and refuses one made for another snapshot or one that differs (P5, CSH-010, [A-34](../../ASSUMPTIONS.md)).
 - `csh a3 open` never overwrites judgments; `csh a3 build --check` fails when a committed output differs from the built one; `csh a3 verify` re-runs each stage at its commit and reports `stage-mismatch` or `stage-unverifiable`, never hiding a stage ([09](../../docs/spec/09-anchor-harness-a3.md), sections 5.7 and 5.8).
 - `csh run` names `csh a3 open <slug>` when a run ends with a cross-source conflict or an enforcing block.

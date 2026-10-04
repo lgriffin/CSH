@@ -1,0 +1,18 @@
+%% C4 level 3: components of the change review (Next layers, section 5).
+C4Component
+  title Change review: components
+  Container_Boundary(r, "Change review (review), outside the trusted base: it reads and never decides") {
+    Component(model, "Diff model", "review/src/diff.ts (diffRuns)", "csh-diff/v1: fragments, rules that moved, signals appeared and cleared by id, evidence, inputs per practice, gate, observations")
+    Component(observe, "Observations", "review/src/diff.ts", "approval-lost, rule-and-evidence-moved-together, implementation-and-tests-changed-together, evidence-removed, spec-untouched; never a verdict")
+    Component(render, "Rendering", "review/src/render.ts (renderDiff)", "Approvals lost first, counts last; an empty section says none; a missing side is never an empty diff")
+  }
+  Container_Ext(cli, "Command line", "cli/src/diff.ts", "csh diff: resolves each side to a stored run, a commit run, or unavailable; changed paths from git")
+  Container_Ext(check, "Check engine", "check", "signalsOf")
+  Container_Ext(run, "Run", "run", "readStoredRun, runAt")
+  System_Ext(ci, "Continuous integration", "diff-job.sh: merge base in its own worktree and install")
+  Rel(cli, model, "Two sides, changes, manifest")
+  Rel(model, check, "Signals of each report")
+  Rel(model, observe, "Uses")
+  Rel(cli, render, "Text, or diff.json")
+  Rel(cli, run, "Stored runs")
+  Rel(ci, cli, "csh diff <merge base run> .")

@@ -391,3 +391,11 @@ export async function runAt(o: RunOptions & { commit: string }): Promise<RunResu
     }
   }
 }
+
+/** A stored run read back: its record, report, gate decision, and model when one was kept (csh diff, Next layers 5.1). */
+export function readStoredRun(dir: string): { run: RunRecord; report: Report; gate: GateDecision; model?: Module } {
+  const read = <T>(f: string): T => JSON.parse(readFileSync(join(dir, f), "utf8")) as T;
+  const out: { run: RunRecord; report: Report; gate: GateDecision; model?: Module } = { run: read("run.json"), report: read("report.json"), gate: read("gate.json") };
+  if (existsSync(join(dir, "model.json"))) out.model = read("model.json");
+  return out;
+}

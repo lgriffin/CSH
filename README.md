@@ -37,8 +37,17 @@ examples/lockout/walkthrough.sh
 The script runs the example in four stages, each a commit run by `csh run` and recorded by `csh a3 stage`: as
 written, after the countermeasures, with a model and signed approvals (the enforcing gate allows), and after a
 regression that keeps the tests green (the enforcing gate blocks). It ends with `csh a3 build --check`, which fails
-when the sheet it builds differs from the committed one. [docs/lockout-walkthrough.md](docs/lockout-walkthrough.md)
-shows the run.
+when the sheet it builds differs from the committed one, then shows what each change did with `csh diff` between
+each pair of stages. [docs/lockout-walkthrough.md](docs/lockout-walkthrough.md) shows the run.
+
+What did the regression do? `csh diff` compares two stored runs and puts first what costs a reviewer a decision: here,
+an approved rule that was satisfied and is now violated, with the tests that changed beside it
+([the change review guide](docs/guides/review.md)).
+
+```sh
+cd .csh-cache/walkthrough/lockout
+node ../../../packages/cli/bin/csh.js diff csh/a3/three-practices/stages/approved csh/a3/three-practices/stages/regression
+```
 
 [examples/account](examples/account) is the worked case of the main tab, section 6.6. The model says the balance
 never falls below the floor; a passing unit test lets a premium account overdraw to minus 5,000; a design note
@@ -145,6 +154,10 @@ csh waive <fragment> --scope <finding|obligation> --expires <YYYY-MM-DD> --actor
 csh countersign <seq> --actor <name> --rationale <text>
                                             Draft one ledger line. The tool never commits or signs.
 csh status [--json]                         What is and is not protected, for one component. Reads only.
+csh diff <base> <head> [--json] [--out <dir>]
+                                            What a change did to the results, between two runs of one component.
+                                            Each side is a stored run's directory, a commit, or . for the working tree.
+                                            Decides nothing; non-zero only when the head cannot be run.
 csh gate [--mode advisory|enforcing]        Check and decide for the current snapshot. Non-zero only on block in enforcing mode.
 csh gate --verify <decision.json>           Recompute; refuse a decision for another snapshot or one that differs.
 ```
@@ -204,9 +217,9 @@ node packages/cli/bin/csh.js status --root packages/gate
 
 ## Status of the build
 
-Stages 1 to 18 are built; stages 19 and 20 of [the next layers](docs/spec/10-next-layers.md) are to come. All 79
+Stages 1 to 19 are built; stage 20 of [the next layers](docs/spec/10-next-layers.md) is to come. All 84
 golden fixtures of the built stages pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70
-to F78, F80 to F107), as do the unit, property and fault-injection tests; F108 to F117 are written and pending. The composition fixtures
+to F78, F80 to F112), as do the unit, property and fault-injection tests; F113 to F117 are written and pending. The composition fixtures
 F70 to F78 were written by the implementer and accepted by the owner. [docs/stages](docs/stages) records what each
 stage built and what its fixtures revealed.
 
@@ -223,7 +236,7 @@ with a summary.
 
 | Path | Contents |
 | --- | --- |
-| `packages/` | Twenty-two packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `arch`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `adapter-gherkin`, `adapter-c4-mermaid`, `facts`, `facts-imports`, `ledger`, `gate`, `component`, `run`, `harness`, `a3`, `cli`, `testkit` |
+| `packages/` | Twenty-three packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `arch`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `adapter-gherkin`, `adapter-c4-mermaid`, `facts`, `facts-imports`, `ledger`, `gate`, `component`, `run`, `review`, `harness`, `a3`, `cli`, `testkit` |
 | `docs/guides/` | How to write a component manifest, a probe, a step table, an A3 and architecture rules, and the owner's runbook for authority |
 | `csh/` | The `Workspace` component: the repository's own architecture rules, read against its container diagram and its imports ([examples/workspace](examples/workspace/README.md)) |
 | `fixtures/` | Golden fixtures, one directory each, plus the shared bases and the test pack |

@@ -2,7 +2,7 @@
 # Reproduce docs/lockout-walkthrough.md: copy the example to a scratch repository, make each stage a commit, run it
 # with csh run and record it as a stage of the A3 with csh a3 stage, then build the A3 with csh a3 build. The A3's
 # committed output (examples/lockout/csh/a3/three-practices/a3.json, a3.md and a3.html) holds every count the
-# walkthrough documents, so csh a3 build --check is the test: no step of this script decides anything itself.
+# walkthrough documents, so csh a3 build --check is the test; the last step checks the stage diffs' pattern.
 # The copy lives under .csh-cache/ so that the specification resolves the csl package.
 # The approval stage signs with a throwaway key made for this run only; it never touches your own keys.
 #
@@ -153,3 +153,25 @@ fi
 
 step csh a3 verify three-practices
 csh a3 verify three-practices 2>/dev/null
+
+# What each change did to the results, stage to stage (docs/spec/10-next-layers.md, section 5): csh diff between each
+# pair of stage records, in order. It reads the two runs and the commits between them, and decides nothing. The script
+# then holds the three diffs to what the walkthrough documents: conflicts cleared, then approvals gained, then one new
+# violation of an approved rule.
+printf '\n== The changes, diffed\n'
+prev=""
+for s in before countermeasures approved regression; do
+  if [ -n "$prev" ]; then
+    step csh diff csh/a3/three-practices/stages/$prev csh/a3/three-practices/stages/$s
+    csh diff "csh/a3/three-practices/stages/$prev" "csh/a3/three-practices/stages/$s" --out ".csh-cache/diff/$prev-$s"
+  fi
+  prev=$s
+done
+node -e '
+const d = (n) => require(`./.csh-cache/diff/${n}/diff.json`);
+const a = d("before-countermeasures"), b = d("countermeasures-approved"), c = d("approved-regression");
+const ok = a.signals.cleared.some((s) => s.kind.endsWith("-conflict")) && a.signals.appeared.length === 0
+  && b.obligations.filter((o) => o.authority[1] === "approved" && o.authority[0] !== "approved").length > 0 && b.observations.length === 0
+  && c.obligations.filter((o) => o.authority[1] === "approved" && o.verdict[1] === "violated" && o.verdict[0] !== "violated").length === 1;
+if (!ok) { console.error("the stage diffs no longer show conflicts cleared, then approvals gained, then one new violation"); process.exit(1); }'
+

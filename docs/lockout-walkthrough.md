@@ -547,3 +547,84 @@ examples/lockout/walkthrough.sh --update
 
 To evolve the example, change a source, a judgment, or the harness, run that command, and read the diff of
 [`a3.md`](../examples/lockout/csh/a3/three-practices/a3.md).
+
+## 11. What each change did
+
+The script ends by comparing each pair of stage records with `csh diff`, in order, and checks the pattern below. It
+reads the two runs and the paths that changed between the commits, and decides nothing ([the change review
+guide](guides/review.md)).
+
+Between the first two stages, the countermeasures cleared nine signals and raised none. The off-by-one and the
+joint conflict are among them. Three rules became unknown because the model now cites bindings nobody has approved yet,
+which is the next stage's work. The tests were rewritten with the implementation and the specification, and the diff
+says so without judging it:
+
+```text
+$ csh diff csh/a3/three-practices/stages/before csh/a3/three-practices/stages/countermeasures
+Approvals lost: none
+New violations and conflicts on approved rules: none
+Rules that became unknown or stale:
+  - SignInService/StopPasswordGuessing/AcceptCorrectPassword: unknown, inapplicable: method-missing: ApprovedBinding; binding-not-approved: Login.failures, Login.locked, SignIn.args.passwordOk, SignIn.result; method-missing: BoundaryWitness; binding-not-approved: Login.locked; method-missing: SolverCheck
+  - SignInService/StopPasswordGuessing/LockOnThirdFailure: unknown, inapplicable: method-missing: ApprovedBinding; binding-not-approved: Login.failures, Login.lockSeconds, Login.locked, SignIn.args.passwordOk, SignIn.result; method-missing: BoundaryWitness; binding-not-approved: Login.failures; method-missing: SolverCheck
+  - SignInService/StopPasswordGuessing/RefuseWhileLocked: unknown, inapplicable: method-missing: ApprovedBinding; binding-not-approved: Login.locked, SignIn.result; method-missing: BoundaryWitness; binding-not-approved: Login.locked; method-missing: SolverCheck
+New signals among candidates: none
+Signals cleared:
+  - dangling-citation: SignInService/@Scenarios/ScenarioASuccessfulSignInClearsTheFailedAttempts
+  - example-conflict: SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsThreeFailedAttemptsBeforeLocking, SignInService/StopPasswordGuessing/LockOnThirdFailure
+  - example-conflict: SignInService/@Scenarios/ScenarioALockedAccountIsRefusedEvenWithTheCorrectPassword, SignInService/StopPasswordGuessing/AcceptCorrectPassword
+  - example-conflict: SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eRefusesALockedAccountEvenWithTheCorrectPassword, SignInService/StopPasswordGuessing/AcceptCorrectPassword
+  - example-divergence: SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsThreeFailedAttemptsBeforeLocking
+  - joint-conflict: SignInService/StopPasswordGuessing/AcceptCorrectPassword, SignInService/StopPasswordGuessing/RefuseWhileLocked
+  - no-rule: SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eLocksOnTheFourthFailedAttempt (SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eLocksOnTheFourthFailedAttempt)
+  - not-comparable: SignInService/@Scenarios/ScenarioTheLockLastsFifteenMinutes
+  - shape-mismatch: docs/requirements.md:6 (SignInService/StopPasswordGuessing/RefuseWhileLocked)
+Observations:
+  - tests no longer seen: UnitTests/test/lockout.test.ts::allows three failed attempts before locking, UnitTests/test/lockout.test.ts::locks on the fourth failed attempt
+  - the specification and the evidence of tdd changed in one change
+  - the implementation and its tests changed in one change
+
+Counts: SignInService, 754d2acead1d -> 3e05c984e19e; fragments +0 -0 ~2; rules moved 3; signals appeared 0, cleared 9, persisting 7; tests +2 -2; gate allow -> allow
+```
+
+Between the countermeasures and the approved model, four rules gained approval and nothing else of note moved. The one
+new signal is the rule only one practice states:
+
+```text
+$ csh diff csh/a3/three-practices/stages/countermeasures csh/a3/three-practices/stages/approved
+Approvals lost: none
+New violations and conflicts on approved rules: none
+Rules that became unknown or stale: none
+New signals among candidates:
+  - single-source: SignInService/StopPasswordGuessing/LockHasDuration (SignInService/StopPasswordGuessing/LockHasDuration)
+Signals cleared: none
+Observations: none
+Authority moved:
+  - SignInService/StopPasswordGuessing/AcceptCorrectPassword: candidate -> approved
+  - SignInService/StopPasswordGuessing/LockHasDuration: absent -> approved
+  - SignInService/StopPasswordGuessing/LockOnThirdFailure: candidate -> approved
+  - SignInService/StopPasswordGuessing/RefuseWhileLocked: candidate -> approved
+
+Counts: SignInService, 3e05c984e19e -> d94d46e815ae; fragments +1 -0 ~0; rules moved 4; signals appeared 1, cleared 0, persisting 7; tests +0 -0; gate allow -> allow
+```
+
+The regression is one new violation of an approved rule, which is why the enforcing gate blocks, and the test that
+would have caught it is no longer seen:
+
+```text
+$ csh diff csh/a3/three-practices/stages/approved csh/a3/three-practices/stages/regression
+Approvals lost: none
+New violations and conflicts on approved rules:
+  - SignInService/StopPasswordGuessing/LockOnThirdFailure: satisfied -> violated (block)
+Rules that became unknown or stale: none
+New signals among candidates:
+  - example-conflict: SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt, SignInService/StopPasswordGuessing/LockOnThirdFailure
+  - example-divergence: SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt
+  - example-divergence: SignInService/@Scenarios/ScenarioTheLockLastsFifteenMinutes, SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt
+Signals cleared: none
+Observations:
+  - tests no longer seen: UnitTests/test/lockout.test.ts::locks on the third failed attempt
+  - the implementation and its tests changed in one change
+  - the specification is untouched
+
+Counts: SignInService, d94d46e815ae -> c3e292797134; fragments +0 -0 ~0; rules moved 1; signals appeared 4, cleared 0, persisting 8; tests +1 -1; gate allow -> block
+```

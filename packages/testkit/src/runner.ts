@@ -13,10 +13,11 @@ import { authorship, formatDecision, gitVcs, LEDGER_PATH, MAINTAINERS_PATH, read
 import { printModule } from "@csh/print";
 import type { SolverPort } from "@csh/solver";
 import { createTestRepo, gpgAvailable, type TestRepo } from "./git.ts";
-import { checkModule, componentStatus, evaluateSpec, type FixtureConfig, loadProject, readConfig } from "@csh/run";
+import { checkModule, componentStatus, evaluateSpec, type FixtureConfig, loadProject, readConfig, readStoredRun } from "@csh/run";
 import { verifyCounterexample, verifyNoOutcome } from "./verify.ts";
 import { packWorkspace } from "./pack.ts";
 import { type ComponentProblem, parseComponent } from "@csh/component";
+import { type DiffContext, diffRuns, type ManifestView, renderDiff, type RunSide, type Unavailable } from "@csh/review";
 import { buildA3, readJudgments, readStage, stageDir, stageIntegrity, type StageRecord } from "@csh/a3";
 
 export interface FixtureResult {
@@ -35,7 +36,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 18;
+export const BUILT_THROUGH_STAGE = 19;
 
 /** The stage a fixture belongs to, from its expected result. */
 export function fixtureStage(fixturesDir: string, id: string): number {
@@ -119,6 +120,7 @@ export class FixtureRunner {
       if ((e.git === true || e.steps !== undefined || e.a3?.authority !== undefined || e.status?.git === true || e.authoredBy !== undefined || e.agent?.git === true) && !gpgAvailable()) {
         res.skipped = "gpg is not installed";
       } else if (e.status !== undefined) await this.status(dir, e.status, failures);
+      else if (e.diff !== undefined) this.diff(dir, e.diff, failures);
       else if (e.a3 !== undefined) await this.a3(dir, e.a3, failures);
       else if (e.starter !== undefined) {
         const skipped = this.starter(e.starter, failures);
@@ -472,6 +474,30 @@ export class FixtureRunner {
         else process.env[k] = saved[k];
       }
     }
+  }
+
+  /** csh diff over two stored runs written by hand (Next layers, section 5). */
+  private diff(dir: string, x: Exp, failures: string[]): void {
+    const inputs = join(dir, "inputs");
+    const side = (name: string): RunSide | Unavailable => {
+      const missing = join(inputs, `${name}-unavailable.txt`);
+      return existsSync(missing) ? { unavailable: readFileSync(missing, "utf8").trim() } : readStoredRun(join(inputs, name));
+    };
+    const ctx: DiffContext = {};
+    if (existsSync(join(inputs, "changes.json"))) ctx.changes = JSON.parse(readFileSync(join(inputs, "changes.json"), "utf8")) as string[];
+    if (existsSync(join(inputs, "component.json"))) ctx.manifest = JSON.parse(readFileSync(join(inputs, "component.json"), "utf8")) as ManifestView;
+    const d = diffRuns(side("base"), side("head"), ctx);
+    const text = renderDiff(d);
+    const ids = (xs: { id: string }[]) => xs.map((s) => s.id).sort().join(",");
+    if (x.signals?.appeared !== undefined && ids(d.signals.appeared) !== [...x.signals.appeared].sort().join(",")) failures.push(`appeared ${ids(d.signals.appeared)}, expected ${x.signals.appeared.join(",")}`);
+    if (x.signals?.cleared !== undefined && ids(d.signals.cleared) !== [...x.signals.cleared].sort().join(",")) failures.push(`cleared ${ids(d.signals.cleared)}, expected ${x.signals.cleared.join(",")}`);
+    for (const c of x.fragmentsChanged ?? []) if (!d.fragments.changed.some((y) => y.fragment === c.fragment && y.authorityBefore === c.authorityBefore && y.authorityAfter === c.authorityAfter)) failures.push(`fragment change ${JSON.stringify(c)} missing; got ${JSON.stringify(d.fragments.changed)}`);
+    for (const o of x.observations ?? []) if (!d.observations.some((y) => JSON.stringify(y) === JSON.stringify(o))) failures.push(`observation ${JSON.stringify(o)} missing; got ${JSON.stringify(d.observations)}`);
+    for (const i of x.inputs ?? []) if (!d.inputs.some((y) => y.practice === i.practice && y.changed === i.changed)) failures.push(`input ${JSON.stringify(i)} missing; got ${JSON.stringify(d.inputs)}`);
+    if (x.base !== undefined && d.comparison !== x.base) failures.push(`comparison ${d.comparison}, expected ${x.base}`);
+    if (x.renderFirst !== undefined && !text.startsWith(x.renderFirst)) failures.push(`the rendering starts ${JSON.stringify(text.split("\n")[0])}, expected ${x.renderFirst}`);
+    for (const r of x.renderIncludes ?? []) if (!text.includes(r)) failures.push(`the rendering lacks ${JSON.stringify(r)}:\n${text}`);
+    if (x.neverEmpty === true && (d.alone === undefined || d.alone.signals.length === 0)) failures.push("a missing side gave a diff with nothing shown");
   }
 
   /** csh status on a scratch repository (Next layers, section 3.2). */
