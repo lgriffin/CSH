@@ -13,6 +13,8 @@ OUT="${3:?artifact directory}"
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 csh() { node "$REPO/packages/cli/bin/csh.js" "$@"; }
 mkdir -p "$OUT"
+# Absolute, since the base is installed and run from its own worktree.
+OUT="$(cd "$OUT" && pwd)"
 
 WT="$REPO/.csh-cache/diff-base"
 rm -rf "$WT"
