@@ -7,7 +7,7 @@ import { compareCodePoints, digestOf, type Module } from "@csh/kernel";
 
 export const COMPONENT_PATH = "csh/component.json";
 export const COMPONENT_SCHEMA = "csh-component/v1";
-export const PRACTICE_KINDS = ["requirements", "scenarios", "tests", "design-notes"] as const;
+export const PRACTICE_KINDS = ["requirements", "scenarios", "tests", "design-notes", "architecture", "facts"] as const;
 /** Where a harness's execution lines go when the manifest does not say (section 3.2). */
 export const DEFAULT_EXECUTIONS = "reports/executions.ndjson";
 /** How long a harness command may run when the manifest does not say: ten minutes (owner-decided, #20). */

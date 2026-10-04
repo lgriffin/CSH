@@ -1,0 +1,47 @@
+{
+  "schema": "csh-a3-judgments/v1",
+  "title": "",
+  "problem": "",
+  "background": [],
+  "stages": [
+    {
+      "id": "first",
+      "name": "",
+      "what": ""
+    }
+  ],
+  "cannotSay": {},
+  "lanes": [
+    {
+      "id": "c4",
+      "practice": "c4",
+      "step": 1,
+      "title": "Container diagram",
+      "where": "C4",
+      "match": []
+    },
+    {
+      "id": "rules",
+      "practice": "rules",
+      "step": 1,
+      "title": "Written rules",
+      "where": "Brief",
+      "match": []
+    },
+    {
+      "id": "facts",
+      "practice": "facts",
+      "step": 1,
+      "title": "Code facts",
+      "where": "Code",
+      "match": []
+    }
+  ],
+  "causes": [],
+  "decisionPoints": [],
+  "goal": "",
+  "rca": [],
+  "whys": [],
+  "countermeasures": [],
+  "plan": []
+}

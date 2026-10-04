@@ -73,7 +73,7 @@ describe("printer round trip", () => {
     const fixtures = join(repo, "fixtures");
     const seen = new Set<string>();
     let checked = 0;
-    for (const id of readdirSync(fixtures).filter((d) => /^F\d\d$/.test(d))) {
+    for (const id of readdirSync(fixtures).filter((d) => /^F\d{2,3}$/.test(d))) {
       const spec = join(fixtures, id, "spec.csl.ts");
       const exp = JSON.parse(readFileSync(join(fixtures, id, "expected.json"), "utf8")).expect;
       if (exp.compile?.ok === false || exp.emit?.ok === false || existsSync(join(fixtures, id, "inputs", "lock.json"))) continue;

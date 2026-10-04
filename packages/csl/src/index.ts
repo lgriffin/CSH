@@ -1,4 +1,5 @@
 export { and, or, not, truth, type Bool, type Int, type EnumValue, type Phase } from "./handles.ts";
+export { forbid, only, closed, pkg, container, anything } from "./arch.ts";
 export {
   system,
   unit,

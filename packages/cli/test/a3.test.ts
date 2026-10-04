@@ -159,4 +159,11 @@ describe("csh a3", () => {
     expect(await csh(["a3", "build", "dispositions", "--check", "--root", join(REPO, "packages", "gate")], check.io), check.o.err).toBe(0);
     expect(check.o.out).toMatch(/match the stage records and judgments/);
   });
+
+  it("the Workspace component's committed sheet matches its first run, with every signal unclassified", async () => {
+    const check = io(REPO);
+    expect(await csh(["a3", "build", "layering", "--check", "--root", REPO], check.io), check.o.err).toBe(0);
+    expect(check.o.out).toMatch(/match the stage records and judgments/);
+    expect(check.o.out).toMatch(/unclassified at first: violated: DiagramIsComplete \(candidate\)/);
+  });
 });

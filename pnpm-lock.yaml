@@ -48,6 +48,15 @@ importers:
         specifier: workspace:*
         version: link:../kernel
 
+  packages/adapter-c4-mermaid:
+    dependencies:
+      '@csh/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+      '@csh/witness':
+        specifier: workspace:*
+        version: link:../witness
+
   packages/adapter-ears-markdown:
     dependencies:
       '@csh/kernel':
@@ -75,8 +84,17 @@ importers:
         specifier: workspace:*
         version: link:../witness
 
+  packages/arch:
+    dependencies:
+      '@csh/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+
   packages/check:
     dependencies:
+      '@csh/arch':
+        specifier: workspace:*
+        version: link:../arch
       '@csh/kernel':
         specifier: workspace:*
         version: link:../kernel
@@ -150,6 +168,27 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
+  packages/facts:
+    dependencies:
+      '@csh/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+      '@csh/witness':
+        specifier: workspace:*
+        version: link:../witness
+
+  packages/facts-imports:
+    dependencies:
+      '@csh/facts':
+        specifier: workspace:*
+        version: link:../facts
+      '@csh/witness':
+        specifier: workspace:*
+        version: link:../witness
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
   packages/gate:
     dependencies:
       '@csh/check':
@@ -191,6 +230,9 @@ importers:
 
   packages/run:
     dependencies:
+      '@csh/adapter-c4-mermaid':
+        specifier: workspace:*
+        version: link:../adapter-c4-mermaid
       '@csh/adapter-ears-markdown':
         specifier: workspace:*
         version: link:../adapter-ears-markdown
@@ -209,6 +251,9 @@ importers:
       '@csh/emit':
         specifier: workspace:*
         version: link:../emit
+      '@csh/facts':
+        specifier: workspace:*
+        version: link:../facts
       '@csh/gate':
         specifier: workspace:*
         version: link:../gate

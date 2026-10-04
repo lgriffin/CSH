@@ -1,0 +1,10 @@
+{
+  "name": "@csh/facts-imports",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": { ".": "./src/index.ts" },
+  "bin": { "facts-imports": "./bin/facts-imports.js" },
+  "dependencies": { "@csh/facts": "workspace:*", "@csh/witness": "workspace:*", "typescript": "5.9.3" }
+}

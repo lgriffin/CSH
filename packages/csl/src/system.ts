@@ -193,8 +193,12 @@ export interface ClaimBuilder {
       then: (h: StepHandles<E>) => Bool<Phase>;
     } & Cites,
   ): void;
-  /** Reserved in version 1: carried and reported, never evaluated. */
+  /**
+   * An architecture rule. A value made by `forbid`, `only` or `closed` is evaluated against the diagram and the facts
+   * (Next layers, section 4.1); any other value is carried and reported, never evaluated.
+   */
   architecture(name: string, native: unknown, opts?: Cites): void;
+  /** Reserved: carried and reported, never evaluated. */
   temporal(name: string, native: unknown, opts?: Cites): void;
 }
 

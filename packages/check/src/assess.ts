@@ -1,5 +1,7 @@
 // Verdict, applicability and methods for every obligation (Semantic contract, section 6).
 import { compareCodePoints, digestJson, type Fragment, type Invariant, type Requirement } from "@csh/kernel";
+import { describeDependency } from "@csh/arch";
+import type { ArchRuleOutcome } from "./arch.ts";
 import { type EvidenceStore, judge, type JudgeContext, termsOfObligation } from "./evidence.ts";
 import type { SourcedWitness } from "./pool.ts";
 import { assumptionsFor, type Pool, type QueryOutcome, stateOfEvent } from "./run.ts";
@@ -16,9 +18,11 @@ export interface AssessInput {
   toolDigest: string;
   snapshotCommit?: string;
   unchangedSince?: (ancestor: string, commit: string) => boolean;
+  /** Typed architecture rules, by fragment name, against the diagram and the facts. */
+  arch?: Map<string, ArchRuleOutcome>;
 }
 
-const CONFLICT_KINDS = new Set(["state-conflict", "joint-conflict", "example-conflict"]);
+const CONFLICT_KINDS = new Set(["state-conflict", "joint-conflict", "example-conflict", "arch-conflict"]);
 const SPEC_VIOLATION_KINDS = new Set(["not-preserved", "not-met"]);
 
 /** The headline reason code of a detailed reason, such as key-missing from "key-missing: post.balanceMinor". */
@@ -63,6 +67,12 @@ export function assess(input: AssessInput): Assessment[] {
     };
     if (auth.reason !== undefined) a.authorityReason = auth.reason;
     if (f.policy !== undefined) a.policy = f.policy.name;
+    const rule = input.arch?.get(f.name);
+    if (rule !== undefined) {
+      assessArchitecture(a, f, rule, outcome.findings.filter((fd) => CONFLICT_KINDS.has(fd.kind) && counts(fd)));
+      out.push(a);
+      continue;
+    }
     if (f.kind === "architecture" || f.kind === "temporal") {
       a.reasons.push("reserved: version 1 has no evaluator for this kind");
       out.push(a);
@@ -153,6 +163,37 @@ export function assess(input: AssessInput): Assessment[] {
     out.push(a);
   }
   return out.sort((x, y) => compareCodePoints(x.fragment, y.fragment));
+}
+
+/** A typed architecture rule: conflicting with the diagram, violated by a current fact, satisfied, or unknown. */
+function assessArchitecture(a: Assessment, f: Fragment, o: ArchRuleOutcome, conflicts: Finding[]): void {
+  a.applicability = o.facts === "current" ? "current" : o.facts === "stale" ? "stale" : "unavailable";
+  const noFacts = o.facts === "stale" ? "no-current-facts" : "no-facts";
+  a.methods = (f.policy?.require ?? []).map((m): MethodStatus => {
+    if (m === "FactsCurrent") return o.facts === "current" ? { method: m, met: true } : { method: m, met: false, reason: noFacts };
+    return { method: m, met: false, reason: "not-applicable: architecture rules are judged by facts" };
+  });
+  const r = o.result;
+  if (conflicts.length > 0) {
+    a.verdict = "conflicting";
+    a.scope = "specification";
+    a.reasons.push(...conflicts.map((fd) => `${fd.kind}: ${fd.id}`), ...conflicts.flatMap((fd) => (fd.reason !== undefined ? [fd.reason] : [])));
+  } else if (r?.result === "violated") {
+    a.verdict = "violated";
+    a.scope = "implementation";
+    a.reasons.push(...r.by.map(describeDependency));
+  } else if (r?.result === "holds" && f.policy !== undefined && a.methods.every((m) => m.met)) {
+    a.verdict = "satisfied";
+    a.reasons.push(...a.methods.map((m) => `${m.method} met`));
+  } else {
+    a.verdict = "unknown";
+    if (f.policy === undefined) a.reasons.push("no-policy");
+    if (o.facts !== "current") a.reasons.push(noFacts);
+    if (r?.result === "unknown") a.reasons.push(r.reason);
+    for (const m of a.methods.filter((m) => !m.met)) a.reasons.push(`method-missing: ${m.method}`, ...(m.reason !== undefined ? [m.reason] : []));
+  }
+  // Each reason once; a file and line is no headline code, so dedupe's listing of codes does not apply.
+  a.reasons = [...new Set(a.reasons)];
 }
 
 function dedupe(xs: string[]): string[] {

@@ -1,0 +1,16 @@
+{
+  "candidates": {
+    "findings": [],
+    "obligations": [
+      "Workspace/Layering/AdaptersSeeKernelAndWitnessOnly",
+      "Workspace/Layering/DiagramIsComplete",
+      "Workspace/Layering/KernelDependsOnNothing"
+    ]
+  },
+  "invalidLedgerEntries": [],
+  "mode": "advisory",
+  "obligations": [],
+  "overall": "allow",
+  "schema": "csh-gate/v1",
+  "snapshotDigest": "sha256:54a723922343d3eda3ba8356af117542db6bc101c6a678c6806c2b2dc7883525"
+}

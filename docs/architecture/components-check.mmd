@@ -13,7 +13,9 @@ C4Component
     Component(report, "Report writer and renderer", "check/src/check.ts, render.ts", "csh-report/v1 and its text rendering")
     Component(signals, "Signals", "check/src/signals.ts", "Every item of a report as a signal with fragments, sources and practices; structured matching")
     Component(refine, "Refiner", "check/src/refine.ts", "Strengthening check for composition")
+    Component(archwire, "Architecture", "check/src/arch.ts", "Finds the diagram and the facts in adapter output, decides whether the facts are current; arch-conflict findings, diagram gaps, rule results")
   }
+  Container_Ext(arch, "Architecture rules", "arch", "Set comparisons")
   ContainerDb_Ext(z3, "Z3")
   Rel(pool, run, "Fragments and claims")
   Rel(run, queries, "Queries")
@@ -27,3 +29,7 @@ C4Component
   Rel(gaps, report, "Gap view")
   Rel(refine, queries, "Entailment")
   Rel(report, signals, "Report and component")
+  Rel(pool, archwire, "Diagram and facts")
+  Rel(archwire, arch, "Rules, diagram, current facts")
+  Rel(archwire, assess, "Rule results")
+  Rel(archwire, gaps, "Diagram gaps")

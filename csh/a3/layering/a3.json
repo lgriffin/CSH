@@ -1,0 +1,619 @@
+{
+  "authority": {
+    "authority": "candidate"
+  },
+  "background": [],
+  "component": "Workspace",
+  "countermeasures": [],
+  "decisionPoints": [],
+  "followUp": {
+    "gate": {
+      "mode": "advisory",
+      "overall": "allow"
+    },
+    "returned": []
+  },
+  "goal": "",
+  "judgmentsDigest": "sha256:72664a5dacf5eb1df9805a2b27ec2a18ce3af74fd5363b71482ae8284f46b99e",
+  "lanes": [
+    {
+      "counts": [
+        0
+      ],
+      "id": "c4",
+      "practice": "c4",
+      "step": 1,
+      "title": "Container diagram",
+      "where": "C4"
+    },
+    {
+      "counts": [
+        0
+      ],
+      "id": "rules",
+      "practice": "rules",
+      "step": 1,
+      "title": "Written rules",
+      "where": "Brief"
+    },
+    {
+      "counts": [
+        0
+      ],
+      "id": "facts",
+      "practice": "facts",
+      "step": 1,
+      "title": "Code facts",
+      "where": "Code"
+    }
+  ],
+  "measures": [
+    {
+      "id": "conflicts",
+      "name": "Conflicts between claims",
+      "target": "0",
+      "values": [
+        {
+          "met": true,
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": "not-comparable",
+      "name": "Not comparable",
+      "target": "0",
+      "values": [
+        {
+          "met": true,
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": "drift",
+      "name": "Shape mismatches and dangling citations",
+      "target": "0",
+      "values": [
+        {
+          "met": true,
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": "no-rule",
+      "name": "Examples with no rule",
+      "target": "0",
+      "values": [
+        {
+          "met": true,
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": "silences",
+      "name": "Silences without an owner decision",
+      "target": "0",
+      "values": [
+        {
+          "met": true,
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": "satisfied",
+      "name": "Rules satisfied on approved evidence",
+      "target": "all",
+      "values": [
+        {
+          "met": false,
+          "value": "0 of 3"
+        }
+      ]
+    },
+    {
+      "id": "gate",
+      "name": "Enforcing gate allows",
+      "target": "allow",
+      "values": [
+        {
+          "met": false,
+          "value": "allow (advisory)"
+        }
+      ]
+    },
+    {
+      "id": "cited",
+      "name": "Examples that cite a requirement",
+      "target": "all",
+      "values": [
+        {
+          "met": false,
+          "value": "0 of 0"
+        }
+      ]
+    }
+  ],
+  "pareto": [
+    {
+      "bars": [
+        {
+          "cause": "",
+          "cumulative": 1,
+          "n": 19,
+          "name": "Unclassified: no cause places it",
+          "vital": true
+        }
+      ],
+      "stage": "first"
+    }
+  ],
+  "plan": [],
+  "practices": [
+    {
+      "author": "Architect",
+      "id": "c4",
+      "kind": "architecture",
+      "name": "Container diagram",
+      "sources": [
+        "C4"
+      ],
+      "unit": "the relation"
+    },
+    {
+      "author": "Architect",
+      "id": "rules",
+      "kind": "requirements",
+      "name": "Written rules",
+      "sources": [
+        "Brief"
+      ],
+      "unit": "the sentence"
+    },
+    {
+      "author": "facts-imports",
+      "id": "facts",
+      "kind": "facts",
+      "name": "Code facts",
+      "sources": [
+        "Code"
+      ],
+      "unit": "the dependency"
+    }
+  ],
+  "problem": "",
+  "problems": [
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: check->adapters"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: testkit->check"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: testkit->a3"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: run->kernel"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: cli->check"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: a3->kernel"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: testkit->ledger"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: testkit->adapters"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: cli->kernel"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: cli->emission"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: cli->gate"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: gate->kernel"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: testkit->emission"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: testkit->gate"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: testkit->component"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: testkit->kernel"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "undrawn-dependency: cli->ledger"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "unobserved-relation: run->harness"
+    },
+    {
+      "detail": "no cause places this signal",
+      "kind": "unclassified",
+      "stage": "first",
+      "subject": "violated: DiagramIsComplete (candidate)"
+    }
+  ],
+  "rca": [],
+  "schema": "csh-a3/v1",
+  "slug": "layering",
+  "stages": [
+    {
+      "conflicts": 0,
+      "examples": {
+        "citing": 0,
+        "total": 0
+      },
+      "gate": {
+        "mode": "advisory",
+        "overall": "allow"
+      },
+      "id": "first",
+      "name": "",
+      "rules": [
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Workspace/Layering/AdaptersSeeKernelAndWitnessOnly",
+          "name": "AdaptersSeeKernelAndWitnessOnly",
+          "selfApproved": false,
+          "verdict": "satisfied"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Workspace/Layering/DiagramIsComplete",
+          "name": "DiagramIsComplete",
+          "selfApproved": false,
+          "verdict": "violated"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Workspace/Layering/KernelDependsOnNothing",
+          "name": "KernelDependsOnNothing",
+          "selfApproved": false,
+          "verdict": "satisfied"
+        }
+      ],
+      "signals": [
+        {
+          "detail": "packages/check/package.json: @csh/check -> @csh/witness (manifest); packages/check/src/arch.ts:6: @csh/check -> @csh/witness (type-only); packages/check/src/check.ts:8: @csh/check -> @csh/witness; packages/check/src/evidence.ts:24: @csh/check -> @csh/witness; packages/check/src/gaps.ts:18: @csh/check -> @csh/witness; packages/check/src/pool.ts:15: @csh/check -> @csh/witness (type-only): no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "138e26759b077ffd",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: check->adapters",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "check->adapters"
+        },
+        {
+          "detail": "packages/testkit/package.json: @csh/testkit -> @csh/check (manifest); packages/testkit/package.json: @csh/testkit -> @csh/solver (manifest); packages/testkit/src/run-fixtures.ts:4: @csh/testkit -> @csh/solver; packages/testkit/src/runner.ts:8: @csh/testkit -> @csh/check; packages/testkit/src/runner.ts:14: @csh/testkit -> @csh/solver (type-only); packages/testkit/src/verify.ts:5: @csh/testkit -> @csh/check (type-only); packages/testkit/src/verify.ts:6: @csh/testkit -> @csh/solver: no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "1acb156778acd813",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: testkit->check",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "testkit->check"
+        },
+        {
+          "detail": "packages/testkit/package.json: @csh/testkit -> @csh/a3 (manifest); packages/testkit/src/runner.ts:20: @csh/testkit -> @csh/a3: no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "29888269414988aa",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: testkit->a3",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "testkit->a3"
+        },
+        {
+          "detail": "packages/run/package.json: @csh/run -> @csh/kernel (manifest); packages/run/src/evaluate.ts:6: @csh/run -> @csh/kernel (type-only); packages/run/src/pipeline.ts:8: @csh/run -> @csh/kernel; packages/run/src/project.ts:7: @csh/run -> @csh/kernel; packages/run/src/run.ts:11: @csh/run -> @csh/kernel; packages/run/src/sources.ts:8: @csh/run -> @csh/kernel; packages/run/src/status.ts:9: @csh/run -> @csh/kernel: no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "2caf28d9c1fcdcbd",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: run->kernel",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "run->kernel"
+        },
+        {
+          "detail": "packages/cli/package.json: @csh/cli -> @csh/check (manifest); packages/cli/package.json: @csh/cli -> @csh/solver (manifest); packages/cli/src/csh.ts:6: @csh/cli -> @csh/check; packages/cli/src/csh.ts:11: @csh/cli -> @csh/solver; packages/cli/src/csl.ts:4: @csh/cli -> @csh/check; packages/cli/src/csl.ts:8: @csh/cli -> @csh/solver: no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "3224cb2457c2b06f",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: cli->check",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "cli->check"
+        },
+        {
+          "detail": "packages/a3/package.json: @csh/a3 -> @csh/kernel (manifest); packages/a3/src/stages.ts:5: @csh/a3 -> @csh/kernel: no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "33a3601dbaf89f52",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: a3->kernel",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "a3->kernel"
+        },
+        {
+          "detail": "packages/testkit/package.json: @csh/testkit -> @csh/ledger (manifest); packages/testkit/src/git.ts:8: @csh/testkit -> @csh/ledger (type-only); packages/testkit/src/runner.ts:12: @csh/testkit -> @csh/ledger: no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "3a8d128bbe2a68d6",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: testkit->ledger",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "testkit->ledger"
+        },
+        {
+          "detail": "packages/testkit/package.json: @csh/testkit -> @csh/adapter-ears-markdown (manifest); packages/testkit/package.json: @csh/testkit -> @csh/adapter-witness-files (manifest); packages/testkit/package.json: @csh/testkit -> @csh/witness (manifest): no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "5b0b7ad7755212a3",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: testkit->adapters",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "testkit->adapters"
+        },
+        {
+          "detail": "packages/cli/package.json: @csh/cli -> @csh/kernel (manifest); packages/cli/src/a3.ts:9: @csh/cli -> @csh/kernel; packages/cli/src/csh.ts:8: @csh/cli -> @csh/kernel; packages/cli/src/csl.ts:6: @csh/cli -> @csh/kernel; packages/cli/src/init.ts:7: @csh/cli -> @csh/kernel: no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "6ae9627ccf2f0c6d",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: cli->kernel",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "cli->kernel"
+        },
+        {
+          "detail": "packages/cli/package.json: @csh/cli -> @csh/emit (manifest); packages/cli/package.json: @csh/cli -> @csh/print (manifest); packages/cli/package.json: @csh/cli -> csl (manifest); packages/cli/src/csh.ts:10: @csh/cli -> @csh/print; packages/cli/src/csl.ts:5: @csh/cli -> @csh/emit; packages/cli/src/csl.ts:7: @csh/cli -> @csh/print: no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "6f230a250ad51fb0",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: cli->emission",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "cli->emission"
+        },
+        {
+          "detail": "packages/cli/package.json: @csh/cli -> @csh/gate (manifest); packages/cli/src/a3.ts:8: @csh/cli -> @csh/gate (type-only); packages/cli/src/csh.ts:7: @csh/cli -> @csh/gate: no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "7ce8282b14d44c8c",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: cli->gate",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "cli->gate"
+        },
+        {
+          "detail": "packages/gate/package.json: @csh/gate -> @csh/kernel (manifest); packages/gate/src/gate.ts:3: @csh/gate -> @csh/kernel: no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "8beb25fafb0fc323",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: gate->kernel",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "gate->kernel"
+        },
+        {
+          "detail": "packages/testkit/package.json: @csh/testkit -> @csh/emit (manifest); packages/testkit/package.json: @csh/testkit -> @csh/print (manifest); packages/testkit/package.json: @csh/testkit -> csl (manifest); packages/testkit/src/runner.ts:9: @csh/testkit -> @csh/emit; packages/testkit/src/runner.ts:13: @csh/testkit -> @csh/print: no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "b2f7cd5c104ddae0",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: testkit->emission",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "testkit->emission"
+        },
+        {
+          "detail": "packages/testkit/package.json: @csh/testkit -> @csh/gate (manifest); packages/testkit/src/runner.ts:10: @csh/testkit -> @csh/gate: no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "c6243de03a3c82a7",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: testkit->gate",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "testkit->gate"
+        },
+        {
+          "detail": "packages/testkit/package.json: @csh/testkit -> @csh/component (manifest); packages/testkit/src/runner.ts:19: @csh/testkit -> @csh/component: no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "c8264e38a3e44e12",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: testkit->component",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "testkit->component"
+        },
+        {
+          "detail": "packages/testkit/package.json: @csh/testkit -> @csh/kernel (manifest); packages/testkit/src/runner.ts:11: @csh/testkit -> @csh/kernel; packages/testkit/src/verify.ts:4: @csh/testkit -> @csh/kernel: no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "d594d41239fbb3b3",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: testkit->kernel",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "testkit->kernel"
+        },
+        {
+          "detail": "packages/cli/package.json: @csh/cli -> @csh/ledger (manifest); packages/cli/src/a3.ts:10: @csh/cli -> @csh/ledger; packages/cli/src/csh.ts:9: @csh/cli -> @csh/ledger: no relation is drawn",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "fecb1cc15fa70442",
+          "kind": "undrawn-dependency",
+          "label": "undrawn-dependency: cli->ledger",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "cli->ledger"
+        },
+        {
+          "detail": "docs/architecture/containers.mmd:36: drawn, and no import or manifest shows it",
+          "fragments": [],
+          "id": "964d2d6d89698e53",
+          "kind": "unobserved-relation",
+          "label": "unobserved-relation: run->harness",
+          "practices": [],
+          "sources": [],
+          "subject": "run->harness"
+        },
+        {
+          "detail": "candidate",
+          "fragments": [
+            "Workspace/Layering/DiagramIsComplete"
+          ],
+          "id": "0840dc31e12efaaa",
+          "kind": "violated",
+          "label": "violated: DiagramIsComplete (candidate)",
+          "practices": [],
+          "sources": [
+            "intent"
+          ]
+        }
+      ],
+      "tests": {
+        "passed": 0,
+        "total": 0
+      },
+      "what": ""
+    }
+  ],
+  "terms": [],
+  "title": "",
+  "whys": []
+}

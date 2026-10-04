@@ -1,0 +1,375 @@
+{
+  "assessments": [
+    {
+      "applicability": "current",
+      "authority": "candidate",
+      "critical": false,
+      "digest": "sha256:3aa7b9ec517122a2801d1091d697493cc2769c5484c3eb8cc8bbd7ce0165cb07",
+      "evidence": [],
+      "findings": [],
+      "fragment": "Workspace/Layering/AdaptersSeeKernelAndWitnessOnly",
+      "kind": "architecture",
+      "methods": [
+        {
+          "met": true,
+          "method": "FactsCurrent"
+        }
+      ],
+      "needsReview": false,
+      "policy": "Structural",
+      "reasons": [
+        "FactsCurrent met"
+      ],
+      "selfApproved": false,
+      "source": "intent",
+      "verdict": "satisfied"
+    },
+    {
+      "applicability": "current",
+      "authority": "candidate",
+      "critical": false,
+      "digest": "sha256:1c6711af3723b63e235e75946c816288cd9ef1ad52a0dc4e93befb378fc95f6b",
+      "evidence": [],
+      "findings": [],
+      "fragment": "Workspace/Layering/DiagramIsComplete",
+      "kind": "architecture",
+      "methods": [
+        {
+          "met": true,
+          "method": "FactsCurrent"
+        }
+      ],
+      "needsReview": false,
+      "policy": "Structural",
+      "reasons": [
+        "packages/a3/package.json: @csh/a3 -> @csh/kernel (manifest)",
+        "packages/a3/src/stages.ts:5: @csh/a3 -> @csh/kernel",
+        "packages/check/package.json: @csh/check -> @csh/witness (manifest)",
+        "packages/check/src/arch.ts:6: @csh/check -> @csh/witness (type-only)",
+        "packages/check/src/check.ts:8: @csh/check -> @csh/witness",
+        "packages/check/src/evidence.ts:24: @csh/check -> @csh/witness",
+        "packages/check/src/gaps.ts:18: @csh/check -> @csh/witness",
+        "packages/check/src/pool.ts:15: @csh/check -> @csh/witness (type-only)",
+        "packages/cli/package.json: @csh/cli -> @csh/check (manifest)",
+        "packages/cli/package.json: @csh/cli -> @csh/solver (manifest)",
+        "packages/cli/src/csh.ts:6: @csh/cli -> @csh/check",
+        "packages/cli/src/csh.ts:11: @csh/cli -> @csh/solver",
+        "packages/cli/src/csl.ts:4: @csh/cli -> @csh/check",
+        "packages/cli/src/csl.ts:8: @csh/cli -> @csh/solver",
+        "packages/cli/package.json: @csh/cli -> @csh/emit (manifest)",
+        "packages/cli/package.json: @csh/cli -> @csh/print (manifest)",
+        "packages/cli/package.json: @csh/cli -> csl (manifest)",
+        "packages/cli/src/csh.ts:10: @csh/cli -> @csh/print",
+        "packages/cli/src/csl.ts:5: @csh/cli -> @csh/emit",
+        "packages/cli/src/csl.ts:7: @csh/cli -> @csh/print",
+        "packages/cli/package.json: @csh/cli -> @csh/gate (manifest)",
+        "packages/cli/src/a3.ts:8: @csh/cli -> @csh/gate (type-only)",
+        "packages/cli/src/csh.ts:7: @csh/cli -> @csh/gate",
+        "packages/cli/package.json: @csh/cli -> @csh/kernel (manifest)",
+        "packages/cli/src/a3.ts:9: @csh/cli -> @csh/kernel",
+        "packages/cli/src/csh.ts:8: @csh/cli -> @csh/kernel",
+        "packages/cli/src/csl.ts:6: @csh/cli -> @csh/kernel",
+        "packages/cli/src/init.ts:7: @csh/cli -> @csh/kernel",
+        "packages/cli/package.json: @csh/cli -> @csh/ledger (manifest)",
+        "packages/cli/src/a3.ts:10: @csh/cli -> @csh/ledger",
+        "packages/cli/src/csh.ts:9: @csh/cli -> @csh/ledger",
+        "packages/gate/package.json: @csh/gate -> @csh/kernel (manifest)",
+        "packages/gate/src/gate.ts:3: @csh/gate -> @csh/kernel",
+        "packages/run/package.json: @csh/run -> @csh/kernel (manifest)",
+        "packages/run/src/evaluate.ts:6: @csh/run -> @csh/kernel (type-only)",
+        "packages/run/src/pipeline.ts:8: @csh/run -> @csh/kernel",
+        "packages/run/src/project.ts:7: @csh/run -> @csh/kernel",
+        "packages/run/src/run.ts:11: @csh/run -> @csh/kernel",
+        "packages/run/src/sources.ts:8: @csh/run -> @csh/kernel",
+        "packages/run/src/status.ts:9: @csh/run -> @csh/kernel",
+        "packages/testkit/package.json: @csh/testkit -> @csh/a3 (manifest)",
+        "packages/testkit/src/runner.ts:20: @csh/testkit -> @csh/a3",
+        "packages/testkit/package.json: @csh/testkit -> @csh/adapter-ears-markdown (manifest)",
+        "packages/testkit/package.json: @csh/testkit -> @csh/adapter-witness-files (manifest)",
+        "packages/testkit/package.json: @csh/testkit -> @csh/witness (manifest)",
+        "packages/testkit/package.json: @csh/testkit -> @csh/check (manifest)",
+        "packages/testkit/package.json: @csh/testkit -> @csh/solver (manifest)",
+        "packages/testkit/src/run-fixtures.ts:4: @csh/testkit -> @csh/solver",
+        "packages/testkit/src/runner.ts:8: @csh/testkit -> @csh/check",
+        "packages/testkit/src/runner.ts:14: @csh/testkit -> @csh/solver (type-only)",
+        "packages/testkit/src/verify.ts:5: @csh/testkit -> @csh/check (type-only)",
+        "packages/testkit/src/verify.ts:6: @csh/testkit -> @csh/solver",
+        "packages/testkit/package.json: @csh/testkit -> @csh/component (manifest)",
+        "packages/testkit/src/runner.ts:19: @csh/testkit -> @csh/component",
+        "packages/testkit/package.json: @csh/testkit -> @csh/emit (manifest)",
+        "packages/testkit/package.json: @csh/testkit -> @csh/print (manifest)",
+        "packages/testkit/package.json: @csh/testkit -> csl (manifest)",
+        "packages/testkit/src/runner.ts:9: @csh/testkit -> @csh/emit",
+        "packages/testkit/src/runner.ts:13: @csh/testkit -> @csh/print",
+        "packages/testkit/package.json: @csh/testkit -> @csh/gate (manifest)",
+        "packages/testkit/src/runner.ts:10: @csh/testkit -> @csh/gate",
+        "packages/testkit/package.json: @csh/testkit -> @csh/kernel (manifest)",
+        "packages/testkit/src/runner.ts:11: @csh/testkit -> @csh/kernel",
+        "packages/testkit/src/verify.ts:4: @csh/testkit -> @csh/kernel",
+        "packages/testkit/package.json: @csh/testkit -> @csh/ledger (manifest)",
+        "packages/testkit/src/git.ts:8: @csh/testkit -> @csh/ledger (type-only)",
+        "packages/testkit/src/runner.ts:12: @csh/testkit -> @csh/ledger"
+      ],
+      "scope": "implementation",
+      "selfApproved": false,
+      "source": "intent",
+      "verdict": "violated"
+    },
+    {
+      "applicability": "current",
+      "authority": "candidate",
+      "critical": false,
+      "digest": "sha256:88f1b86097d2a55428fb8af06d912c7f748b2b0b4b1797c65b0ebc6eb0179c0a",
+      "evidence": [],
+      "findings": [],
+      "fragment": "Workspace/Layering/KernelDependsOnNothing",
+      "kind": "architecture",
+      "methods": [
+        {
+          "met": true,
+          "method": "FactsCurrent"
+        }
+      ],
+      "needsReview": false,
+      "policy": "Structural",
+      "reasons": [
+        "FactsCurrent met"
+      ],
+      "selfApproved": false,
+      "source": "intent",
+      "verdict": "satisfied"
+    }
+  ],
+  "component": {
+    "digest": "sha256:1842fb01b5c0038979c83912628420792e78adfa4a863d43c2b7c6edbf447933",
+    "name": "Workspace",
+    "sources": {
+      "Brief": "rules",
+      "C4": "c4",
+      "Code": "facts"
+    }
+  },
+  "diagnostics": [],
+  "errors": [],
+  "examples": [],
+  "executions": [],
+  "findings": [],
+  "gapView": {
+    "gaps": [
+      {
+        "detail": "packages/a3/package.json: @csh/a3 -> @csh/kernel (manifest); packages/a3/src/stages.ts:5: @csh/a3 -> @csh/kernel: no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "a3->kernel"
+      },
+      {
+        "detail": "packages/check/package.json: @csh/check -> @csh/witness (manifest); packages/check/src/arch.ts:6: @csh/check -> @csh/witness (type-only); packages/check/src/check.ts:8: @csh/check -> @csh/witness; packages/check/src/evidence.ts:24: @csh/check -> @csh/witness; packages/check/src/gaps.ts:18: @csh/check -> @csh/witness; packages/check/src/pool.ts:15: @csh/check -> @csh/witness (type-only): no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "check->adapters"
+      },
+      {
+        "detail": "packages/cli/package.json: @csh/cli -> @csh/check (manifest); packages/cli/package.json: @csh/cli -> @csh/solver (manifest); packages/cli/src/csh.ts:6: @csh/cli -> @csh/check; packages/cli/src/csh.ts:11: @csh/cli -> @csh/solver; packages/cli/src/csl.ts:4: @csh/cli -> @csh/check; packages/cli/src/csl.ts:8: @csh/cli -> @csh/solver: no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "cli->check"
+      },
+      {
+        "detail": "packages/cli/package.json: @csh/cli -> @csh/emit (manifest); packages/cli/package.json: @csh/cli -> @csh/print (manifest); packages/cli/package.json: @csh/cli -> csl (manifest); packages/cli/src/csh.ts:10: @csh/cli -> @csh/print; packages/cli/src/csl.ts:5: @csh/cli -> @csh/emit; packages/cli/src/csl.ts:7: @csh/cli -> @csh/print: no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "cli->emission"
+      },
+      {
+        "detail": "packages/cli/package.json: @csh/cli -> @csh/gate (manifest); packages/cli/src/a3.ts:8: @csh/cli -> @csh/gate (type-only); packages/cli/src/csh.ts:7: @csh/cli -> @csh/gate: no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "cli->gate"
+      },
+      {
+        "detail": "packages/cli/package.json: @csh/cli -> @csh/kernel (manifest); packages/cli/src/a3.ts:9: @csh/cli -> @csh/kernel; packages/cli/src/csh.ts:8: @csh/cli -> @csh/kernel; packages/cli/src/csl.ts:6: @csh/cli -> @csh/kernel; packages/cli/src/init.ts:7: @csh/cli -> @csh/kernel: no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "cli->kernel"
+      },
+      {
+        "detail": "packages/cli/package.json: @csh/cli -> @csh/ledger (manifest); packages/cli/src/a3.ts:10: @csh/cli -> @csh/ledger; packages/cli/src/csh.ts:9: @csh/cli -> @csh/ledger: no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "cli->ledger"
+      },
+      {
+        "detail": "packages/gate/package.json: @csh/gate -> @csh/kernel (manifest); packages/gate/src/gate.ts:3: @csh/gate -> @csh/kernel: no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "gate->kernel"
+      },
+      {
+        "detail": "packages/run/package.json: @csh/run -> @csh/kernel (manifest); packages/run/src/evaluate.ts:6: @csh/run -> @csh/kernel (type-only); packages/run/src/pipeline.ts:8: @csh/run -> @csh/kernel; packages/run/src/project.ts:7: @csh/run -> @csh/kernel; packages/run/src/run.ts:11: @csh/run -> @csh/kernel; packages/run/src/sources.ts:8: @csh/run -> @csh/kernel; packages/run/src/status.ts:9: @csh/run -> @csh/kernel: no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "run->kernel"
+      },
+      {
+        "detail": "packages/testkit/package.json: @csh/testkit -> @csh/a3 (manifest); packages/testkit/src/runner.ts:20: @csh/testkit -> @csh/a3: no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "testkit->a3"
+      },
+      {
+        "detail": "packages/testkit/package.json: @csh/testkit -> @csh/adapter-ears-markdown (manifest); packages/testkit/package.json: @csh/testkit -> @csh/adapter-witness-files (manifest); packages/testkit/package.json: @csh/testkit -> @csh/witness (manifest): no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "testkit->adapters"
+      },
+      {
+        "detail": "packages/testkit/package.json: @csh/testkit -> @csh/check (manifest); packages/testkit/package.json: @csh/testkit -> @csh/solver (manifest); packages/testkit/src/run-fixtures.ts:4: @csh/testkit -> @csh/solver; packages/testkit/src/runner.ts:8: @csh/testkit -> @csh/check; packages/testkit/src/runner.ts:14: @csh/testkit -> @csh/solver (type-only); packages/testkit/src/verify.ts:5: @csh/testkit -> @csh/check (type-only); packages/testkit/src/verify.ts:6: @csh/testkit -> @csh/solver: no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "testkit->check"
+      },
+      {
+        "detail": "packages/testkit/package.json: @csh/testkit -> @csh/component (manifest); packages/testkit/src/runner.ts:19: @csh/testkit -> @csh/component: no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "testkit->component"
+      },
+      {
+        "detail": "packages/testkit/package.json: @csh/testkit -> @csh/emit (manifest); packages/testkit/package.json: @csh/testkit -> @csh/print (manifest); packages/testkit/package.json: @csh/testkit -> csl (manifest); packages/testkit/src/runner.ts:9: @csh/testkit -> @csh/emit; packages/testkit/src/runner.ts:13: @csh/testkit -> @csh/print: no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "testkit->emission"
+      },
+      {
+        "detail": "packages/testkit/package.json: @csh/testkit -> @csh/gate (manifest); packages/testkit/src/runner.ts:10: @csh/testkit -> @csh/gate: no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "testkit->gate"
+      },
+      {
+        "detail": "packages/testkit/package.json: @csh/testkit -> @csh/kernel (manifest); packages/testkit/src/runner.ts:11: @csh/testkit -> @csh/kernel; packages/testkit/src/verify.ts:4: @csh/testkit -> @csh/kernel: no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "testkit->kernel"
+      },
+      {
+        "detail": "packages/testkit/package.json: @csh/testkit -> @csh/ledger (manifest); packages/testkit/src/git.ts:8: @csh/testkit -> @csh/ledger (type-only); packages/testkit/src/runner.ts:12: @csh/testkit -> @csh/ledger: no relation is drawn",
+        "fragments": [
+          "Workspace/Layering/DiagramIsComplete"
+        ],
+        "kind": "undrawn-dependency",
+        "subject": "testkit->ledger"
+      },
+      {
+        "detail": "docs/architecture/containers.mmd:36: drawn, and no import or manifest shows it",
+        "fragments": [],
+        "kind": "unobserved-relation",
+        "subject": "run->harness"
+      }
+    ],
+    "rows": [
+      {
+        "cells": {
+          "Brief": "silent",
+          "C4": "silent",
+          "Code": "silent",
+          "intent": "asserts"
+        },
+        "subject": "Workspace/Layering/AdaptersSeeKernelAndWitnessOnly"
+      },
+      {
+        "cells": {
+          "Brief": "silent",
+          "C4": "silent",
+          "Code": "silent",
+          "intent": "asserts"
+        },
+        "subject": "Workspace/Layering/DiagramIsComplete"
+      },
+      {
+        "cells": {
+          "Brief": "silent",
+          "C4": "silent",
+          "Code": "silent",
+          "intent": "asserts"
+        },
+        "subject": "Workspace/Layering/KernelDependsOnNothing"
+      }
+    ],
+    "sources": [
+      "intent",
+      "Brief",
+      "C4",
+      "Code"
+    ]
+  },
+  "items": [
+    {
+      "id": "ARCH-001",
+      "pattern": "ubiquitous",
+      "source": "Brief",
+      "span": "docs/architecture/rules.md:10",
+      "textDigest": "sha256:1fb80474e3bf8a677d79daa9f50a753d8002d4522658d6ab9c3c5f7dfaed546f"
+    },
+    {
+      "id": "ARCH-002",
+      "pattern": "ubiquitous",
+      "source": "Brief",
+      "span": "docs/architecture/rules.md:11",
+      "textDigest": "sha256:e3b2bbe1c36929ba54925e39489aed177fa5c24fbaf71e80d944baa440a4f6d0"
+    },
+    {
+      "id": "ARCH-003",
+      "pattern": "ubiquitous",
+      "source": "Brief",
+      "span": "docs/architecture/rules.md:12",
+      "textDigest": "sha256:5888c7014cc3c86c01bed35d7191d2ee93a9d55c76e1ab946d5ade05b08915b7"
+    }
+  ],
+  "moduleDigest": "sha256:5c97e6b93e7af702d869c8bf4bb1215fd8bc49752eeb5ebc92b0d4d3f0b602b8",
+  "notComparable": [],
+  "schema": "csh-report/v1",
+  "snapshot": {
+    "commit": "96aee9220c12aea02aa485507530e4e9a7a6132c",
+    "digest": "sha256:54a723922343d3eda3ba8356af117542db6bc101c6a678c6806c2b2dc7883525",
+    "ledgerHead": "0"
+  },
+  "tool": {
+    "budgetMs": 5000,
+    "solver": "z3 5.1.0.0",
+    "version": "0.1.0"
+  },
+  "unliftable": []
+}

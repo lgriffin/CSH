@@ -25,7 +25,7 @@ never what is right: it holds no judgment and no authority ([09](../spec/09-anch
 | `spec` | The CSL module, relative to the component root |
 | `implementation` | Paths whose change makes a witness stale |
 | `practices[].id` | A lane on the A3: lower case letters, digits and hyphens |
-| `practices[].kind` | `requirements`, `scenarios`, `tests` or `design-notes` |
+| `practices[].kind` | `requirements`, `scenarios`, `tests`, `design-notes`, `architecture` (a container diagram) or `facts` (dependency facts, whose harness writes the file `harness.witnesses` names; [architecture rules](architecture-rules.md)) |
 | `practices[].sources` | The `s.source(...)` names this practice feeds. A source has one owner; one no practice names is the gap `unowned-source` |
 | `practices[].adapter` | A package or a path; the built-in adapter for the source kind when absent. A Scenarios source with none, whose every file is JSON declaring `"schema": "csh-ir/v1"`, is read as claims already lifted |
 | `practices[].harness.run` | An argument vector, never a shell string. It runs with the project's own permissions |

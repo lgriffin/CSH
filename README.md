@@ -194,8 +194,8 @@ node packages/cli/bin/csh.js status --root packages/gate
 ## Limits
 
 - **Predicates are limited.** Linear integer arithmetic, enumerations and booleans, over one state per event. No concurrency, no time, no quantifiers in specifications.
-- **Reserved constructs.** Architectural and temporal obligations are carried and reported, but not evaluated.
-- **Three adapters.** Witness files, EARS requirements in Markdown, and Gherkin scenarios through a step table. Scenarios are read, never executed. Anything else must arrive as claim sets in IR form, or it stays unliftable.
+- **Reserved constructs.** Temporal obligations are carried and reported, but not evaluated. Architectural obligations are evaluated when written with the `forbid`, `only` and `closed` builders, against a container diagram and the imports of TypeScript and JavaScript code ([architecture rules](docs/guides/architecture-rules.md)); any other value stays reserved.
+- **Five adapters.** Witness files, EARS requirements in Markdown, Gherkin scenarios through a step table, Mermaid C4 container diagrams, and dependency facts. Scenarios are read, never executed. Anything else must arrive as claim sets in IR form, or it stays unliftable.
 - **One test runner.** The probe's outcomes come from a reporter for Node's test runner; other runners have none ([Q-20](QUESTIONS.md), decided: the gate's probe is a second file checked against its unit tests).
 - **Unknown is common.** A solver timeout, a missing binding or an unapproved binding all give unknown. That is a correct answer, not a malfunction.
 - **Protection depends on keys.** It also depends on where the gate runs: CI should pin the root maintainers commit with `CSH_ROOT_COMMIT`, outside the repository ([A-28](ASSUMPTIONS.md)).
@@ -204,9 +204,9 @@ node packages/cli/bin/csh.js status --root packages/gate
 
 ## Status of the build
 
-Stages 1 to 17 are built; stages 18 to 20 of [the next layers](docs/spec/10-next-layers.md) are to come. All 71
+Stages 1 to 18 are built; stages 19 and 20 of [the next layers](docs/spec/10-next-layers.md) are to come. All 79
 golden fixtures of the built stages pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70
-to F78, F80 to F99), as do the unit, property and fault-injection tests; F100 to F117 are written and pending. The composition fixtures
+to F78, F80 to F107), as do the unit, property and fault-injection tests; F108 to F117 are written and pending. The composition fixtures
 F70 to F78 were written by the implementer and accepted by the owner. [docs/stages](docs/stages) records what each
 stage built and what its fixtures revealed.
 
@@ -223,11 +223,13 @@ with a summary.
 
 | Path | Contents |
 | --- | --- |
-| `packages/` | Eighteen packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `adapter-gherkin`, `ledger`, `gate`, `component`, `run`, `harness`, `a3`, `cli`, `testkit` |
-| `docs/guides/` | How to write a component manifest, a probe, a step table and an A3, and the owner's runbook for authority |
+| `packages/` | Twenty-two packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `arch`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `adapter-gherkin`, `adapter-c4-mermaid`, `facts`, `facts-imports`, `ledger`, `gate`, `component`, `run`, `harness`, `a3`, `cli`, `testkit` |
+| `docs/guides/` | How to write a component manifest, a probe, a step table, an A3 and architecture rules, and the owner's runbook for authority |
+| `csh/` | The `Workspace` component: the repository's own architecture rules, read against its container diagram and its imports ([examples/workspace](examples/workspace/README.md)) |
 | `fixtures/` | Golden fixtures, one directory each, plus the shared bases and the test pack |
 | `examples/lockout/` | Three practices on one behaviour, run in four stages, and its A3 |
 | `examples/account/` | The first walkthrough example |
+| `examples/workspace/` | The repository as a component: its diagram, its written rules and its imports, and the A3 its first run opened |
 | `examples/starter/` | The smallest component, which installs and runs outside the repository |
 | `docs/spec/` | The specification, read-only |
 | `docs/architecture/` | C4 diagram sources (Mermaid) and rendered SVG |

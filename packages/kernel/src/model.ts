@@ -71,9 +71,9 @@ export interface Transition {
   otherwise?: Expr;
 }
 
-export type Method = "ApprovedBinding" | "BoundaryWitness" | "SolverCheck";
+export type Method = "ApprovedBinding" | "BoundaryWitness" | "SolverCheck" | "FactsCurrent";
 export type Rejection = "MockOnly";
-export const METHODS: readonly Method[] = ["ApprovedBinding", "BoundaryWitness", "SolverCheck"];
+export const METHODS: readonly Method[] = ["ApprovedBinding", "BoundaryWitness", "SolverCheck", "FactsCurrent"];
 export const REJECTIONS: readonly Rejection[] = ["MockOnly"];
 
 export interface Policy {
@@ -145,11 +145,44 @@ export interface Requirement {
   cites?: Cite[];
 }
 
+/**
+ * An architecture or temporal obligation. An architecture obligation whose value is an ArchRule is evaluated (Next
+ * layers, section 4.1); any other value, and every temporal obligation, stays reserved: carried, never evaluated.
+ */
 export interface Reserved {
   kind: "architecture" | "temporal";
   name: string;
   native: unknown;
   cites?: Cite[];
+}
+
+/** What an architecture rule is about: one package, the packages a container of the diagram holds, or any package. */
+export type ArchSel = { k: "package"; name: string } | { k: "container"; id: string } | { k: "any" };
+
+/** The typed architecture rules (Next layers, section 4.1). */
+export type ArchRule = { k: "forbid"; from: ArchSel; to: ArchSel } | { k: "only"; from: ArchSel; to: ArchSel[] } | { k: "closed"; source: string };
+
+const nonEmpty = (x: unknown): x is string => typeof x === "string" && x !== "";
+
+export function isArchSel(x: unknown): x is ArchSel {
+  if (typeof x !== "object" || x === null) return false;
+  const o = x as Record<string, unknown>;
+  if (o.k === "package") return nonEmpty(o.name) && Object.keys(o).length === 2;
+  if (o.k === "container") return nonEmpty(o.id) && Object.keys(o).length === 2;
+  return o.k === "any" && Object.keys(o).length === 1;
+}
+
+/** A value that claims to be an architecture rule: an object whose k names one of the three forms. */
+export function claimsArchRule(x: unknown): boolean {
+  return typeof x === "object" && x !== null && !Array.isArray(x) && ["forbid", "only", "closed"].includes((x as { k?: unknown }).k as string);
+}
+
+export function isArchRule(x: unknown): x is ArchRule {
+  if (!claimsArchRule(x)) return false;
+  const o = x as Record<string, unknown>;
+  if (o.k === "forbid") return isArchSel(o.from) && isArchSel(o.to) && Object.keys(o).length === 3;
+  if (o.k === "only") return isArchSel(o.from) && Array.isArray(o.to) && o.to.every(isArchSel) && Object.keys(o).length === 3;
+  return nonEmpty(o.source) && Object.keys(o).length === 2;
 }
 
 export interface Example {
