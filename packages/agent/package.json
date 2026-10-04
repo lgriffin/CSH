@@ -1,0 +1,19 @@
+{
+  "name": "@csh/agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": { ".": "./src/index.ts" },
+  "bin": { "csh-agent": "./bin/csh-agent.js" },
+  "dependencies": {
+    "@csh/kernel": "workspace:*",
+    "@csh/print": "workspace:*",
+    "@csh/solver": "workspace:*",
+    "@csh/check": "workspace:*",
+    "@csh/run": "workspace:*",
+    "@csh/review": "workspace:*",
+    "@csh/cli": "workspace:*",
+    "@modelcontextprotocol/sdk": "1.32.0"
+  }
+}

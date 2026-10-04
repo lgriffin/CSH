@@ -18,6 +18,7 @@ results and never produces a verdict.
 ## Public interface
 
 - `diffRuns(base, head, ctx?)`, `RunDiff`: the model. Each side is a `RunSide` (`run`, `report`, `gate` and, when the run kept it, `model`) or an `Unavailable` (`{ unavailable: reason }`). `ctx.changes` is the paths changed between the two commits and `ctx.manifest` the component's manifest; without them the observations about the change and the practices' inputs are left out.
+- `sideOf(project, arg, o, which)`, `changesBetween(project, base, head)`, `diffProject(project, base, head, o)`, `SideOptions`: each side from a stored run's directory, a commit, `.` or `unavailable:<reason>`, and the diff of a component between them; shared by `csh diff` and the agent's `diff` tool.
 - `renderDiff(diff)`: the text of section 5.2. Sections in order: approvals lost; new violations and conflicts on approved rules; rules that became unknown or stale; new signals among candidates; signals cleared; observations; then authority moved, when any did; then one line of counts. An empty section says `none`.
 - `describeSignal(signal)`, `describeObservation(observation)`: one line each, as the rendering uses them.
 - `RunSide`, `Unavailable`, `ManifestView`, `Observation`, `ObligationMove`, `DiffContext`.
@@ -25,7 +26,7 @@ results and never produces a verdict.
 ## Depends on and used by
 
 - Depends on: `@csh/check` (`Report`, `Signal`, `signalsOf`), `@csh/kernel` (`fragmentsOf`, `Module`, `compareCodePoints`), `@csh/gate` (`GateDecision`), `@csh/run` (`RunRecord`). No external packages.
-- Used by: `@csh/cli` (`csh diff`), `@csh/testkit` (F108 to F112).
+- Used by: `@csh/cli` (`csh diff`), `@csh/agent` (the `diff` tool), `@csh/testkit` (F108 to F112).
 
 ## Invariants it protects
 

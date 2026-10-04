@@ -7,8 +7,8 @@ import { join } from "node:path";
 import { A3_DIR, a3Dir, type Authority, buildA3, type Judgments, readJudgments, readStage, renderHtml, renderMarkdown, skeleton, SLUG, STAGE_FILES, stageDir, stageIntegrity, type StageRecord } from "@csh/a3";
 import type { Mode } from "@csh/gate";
 import { digestOf, stableJson } from "@csh/kernel";
-import { resolveAuthority } from "@csh/ledger";
-import { ledgerOf, type Project, type RunOptions, runAt, RUNS_DIR, specOf } from "@csh/run";
+import { authoredByOf, resolveAuthority } from "@csh/ledger";
+import { fileProvenance, ledgerOf, type Project, type RunOptions, runAt, RUNS_DIR, specOf } from "@csh/run";
 import type { Args } from "./args.ts";
 
 export interface A3Io {
@@ -127,6 +127,7 @@ export async function buildOutputs(p: Project, slug: string): Promise<{ files: R
     component: { name: p.component?.manifest.name ?? "", practices: p.component?.manifest.practices ?? [] },
     stages,
     authority: await a3Authority(p, slug, digest),
+    authoredBy: authoredByOf(fileProvenance(p, `csh/a3/${slug}/judgments.json`)),
     readAt: (rec, file) => {
       if (vcs === undefined) return null;
       try {

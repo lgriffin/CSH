@@ -450,10 +450,10 @@ $ csh check
 ...
 == Obligations
 
-  satisfied  SignInService/StopPasswordGuessing/AcceptCorrectPassword  [approved, self-approved; evidence current]  ApprovedBinding met; BoundaryWitness met; SolverCheck met
-  satisfied  SignInService/StopPasswordGuessing/LockHasDuration  [approved, self-approved; evidence current]  ApprovedBinding met; BoundaryWitness met; SolverCheck met
-  satisfied  SignInService/StopPasswordGuessing/LockOnThirdFailure  [approved, self-approved; evidence current]  ApprovedBinding met; BoundaryWitness met; SolverCheck met
-  satisfied  SignInService/StopPasswordGuessing/RefuseWhileLocked  [approved, self-approved; evidence current]  ApprovedBinding met; BoundaryWitness met; SolverCheck met
+  satisfied  SignInService/StopPasswordGuessing/AcceptCorrectPassword  [approved, self-approved, authored by unknown; evidence current]  ApprovedBinding met; BoundaryWitness met; SolverCheck met
+  satisfied  SignInService/StopPasswordGuessing/LockHasDuration  [approved, self-approved, authored by unknown; evidence current]  ApprovedBinding met; BoundaryWitness met; SolverCheck met
+  satisfied  SignInService/StopPasswordGuessing/LockOnThirdFailure  [approved, self-approved, authored by unknown; evidence current]  ApprovedBinding met; BoundaryWitness met; SolverCheck met
+  satisfied  SignInService/StopPasswordGuessing/RefuseWhileLocked  [approved, self-approved, authored by unknown; evidence current]  ApprovedBinding met; BoundaryWitness met; SolverCheck met
 
 $ csh gate --mode enforcing
 gate allow (enforcing)
@@ -496,7 +496,7 @@ $ csh check
 ...
 [example-divergence] c058ac37b386ad29  (cross-source)  from Q-DIV(SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt)
 ...
-  violated (implementation)  SignInService/StopPasswordGuessing/LockOnThirdFailure  [approved, self-approved; evidence current]  witness allows-a-third-failed-attempt makes it false
+  violated (implementation)  SignInService/StopPasswordGuessing/LockOnThirdFailure  [approved, self-approved, authored by unknown; evidence current]  witness allows-a-third-failed-attempt makes it false
 
 $ csh gate --mode enforcing
 gate block (enforcing)

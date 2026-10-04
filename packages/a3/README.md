@@ -10,6 +10,7 @@ It is the "A3" container, shown in the [containers diagram](../../docs/architect
 
 ## Public interface
 
+- `A3Model.authoredBy`: who wrote the judgments, from the signature on the commit that last changed the file, shown in the sheet's header; `csh a3 build` supplies it, and an unsigned or uncommitted file is `unknown`.
 - `Judgments`, `Pointer`, `JUDGMENTS_SCHEMA`: the judgments file, `csh-a3-judgments/v1`, with structured match rules (`Match` from `@csh/check`) and decision points keyed by practice id.
 - `StageRecord`, `readStage(dir, id)`, `stageIntegrity(stage)`, `STAGE_FILES`, `a3Dir`, `stageDir`, `SLUG`: one stage's `run.json`, `report.json` and `gate.json`, and whether the two files are the ones the run record names.
 - `readJudgments(root, slug)`, `validateJudgments(v)`: the judgments file's bytes, whose digest the ledger approves, and its structural problems.

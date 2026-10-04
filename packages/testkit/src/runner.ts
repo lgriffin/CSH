@@ -13,11 +13,14 @@ import { authorship, formatDecision, gitVcs, LEDGER_PATH, MAINTAINERS_PATH, read
 import { printModule } from "@csh/print";
 import type { SolverPort } from "@csh/solver";
 import { createTestRepo, gpgAvailable, type TestRepo } from "./git.ts";
-import { checkModule, componentStatus, evaluateSpec, type FixtureConfig, loadProject, readConfig, readStoredRun } from "@csh/run";
+import { checkModule, componentQueue, componentStatus, evaluateProject, evaluateSpec, type FixtureConfig, loadProject, readConfig, readStoredRun } from "@csh/run";
 import { verifyCounterexample, verifyNoOutcome } from "./verify.ts";
 import { packWorkspace } from "./pack.ts";
 import { type ComponentProblem, parseComponent } from "@csh/component";
 import { type DiffContext, diffRuns, type ManifestView, renderDiff, type RunSide, type Unavailable } from "@csh/review";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { unquotedStrings } from "@csh/agent";
 import { buildA3, readJudgments, readStage, stageDir, stageIntegrity, type StageRecord } from "@csh/a3";
 
 export interface FixtureResult {
@@ -36,7 +39,9 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 19;
+export const BUILT_THROUGH_STAGE = 20;
+
+const AGENT_BIN = resolve(import.meta.dirname, "../../agent/bin/csh-agent.js");
 
 /** The stage a fixture belongs to, from its expected result. */
 export function fixtureStage(fixturesDir: string, id: string): number {
@@ -120,6 +125,9 @@ export class FixtureRunner {
       if ((e.git === true || e.steps !== undefined || e.a3?.authority !== undefined || e.status?.git === true || e.authoredBy !== undefined || e.agent?.git === true) && !gpgAvailable()) {
         res.skipped = "gpg is not installed";
       } else if (e.status !== undefined) await this.status(dir, e.status, failures);
+      else if (e.queue !== undefined) await this.queue(dir, e.queue, failures);
+      else if (e.authoredBy !== undefined) await this.authoredBy(dir, e.authoredBy, failures);
+      else if (e.agent !== undefined) await this.agent(dir, e.agent, failures);
       else if (e.diff !== undefined) this.diff(dir, e.diff, failures);
       else if (e.a3 !== undefined) await this.a3(dir, e.a3, failures);
       else if (e.starter !== undefined) {
@@ -518,6 +526,89 @@ export class FixtureRunner {
       for (const [k, v] of Object.entries((x.fragments ?? {}) as Record<string, number>)) if (s.fragments[k as keyof typeof s.fragments] !== v) failures.push(`fragments ${k} ${s.fragments[k as keyof typeof s.fragments]}, expected ${v}`);
       if (x.decision !== undefined && s.decision.state !== x.decision) failures.push(`decision ${s.decision.state}, expected ${x.decision}`);
       for (const e of x.invalidEntries ?? []) if (!s.ledger.invalid.some((y) => y.seq === e.seq && y.reason === e.reason)) failures.push(`invalid entry seq ${e.seq} ${e.reason} not shown; got ${JSON.stringify(s.ledger.invalid)}`);
+    } finally {
+      repo.dispose();
+    }
+  }
+
+  /** The agent tool server, driven by a scripted client over standard input and output (section 6). */
+  private async agent(dir: string, x: Exp, failures: string[]): Promise<void> {
+    const { repo } = await this.scenarioRepo(dir, x.project);
+    const client = new Client({ name: "csh-fixture-client", version: "0.1.0" });
+    try {
+      // A scripted client: the server is started as an agent's host would start it, and no language model is involved.
+      const env = Object.fromEntries(Object.entries({ ...process.env, ...repo.env }).filter((e): e is [string, string] => e[1] !== undefined));
+      delete env.CSH_ROOT_COMMIT;
+      await client.connect(new StdioClientTransport({ command: process.execPath, args: [AGENT_BIN, "--root", repo.dir], cwd: repo.dir, env, stderr: "pipe" }));
+      const tools = (await client.listTools()).tools.map((t) => t.name).sort();
+      if (x.tools !== undefined && JSON.stringify(tools) !== JSON.stringify([...x.tools].sort())) failures.push(`tools ${tools.join(", ")}, expected ${x.tools.join(", ")}`);
+      if (x.quotedOnly !== true) return;
+      const call = async (name: string, args: Record<string, unknown> = {}) => {
+        const r = (await client.callTool({ name, arguments: args })) as { content: { type: string; text: string }[] };
+        return JSON.parse(r.content[0]!.text) as { ok: boolean; result?: Record<string, unknown> };
+      };
+      const results: { call: string; envelope: unknown }[] = [];
+      const record = async (name: string, args: Record<string, unknown> = {}) => {
+        const e = await call(name, args);
+        results.push({ call: `${name} ${JSON.stringify(args)}`, envelope: e });
+        return e;
+      };
+      await record("status");
+      const run = await record("run");
+      await record("gaps");
+      const signals = ((run.result?.signals ?? []) as { id: string }[]).map((s) => s.id);
+      for (const id of signals) await record("explain", { id });
+      await record("diff", { base: "HEAD", head: "HEAD" });
+      const queue = await record("queue");
+      for (const e of (queue.result?.entries ?? []) as { fragment: string; kind: string }[]) if (e.kind !== "a3") await record("print", { fragment: e.fragment });
+      await record("a3_open", { slug: "agent-check" });
+      const canary = String(x.canary).toLowerCase();
+      let seenQuoted = false;
+      for (const r of results) {
+        for (const u of unquotedStrings(r.envelope)) if (u.value.toLowerCase().includes(canary)) failures.push(`${r.call}: source text outside a quoted key at ${u.path}`);
+        if (JSON.stringify(r.envelope).toLowerCase().includes(canary)) seenQuoted = true;
+        if ((r.envelope as { ok: boolean }).ok !== true) failures.push(`${r.call} failed: ${JSON.stringify(r.envelope)}`);
+      }
+      if (!seenQuoted) failures.push("no tool returned the canary text at all, so the fixture tests nothing");
+    } finally {
+      await client.close().catch(() => {});
+      repo.dispose();
+    }
+  }
+
+  /** csh queue on a scratch repository (Next layers, section 6.4). */
+  private async queue(dir: string, x: Exp, failures: string[]): Promise<void> {
+    const { repo } = await this.scenarioRepo(dir, x.project);
+    try {
+      const r = await this.inRepoEnv(repo, () => componentQueue(loadProject(repo.dir, repo.dir), this.o.solver));
+      if (!r.ok) {
+        failures.push(`csh queue failed: ${r.message}`);
+        return;
+      }
+      const q = r.queue;
+      if (x.limit !== undefined && q.limit !== x.limit) failures.push(`limit ${q.limit}, expected ${x.limit}`);
+      const order = (x.order ?? []) as string[];
+      const got = q.entries.slice(0, order.length).map((e) => e.fragment);
+      if (JSON.stringify(got) !== JSON.stringify(order)) failures.push(`queue begins ${JSON.stringify(got)}, expected ${JSON.stringify(order)}; whole queue ${JSON.stringify(q.entries)}`);
+      if (x.warning !== undefined && (q.warning !== undefined) !== x.warning) failures.push(`warning ${q.warning ?? "none"}, expected ${x.warning ? "one" : "none"}`);
+    } finally {
+      repo.dispose();
+    }
+  }
+
+  /** authoredBy on each assessed fragment, from the signature on the commit that last changed it (section 6.5). */
+  private async authoredBy(dir: string, x: Exp, failures: string[]): Promise<void> {
+    const { repo } = await this.scenarioRepo(dir, x.project);
+    try {
+      const e = await this.inRepoEnv(repo, () => evaluateProject(loadProject(repo.dir, repo.dir), { solver: this.o.solver, noCache: true }));
+      if (!e.ok) {
+        failures.push(`evaluation failed: ${e.message}`);
+        return;
+      }
+      for (const want of x.fragments as { fragment: string; authoredBy: string }[]) {
+        const a = e.report.assessments?.find((y) => y.fragment === want.fragment);
+        if (a?.authoredBy !== want.authoredBy) failures.push(`${want.fragment}: authored by ${a?.authoredBy ?? "(absent)"}, expected ${want.authoredBy}`);
+      }
     } finally {
       repo.dispose();
     }

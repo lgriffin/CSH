@@ -11,7 +11,7 @@ It is the main part of the "Check engine" container, with `@csh/solver`, shown i
 ## Public interface
 
 - `check(opts)`, `CheckOptions`, `CheckResult`, `DEFAULT_BUDGET_MS`: one complete evaluation, returning the report, the prepared pool and the resolved authority.
-- `Report`, `Finding`, `FindingKind`, `Member`, `Gap`, `GapView`, `Cell`, `Assessment`, `EvidenceRecord`, `MethodStatus`, `ReportError`, `Verdict`, `Applicability`, `TOOL_VERSION`: the report and its records.
+- `Report`, `Finding`, `FindingKind`, `Member`, `Gap`, `GapView`, `Cell`, `Assessment`, `EvidenceRecord`, `MethodStatus`, `ReportError`, `Verdict`, `Applicability`, `TOOL_VERSION`: the report and its records. An assessment carries `authoredBy` (`person`, `agent` or `unknown`) once the project has a maintainers file; the run fills it in from history, and it never enters a verdict.
 - `Authority`, `AuthorityInfo`, `AuthorityResolver`, `ALL_CANDIDATE`, `resolveAll`: authority as an injected function; with none, every fragment is candidate.
 - `prepare(module, runs)`, `Prepared`, `SourceRun`, `SourcedWitness`: steps 1 and 2 of joint evaluation (add adapter output, type-check lifted claims).
 - `buildPool`, `Pool`, `runQueries`, `QueryOutcome`, `SolverCheckStatus`, `assumptionsFor`, `stateOfEvent`, `sourceColumn`, `findingId`, `sortFindings`: steps 3 and 4 (queries and findings), including Q-DIV, the comparison of examples from different sources.

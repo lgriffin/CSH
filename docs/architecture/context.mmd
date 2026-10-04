@@ -9,7 +9,7 @@ C4Context
   System_Ext(practice, "Existing practice", "Test runs that record witnesses; requirement documents")
   System_Ext(ci, "Continuous integration", "Where the gate runs: the gate job on the commit being merged, with the root of trust pinned by a variable outside the repository")
   Rel(contributor, csh, "csl emit, csh check, gaps, explain")
-  Rel(agent, csh, "Same commands; cannot sign")
+  Rel(agent, csh, "The agent tool server (MCP): reads, runs and diffs; no tool decides; cannot sign")
   Rel(owner, vcs, "Commits signed ledger lines")
   Rel(owner, csh, "csh approve drafts a line")
   Rel(csh, vcs, "Reads history, signatures, ledger")

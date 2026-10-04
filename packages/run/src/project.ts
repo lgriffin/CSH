@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { emit, type Lock, readLock } from "@csh/emit";
 import { digestJson, digestOf, fragmentsOf } from "@csh/kernel";
-import { authorship, gitVcs, LEDGER_PATH, type LedgerState, MAINTAINERS_PATH, persons, readLedger, type VcsPort } from "@csh/ledger";
+import { authorship, gitVcs, LEDGER_PATH, type LedgerState, MAINTAINERS_PATH, identityOf, maintainersHistory, persons, type Provenance, provenance, readLedger, type VcsPort } from "@csh/ledger";
 import type { Snapshot } from "@csh/gate";
 import { type ComponentProblem, COMPONENT_PATH, type LoadedComponent, loadComponent } from "@csh/component";
 
@@ -29,6 +29,8 @@ export interface ProjectConfig {
    * Replaced by each practice's harness or `executions` when there is a component manifest.
    */
   executions?: string;
+  /** The longest the candidate queue should be (csh queue, Next layers, section 6.4); past it, a warning. Default 20. */
+  queueLimit?: number;
 }
 
 /** Settings of csh/config.json that the component manifest replaces (Anchor, harnesses and A3, section 2.1). */
@@ -161,10 +163,59 @@ export async function ledgerOf(p: Project, spec: string): Promise<LedgerState | 
   const plain = readLedger(vcs, opts);
   // Authorship matters only once a second person is listed (Authority tab, section 3.3).
   if (persons(plain.maintainers).length < 2) return plain;
-  const specPaths = p.config.specPaths ?? [relative(p.root, dirname(spec)) || "."];
-  const digests = new Map<string, ReadonlyMap<string, string> | undefined>();
-  for (const c of [...new Set(specPaths.flatMap((sp) => vcs.commitsTouching(sp)))]) digests.set(c, await digestsAtCommit(p, spec, c));
+  const { specPaths, digests } = await specHistory(p, spec);
   return readLedger(vcs, { ...opts, authorOf: authorship(vcs, specPaths, (c) => digests.get(c), opts) });
+}
+
+const histories = new WeakMap<Project, Map<string, Promise<{ specPaths: string[]; digests: Map<string, ReadonlyMap<string, string> | undefined> }>>>();
+
+/** Fragment digests at every commit that touched the specification, emitted once per project and specification. */
+function specHistory(p: Project, spec: string): Promise<{ specPaths: string[]; digests: Map<string, ReadonlyMap<string, string> | undefined> }> {
+  let bySpec = histories.get(p);
+  if (bySpec === undefined) histories.set(p, (bySpec = new Map()));
+  const hit = bySpec.get(spec);
+  if (hit !== undefined) return hit;
+  const made = (async () => {
+    const vcs = p.vcs!;
+    const specPaths = p.config.specPaths ?? [relative(p.root, dirname(spec)) || "."];
+    const digests = new Map<string, ReadonlyMap<string, string> | undefined>();
+    for (const c of [...new Set(specPaths.flatMap((sp) => vcs.commitsTouching(sp)))]) digests.set(c, await digestsAtCommit(p, spec, c));
+    return { specPaths, digests };
+  })();
+  bySpec.set(spec, made);
+  return made;
+}
+
+/**
+ * Where each fragment's current digest came from (Next layers, section 6.5): the commit that last changed it and its
+ * signer. Undefined when there is no history, or, unless `withoutMaintainers` (the queue, for ages), when no maintainers
+ * file was ever committed, since no signer can then be named; every fragment is then authored by `unknown`.
+ */
+export async function fragmentProvenance(p: Project, spec: string, o: { withoutMaintainers?: boolean } = {}): Promise<((fragment: string, digest: string) => Provenance | undefined) | undefined> {
+  const vcs = p.vcs;
+  if (vcs === undefined || (o.withoutMaintainers !== true && vcs.commitsTouching(MAINTAINERS_PATH).length === 0)) return undefined;
+  const pinned = process.env.CSH_ROOT_COMMIT;
+  const opts = pinned !== undefined && pinned !== "" ? { rootCommit: pinned } : {};
+  const { specPaths, digests } = await specHistory(p, spec);
+  const of = provenance(vcs, specPaths, (c) => digests.get(c), opts);
+  const head = vcs.head();
+  return (fragment, digest) => of(fragment, digest, head);
+}
+
+/** Where a file's current content came from: the last commit that changed it, when the working tree still holds it. */
+export function fileProvenance(p: Project, path: string): Provenance | undefined {
+  const vcs = p.vcs;
+  if (vcs === undefined) return undefined;
+  const commits = vcs.commitsTouching(path);
+  const last = commits[commits.length - 1];
+  const file = join(p.root, path);
+  if (last === undefined || !existsSync(file) || vcs.fileAt(last, path) !== readFileSync(file, "utf8")) return undefined;
+  const info = vcs.commit(last);
+  const pinned = process.env.CSH_ROOT_COMMIT;
+  const mh = maintainersHistory(vcs, pinned !== undefined && pinned !== "" ? { rootCommit: pinned } : {});
+  const m = [...mh.versions].reverse().find((v) => v.commit === info.parents[0] || (info.parents[0] !== undefined && vcs.isAncestor(v.commit, info.parents[0])))?.m ?? mh.versions[0]?.m;
+  const identity = identityOf(m, info.signature);
+  return { commit: last, date: info.date, ...(identity !== undefined ? { identity } : {}) };
 }
 
 export function snapshotOf(p: Project, moduleDigest: string, ledger: LedgerState | undefined, solver: string, toolVersion: string): Snapshot {
