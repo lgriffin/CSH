@@ -1,0 +1,11 @@
+{
+  "candidates": {
+    "obligations": []
+  },
+  "invalidLedgerEntries": [],
+  "mode": "advisory",
+  "obligations": [],
+  "overall": "allow",
+  "schema": "csh-gate/v1",
+  "snapshotDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+}
