@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { parseExecutions, parseWitnesses } from "@csh/witness";
-import { executionOf, nameTracker, probe, testIdentity, witnessId } from "../src/index.ts";
+import { executionOf, fileSlug, nameTracker, probe, testIdentity, witnessId } from "../src/index.ts";
 
 const REPO = resolve(import.meta.dirname, "../../..");
 let dir: string;
@@ -52,7 +52,31 @@ describe("probe", () => {
   it("names witnesses after the test, numbering later calls in the same test", () => {
     expect(witnessId("Locks on the Third failure!")).toBe("locks-on-the-third-failure");
     expect(witnessId("Locks on the Third failure!")).toBe("locks-on-the-third-failure-2");
+    // A later call never takes an id another test already has.
+    expect(witnessId("counts 2")).toBe("counts-2");
+    expect(witnessId("counts")).toBe("counts");
+    expect(witnessId("counts")).toBe("counts-3");
   });
+
+  it("puts the test file into the id, so that no two files share one (#25)", () => {
+    expect(witnessId("Locks on the third failure", "test/lockout.test.ts")).toBe("test-lockout_test_ts--locks-on-the-third-failure");
+    expect(fileSlug("test/a-b.test.ts")).toBe("test-a~2db_test_ts");
+    expect(fileSlug("test/a/b.test.ts")).toBe("test-a-b_test_ts");
+    expect(fileSlug("Test/É.ts")).toBe("~54est-~c3~89_ts");
+    expect(new Set(["test/a-b.ts", "test/a/b.ts", "test/a_b.ts", "test/a.b.ts", "Test/a.ts", "test/a.ts"].map(fileSlug)).size).toBe(6);
+  });
+
+  it("gives same-named tests in two files, writing one witness file, ids that both parse (#25)", () => {
+    const root = join(dir, "two-files");
+    mkdirSync(join(root, "test"), { recursive: true });
+    const body = `import { test } from "node:test";\nimport { probe } from "@csh/harness";\nconst p = probe("Add", (x: number) => ({ x }), { pre: (x) => ({ x }), args: () => ({}), post: (o) => ({ x: o.x }), mocked: [] });\ntest("adds", (t) => { p.in(t)(1); p.in(t)(2); });\n`;
+    writeFileSync(join(root, "test", "a.test.ts"), body);
+    writeFileSync(join(root, "test", "b.test.ts"), body);
+    execFileSync(process.execPath, ["--test", "test/a.test.ts", "test/b.test.ts"], { cwd: root, env: { ...process.env, CSH_WITNESS_FILE: "reports/w.ndjson" }, stdio: "pipe" });
+    const parsed = parseWitnesses(readFileSync(join(root, "reports", "w.ndjson"), "utf8"));
+    expect(parsed.problems).toEqual([]);
+    expect(parsed.witnesses.map((x) => x.w.id).sort()).toEqual(["test-a_test_ts--adds", "test-a_test_ts--adds-2", "test-b_test_ts--adds", "test-b_test_ts--adds-2"]);
+  }, 60000);
 });
 
 describe("reporter", () => {

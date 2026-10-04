@@ -3,9 +3,15 @@
 import { isAbsolute, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export function testIdentity(file: string | undefined, fullName: string, cwd = process.cwd()): string {
-  if (file === undefined || file === "") return fullName;
+/** The test file relative to the harness's directory, with forward slashes; undefined when the runner names none. */
+export function testFile(file: string | undefined, cwd = process.cwd()): string | undefined {
+  if (file === undefined || file === "") return undefined;
   const path = file.startsWith("file:") ? fileURLToPath(file) : file;
   const rel = isAbsolute(path) ? relative(cwd, path) : path;
-  return `${rel.split(sep).join("/")}::${fullName}`;
+  return rel.split(sep).join("/");
+}
+
+export function testIdentity(file: string | undefined, fullName: string, cwd = process.cwd()): string {
+  const rel = testFile(file, cwd);
+  return rel === undefined ? fullName : `${rel}::${fullName}`;
 }

@@ -107,8 +107,8 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit c014161737c32cec70ab3a659f
     2. A context is missing (an assumption that would separate the cases).
     3. The intent is undecided, and a person must decide it.
 
-[example-conflict] 7e5ab121a94c21fd  (cross-source)  from Q-EX(SignInService/@UnitTests/WitnessAllowsThreeFailedAttemptsBeforeLocking)
-  - SignInService/@UnitTests/WitnessAllowsThreeFailedAttemptsBeforeLocking  source UnitTests, candidate
+[example-conflict] 1ddb3af3b59cda97  (cross-source)  from Q-EX(SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsThreeFailedAttemptsBeforeLocking)
+  - SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsThreeFailedAttemptsBeforeLocking  source UnitTests, candidate
   - SignInService/StopPasswordGuessing/LockOnThirdFailure  source intent, candidate
   context: SignInService/StopPasswordGuessing/CountNeverNegative
   collision terms: Login.failures@pre, Login.lockSeconds@post, Login.locked@post, SignIn.args.passwordOk, SignIn.result
@@ -117,8 +117,8 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit c014161737c32cec70ab3a659f
     2. A context is missing (an assumption that would separate the cases).
     3. The intent is undecided, and a person must decide it.
 
-[example-conflict] 5e3cfe7d6faa2c29  (cross-source)  from Q-EX(SignInService/@UnitTests/WitnessRefusesALockedAccountEvenWithTheCorrectPassword)
-  - SignInService/@UnitTests/WitnessRefusesALockedAccountEvenWithTheCorrectPassword  source UnitTests, candidate
+[example-conflict] 702512fd20ed2026  (cross-source)  from Q-EX(SignInService/@UnitTests/WitnessTestLockoutTestTsRefusesALockedAccountEvenWithTheCorrectPassword)
+  - SignInService/@UnitTests/WitnessTestLockoutTestTsRefusesALockedAccountEvenWithTheCorrectPassword  source UnitTests, candidate
   - SignInService/StopPasswordGuessing/AcceptCorrectPassword  source intent, candidate
   context: SignInService/StopPasswordGuessing/CountNeverNegative
   collision terms: Login.failures@post, SignIn.args.passwordOk, SignIn.result
@@ -142,9 +142,9 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit c014161737c32cec70ab3a659f
 
 == Divergences between examples
 
-[example-divergence] d7620e8595d774a2  (cross-source)  from Q-DIV(SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessAllowsThreeFailedAttemptsBeforeLocking)
+[example-divergence] c96bb04f012d0eff  (cross-source)  from Q-DIV(SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsThreeFailedAttemptsBeforeLocking)
   - SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount  source Scenarios, candidate
-  - SignInService/@UnitTests/WitnessAllowsThreeFailedAttemptsBeforeLocking  source UnitTests, candidate
+  - SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsThreeFailedAttemptsBeforeLocking  source UnitTests, candidate
   collision terms: Login.failures@pre, Login.locked@post, Login.locked@pre, SignIn.args.passwordOk, SignIn.result
   inputs: overlapping
   a shared input: Login.failures@pre = 2, Login.lockSeconds@pre = 0, Login.locked@pre = false, SignIn.args.passwordOk = false
@@ -174,7 +174,7 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit c014161737c32cec70ab3a659f
   Derived gaps (a gap is not a failure):
   - unliftable  Product: Product docs/requirements.md:9: feature-scope
   - unliftable  Scenarios: Scenarios features/lockout.feature:35: unknown-step
-  - no-rule  SignInService/@UnitTests/WitnessLocksOnTheFourthFailedAttempt: no requirement on SignIn has a trigger this example meets
+  - no-rule  SignInService/@UnitTests/WitnessTestLockoutTestTsLocksOnTheFourthFailedAttempt: no requirement on SignIn has a trigger this example meets
   - single-source  SignInService/StopPasswordGuessing/AcceptCorrectPassword: Login.failures, SignIn.args.passwordOk, SignIn.result asserted only by intent
   - single-source  SignInService/StopPasswordGuessing/LockOnThirdFailure: Login.failures, Login.lockSeconds, Login.locked, SignIn.args.passwordOk, SignIn.result asserted only by intent
   - single-source  SignInService/StopPasswordGuessing/RefuseWhileLocked: Login.locked, SignIn.result asserted only by intent
@@ -183,8 +183,8 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit c014161737c32cec70ab3a659f
 
 == Obligations
 
-  conflicting (specification)  SignInService/StopPasswordGuessing/AcceptCorrectPassword  [candidate; evidence inapplicable]  joint-conflict: 6aa446d724b76ed9; example-conflict: c897987617527744; example-conflict: 5e3cfe7d6faa2c29; joint-conflict; example-conflict
-  conflicting (specification)  SignInService/StopPasswordGuessing/LockOnThirdFailure  [candidate; evidence inapplicable]  example-conflict: 7e5ab121a94c21fd; example-conflict
+  conflicting (specification)  SignInService/StopPasswordGuessing/AcceptCorrectPassword  [candidate; evidence inapplicable]  joint-conflict: 6aa446d724b76ed9; example-conflict: c897987617527744; example-conflict: 702512fd20ed2026; joint-conflict; example-conflict
+  conflicting (specification)  SignInService/StopPasswordGuessing/LockOnThirdFailure  [candidate; evidence inapplicable]  example-conflict: 1ddb3af3b59cda97; example-conflict
   conflicting (specification)  SignInService/StopPasswordGuessing/RefuseWhileLocked  [candidate; evidence inapplicable]  joint-conflict: 6aa446d724b76ed9; joint-conflict
 
 == Errors and warnings
@@ -201,7 +201,7 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit c014161737c32cec70ab3a659f
 
 How to read this report, one practice pair at a time:
 
-- **TDD against EARS.** `WitnessAllowsThreeFailedAttemptsBeforeLocking` is the unit test that lets a third wrong password through
+- **TDD against EARS.** `WitnessTestLockoutTestTsAllowsThreeFailedAttemptsBeforeLocking` is the unit test that lets a third wrong password through
   unlocked. `LockOnThirdFailure`, written from `LCK-001`, says the third one locks. Five collision terms: the two
   practices agree on the input and disagree on everything that follows. This is an off-by-one that would ship green.
 - **EARS against EARS.** The joint conflict needs no evidence at all. `LCK-002` (refuse while locked) and `LCK-003`
@@ -226,7 +226,7 @@ How to read this report, one practice pair at a time:
 - **The gap view.**
   - `Product` is silent on every row. EARS sentences are cited, never translated ([ADR-14](adr/ADR-14-cite-not-translate.md)), so the product owner's voice reaches the model only through the person who wrote the predicates.
   - All three rules are `single-source`: BDD and TDD contribute examples and never a rule, so every rule rests on EARS alone.
-  - `WitnessLocksOnTheFourthFailedAttempt` has `no-rule`: the test pins down behaviour that no sentence and no scenario covers.
+  - `WitnessTestLockoutTestTsLocksOnTheFourthFailedAttempt` has `no-rule`: the test pins down behaviour that no sentence and no scenario covers.
   - `LCK-004` (email the holder) is uncited, and `LCK-005` (WHERE two-factor sign-in is enabled) is unliftable with reason `feature-scope` as well as uncited. The scenario `Support unlocks a locked account` is unliftable with reason `unknown-step`.
 
 `csh check` exited 0. Reporting and judging are separate powers ([ADR-11](adr/ADR-11-check-never-blocks.md)). The
@@ -273,11 +273,11 @@ chooses none.
 ## 5. Explain the off-by-one
 
 ```text
-$ csh explain 7e5ab121a94c21fd
-example-conflict 7e5ab121a94c21fd (cross-source), from Q-EX(SignInService/@UnitTests/WitnessAllowsThreeFailedAttemptsBeforeLocking)
+$ csh explain 1ddb3af3b59cda97
+example-conflict 1ddb3af3b59cda97 (cross-source), from Q-EX(SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsThreeFailedAttemptsBeforeLocking)
 
-SignInService/@UnitTests/WitnessAllowsThreeFailedAttemptsBeforeLocking  source UnitTests, candidate, sha256:43d068c68258e8c8aa60f3b073d1ad8ff20f8d70aade66d92e2504ae637cfbca
-    i.example("WitnessAllowsThreeFailedAttemptsBeforeLocking", {
+SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsThreeFailedAttemptsBeforeLocking  source UnitTests, candidate, sha256:a6f2241fa65b20aa00d05e29d540d82f9052dc8ebaf9e61f4337104b96e347d1
+    i.example("WitnessTestLockoutTestTsAllowsThreeFailedAttemptsBeforeLocking", {
       given: { failures: u_count_attempts(2), lockSeconds: u_time_s(0), locked: truth(false) },
       when: SignIn({ passwordOk: truth(false) }),
       then: ({ pre, post, args, result }) => and(result.eq(Outcome.Refused), post.failures.eq(u_count_attempts(3)), post.lockSeconds.eq(u_time_s(0)), post.locked.eq(truth(false))),
@@ -490,11 +490,11 @@ The approved rule is outside the change, so the harness sees it:
 ```
 $ csh check
 ...
-[example-conflict] 17baf74885f66bc7  (cross-source)  from Q-EX(SignInService/@UnitTests/WitnessAllowsAThirdFailedAttempt)
-  - SignInService/@UnitTests/WitnessAllowsAThirdFailedAttempt  source UnitTests, candidate
+[example-conflict] 366f0170067a67dc  (cross-source)  from Q-EX(SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsAThirdFailedAttempt)
+  - SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsAThirdFailedAttempt  source UnitTests, candidate
   - SignInService/StopPasswordGuessing/LockOnThirdFailure  source intent, approved
 ...
-[example-divergence] d3b14091a05a18c8  (cross-source)  from Q-DIV(SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessAllowsAThirdFailedAttempt)
+[example-divergence] 88e0136d79c3b3db  (cross-source)  from Q-DIV(SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsAThirdFailedAttempt)
 ...
   violated (implementation)  SignInService/StopPasswordGuessing/LockOnThirdFailure  [approved, self-approved; evidence current]  witness allows-a-third-failed-attempt makes it false
 

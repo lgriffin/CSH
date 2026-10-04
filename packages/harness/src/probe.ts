@@ -4,7 +4,7 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { buildWitness, type Json, type Witness } from "@csh/witness";
-import { testIdentity } from "./identity.ts";
+import { testFile, testIdentity } from "./identity.ts";
 
 export const HARNESS_TOOL = { id: "@csh/harness", version: "0.1.0" };
 
@@ -43,14 +43,41 @@ export interface Probe<A extends unknown[], R> {
 }
 
 const calls = new Map<string, number>();
+const used = new Set<string>();
 
-/** A witness id from the test's full name: "locks on the third failure" becomes "locks-on-the-third-failure". */
-export function witnessId(fullName: string): string {
+/**
+ * The test file as a segment of a witness id: lower-case letters and digits kept, "/" as "-", "." as "_", and any other
+ * character as "~" and its UTF-8 bytes in hex. Two paths never share a segment, and a segment never holds "--" (#25).
+ */
+export function fileSlug(path: string): string {
+  let out = "";
+  for (const ch of path) {
+    if (/^[a-z0-9]$/.test(ch)) out += ch;
+    else if (ch === "/") out += "-";
+    else if (ch === ".") out += "_";
+    else for (const b of new TextEncoder().encode(ch)) out += `~${b.toString(16).padStart(2, "0")}`;
+  }
+  return out;
+}
+
+/**
+ * A witness id from the test's file and full name: "locks on the third failure" in test/lockout.test.ts becomes
+ * "test-lockout_test_ts--locks-on-the-third-failure". Node runs each file in its own process, so the file keeps ids
+ * from two files apart; within a process, later calls are numbered, skipping any id already given (A-42).
+ */
+export function witnessId(fullName: string, file?: string): string {
   const slug = fullName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-  const base = slug === "" ? "witness" : slug;
-  const n = (calls.get(base) ?? 0) + 1;
+  const name = slug === "" ? "witness" : slug;
+  const base = file === undefined || file === "" ? name : `${fileSlug(file)}--${name}`;
+  let n = calls.get(base) ?? 0;
+  let id: string;
+  do {
+    n++;
+    id = n === 1 ? base : `${base}-${n}`;
+  } while (used.has(id));
   calls.set(base, n);
-  return n === 1 ? base : `${base}-${n}`;
+  used.add(id);
+  return id;
 }
 
 function write(w: Witness, file: string): void {
@@ -64,11 +91,12 @@ export function probe<A extends unknown[], R>(event: string, fn: (...args: A) =>
     in(t, options = {}) {
       const fullName = t.fullName ?? t.name;
       const test = testIdentity(t.filePath, fullName, ctx.cwd);
+      const file = testFile(t.filePath, ctx.cwd);
       return (...args: A): R => {
         const pre = mappers.pre(...args);
         const argValues = mappers.args(...args);
         const record = (out: Awaited<R>) => {
-          const input: Parameters<typeof buildWitness>[0] = { id: witnessId(fullName), test, event, args: argValues, pre, post: mappers.post(out, ...args), mocked: mappers.mocked };
+          const input: Parameters<typeof buildWitness>[0] = { id: witnessId(fullName, file), test, event, args: argValues, pre, post: mappers.post(out, ...args), mocked: mappers.mocked };
           if (mappers.result !== undefined) input.result = mappers.result(out, ...args);
           if (options.cites !== undefined) input.cites = options.cites;
           const ctxIn: Parameters<typeof buildWitness>[1] = {};

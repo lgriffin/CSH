@@ -65,8 +65,8 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit a75bb1ff0e5080ec2696592cc9
 
 == Cross-source conflicts
 
-[example-conflict] 0ad442418095eaee  (cross-source)  from Q-EX(AccountService/@UnitTests/WitnessLetsAPremiumAccountOverdraw)
-  - AccountService/@UnitTests/WitnessLetsAPremiumAccountOverdraw  source UnitTests, candidate
+[example-conflict] 74de50bef2299eb0  (cross-source)  from Q-EX(AccountService/@UnitTests/WitnessTestAccountTestTsLetsAPremiumAccountOverdraw)
+  - AccountService/@UnitTests/WitnessTestAccountTestTsLetsAPremiumAccountOverdraw  source UnitTests, candidate
   - AccountService/ProtectFunds/MinimumBalance  source intent, candidate
   context: AccountService/ProtectFunds/PositiveAmount
   collision terms: Account.balance@post, Account.floor@post
@@ -75,8 +75,8 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit a75bb1ff0e5080ec2696592cc9
     2. A context is missing (an assumption that would separate the cases).
     3. The intent is undecided, and a person must decide it.
 
-[example-conflict] 2d00bb5c9d716a5c  (cross-source)  from Q-EX(AccountService/@UnitTests/WitnessLetsAPremiumAccountOverdraw)
-  - AccountService/@UnitTests/WitnessLetsAPremiumAccountOverdraw  source UnitTests, candidate
+[example-conflict] 826108fb9d573c00  (cross-source)  from Q-EX(AccountService/@UnitTests/WitnessTestAccountTestTsLetsAPremiumAccountOverdraw)
+  - AccountService/@UnitTests/WitnessTestAccountTestTsLetsAPremiumAccountOverdraw  source UnitTests, candidate
   - AccountService/ProtectFunds/RejectInsufficientFunds  source intent, candidate
   context: AccountService/ProtectFunds/PositiveAmount
   collision terms: Account.balance@post, Account.balance@pre, Account.floor@pre, Withdraw.args.amount, Withdraw.result
@@ -87,8 +87,8 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit a75bb1ff0e5080ec2696592cc9
 
 == Divergences between examples
 
-[example-divergence] 95294d66ce4bd84b  (cross-source)  from Q-DIV(AccountService/@UnitTests/WitnessLetsAPremiumAccountOverdraw, AccountService/ProtectFunds/RejectAtBoundary)
-  - AccountService/@UnitTests/WitnessLetsAPremiumAccountOverdraw  source UnitTests, candidate
+[example-divergence] 743b6acb9209c925  (cross-source)  from Q-DIV(AccountService/@UnitTests/WitnessTestAccountTestTsLetsAPremiumAccountOverdraw, AccountService/ProtectFunds/RejectAtBoundary)
+  - AccountService/@UnitTests/WitnessTestAccountTestTsLetsAPremiumAccountOverdraw  source UnitTests, candidate
   - AccountService/ProtectFunds/RejectAtBoundary  source intent, candidate
   collision terms: Account.balance@post, Account.balance@pre, Account.floor@pre, Withdraw.args.amount, Withdraw.result
   inputs: identical
@@ -112,15 +112,15 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit a75bb1ff0e5080ec2696592cc9
 
   Derived gaps (a gap is not a failure):
   - unliftable  DesignNotes: DesignNotes docs/design-notes.json:1: unknown-term
-  - no-rule  AccountService/@UnitTests/WitnessAcceptsAWithdrawalWithinTheBalance: no requirement on Withdraw has a trigger this example meets
+  - no-rule  AccountService/@UnitTests/WitnessTestAccountTestTsAcceptsAWithdrawalWithinTheBalance: no requirement on Withdraw has a trigger this example meets
   - single-source  AccountService/ProtectFunds/MinimumBalance: Account.balance, Account.floor asserted only by intent
   - single-source  AccountService/ProtectFunds/RejectInsufficientFunds: Account.balance, Account.floor, Withdraw.args.amount, Withdraw.result asserted only by intent
   - uncited  Product/ACC-008: docs/requirements.md:6: no fragment cites it
 
 == Obligations
 
-  conflicting (specification)  AccountService/ProtectFunds/MinimumBalance  [candidate; evidence inapplicable]  example-conflict: 0ad442418095eaee; example-conflict
-  conflicting (specification)  AccountService/ProtectFunds/RejectInsufficientFunds  [candidate; evidence inapplicable]  example-conflict: 2d00bb5c9d716a5c; example-conflict
+  conflicting (specification)  AccountService/ProtectFunds/MinimumBalance  [candidate; evidence inapplicable]  example-conflict: 74de50bef2299eb0; example-conflict
+  conflicting (specification)  AccountService/ProtectFunds/RejectInsufficientFunds  [candidate; evidence inapplicable]  example-conflict: 826108fb9d573c00; example-conflict
 
 == Counts
 
@@ -131,7 +131,7 @@ tool 0.1.0, solver z3 5.1.0.0, budget 5000 ms, commit a75bb1ff0e5080ec2696592cc9
 
 How to read this report:
 
-- **Two cross-source conflicts.** The premium overdraw test lifts as the example `WitnessLetsAPremiumAccountOverdraw` ([ADR-13](adr/ADR-13-passing-test-is-claim-and-witness.md)). That example is consistent on its own, and so are `MinimumBalance` and `RejectInsufficientFunds`. But no state satisfies the example together with either of them. Each minimal set has two members from two sources, with the terms on which they collide. The harness offers three readings and chooses none.
+- **Two cross-source conflicts.** The premium overdraw test lifts as the example `WitnessTestAccountTestTsLetsAPremiumAccountOverdraw` ([ADR-13](adr/ADR-13-passing-test-is-claim-and-witness.md)). That example is consistent on its own, and so are `MinimumBalance` and `RejectInsufficientFunds`. But no state satisfies the example together with either of them. Each minimal set has two members from two sources, with the terms on which they collide. The harness offers three readings and chooses none.
 - **One divergence between examples.** The same test also meets the intent's own example `RejectAtBoundary` on identical inputs: a balance of 5,000, a floor of 0 and a withdrawal of 10,000. The test says accepted and the example says rejected. Two examples that disagree are a divergence, not a conflict, because the harness does not assume an event answers one input one way ([A-36](../ASSUMPTIONS.md)). It offers four readings. Declaring `Withdraw` `deterministic` would turn this one into a third conflict.
 - **The gap view.** Each row is a term or obligation, and each column a source. `UnitTests` exemplifies everything; `Product` and `DesignNotes` assert nothing the model can read. The derived gaps say more:
   - The design note is held as `unliftable`, with its original text kept (P4).
@@ -146,11 +146,11 @@ How to read this report:
 ## 4. Explain one finding
 
 ```text
-$ csh explain 0ad442418095eaee
-example-conflict 0ad442418095eaee (cross-source), from Q-EX(AccountService/@UnitTests/WitnessLetsAPremiumAccountOverdraw)
+$ csh explain 74de50bef2299eb0
+example-conflict 74de50bef2299eb0 (cross-source), from Q-EX(AccountService/@UnitTests/WitnessTestAccountTestTsLetsAPremiumAccountOverdraw)
 
-AccountService/@UnitTests/WitnessLetsAPremiumAccountOverdraw  source UnitTests, candidate, sha256:2364ec04b905849cf4d9ef617ea226dccdcd51eee31c8b4bc23c967c6b895c01
-    i.example("WitnessLetsAPremiumAccountOverdraw", {
+AccountService/@UnitTests/WitnessTestAccountTestTsLetsAPremiumAccountOverdraw  source UnitTests, candidate, sha256:ba941ae37395598e2a0ea6848a5fef624c86ad4cbcb36f303c35cf6d7f47aa97
+    i.example("WitnessTestAccountTestTsLetsAPremiumAccountOverdraw", {
       given: { balance: u_minor_EUR(5000), floor: u_minor_EUR(0) },
       when: Withdraw({ amount: u_minor_EUR(10000) }),
       then: ({ pre, post, args, result }) => and(result.eq(Outcome.Accepted), post.balance.eq(u_minor_EUR(-5000)), post.floor.eq(u_minor_EUR(0))),
@@ -196,7 +196,7 @@ approve AccountService/ProtectFunds/MinimumBalance
     i.invariant("MinimumBalance", Account.balance.gte(Account.floor));
 
   Findings that involve it:
-    example-conflict 0ad442418095eaee
+    example-conflict 74de50bef2299eb0
   Gaps that involve it:
     single-source: Account.balance, Account.floor asserted only by intent
   Approving it makes its verdict count at the gate.
