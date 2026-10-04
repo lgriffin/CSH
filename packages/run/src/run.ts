@@ -121,14 +121,13 @@ const NOT_INPUTS = new Set([".git", "node_modules", CACHE_DIR]);
 
 /**
  * What a run evaluates, by project path, with each file's digest: the specification and the files it imports, every
- * source no harness writes, the manifest, the configuration and the lock. A harness's own sources and output files are
- * left out, since writing them is its job.
+ * file of every source, the manifest, the configuration and the lock. Only the harnesses' own witness and executions
+ * files are left out, since writing them is their job; any other file in a harness's source directory is an input.
  */
 export function inputDigests(p: Project, manifest: ComponentManifest, m: Module): Map<string, string> {
   const root = resolve(p.root);
   const harnessed = manifest.practices.filter((x) => x.harness !== undefined);
   const written = new Set(harnessed.flatMap((x) => [x.harness!.witnesses, x.harness!.executions ?? DEFAULT_EXECUTIONS]).map((f) => resolve(root, f)));
-  const theirs = new Set(harnessed.flatMap((x) => x.sources));
   const out = new Map<string, string>();
   const add = (abs: string, follow: boolean): void => {
     const rel = relative(root, abs).split("\\").join("/");
@@ -145,7 +144,7 @@ export function inputDigests(p: Project, manifest: ComponentManifest, m: Module)
     if (follow) for (const i of bytes.toString("utf8").matchAll(RELATIVE_IMPORT)) add(resolve(dirname(abs), i[1]!), true);
   };
   add(specOf(p, undefined), true);
-  for (const s of m.sources) if (!theirs.has(s.name)) add(resolve(root, s.at), false);
+  for (const s of m.sources) add(resolve(root, s.at), false);
   for (const f of [COMPONENT_PATH, CONFIG_PATH, LOCK_PATH]) add(join(root, f), false);
   return out;
 }

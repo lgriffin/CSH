@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ComponentManifest } from "@csh/component";
 import { digestOf, type Module } from "@csh/kernel";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { evaluateSpec, type Project, type RunRecord, runAt, runComponent, runHarnesses, runSources, type RunSourcesOptions, unchangedSince } from "../src/index.ts";
+import { changedInputs, evaluateSpec, inputDigests, type Project, type RunRecord, runAt, runComponent, runHarnesses, runSources, type RunSourcesOptions, unchangedSince } from "../src/index.ts";
 
 const REPO = resolve(import.meta.dirname, "../../..");
 let proj: string;
@@ -304,6 +304,36 @@ describe("runHarnesses", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   }, 60000);
+});
+
+describe("inputDigests", () => {
+  // A project of plain files: the specification, a harness-owned source directory, and the manifest's other inputs.
+  const project = (files: Record<string, string>) => {
+    const dir = mkdtempSync(join(REPO, ".csh-cache", "run-inputs-"));
+    for (const [f, text] of Object.entries(files)) {
+      mkdirSync(join(dir, f, ".."), { recursive: true });
+      writeFileSync(join(dir, f), text);
+    }
+    return dir;
+  };
+  const tdd = (extra: object = {}) => ({ ...manifest, spec: "spec.ts", practices: [{ id: "tdd", name: "TDD", kind: "tests", sources: ["UnitTests"], harness: { run: ["node"], witnesses: "w/out.ndjson" }, ...extra }] }) as ComponentManifest;
+  const mod = (at: string) => ({ sources: [{ name: "UnitTests", kind: "Witnesses", at }] }) as unknown as Module;
+  const moved = (dir: string, c: ComponentManifest, m: Module, change: () => void) => {
+    const p = { root: dir, config: {}, component: { manifest: c, digest: "" } } as unknown as Project;
+    const before = inputDigests(p, c, m);
+    change();
+    return changedInputs(before, inputDigests(p, c, m));
+  };
+
+  it("digests every file of a harness's source directory but the harness's own output (review of #17)", () => {
+    const dir = project({ "spec.ts": "", "w/out.ndjson": "a\n", "w/recorded.ndjson": "b\n" });
+    try {
+      expect(moved(dir, tdd(), mod("w"), () => writeFileSync(join(dir, "w", "out.ndjson"), "changed\n"))).toEqual([]);
+      expect(moved(dir, tdd(), mod("w"), () => writeFileSync(join(dir, "w", "recorded.ndjson"), "changed\n"))).toEqual(["w/recorded.ndjson"]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("the executions file joined to a Witnesses source (#22)", () => {
