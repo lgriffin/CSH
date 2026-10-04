@@ -29,12 +29,15 @@ export default system("Gate", (s) => {
   const Authority = s.source("Authority", { kind: "Requirements", at: "docs/requirements.md" });
   s.source("UnitTests", { kind: "Witnesses", at: "reports/witnesses.ndjson" });
 
-  // The model: the table read row by row, each row an implication. Where rows overlap the table does not say which
-  // wins, and neither does this transition.
+  // The model: the table read row by row, each row an implication, in the order src/gate.ts applies them (countermeasure
+  // C1 of the A3 in csh/a3/dispositions): conflicting, then violated, then unknown or stale, then self-approved needing
+  // review, then allow. Each row's condition excludes the rows above it, so exactly one row holds for any input.
   s.transition(Decide, ({ args, result }) => {
     const enforcing = args.mode.eq(Mode.enforcing);
     const advisory = args.mode.eq(Mode.advisory);
-    const unknownOrStale = or(args.verdict.eq(Verdict.unknown), args.applicability.eq(Applicability.stale));
+    const unknownOrStale = or(args.verdict.eq(Verdict.unknown), and(args.verdict.eq(Verdict.satisfied), args.applicability.eq(Applicability.stale)));
+    const current = and(args.verdict.eq(Verdict.satisfied), args.applicability.eq(Applicability.stale).not());
+    const selfReview = and(args.selfApproved, args.needsReview);
     return {
       when: or(enforcing, advisory),
       then: and(
@@ -43,8 +46,8 @@ export default system("Gate", (s) => {
         and(args.verdict.eq(Verdict.violated), args.waiverValid).implies(result.eq(Disposition.waived)),
         and(unknownOrStale, args.critical).implies(and(enforcing.implies(result.eq(Disposition.block)), advisory.implies(result.eq(Disposition.review)))),
         and(unknownOrStale, args.critical.not()).implies(result.eq(Disposition.review)),
-        args.verdict.eq(Verdict.satisfied).implies(result.eq(Disposition.allow)),
-        and(args.selfApproved, args.needsReview).implies(result.eq(Disposition.review)),
+        and(current, selfReview.not()).implies(result.eq(Disposition.allow)),
+        and(current, selfReview).implies(result.eq(Disposition.review)),
       ),
     };
   });
@@ -54,7 +57,8 @@ export default system("Gate", (s) => {
     reject: ["MockOnly"],
   });
 
-  // Each row of the table written as a predicate, citing the sentence it claims to express.
+  // Each row of the table written as a predicate, citing the sentence it claims to express. A row's condition excludes
+  // every row above it in the order of docs/requirements.md (C1).
   s.intent("NoViolationAllowed", {
     owner: "GateOwner",
     value: "A defect in the gate never turns a violation into an allow",
@@ -83,28 +87,28 @@ export default system("Gate", (s) => {
 
     i.requirement("BlockUnknownCritical", {
       when: Decide,
-      and: ({ args }) => and(or(args.verdict.eq(Verdict.unknown), args.applicability.eq(Applicability.stale)), args.critical),
+      and: ({ args }) => and(or(args.verdict.eq(Verdict.unknown), and(args.verdict.eq(Verdict.satisfied), args.applicability.eq(Applicability.stale))), args.critical),
       shall: ({ args, result }) => and(args.mode.eq(Mode.enforcing).implies(result.eq(Disposition.block)), args.mode.eq(Mode.advisory).implies(result.eq(Disposition.review))),
       cites: [{ source: Authority, id: "GATE-004" }],
     });
 
     i.requirement("ReviewUnknown", {
       when: Decide,
-      and: ({ args }) => and(or(args.verdict.eq(Verdict.unknown), args.applicability.eq(Applicability.stale)), args.critical.not()),
+      and: ({ args }) => and(or(args.verdict.eq(Verdict.unknown), and(args.verdict.eq(Verdict.satisfied), args.applicability.eq(Applicability.stale))), args.critical.not()),
       shall: ({ result }) => result.eq(Disposition.review),
       cites: [{ source: Authority, id: "GATE-005" }],
     });
 
     i.requirement("AllowSatisfied", {
       when: Decide,
-      and: ({ args }) => args.verdict.eq(Verdict.satisfied),
+      and: ({ args }) => and(args.verdict.eq(Verdict.satisfied), args.applicability.eq(Applicability.stale).not(), and(args.selfApproved, args.needsReview).not()),
       shall: ({ result }) => result.eq(Disposition.allow),
       cites: [{ source: Authority, id: "GATE-006" }],
     });
 
     i.requirement("ReviewSelfApproved", {
       when: Decide,
-      and: ({ args }) => and(args.selfApproved, args.needsReview),
+      and: ({ args }) => and(args.verdict.eq(Verdict.satisfied), args.applicability.eq(Applicability.stale).not(), args.selfApproved, args.needsReview),
       shall: ({ result }) => result.eq(Disposition.review),
       cites: [{ source: Authority, id: "GATE-007" }],
     });
