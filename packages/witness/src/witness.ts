@@ -40,7 +40,7 @@ export interface AdapterManifest {
   id: string;
   version: string;
   ir: "csh-ir/v1";
-  produces: ("claims" | "witnesses" | "items")[];
+  produces: ("claims" | "witnesses" | "items" | "diagram" | "facts")[];
   inputKinds: string[];
 }
 
@@ -70,8 +70,70 @@ export interface Diagnostic {
   span?: string;
 }
 
+/** One element of a container diagram: a container holds the packages its technology field names. */
+export interface DiagramElement {
+  id: string;
+  /** Container, Person, System_Ext and the like, as written. */
+  kind: string;
+  label: string;
+  packages: string[];
+  span: string;
+}
+
+/** One drawn relation, between element identifiers. */
+export interface DiagramRelation {
+  from: string;
+  to: string;
+  label: string;
+  span: string;
+}
+
+/** What an Architecture source's adapter reads from a diagram (Next layers, section 4.2). */
+export interface Diagram {
+  elements: DiagramElement[];
+  relations: DiagramRelation[];
+}
+
+interface FactBase {
+  schema: "csh-facts/v1";
+  /** Where the fact was read: a manifest, or a file and line. */
+  at: string;
+  subject: { commit: string };
+  tool: { id: string; version: string };
+}
+
+/** A package of the workspace, by its manifest name. */
+export interface PackageFact extends FactBase {
+  kind: "package";
+  name: string;
+}
+
+/** One dependency between packages of the workspace, from an import statement or a manifest (section 4.2). */
+export interface DependencyFact extends FactBase {
+  kind: "depends";
+  from: string;
+  to: string;
+  via: "import" | "manifest";
+  /** An import of types alone: counted as a dependency, and flagged (A-74). */
+  typeOnly: boolean;
+}
+
+/** Something the scan saw and could not resolve, such as a dynamic import of a computed specifier. */
+export interface SkippedFact extends FactBase {
+  kind: "skipped";
+  from: string;
+  reason: string;
+}
+
+/** The fact format (csh-facts/v1), evidence beside the witness format; a fact never carries authority. */
+export type Fact = PackageFact | DependencyFact | SkippedFact;
+
 export interface AdapterOutput {
   claims?: ClaimSet;
+  /** An Architecture source: the diagram's elements and relations. */
+  diagram?: Diagram;
+  /** A Facts source: the facts read, every line kept. */
+  facts?: Fact[];
   witnesses?: Witness[];
   items?: SourceItem[];
   diagnostics: Diagnostic[];

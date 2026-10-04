@@ -18,6 +18,8 @@
     "@csh/adapter-ears-markdown": "workspace:*",
     "@csh/ledger": "workspace:*",
     "@csh/gate": "workspace:*",
-    "@csh/adapter-gherkin": "workspace:*"
+    "@csh/adapter-gherkin": "workspace:*",
+    "@csh/adapter-c4-mermaid": "workspace:*",
+    "@csh/facts": "workspace:*"
   }
 }

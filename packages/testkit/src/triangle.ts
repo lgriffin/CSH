@@ -40,6 +40,8 @@ const REACHES: Record<string, { commands?: RegExp; files?: RegExp }> = {
   component: { commands: /\bcsh (run|init)\b/ },
   ledger: { commands: /\bcsh (approve|reject|retire|waive|countersign)\b/ },
   a3: { commands: /\bcsh a3\b/ },
+  // The one component with typed architecture rules is the repository's own, run from its root.
+  arch: { commands: /\bcsh (run|check|gaps) --root \.(\s|$)/m },
   harness: { files: /from "@csh\/harness"/ },
 };
 

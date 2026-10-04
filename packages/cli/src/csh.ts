@@ -123,7 +123,7 @@ function explainFinding(f: Finding, m: Module): string {
   if (f.inputs !== undefined) lines.push(`Inputs: ${f.inputs}`);
   if (f.witness !== undefined) lines.push(`${f.kind === "joint-conflict" ? "Input with no valid outcome" : f.kind === "example-divergence" ? "A shared input" : "Counterexample"}: ${Object.entries(f.witness).map(([k, v]) => `${k} = ${v}`).join(", ")}`);
   if (f.reason !== undefined) lines.push(`Reason: ${f.reason}`);
-  if (["state-conflict", "joint-conflict", "example-conflict"].includes(f.kind)) {
+  if (["state-conflict", "joint-conflict", "example-conflict", "arch-conflict"].includes(f.kind)) {
     lines.push("", "Three readings, and the harness chooses none:", "  1. A member is wrong.", "  2. A context is missing.", "  3. The intent is undecided.");
   }
   if (f.kind === "example-divergence") lines.push("", ...DIVERGENCE_READINGS);
@@ -362,7 +362,7 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
   const lines = [`run ${record.component} at ${record.snapshot.commit}`];
   for (const h of record.harnesses) lines.push(`  harness ${h.practice}: ${h.argv.join(" ")}  exit ${h.exitCode ?? h.error ?? "none"}, ${h.witnesses} witnesses, ${h.executions} executions (not sandboxed)`);
   if (record.harnesses.length === 0) lines.push("  no practice has a harness");
-  const conflicts = countOf(report, ["state-conflict", "joint-conflict", "example-conflict", "vacuous"]);
+  const conflicts = countOf(report, ["state-conflict", "joint-conflict", "example-conflict", "arch-conflict", "vacuous"]);
   lines.push(`  findings ${report.findings.length} (${plural(conflicts, "conflict")}, ${plural(countOf(report, ["example-divergence"]), "divergence")}, ${report.findings.filter((f) => f.crossSource).length} cross-source); gaps ${report.gapView.gaps.length}; not comparable ${report.notComparable.length}; errors ${report.errors.length}`);
   const v = (x: string) => (report.assessments ?? []).filter((y) => y.verdict === x).length;
   lines.push(`  obligations ${(report.assessments ?? []).length}: conflicting ${v("conflicting")}, violated ${v("violated")}, satisfied ${v("satisfied")}, unknown ${v("unknown")}`);

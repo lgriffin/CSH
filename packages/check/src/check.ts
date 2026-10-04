@@ -2,12 +2,13 @@
 // Evidence tab. It reports and does not judge; blocking is the gate's job.
 import type { Fragment, Module } from "@csh/kernel";
 import type { SolverPort } from "@csh/solver";
+import { evaluateArchitecture } from "./arch.ts";
 import { assess, toolDigest } from "./assess.ts";
 import { type EvidenceStore, MemoryEvidenceStore } from "./evidence.ts";
 import { outcomeOf } from "@csh/witness";
 import { gapView } from "./gaps.ts";
 import { prepare, type Prepared, type SourceRun } from "./pool.ts";
-import { buildPool, runQueries } from "./run.ts";
+import { buildPool, runQueries, sortFindings } from "./run.ts";
 import { ALL_CANDIDATE, type AuthorityInfo, type AuthorityResolver, type ComponentInfo, type Report, TOOL_VERSION } from "./types.ts";
 
 export const DEFAULT_BUDGET_MS = 5000;
@@ -50,7 +51,9 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
   const env = { solver: opts.solver, vocabulary: v, budgetMs };
   const pool = buildPool(prepared.fragments, v, authority);
   const outcome = await runQueries(pool, env, authority);
-  const gaps = await gapView({ prepared, pool, outcome, env, authority, ...(opts.component !== undefined ? { unowned: opts.component.unowned } : {}) });
+  const arch = evaluateArchitecture({ prepared, fragments: prepared.fragments, authority, live: (n) => pool.byName.has(n), ...(opts.snapshot !== undefined ? { snapshotCommit: opts.snapshot.commit } : {}) });
+  outcome.findings = sortFindings([...outcome.findings, ...arch.findings]);
+  const gaps = await gapView({ prepared, pool, outcome, env, authority, archGaps: arch.gaps, ...(opts.component !== undefined ? { unowned: opts.component.unowned } : {}) });
   const tool = { version: TOOL_VERSION, solver: opts.solver.id, budgetMs };
   const assessInput: Parameters<typeof assess>[0] = {
     pool,
@@ -60,6 +63,7 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
     authority,
     store: opts.evidence ?? new MemoryEvidenceStore(),
     toolDigest: toolDigest(tool, opts.configDigest),
+    arch: arch.rules,
   };
   if (opts.snapshot !== undefined) assessInput.snapshotCommit = opts.snapshot.commit;
   if (opts.unchangedSince !== undefined) assessInput.unchangedSince = opts.unchangedSince;

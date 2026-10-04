@@ -113,7 +113,7 @@ export interface QueryOutcome {
   skipped: Map<string, string>;
 }
 
-const KIND_ORDER: FindingKind[] = ["state-conflict", "joint-conflict", "example-conflict", "example-divergence", "vacuous", "not-preserved", "not-met", "unknown"];
+const KIND_ORDER: FindingKind[] = ["state-conflict", "joint-conflict", "example-conflict", "arch-conflict", "example-divergence", "vacuous", "not-preserved", "not-met", "unknown"];
 
 /** Both examples state every field of the state and every argument of the event, with equal values. */
 export function identicalInputs(x1: { given: Record<string, Expr>; args: Record<string, Expr> }, x2: typeof x1, ev: { args: Record<string, unknown> } | undefined, fields: string[]): boolean {

@@ -1,0 +1,12 @@
+{
+  "schema": "csh-component/v1",
+  "name": "Workspace",
+  "spec": "csh/spec/workspace.csl.ts",
+  "implementation": ["packages"],
+  "practices": [
+    { "id": "c4", "name": "Container diagram", "kind": "architecture", "sources": ["C4"], "author": "Architect", "unit": "the relation" },
+    { "id": "rules", "name": "Written rules", "kind": "requirements", "sources": ["Brief"], "author": "Architect", "unit": "the sentence" },
+    { "id": "facts", "name": "Code facts", "kind": "facts", "sources": ["Code"], "author": "facts-imports", "unit": "the dependency",
+      "harness": { "run": ["node", "packages/facts-imports/bin/facts-imports.js"], "witnesses": "reports/facts.ndjson" } }
+  ]
+}

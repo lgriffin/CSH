@@ -2,7 +2,7 @@
 // the phase table, and naming (Language reference, sections 6 and 7; main tab, section 7.3).
 import { refName } from "./canonical.ts";
 import type { Assumption, ClaimSet, Example, Expr, Module, Obligation, Type, Vocabulary } from "./model.ts";
-import { METHODS, REJECTIONS, sameType } from "./model.ts";
+import { type ArchRule, claimsArchRule, isArchRule, METHODS, REJECTIONS, sameType } from "./model.ts";
 import { collectRefs } from "./refs.ts";
 import { checkBool, isExprShape, type ExprTypeError, type Position, type TypeErrorCode, typeExpr } from "./typing.ts";
 
@@ -123,7 +123,9 @@ export function validateObligation(c: Collector, v: Vocabulary, o: Obligation, p
     checkAt(c, v, o.shall, `${path}.shall`, "step", scope);
     if (!Array.isArray(o.ensures)) c.add("S6", `${path}.ensures`, "ensures must be a list of expressions");
     else o.ensures.forEach((x, i) => checkAt(c, v, x, `${path}.ensures[${i}]`, "step", scope));
-  } else if (o.kind !== "architecture" && o.kind !== "temporal") {
+  } else if (o.kind === "architecture") {
+    if (claimsArchRule(o.native) && !isArchRule(o.native)) c.add("S6", path, `malformed architecture rule ${JSON.stringify(o.native)}`);
+  } else if (o.kind !== "temporal") {
     c.add("S6", path, `unknown obligation kind ${JSON.stringify((o as { kind: unknown }).kind)}`);
   }
 }
@@ -235,6 +237,10 @@ export function validateModule(m: Module): RuleViolation[] {
     i.assumptions.forEach((a) => validateAssumption(c, v, a, `${path}/${a.name}`));
     i.obligations.forEach((o) => validateObligation(c, v, o, `${path}/${o.name}`));
     i.examples.forEach((x) => validateExample(c, v, x, `${path}/${x.name}`));
+    for (const o of i.obligations) {
+      const r = o.kind === "architecture" ? (o.native as ArchRule) : undefined;
+      if (r !== undefined && isArchRule(r) && r.k === "closed" && !m.sources.some((s) => s.name === r.source)) c.add("S1", `${path}/${o.name}`, `closed rule on undeclared source ${r.source}`);
+    }
   }
   dupCheck(c, m.sources.map((s) => s.name), "sources", "source");
   for (const s of m.sources) nameCheck(c, s.name, UPPER, `source ${s.name}`, "source");

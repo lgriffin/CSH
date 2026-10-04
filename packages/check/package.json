@@ -10,6 +10,7 @@
   "dependencies": {
     "@csh/kernel": "workspace:*",
     "@csh/solver": "workspace:*",
-    "@csh/witness": "workspace:*"
+    "@csh/witness": "workspace:*",
+    "@csh/arch": "workspace:*"
   }
 }

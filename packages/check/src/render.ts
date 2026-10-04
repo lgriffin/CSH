@@ -3,7 +3,7 @@
 // preservation, unknowns, the gap view. Counts come last, and there is never a score.
 import type { Assessment, Finding, Report } from "./types.ts";
 
-const CONFLICTS = new Set(["state-conflict", "joint-conflict", "example-conflict", "vacuous"]);
+const CONFLICTS = new Set(["state-conflict", "joint-conflict", "example-conflict", "arch-conflict", "vacuous"]);
 const PRESERVATION = new Set(["not-preserved", "not-met"]);
 
 /** The readings of a divergence (Anchor, harnesses and A3, section 6.1): one more than a conflict has. */
@@ -82,7 +82,7 @@ export function renderReport(r: Report): string {
   }
   const count = (k: string) => r.findings.filter((f) => f.kind === k).length;
   out.push("== Counts", "");
-  out.push(`  findings ${r.findings.length}: ${["state-conflict", "joint-conflict", "example-conflict", "example-divergence", "vacuous", "not-preserved", "not-met", "unknown"].map((k) => `${k} ${count(k)}`).join(", ")}`);
+  out.push(`  findings ${r.findings.length}: ${["state-conflict", "joint-conflict", "example-conflict", "arch-conflict", "example-divergence", "vacuous", "not-preserved", "not-met", "unknown"].map((k) => `${k} ${count(k)}`).join(", ")}`);
   out.push(`  gaps ${r.gapView.gaps.length}; not comparable ${r.notComparable.length}; unliftable ${r.unliftable.length}`);
   if (r.assessments !== undefined) {
     const v = (x: string) => r.assessments!.filter((a) => a.verdict === x).length;

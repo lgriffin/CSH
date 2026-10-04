@@ -12,7 +12,8 @@
 
 - `system(name, build)`: builds a `Module`; the callback runs exactly once with symbolic handles.
 - `SystemBuilder`: `enum`, `state`, `event` (with an optional `deterministic: true`, so that two examples answering one input two ways are a conflict rather than a divergence), `transition`, `policy`, `intent`, `source`, `claims`, `bind`, `use` and `relax`.
-- `ClaimBuilder`: `assume`, `invariant`, `requirement`, `example`, and the reserved `architecture` and `temporal`.
+- `ClaimBuilder`: `assume`, `invariant`, `requirement`, `example`, `architecture` and the reserved `temporal`.
+- `forbid(from, to)`, `only(from, to[])`, `closed(source)`, `pkg(name)`, `container(id)`, `anything`: the architecture builders; `s.architecture(name, forbid(pkg("kernel"), anything))` writes a rule the check engine evaluates ([architecture rules guide](../../docs/guides/architecture-rules.md)).
 - `unit(dimension, symbol)`, `UnitFn`: a branded unit and its literal constructor.
 - `int(unit?)`, `bool()`, `lit(value)`, `IntType`, `BoolType`, `EnumType`: type descriptors and a unitless literal.
 - `and`, `or`, `not`, `truth`: boolean combinators and the boolean literal.
@@ -50,5 +51,5 @@ The language is an internal DSL so that TypeScript does the type and unit checki
 
 - Rule S2 depends on branded template-literal unit types; native operators such as `a >= b` on handles cannot all be rejected by the compiler, so S6 on the IR catches the rest (main tab, section 7.6).
 - Phase inference for `and(...)` over mixed arguments is this implementation's choice, fixed only by the compile-time fixtures (Implementer's brief, section 10).
-- `architecture` and `temporal` are carried as native content and never evaluated.
+- `temporal`, and an `architecture` value not made by the builders, are carried as native content and never evaluated.
 - A source file can generate obligations with loops or helpers, so reading the file is not reading the specification; review the printed IR instead.

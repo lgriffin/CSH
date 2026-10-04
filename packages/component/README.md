@@ -11,7 +11,7 @@ It is the "Component" container ([the manifest reference](../../docs/guides/mani
 ## Public interface
 
 - `ComponentManifest`, `Practice`, `Harness`: the manifest's types. A harness is an argument vector, never a shell string, and the witness file it writes. A practice without a harness may name `executions`, the file a reporter run by hand writes.
-- `COMPONENT_PATH`, `COMPONENT_SCHEMA`, `PRACTICE_KINDS`, `DEFAULT_EXECUTIONS`, `DEFAULT_HARNESS_TIMEOUT_MS`: `csh/component.json`, `csh-component/v1`, the four practice kinds, `reports/executions.ndjson`, and the ten minutes a harness may run when `harness.timeoutMs` does not say.
+- `COMPONENT_PATH`, `COMPONENT_SCHEMA`, `PRACTICE_KINDS`, `DEFAULT_EXECUTIONS`, `DEFAULT_HARNESS_TIMEOUT_MS`: `csh/component.json`, `csh-component/v1`, the six practice kinds (`requirements`, `scenarios`, `tests`, `design-notes`, and since stage 18 `architecture` and `facts`), `reports/executions.ndjson`, and the ten minutes a harness may run when `harness.timeoutMs` does not say.
 - `validateManifest(v)`: every structural problem, as `{ code, detail }`; codes `malformed-manifest`, `duplicate-practice`, `source-owned-twice`.
 - `loadComponent(root)`, `parseComponent(bytes)`: the manifest and the digest of its bytes, or its problems.
 - `checkAgainstModule(manifest, module)`: errors (`component-name-mismatch`, `practice-unknown-source`, `harness-file-unread`) and the sources no practice names.

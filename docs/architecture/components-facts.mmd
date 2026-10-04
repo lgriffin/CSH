@@ -1,0 +1,21 @@
+%% C4 level 3: the facts, written by a harness and read by an adapter (Next layers, section 4.2).
+C4Component
+  title Facts: components
+  Container_Boundary(h, "Harnesses (facts-imports)") {
+    Component(workspace, "Workspace reader", "facts-imports/src/scan.ts (workspacePackages)", "Package directories from pnpm-workspace.yaml or package.json workspaces")
+    Component(scan, "Import scan", "facts-imports/src/scan.ts (importsOf)", "TypeScript parser: imports, re-exports, require, dynamic import, import types; type-only flag; computed specifiers skipped")
+    Component(writer, "Facts command", "facts-imports/bin/facts-imports.js", "One fact per package and dependency, stamped with CSH_COMMIT")
+  }
+  Container_Boundary(ad, "Adapters (facts, witness)") {
+    Component(format, "Fact format", "witness/src/witness.ts", "csh-facts/v1: package, depends, skipped")
+    Component(reader, "Facts reader and adapter", "facts/src/facts.ts, adapter.ts", "Parses and validates lines; malformed lines reported")
+  }
+  System_Ext(code, "The workspace's code", "manifests, src and bin")
+  Container_Ext(check, "Check engine", "check", "Current only at the snapshot's commit")
+  Rel(writer, workspace, "Packages")
+  Rel(writer, scan, "Each file of src and bin")
+  Rel(workspace, code, "Reads manifests")
+  Rel(scan, code, "Reads files")
+  Rel(writer, format, "reports/facts.ndjson")
+  Rel(reader, format, "Validates")
+  Rel(check, reader, "Facts, through the isolated runner")

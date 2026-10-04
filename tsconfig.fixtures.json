@@ -8,14 +8,6 @@
     "fixtures/F02/**",
     "fixtures/F03/**",
     "fixtures/F04/**",
-    "fixtures/F09/**",
-    "fixtures/F100/**",
-    "fixtures/F101/**",
-    "fixtures/F102/**",
-    "fixtures/F103/**",
-    "fixtures/F104/**",
-    "fixtures/F105/**",
-    "fixtures/F106/**",
-    "fixtures/F107/**"
+    "fixtures/F09/**"
   ]
 }

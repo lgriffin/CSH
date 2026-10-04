@@ -13,6 +13,8 @@ It belongs to the "Adapters" container, with `@csh/adapter-witness-files` and `@
 - `Witness`, `Json`, `LocalResult`: one recorded execution (event, pre, args, result, post, execution facts, subject commit, and in version 2 the requirement identifiers it cites). In version 2 the local result is optional.
 - `Execution`, `parseExecutions(text)`: one finished test as the test runner's reporter records it (test identity and outcome), and the parser for an execution file.
 - `outcomeOf(w)`: a witness's outcome, `unknown` when the record states none.
+- `Fact`, `PackageFact`, `DependencyFact`, `SkippedFact`: the fact format, `csh-facts/v1`, evidence beside the witness format; `@csh/facts` reads and writes it ([10](../../docs/spec/10-next-layers.md), section 4.2).
+- `Diagram`, `DiagramElement`, `DiagramRelation`: what an Architecture source's adapter reads from a container diagram.
 - `SourceItem`: an identified item from a source, such as a requirement sentence with its span and text digest.
 - `Adapter`, `AdapterManifest`, `AdapterInput`, `AdapterOutput`, `Diagnostic`: the adapter contract. An adapter receives file bytes, the vocabulary and bindings (and, for a witness source, the execution file's bytes), and returns claims, witnesses, items, diagnostics and the execution lines it read. `run` may return a promise.
 - `witnessDigest(w)`: the digest of a witness without `recordedAt`.

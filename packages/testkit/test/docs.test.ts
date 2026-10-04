@@ -37,7 +37,7 @@ describe("container diagram", () => {
     expect(new RegExp(`\\b${p}\\b`).test(source), `docs/architecture/containers.mmd does not name ${p}`).toBe(true);
   });
   it("has a component diagram for every container it draws", () => {
-    for (const c of ["cli", "run", "component", "a3", "harness", "emission", "adapters", "ledger", "check", "gate", "kernel"]) expect(existsSync(join(repo, "docs", "architecture", `components-${c}.mmd`)), c).toBe(true);
+    for (const c of ["cli", "run", "component", "a3", "harness", "emission", "adapters", "ledger", "check", "gate", "kernel", "arch", "facts"]) expect(existsSync(join(repo, "docs", "architecture", `components-${c}.mmd`)), c).toBe(true);
   });
 });
 

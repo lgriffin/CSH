@@ -1,0 +1,5 @@
+{
+  "mode": "advisory",
+  "budgetMs": 5000,
+  "specPaths": ["csh/spec"]
+}

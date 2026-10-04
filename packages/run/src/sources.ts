@@ -15,6 +15,8 @@ export const BUILTIN_ADAPTERS: Record<string, string> = {
   Witnesses: "@csh/adapter-witness-files",
   Scenarios: "@csh/adapter-gherkin",
   Requirements: "@csh/adapter-ears-markdown",
+  Architecture: "@csh/adapter-c4-mermaid",
+  Facts: "@csh/facts",
 };
 
 export type { SourceRun };

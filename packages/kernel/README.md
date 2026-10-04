@@ -11,7 +11,8 @@ The kernel is its own container, "Kernel", a library with no dependencies. It ap
 ## Public interface
 
 - `Module`, `Vocabulary`, `UnitDecl`, `EnumDecl`, `StateDecl`, `EventDecl`, `PackUse`, `Type`: the model and its vocabulary. An event may carry `deterministic: true`; S1 refuses any other value.
-- `Intent`, `Policy`, `Method`, `Rejection`, `METHODS`, `REJECTIONS`: intents, assurance policies and the version 1 method names.
+- `Intent`, `Policy`, `Method`, `Rejection`, `METHODS`, `REJECTIONS`: intents, assurance policies and the method names, `FactsCurrent` among them since stage 18.
+- `ArchRule`, `ArchSel`, `isArchRule`, `isArchSel`, `claimsArchRule`: the typed architecture rules (`forbid`, `only`, `closed`) and their selectors ([10](../../docs/spec/10-next-layers.md), section 4.1; [A-79](../../ASSUMPTIONS.md)). A malformed rule is refused (S6), and `closed` must name a declared source (S1).
 - `Assumption`, `Obligation`, `Invariant`, `Requirement`, `Reserved`, `Example`, `Transition`, `Binding`, `Relaxation`: the fragment node types.
 - `Source`, `ClaimSet`, `Unliftable`, `Cite`: lifted claims, retained native content and citations.
 - `Expr`, `Ref`, `At`, `CmpOp`, `Digest`: expressions, references and digest strings.
@@ -52,5 +53,5 @@ The emitted model, not the TypeScript source, is the contract that is digested a
 ## Known limits
 
 - The expression language has integers, booleans and enumerations only. Real numbers, quantifiers over collections and liveness are excluded in version 1 (main tab, section 7.7).
-- `architecture` and `temporal` obligations are typed as `Reserved`: carried and reported, never evaluated.
+- `temporal` obligations, and `architecture` obligations whose value is not a typed rule, are typed as `Reserved`: carried and reported, never evaluated.
 - Rules S6 (raw JavaScript values) and S9 (two emissions differ) can only be fully checked during emission, so they live in `@csh/emit`.

@@ -5,6 +5,7 @@ C4Component
     Component(probe, "Probe", "harness/src/probe.ts", "Wraps the function under test; records each call as a v2 witness with no outcome")
     Component(identity, "Test identity", "harness/src/identity.ts", "file::full name, shared by witnesses and execution lines")
     Component(reporter, "Reporter", "harness/src/reporter.ts", "One csh-execution/v1 line per finished test; prints nothing")
+    Component(scan, "Import scan", "facts-imports/src/scan.ts", "Run as a facts practice's harness, not in a test process: manifests and imports to csh-facts/v1")
   }
   System_Ext(runner, "Node's test runner", "node --test")
   Container_Ext(adapters, "Adapters", "adapter-witness-files", "Joins witnesses to outcomes by identity")
@@ -14,3 +15,4 @@ C4Component
   Rel(reporter, identity, "Uses")
   Rel(probe, adapters, "CSH_WITNESS_FILE")
   Rel(reporter, adapters, "CSH_EXECUTIONS_FILE")
+  Rel(scan, adapters, "reports/facts.ndjson, stamped with CSH_COMMIT")

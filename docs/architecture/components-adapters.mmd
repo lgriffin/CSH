@@ -1,13 +1,15 @@
 %% C4 level 3: components of the adapters container.
 C4Component
   title Adapters: components
-  Container_Boundary(ad, "Adapters (witness, adapter-witness-files, adapter-ears-markdown, adapter-gherkin)") {
+  Container_Boundary(ad, "Adapters (witness, adapter-witness-files, adapter-ears-markdown, adapter-gherkin, adapter-c4-mermaid, facts)") {
     Component(format, "Witness format", "witness/src/witness.ts", "csh-witness/v1 and v2, csh-execution/v1, adapter contract, witness digest")
     Component(recorder, "Recorder", "witness/src/record.ts", "recordWitness helper for any JavaScript test")
     Component(reader, "Witness reader", "witness/src/witness.ts (parseWitnesses)", "Parses and validates records; reports malformed lines")
     Component(lifter, "Example lifter", "adapter-witness-files/src/adapter.ts", "Joins records to outcomes by test identity; passing records to example claims through reversed bindings")
     Component(scenarios, "Scenario lifter", "adapter-gherkin/src/adapter.ts", "Loads the project's step table in the sandbox; scenarios to example claims; tags to citations")
     Component(extractor, "Sentence extractor", "adapter-ears-markdown/src/adapter.ts", "Identified EARS sentences; pattern; text digest")
+    Component(diagram, "Diagram reader", "adapter-c4-mermaid/src/adapter.ts", "C4Container text to elements, packages held and relations; unreadable lines unliftable")
+    Component(facts, "Facts reader", "facts/src/adapter.ts", "csh-facts/v1 lines handed to the check engine; malformed lines reported")
     Component(runner, "Isolated runner", "run/src/adapter-runner.ts", "Permission-restricted subprocess; bytes in, output out")
   }
   Rel(recorder, format, "Writes")
@@ -16,3 +18,6 @@ C4Component
   Rel(runner, lifter, "Runs")
   Rel(runner, extractor, "Runs")
   Rel(runner, scenarios, "Runs, with read access to the step table only")
+  Rel(runner, diagram, "Runs, for Architecture sources")
+  Rel(runner, facts, "Runs, for Facts sources")
+  Rel(facts, format, "Fact types")

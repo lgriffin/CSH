@@ -19,7 +19,7 @@ export type AuthorityResolver = (fragment: { name: string; digest: string; kind:
 
 export const ALL_CANDIDATE: AuthorityResolver = () => ({ authority: "candidate" });
 
-export type FindingKind = "state-conflict" | "vacuous" | "joint-conflict" | "example-conflict" | "example-divergence" | "not-preserved" | "not-met" | "unknown";
+export type FindingKind = "state-conflict" | "vacuous" | "joint-conflict" | "example-conflict" | "example-divergence" | "not-preserved" | "not-met" | "unknown" | "arch-conflict";
 
 export interface Member {
   fragment: string;

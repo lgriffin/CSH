@@ -1,0 +1,18 @@
+%% C4 level 3: components of the architecture rules (Next layers, sections 4.1 and 4.3).
+C4Component
+  title Architecture rules: components
+  Container_Boundary(a, "Architecture rules (arch), in the trusted base") {
+    Component(select, "Selectors", "arch/src/arch.ts (selects, containersOf, sameName)", "A package by full or unscoped name, a container's packages, or any package")
+    Component(rules, "Rule evaluation", "arch/src/arch.ts (evaluateRule)", "forbid, only and closed against current facts: violated with file and line, holds, or unknown")
+    Component(conflicts, "Diagram conflicts", "arch/src/arch.ts (conflictingRelations)", "Drawn relations a rule forbids, each end wholly inside the rule")
+    Component(compare, "Diagram against facts", "arch/src/arch.ts", "Undrawn dependencies, unobserved relations, unplaced packages")
+  }
+  Container_Ext(check, "Check engine", "check/src/arch.ts", "Findings, gaps, assessments")
+  Container_Ext(kernel, "Kernel", "kernel", "ArchRule, ArchSel")
+  Rel(check, rules, "Each typed rule")
+  Rel(check, conflicts, "Each typed rule and the diagram")
+  Rel(check, compare, "The diagram and current facts")
+  Rel(rules, select, "Uses")
+  Rel(conflicts, select, "Uses")
+  Rel(rules, compare, "closed: undrawn dependencies")
+  Rel(select, kernel, "Rule types")

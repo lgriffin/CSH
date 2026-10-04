@@ -18,6 +18,7 @@ It is the main part of the "Check engine" container, with `@csh/solver`, shown i
 - `judge`, `JudgeContext`, `witnessValue`, `refsOfObligation`, `termsOfObligation`: judging one witness against one obligation.
 - `EvidenceStore`, `EvidenceDeps`, `MemoryEvidenceStore`, `loadEvidenceStore`, `saveEvidenceStore`: the dependency digests each piece of evidence was recorded against.
 - `assess(input)`, `AssessInput`, `toolDigest`: verdict, applicability and methods for every obligation.
+- `evaluateArchitecture(input)`, `ArchOutcome`, `ArchRuleOutcome`, `archRuleOf`: typed architecture rules against the diagram and the facts through `@csh/arch`: the finding `arch-conflict`, the gaps `undrawn-dependency`, `unobserved-relation` and `unplaced-package`, and each rule's result, judged by the method `FactsCurrent` ([10](../../docs/spec/10-next-layers.md), section 4.3; [A-80](../../ASSUMPTIONS.md) to [A-82](../../ASSUMPTIONS.md)).
 - `gapView(input)`, `GapInput`, `subjectsOf`: the gap view, plus citation errors.
 - `SolverCache`, `cachingSolver`: a caching solver port that keeps only `sat` and `unsat`.
 - `renderReport(report)`, `renderGaps(report)`, `DIVERGENCE_READINGS`: the human-readable report, generated from the report JSON alone, and the four readings of a divergence.
@@ -27,7 +28,7 @@ It is the main part of the "Check engine" container, with `@csh/solver`, shown i
 
 ## Depends on and used by
 
-- Depends on: `@csh/kernel`, `@csh/solver` and `@csh/witness` (witness and adapter output types, `witnessDigest`). No external packages.
+- Depends on: `@csh/kernel`, `@csh/solver`, `@csh/arch` (architecture rules) and `@csh/witness` (witness and adapter output types, `witnessDigest`). No external packages.
 - Used by: `@csh/run` (pipeline), `@csh/cli` (commands, rendering), `@csh/gate` (report and assessment types) and `@csh/testkit`.
 
 ## Invariants it protects
@@ -58,11 +59,11 @@ A joint conflict is an input with no valid outcome ([ADR-08](../../docs/adr/ADR-
 - `packages/run/test/faults.test.ts`: a missing witness file, a malformed witness file, a crashing adapter, a hanging adapter and a witness from another commit each leave obligations unknown, never satisfied.
 - `test/signals.test.ts`: signals keep a finding's id, name sources and practices through the component, have ids that do not change between runs, and match on kind, fragment (exact or last segment), source, practice, subject and `not`.
 - `packages/gate/test/gate.test.ts` uses its report types.
-- Fixtures (through `@csh/testkit`): F10 to F16 (single-source queries), F20 to F23 (joint conflicts and not comparable), F12 and F24 (gap view), F30 to F35 (witness judging and methods), F50 and F52 (uncited items and dangling citations), F87 to F90 (divergence), F40, F41, F46, F51 and F64 (staleness and authority changes; F64 compares incremental and full runs).
+- Fixtures (through `@csh/testkit`): F10 to F16 (single-source queries), F20 to F23 (joint conflicts and not comparable), F12 and F24 (gap view), F30 to F35 (witness judging and methods), F50 and F52 (uncited items and dangling citations), F87 to F90 (divergence), F40, F41, F46, F51 and F64 (staleness and authority changes; F64 compares incremental and full runs), F100 to F107 (architecture rules, the diagram and the facts).
 
 ## Known limits
 
 - The query runner and gap view are unit-tested only through fixtures, apart from `unobserved-test` per source; witness judging, verdicts, comparability and the cache have their own unit tests.
 - Retired fragments leave the solver pool entirely ([A-03](../../ASSUMPTIONS.md)).
 - Stale evidence is never refreshed; a new witness must be recorded ([A-15](../../ASSUMPTIONS.md)).
-- `architecture` and `temporal` obligations are assessed but never evaluated, so they stay `unknown`.
+- `temporal` obligations, and `architecture` obligations whose value is not a typed rule, are assessed but never evaluated, so they stay `unknown`.
