@@ -488,7 +488,7 @@
       "q": "Why would a BDD and TDD contradiction go unseen even with CSH?",
       "a": "Until C7, Q-EX compared an example only with rules, never with another example, so the scenario and the test on the third attempt collided only through LCK-001's predicate. With C7 built, the divergence query reports them directly at the first stage, with no rule between them.",
       "evidence": {
-        "finding": "c96bb04f012d0eff",
+        "finding": "d46c46fc35c2bc4a",
         "stage": "before"
       },
       "depth": "Ends in a tool: countermeasure C7, now built."
@@ -498,7 +498,7 @@
       "q": "Why does a green suite not protect the agreed behaviour after approval?",
       "a": "A change can edit the code and its test together, so both agree with each other and nothing in either practice notices. Only an approved rule outside the change can.",
       "evidence": {
-        "finding": "366f0170067a67dc",
+        "finding": "52f1b067782479c7",
         "stage": "regression"
       },
       "depth": "Ends in a tool: the enforcing gate, countermeasure C9."

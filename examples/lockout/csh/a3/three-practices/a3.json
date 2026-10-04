@@ -123,15 +123,15 @@
       },
       "signals": [
         [
-          "1ddb3af3b59cda97",
-          "c96bb04f012d0eff"
+          "c394d28f6a0cf886",
+          "d46c46fc35c2bc4a"
         ],
         [],
         [],
         [
-          "366f0170067a67dc",
-          "18501bbfd8281e4f",
-          "88e0136d79c3b3db",
+          "52f1b067782479c7",
+          "c058ac37b386ad29",
+          "d585e1ac635288cb",
           "3716f56495558948"
         ]
       ]
@@ -156,8 +156,8 @@
       },
       "signals": [
         [
-          "702512fd20ed2026",
           "c897987617527744",
+          "d3af7a2650522cc2",
           "6aa446d724b76ed9"
         ],
         [],
@@ -263,7 +263,7 @@
       },
       "signals": [
         [
-          "6565be23d35a3264"
+          "71962efd6ed0caae"
         ],
         [],
         [],
@@ -379,7 +379,7 @@
     "returned": []
   },
   "goal": "Every decision point has one rule that all three practices agree with and a person has approved, every translation between notations is visible and reviewed, and every case one practice cannot express is a recorded decision.",
-  "judgmentsDigest": "sha256:60ddec5a20b6d74bac0928ad01adbc12ff4a1fa983277b22249ca28010256e59",
+  "judgmentsDigest": "sha256:a3cb4eacda8e3f0b5d66e3f4c3cafbead4d0e09b5d21e8a9d7140ba642b895c4",
   "lanes": [
     {
       "counts": [
@@ -875,7 +875,7 @@
       "a": "Until C7, Q-EX compared an example only with rules, never with another example, so the scenario and the test on the third attempt collided only through LCK-001's predicate. With C7 built, the divergence query reports them directly at the first stage, with no rule between them.",
       "depth": "Ends in a tool: countermeasure C7, now built.",
       "evidence": {
-        "finding": "c96bb04f012d0eff",
+        "finding": "d46c46fc35c2bc4a",
         "resolves": true,
         "stage": "before"
       },
@@ -886,7 +886,7 @@
       "a": "A change can edit the code and its test together, so both agree with each other and nothing in either practice notices. Only an approved rule outside the change can.",
       "depth": "Ends in a tool: the enforcing gate, countermeasure C9.",
       "evidence": {
-        "finding": "366f0170067a67dc",
+        "finding": "52f1b067782479c7",
         "resolves": true,
         "stage": "regression"
       },
@@ -957,34 +957,15 @@
         },
         {
           "cause": "count",
-          "detail": "Q-EX(SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsThreeFailedAttemptsBeforeLocking)",
+          "detail": "Q-EX(SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsThreeFailedAttemptsBeforeLocking)",
           "fragments": [
-            "SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsThreeFailedAttemptsBeforeLocking",
+            "SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsThreeFailedAttemptsBeforeLocking",
             "SignInService/StopPasswordGuessing/LockOnThirdFailure"
           ],
-          "id": "1ddb3af3b59cda97",
+          "id": "c394d28f6a0cf886",
           "kind": "example-conflict",
-          "label": "example-conflict 1ddb3af3b59cda97: WitnessTestLockoutTestTsAllowsThreeFailedAttemptsBeforeLocking × LockOnThirdFailure",
+          "label": "example-conflict c394d28f6a0cf886: WitnessTest0slockout0dtest0dts0eAllowsThreeFailedAttemptsBeforeLocking × LockOnThirdFailure",
           "lane": "tdd-test",
-          "practices": [
-            "tdd"
-          ],
-          "sources": [
-            "UnitTests",
-            "intent"
-          ]
-        },
-        {
-          "cause": "together",
-          "detail": "Q-EX(SignInService/@UnitTests/WitnessTestLockoutTestTsRefusesALockedAccountEvenWithTheCorrectPassword)",
-          "fragments": [
-            "SignInService/@UnitTests/WitnessTestLockoutTestTsRefusesALockedAccountEvenWithTheCorrectPassword",
-            "SignInService/StopPasswordGuessing/AcceptCorrectPassword"
-          ],
-          "id": "702512fd20ed2026",
-          "kind": "example-conflict",
-          "label": "example-conflict 702512fd20ed2026: WitnessTestLockoutTestTsRefusesALockedAccountEvenWithTheCorrectPassword × AcceptCorrectPassword",
-          "lane": "hub",
           "practices": [
             "tdd"
           ],
@@ -1013,15 +994,34 @@
           ]
         },
         {
+          "cause": "together",
+          "detail": "Q-EX(SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eRefusesALockedAccountEvenWithTheCorrectPassword)",
+          "fragments": [
+            "SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eRefusesALockedAccountEvenWithTheCorrectPassword",
+            "SignInService/StopPasswordGuessing/AcceptCorrectPassword"
+          ],
+          "id": "d3af7a2650522cc2",
+          "kind": "example-conflict",
+          "label": "example-conflict d3af7a2650522cc2: WitnessTest0slockout0dtest0dts0eRefusesALockedAccountEvenWithTheCorrectPassword × AcceptCorrectPassword",
+          "lane": "hub",
+          "practices": [
+            "tdd"
+          ],
+          "sources": [
+            "UnitTests",
+            "intent"
+          ]
+        },
+        {
           "cause": "count",
-          "detail": "Q-DIV(SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsThreeFailedAttemptsBeforeLocking); inputs overlapping",
+          "detail": "Q-DIV(SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsThreeFailedAttemptsBeforeLocking); inputs overlapping",
           "fragments": [
             "SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount",
-            "SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsThreeFailedAttemptsBeforeLocking"
+            "SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsThreeFailedAttemptsBeforeLocking"
           ],
-          "id": "c96bb04f012d0eff",
+          "id": "d46c46fc35c2bc4a",
           "kind": "example-divergence",
-          "label": "example-divergence c96bb04f012d0eff: ScenarioThirdFailedAttemptLocksTheAccount × WitnessTestLockoutTestTsAllowsThreeFailedAttemptsBeforeLocking",
+          "label": "example-divergence d46c46fc35c2bc4a: ScenarioThirdFailedAttemptLocksTheAccount × WitnessTest0slockout0dtest0dts0eAllowsThreeFailedAttemptsBeforeLocking",
           "lane": "hub",
           "practices": [
             "bdd",
@@ -1052,11 +1052,11 @@
           "cause": "silence",
           "detail": "no requirement on SignIn has a trigger this example meets",
           "fragments": [
-            "SignInService/@UnitTests/WitnessTestLockoutTestTsLocksOnTheFourthFailedAttempt"
+            "SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eLocksOnTheFourthFailedAttempt"
           ],
-          "id": "6565be23d35a3264",
+          "id": "71962efd6ed0caae",
           "kind": "no-rule",
-          "label": "no-rule: WitnessTestLockoutTestTsLocksOnTheFourthFailedAttempt",
+          "label": "no-rule: WitnessTest0slockout0dtest0dts0eLocksOnTheFourthFailedAttempt",
           "lane": "tdd-test",
           "practices": [
             "tdd"
@@ -1064,7 +1064,7 @@
           "sources": [
             "UnitTests"
           ],
-          "subject": "SignInService/@UnitTests/WitnessTestLockoutTestTsLocksOnTheFourthFailedAttempt"
+          "subject": "SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eLocksOnTheFourthFailedAttempt"
         },
         {
           "cause": "drift",
@@ -1610,14 +1610,14 @@
       "signals": [
         {
           "cause": "count",
-          "detail": "Q-EX(SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsAThirdFailedAttempt)",
+          "detail": "Q-EX(SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt)",
           "fragments": [
-            "SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsAThirdFailedAttempt",
+            "SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt",
             "SignInService/StopPasswordGuessing/LockOnThirdFailure"
           ],
-          "id": "366f0170067a67dc",
+          "id": "52f1b067782479c7",
           "kind": "example-conflict",
-          "label": "example-conflict 366f0170067a67dc: WitnessTestLockoutTestTsAllowsAThirdFailedAttempt × LockOnThirdFailure",
+          "label": "example-conflict 52f1b067782479c7: WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt × LockOnThirdFailure",
           "lane": "tdd-test",
           "practices": [
             "tdd"
@@ -1629,14 +1629,14 @@
         },
         {
           "cause": "count",
-          "detail": "Q-DIV(SignInService/@Scenarios/ScenarioTheLockLastsFifteenMinutes, SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsAThirdFailedAttempt); inputs overlapping",
+          "detail": "Q-DIV(SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt); inputs overlapping",
           "fragments": [
-            "SignInService/@Scenarios/ScenarioTheLockLastsFifteenMinutes",
-            "SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsAThirdFailedAttempt"
+            "SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount",
+            "SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt"
           ],
-          "id": "18501bbfd8281e4f",
+          "id": "c058ac37b386ad29",
           "kind": "example-divergence",
-          "label": "example-divergence 18501bbfd8281e4f: ScenarioTheLockLastsFifteenMinutes × WitnessTestLockoutTestTsAllowsAThirdFailedAttempt",
+          "label": "example-divergence c058ac37b386ad29: ScenarioThirdFailedAttemptLocksTheAccount × WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt",
           "lane": "hub",
           "practices": [
             "bdd",
@@ -1649,14 +1649,14 @@
         },
         {
           "cause": "count",
-          "detail": "Q-DIV(SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsAThirdFailedAttempt); inputs overlapping",
+          "detail": "Q-DIV(SignInService/@Scenarios/ScenarioTheLockLastsFifteenMinutes, SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt); inputs overlapping",
           "fragments": [
-            "SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount",
-            "SignInService/@UnitTests/WitnessTestLockoutTestTsAllowsAThirdFailedAttempt"
+            "SignInService/@Scenarios/ScenarioTheLockLastsFifteenMinutes",
+            "SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt"
           ],
-          "id": "88e0136d79c3b3db",
+          "id": "d585e1ac635288cb",
           "kind": "example-divergence",
-          "label": "example-divergence 88e0136d79c3b3db: ScenarioThirdFailedAttemptLocksTheAccount × WitnessTestLockoutTestTsAllowsAThirdFailedAttempt",
+          "label": "example-divergence d585e1ac635288cb: ScenarioTheLockLastsFifteenMinutes × WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt",
           "lane": "hub",
           "practices": [
             "bdd",
