@@ -2,10 +2,165 @@
   "authority": {
     "authority": "candidate"
   },
-  "background": [],
+  "background": [
+    "These judgments were written by Claude, an agent, at the owner's request (issue #13, where the owner wrote \"Make that call as an agent as this evolves for 13\"). The owner may revise any of them. Like everything else in this component they are candidates: nothing is approved in any ledger, and the sheet says so in its header.",
+    "The gate turns one approved obligation into a disposition: allow, review, block or waived. Its requirements are the disposition table of the Authority tab (05, section 6). Its code is src/gate.ts, about 140 lines that the safety of every other run rests on. Its tests are test/gate.test.ts, repeated as a probe in test/gate.probe.ts so that each call to gate is a witness (A-49). Stage 15 wrote the table's rows as the sentences GATE-001 to GATE-007, wrote a model of the event Decide with a predicate for each row, and ran the three together for the first time.",
+    "How each practice is judged on its own terms: the table and its sentences by review, one row at a time; the tests by passing against gate.ts. Both pass. In CSH a sentence is cited, never translated, and a person writes the predicate, so the predicates and the model are where the rows meet each other."
+  ],
   "component": "Gate",
-  "countermeasures": [],
-  "decisionPoints": [],
+  "countermeasures": [
+    {
+      "answers": [
+        "Q1",
+        "Q2"
+      ],
+      "id": "C1",
+      "kind": "requirement",
+      "status": "verified",
+      "what": "State the order gate.ts already applies (conflicting, then violated, then unknown or stale, then self-approved needing review, then allow) in the condition of each sentence GATE-001 to 007 and of each predicate, and as the Decide transition. Each row then holds only when no higher row applies. gate.ts is unchanged; everything stays candidate."
+    },
+    {
+      "answers": [
+        "Q1"
+      ],
+      "id": "C2",
+      "kind": "process",
+      "status": "proposed",
+      "what": "The owner amends the Authority tab's disposition table (05, section 6) to say that its rows apply in order, highest first, as gate.ts and C1 do. A new row then has to say where it sits. The agent does not edit tabs 00 to 08."
+    },
+    {
+      "answers": [
+        "Q3"
+      ],
+      "id": "C3",
+      "kind": "scope",
+      "status": "owner decides",
+      "what": "Accept the seven single-source gaps for now, and add no scenarios in this change. Scenarios would add examples, not rules, so they would not clear the gap. A second rule-bearing source is the owner's choice."
+    },
+    {
+      "answers": [
+        "Q4"
+      ],
+      "id": "C4",
+      "kind": "scope",
+      "status": "owner decides",
+      "what": "Accept the unobserved test. A case with no approved obligation is not a Decide event, and A-49 records why the probe leaves it out."
+    },
+    {
+      "answers": [
+        "Q5"
+      ],
+      "id": "C5",
+      "kind": "scope",
+      "status": "owner decides",
+      "what": "Leave the GateSafety policy as it is, not critical, until the owner approves the rules and can choose how the gate treats its own unknown or stale rules."
+    },
+    {
+      "answers": [
+        "Q1",
+        "Q2"
+      ],
+      "id": "C6",
+      "kind": "process",
+      "status": "proposed",
+      "what": "The owner reviews C1 and approves the sentences, predicates and bindings, or revises them. The rules are unknown at the second stage only because their bindings are candidate."
+    }
+  ],
+  "decisionPoints": [
+    {
+      "class": "contradiction",
+      "note": "gate.ts checks staleness before allowing (src/gate.ts:97), so the test is right and GATE-006 is too wide.",
+      "point": "Satisfied, but stale",
+      "says": {
+        "ears": {
+          "mark": "clash",
+          "text": "GATE-004/005: review or block · GATE-006: allow"
+        },
+        "tdd": {
+          "mark": "says",
+          "text": "review (stale gives review)"
+        }
+      },
+      "signals": [
+        [
+          "226609020dc65386",
+          "5cb9cb853f53bb0c",
+          "82e5e0bfe2c1a5bf"
+        ],
+        []
+      ]
+    },
+    {
+      "class": "contradiction",
+      "note": "gate.ts turns an allow into review afterwards (src/gate.ts:107), so GATE-007 wins over GATE-006.",
+      "point": "Satisfied, self-approved and needs review",
+      "says": {
+        "ears": {
+          "mark": "clash",
+          "text": "GATE-006: allow · GATE-007: review"
+        },
+        "tdd": {
+          "mark": "says",
+          "text": "review (self-approved needing review gives review)"
+        }
+      },
+      "signals": [
+        [
+          "c5389a65a1977884",
+          "86db1b2fd17db34f"
+        ],
+        []
+      ]
+    },
+    {
+      "class": "contradiction",
+      "note": "gate.ts applies GATE-007 only while the row is still allow (src/gate.ts:107), so a block or a waiver stands.",
+      "point": "Conflicting, violated or unknown, and self-approved needing review",
+      "says": {
+        "ears": {
+          "mark": "clash",
+          "text": "GATE-001 to 004: block, review or waived · GATE-007: review"
+        },
+        "tdd": {
+          "mark": "silent",
+          "text": "no case"
+        }
+      },
+      "signals": [
+        [
+          "4b3ccbab132a0547",
+          "5cfe9b79d4ab2007",
+          "984794edd09ab1a5",
+          "e7f6554614a8de02"
+        ],
+        []
+      ]
+    },
+    {
+      "class": "contradiction",
+      "note": "gate.ts reaches its unknown-or-stale branch only through else (src/gate.ts:97), so the verdict decides first.",
+      "point": "Conflicting or violated, and stale",
+      "says": {
+        "ears": {
+          "mark": "clash",
+          "text": "GATE-001 to 003: block, review or waived · GATE-004/005: review or block"
+        },
+        "tdd": {
+          "mark": "silent",
+          "text": "no case"
+        }
+      },
+      "signals": [
+        [
+          "019df5366f3feef4",
+          "431ff15ba078647c",
+          "53f10b4521b82818",
+          "fc3c487e0bf9d8eb"
+        ],
+        []
+      ]
+    }
+  ],
   "followUp": {
     "gate": {
       "mode": "advisory",
@@ -13,28 +168,52 @@
     },
     "returned": []
   },
-  "goal": "",
-  "judgmentsDigest": "sha256:a80ee97c65784cc2b499c44d459621371de15799da343cc77addcd02776f7199",
+  "goal": "Exactly one row applies to any obligation, and the sentences, the model and gate.ts state the same order. Every gap that remains is a recorded decision, and the rules are ready for the owner to approve.",
+  "judgmentsDigest": "sha256:0619c9f0df0db09f9856ae35c16d0ae3f75d9d5fca23455e5d6c0afa589f5cf1",
   "lanes": [
     {
       "counts": [
+        13,
         0
       ],
-      "id": "ears",
+      "id": "ears-sentence",
       "practice": "ears",
       "step": 1,
-      "title": "EARS",
-      "where": "Authority"
+      "title": "The table's rows written as EARS sentences",
+      "where": "docs/requirements.md"
     },
     {
       "counts": [
+        0,
         0
       ],
-      "id": "tdd",
+      "id": "ears-predicate",
+      "practice": "ears",
+      "step": 2,
+      "title": "Predicates and the model cite them",
+      "where": "spec/gate.csl.ts"
+    },
+    {
+      "counts": [
+        1,
+        1
+      ],
+      "id": "tdd-test",
       "practice": "tdd",
       "step": 1,
-      "title": "Unit tests",
-      "where": "UnitTests"
+      "title": "The probe records each call to gate",
+      "where": "test/gate.probe.ts and src/gate.ts"
+    },
+    {
+      "counts": [
+        7,
+        7
+      ],
+      "id": "hub",
+      "practice": "hub",
+      "step": 3,
+      "title": "CSH: one pool",
+      "where": "rules from the predicates and model, examples from the probe"
     }
   ],
   "measures": [
@@ -46,6 +225,10 @@
         {
           "met": false,
           "value": "13"
+        },
+        {
+          "met": true,
+          "value": "0"
         }
       ]
     },
@@ -54,6 +237,10 @@
       "name": "Not comparable",
       "target": "0",
       "values": [
+        {
+          "met": true,
+          "value": "0"
+        },
         {
           "met": true,
           "value": "0"
@@ -68,6 +255,10 @@
         {
           "met": true,
           "value": "0"
+        },
+        {
+          "met": true,
+          "value": "0"
         }
       ]
     },
@@ -76,6 +267,10 @@
       "name": "Examples with no rule",
       "target": "0",
       "values": [
+        {
+          "met": true,
+          "value": "0"
+        },
         {
           "met": true,
           "value": "0"
@@ -90,6 +285,10 @@
         {
           "met": true,
           "value": "0"
+        },
+        {
+          "met": true,
+          "value": "0"
         }
       ]
     },
@@ -98,6 +297,10 @@
       "name": "Rules satisfied on approved evidence",
       "target": "all",
       "values": [
+        {
+          "met": false,
+          "value": "0 of 7"
+        },
         {
           "met": false,
           "value": "0 of 7"
@@ -112,6 +315,10 @@
         {
           "met": false,
           "value": "allow (advisory)"
+        },
+        {
+          "met": false,
+          "value": "allow (advisory)"
         }
       ]
     },
@@ -123,6 +330,10 @@
         {
           "met": true,
           "value": "17 of 17"
+        },
+        {
+          "met": true,
+          "value": "17 of 17"
         }
       ]
     }
@@ -131,20 +342,75 @@
     {
       "bars": [
         {
-          "cause": "",
-          "cumulative": 1,
-          "n": 21,
-          "name": "Unclassified: no cause places it",
+          "cause": "order",
+          "cumulative": 0.6190476190476191,
+          "n": 13,
+          "name": "The rows' order lives only in gate.ts",
           "vital": true
+        },
+        {
+          "cause": "one-voice",
+          "cumulative": 0.9523809523809523,
+          "n": 7,
+          "name": "Rules come from one source only",
+          "vital": true
+        },
+        {
+          "cause": "nothing-to-decide",
+          "cumulative": 1,
+          "n": 1,
+          "name": "A test gives the gate nothing to decide",
+          "vital": false
         }
       ],
       "stage": "first"
+    },
+    {
+      "bars": [
+        {
+          "cause": "one-voice",
+          "cumulative": 0.875,
+          "n": 7,
+          "name": "Rules come from one source only",
+          "vital": true
+        },
+        {
+          "cause": "nothing-to-decide",
+          "cumulative": 1,
+          "n": 1,
+          "name": "A test gives the gate nothing to decide",
+          "vital": false
+        }
+      ],
+      "stage": "precedence"
     }
   ],
-  "plan": [],
+  "plan": [
+    {
+      "what": "State the order in the sentences, predicates and model (C1)",
+      "when": "Done: the second stage",
+      "who": "Claude (agent), at the owner's request"
+    },
+    {
+      "what": "Review these judgments and C1; revise or approve the rules and bindings (C6)",
+      "when": "Before any rule is approved",
+      "who": "Gate owner"
+    },
+    {
+      "what": "Amend the table in the Authority tab to state its order (C2)",
+      "when": "With the next export of the specification",
+      "who": "Gate owner"
+    },
+    {
+      "what": "Revisit single-source, the unobserved test and the critical policy (C3 to C5)",
+      "when": "At approval",
+      "who": "Gate owner"
+    }
+  ],
   "practices": [
     {
       "author": "Gate owner",
+      "cannotSay": "Which row wins when two apply, unless each sentence says so",
       "id": "ears",
       "kind": "requirements",
       "name": "EARS",
@@ -155,6 +421,7 @@
     },
     {
       "author": "Developer",
+      "cannotSay": "A rule: each test is one case, judged against the code that holds the order",
       "id": "tdd",
       "kind": "tests",
       "name": "Unit tests",
@@ -164,136 +431,62 @@
       "unit": "the test"
     }
   ],
-  "problem": "",
-  "problems": [
+  "problem": "The gate's disposition table has seven rows, and nothing says which one wins when two apply. Written as seven sentences and seven predicates, 11 pairs of rows contradict each other and two unit tests contradict a row. gate.ts passes every test because it applies an order that no sentence states.",
+  "problems": [],
+  "rca": [
     {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "example-conflict 226609020dc65386: WitnessStaleGivesReview × AllowSatisfied"
+      "a": "The rows' conditions overlap, and each pair that overlaps prescribes different dispositions. Stale crosses every verdict, and self-approved needing review crosses everything. gate.ts never conflicts because it checks in a fixed order (src/gate.ts:89, 90, 97, 107), so an earlier check settles any overlap. Neither the sentences nor the model state that order.",
+      "depth": "5 Whys to the root, below.",
+      "evidence": {
+        "finding": "5cb9cb853f53bb0c",
+        "resolves": true,
+        "stage": "first"
+      },
+      "id": "Q1",
+      "q": "Why do 11 pairs of rows conflict when gate.ts passes every test?"
     },
     {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "example-conflict c5389a65a1977884: WitnessSelfApprovedNeedingReviewGivesReview × AllowSatisfied"
+      "a": "GATE-006 allows every satisfied obligation. gate.ts sends a satisfied but stale one to review (src/gate.ts:97), and also one that is self-approved and needs review (src/gate.ts:107). The tests follow the code, so the rule is too wide and the tests are right.",
+      "depth": "Evidence stops: the same missing order as Q1, seen from the tests.",
+      "evidence": {
+        "finding": "226609020dc65386",
+        "resolves": true,
+        "stage": "first"
+      },
+      "id": "Q2",
+      "q": "Why do two unit tests conflict with AllowSatisfied?"
     },
     {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "joint-conflict 019df5366f3feef4: BlockUnknownCritical × WaiveViolatedWithWaiver"
+      "a": "Only rules count towards this gap: the predicates and the model, which share one column (intent). The sentences are cited, never lifted, and the probe adds examples, not rules. Scenarios, the optional fourth practice of section 8, would also add examples, so they would not clear it. The rows are not unsupported: 17 witnesses cite them, and after C1 none contradicts them.",
+      "depth": "Evidence stops: this is how the harness counts sources, and the lockout sheet keeps the same gaps.",
+      "id": "Q3",
+      "q": "Why is every row single-source?"
     },
     {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "joint-conflict 431ff15ba078647c: BlockConflicting × ReviewUnknown"
+      "a": "\"ignores candidate obligations, listing them\" has no approved assessment, so the gate has nothing to decide and no Decide event to record. The probe calls gate without the probe on purpose (A-49). The test passes and counts in the Tests column (A-67).",
+      "depth": "Evidence stops: the case lies outside the event the probe records.",
+      "evidence": {
+        "file": "test/gate.probe.ts",
+        "resolves": true,
+        "stage": "first",
+        "text": "A case whose report has no approved assessment gives the"
+      },
+      "id": "Q4",
+      "q": "Why does one test record no witness?"
     },
     {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "joint-conflict 4b3ccbab132a0547: BlockConflicting × ReviewSelfApproved"
-    },
-    {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "joint-conflict 53f10b4521b82818: ReviewUnknown × WaiveViolatedWithWaiver"
-    },
-    {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "joint-conflict 5cb9cb853f53bb0c: AllowSatisfied × ReviewUnknown"
-    },
-    {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "joint-conflict 5cfe9b79d4ab2007: ReviewSelfApproved × WaiveViolatedWithWaiver"
-    },
-    {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "joint-conflict 82e5e0bfe2c1a5bf: AllowSatisfied × BlockUnknownCritical"
-    },
-    {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "joint-conflict 86db1b2fd17db34f: AllowSatisfied × ReviewSelfApproved"
-    },
-    {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "joint-conflict 984794edd09ab1a5: BlockUnknownCritical × ReviewSelfApproved"
-    },
-    {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "joint-conflict e7f6554614a8de02: BlockViolatedWithoutWaiver × ReviewSelfApproved"
-    },
-    {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "joint-conflict fc3c487e0bf9d8eb: BlockViolatedWithoutWaiver × ReviewUnknown"
-    },
-    {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "single-source: ReviewUnknown"
-    },
-    {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "single-source: WaiveViolatedWithWaiver"
-    },
-    {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "single-source: AllowSatisfied"
-    },
-    {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "single-source: ReviewSelfApproved"
-    },
-    {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "single-source: BlockViolatedWithoutWaiver"
-    },
-    {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "single-source: BlockUnknownCritical"
-    },
-    {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "single-source: BlockConflicting"
-    },
-    {
-      "detail": "no cause places this signal",
-      "kind": "unclassified",
-      "stage": "first",
-      "subject": "unobserved-test: gate.probe.ts::ignores candidate obligations, listing them"
+      "a": "Critical changes one thing: an approved obligation of this intent that is unknown or stale blocks in enforcing mode instead of going to review (src/gate.ts:99). Nothing is approved, so it would change nothing that runs today. Choosing it means deciding how the gate treats its own unproven rules once they are approved, which is a decision about approval. No concrete reason to change it was found, so the policy is left as it is.",
+      "depth": "Evidence stops: a policy decision, left at its protective default.",
+      "evidence": {
+        "file": "src/gate.ts",
+        "resolves": true,
+        "stage": "first",
+        "text": "if (a.critical && mode === \"enforcing\")"
+      },
+      "id": "Q5",
+      "q": "Should the GateSafety policy mark the intent critical?"
     }
   ],
-  "rca": [],
   "schema": "csh-a3/v1",
   "slug": "dispositions",
   "stages": [
@@ -308,7 +501,7 @@
         "overall": "allow"
       },
       "id": "first",
-      "name": "",
+      "name": "First run",
       "rules": [
         {
           "authority": "candidate",
@@ -369,6 +562,7 @@
       ],
       "signals": [
         {
+          "cause": "order",
           "detail": "Q-EX(Gate/@UnitTests/WitnessStaleGivesReview)",
           "fragments": [
             "Gate/@UnitTests/WitnessStaleGivesReview",
@@ -377,6 +571,7 @@
           "id": "226609020dc65386",
           "kind": "example-conflict",
           "label": "example-conflict 226609020dc65386: WitnessStaleGivesReview × AllowSatisfied",
+          "lane": "ears-sentence",
           "practices": [
             "tdd"
           ],
@@ -386,6 +581,7 @@
           ]
         },
         {
+          "cause": "order",
           "detail": "Q-EX(Gate/@UnitTests/WitnessSelfApprovedNeedingReviewGivesReview)",
           "fragments": [
             "Gate/@UnitTests/WitnessSelfApprovedNeedingReviewGivesReview",
@@ -394,6 +590,7 @@
           "id": "c5389a65a1977884",
           "kind": "example-conflict",
           "label": "example-conflict c5389a65a1977884: WitnessSelfApprovedNeedingReviewGivesReview × AllowSatisfied",
+          "lane": "ears-sentence",
           "practices": [
             "tdd"
           ],
@@ -403,6 +600,7 @@
           ]
         },
         {
+          "cause": "order",
           "detail": "Q-FEAS(Decide)",
           "fragments": [
             "Gate/NoViolationAllowed/BlockUnknownCritical",
@@ -411,12 +609,14 @@
           "id": "019df5366f3feef4",
           "kind": "joint-conflict",
           "label": "joint-conflict 019df5366f3feef4: BlockUnknownCritical × WaiveViolatedWithWaiver",
+          "lane": "ears-sentence",
           "practices": [],
           "sources": [
             "intent"
           ]
         },
         {
+          "cause": "order",
           "detail": "Q-FEAS(Decide)",
           "fragments": [
             "Gate/NoViolationAllowed/BlockConflicting",
@@ -425,12 +625,14 @@
           "id": "431ff15ba078647c",
           "kind": "joint-conflict",
           "label": "joint-conflict 431ff15ba078647c: BlockConflicting × ReviewUnknown",
+          "lane": "ears-sentence",
           "practices": [],
           "sources": [
             "intent"
           ]
         },
         {
+          "cause": "order",
           "detail": "Q-FEAS(Decide)",
           "fragments": [
             "Gate/NoViolationAllowed/BlockConflicting",
@@ -439,12 +641,14 @@
           "id": "4b3ccbab132a0547",
           "kind": "joint-conflict",
           "label": "joint-conflict 4b3ccbab132a0547: BlockConflicting × ReviewSelfApproved",
+          "lane": "ears-sentence",
           "practices": [],
           "sources": [
             "intent"
           ]
         },
         {
+          "cause": "order",
           "detail": "Q-FEAS(Decide)",
           "fragments": [
             "Gate/NoViolationAllowed/ReviewUnknown",
@@ -453,12 +657,14 @@
           "id": "53f10b4521b82818",
           "kind": "joint-conflict",
           "label": "joint-conflict 53f10b4521b82818: ReviewUnknown × WaiveViolatedWithWaiver",
+          "lane": "ears-sentence",
           "practices": [],
           "sources": [
             "intent"
           ]
         },
         {
+          "cause": "order",
           "detail": "Q-FEAS(Decide)",
           "fragments": [
             "Gate/NoViolationAllowed/AllowSatisfied",
@@ -467,12 +673,14 @@
           "id": "5cb9cb853f53bb0c",
           "kind": "joint-conflict",
           "label": "joint-conflict 5cb9cb853f53bb0c: AllowSatisfied × ReviewUnknown",
+          "lane": "ears-sentence",
           "practices": [],
           "sources": [
             "intent"
           ]
         },
         {
+          "cause": "order",
           "detail": "Q-FEAS(Decide)",
           "fragments": [
             "Gate/NoViolationAllowed/ReviewSelfApproved",
@@ -481,12 +689,14 @@
           "id": "5cfe9b79d4ab2007",
           "kind": "joint-conflict",
           "label": "joint-conflict 5cfe9b79d4ab2007: ReviewSelfApproved × WaiveViolatedWithWaiver",
+          "lane": "ears-sentence",
           "practices": [],
           "sources": [
             "intent"
           ]
         },
         {
+          "cause": "order",
           "detail": "Q-FEAS(Decide)",
           "fragments": [
             "Gate/NoViolationAllowed/AllowSatisfied",
@@ -495,12 +705,14 @@
           "id": "82e5e0bfe2c1a5bf",
           "kind": "joint-conflict",
           "label": "joint-conflict 82e5e0bfe2c1a5bf: AllowSatisfied × BlockUnknownCritical",
+          "lane": "ears-sentence",
           "practices": [],
           "sources": [
             "intent"
           ]
         },
         {
+          "cause": "order",
           "detail": "Q-FEAS(Decide)",
           "fragments": [
             "Gate/NoViolationAllowed/AllowSatisfied",
@@ -509,12 +721,14 @@
           "id": "86db1b2fd17db34f",
           "kind": "joint-conflict",
           "label": "joint-conflict 86db1b2fd17db34f: AllowSatisfied × ReviewSelfApproved",
+          "lane": "ears-sentence",
           "practices": [],
           "sources": [
             "intent"
           ]
         },
         {
+          "cause": "order",
           "detail": "Q-FEAS(Decide)",
           "fragments": [
             "Gate/NoViolationAllowed/BlockUnknownCritical",
@@ -523,12 +737,14 @@
           "id": "984794edd09ab1a5",
           "kind": "joint-conflict",
           "label": "joint-conflict 984794edd09ab1a5: BlockUnknownCritical × ReviewSelfApproved",
+          "lane": "ears-sentence",
           "practices": [],
           "sources": [
             "intent"
           ]
         },
         {
+          "cause": "order",
           "detail": "Q-FEAS(Decide)",
           "fragments": [
             "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver",
@@ -537,12 +753,14 @@
           "id": "e7f6554614a8de02",
           "kind": "joint-conflict",
           "label": "joint-conflict e7f6554614a8de02: BlockViolatedWithoutWaiver × ReviewSelfApproved",
+          "lane": "ears-sentence",
           "practices": [],
           "sources": [
             "intent"
           ]
         },
         {
+          "cause": "order",
           "detail": "Q-FEAS(Decide)",
           "fragments": [
             "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver",
@@ -551,12 +769,14 @@
           "id": "fc3c487e0bf9d8eb",
           "kind": "joint-conflict",
           "label": "joint-conflict fc3c487e0bf9d8eb: BlockViolatedWithoutWaiver × ReviewUnknown",
+          "lane": "ears-sentence",
           "practices": [],
           "sources": [
             "intent"
           ]
         },
         {
+          "cause": "one-voice",
           "detail": "Decide.args.applicability, Decide.args.critical, Decide.args.verdict, Decide.result asserted only by intent",
           "fragments": [
             "Gate/NoViolationAllowed/ReviewUnknown"
@@ -564,6 +784,7 @@
           "id": "198d8967a175f166",
           "kind": "single-source",
           "label": "single-source: ReviewUnknown",
+          "lane": "hub",
           "practices": [],
           "sources": [
             "intent"
@@ -571,6 +792,7 @@
           "subject": "Gate/NoViolationAllowed/ReviewUnknown"
         },
         {
+          "cause": "one-voice",
           "detail": "Decide.args.verdict, Decide.args.waiverValid, Decide.result asserted only by intent",
           "fragments": [
             "Gate/NoViolationAllowed/WaiveViolatedWithWaiver"
@@ -578,6 +800,7 @@
           "id": "6e261864f0618dd2",
           "kind": "single-source",
           "label": "single-source: WaiveViolatedWithWaiver",
+          "lane": "hub",
           "practices": [],
           "sources": [
             "intent"
@@ -585,6 +808,7 @@
           "subject": "Gate/NoViolationAllowed/WaiveViolatedWithWaiver"
         },
         {
+          "cause": "one-voice",
           "detail": "Decide.args.verdict, Decide.result asserted only by intent",
           "fragments": [
             "Gate/NoViolationAllowed/AllowSatisfied"
@@ -592,6 +816,7 @@
           "id": "8757e3f8eb7f2bf9",
           "kind": "single-source",
           "label": "single-source: AllowSatisfied",
+          "lane": "hub",
           "practices": [],
           "sources": [
             "intent"
@@ -599,6 +824,7 @@
           "subject": "Gate/NoViolationAllowed/AllowSatisfied"
         },
         {
+          "cause": "one-voice",
           "detail": "Decide.args.needsReview, Decide.args.selfApproved, Decide.result asserted only by intent",
           "fragments": [
             "Gate/NoViolationAllowed/ReviewSelfApproved"
@@ -606,6 +832,7 @@
           "id": "90b4650453d9bba3",
           "kind": "single-source",
           "label": "single-source: ReviewSelfApproved",
+          "lane": "hub",
           "practices": [],
           "sources": [
             "intent"
@@ -613,6 +840,7 @@
           "subject": "Gate/NoViolationAllowed/ReviewSelfApproved"
         },
         {
+          "cause": "one-voice",
           "detail": "Decide.args.mode, Decide.args.verdict, Decide.args.waiverValid, Decide.result asserted only by intent",
           "fragments": [
             "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver"
@@ -620,6 +848,7 @@
           "id": "9e25edacb0600b84",
           "kind": "single-source",
           "label": "single-source: BlockViolatedWithoutWaiver",
+          "lane": "hub",
           "practices": [],
           "sources": [
             "intent"
@@ -627,6 +856,7 @@
           "subject": "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver"
         },
         {
+          "cause": "one-voice",
           "detail": "Decide.args.applicability, Decide.args.critical, Decide.args.mode, Decide.args.verdict, Decide.result asserted only by intent",
           "fragments": [
             "Gate/NoViolationAllowed/BlockUnknownCritical"
@@ -634,6 +864,7 @@
           "id": "a31d499f803ee5fe",
           "kind": "single-source",
           "label": "single-source: BlockUnknownCritical",
+          "lane": "hub",
           "practices": [],
           "sources": [
             "intent"
@@ -641,6 +872,7 @@
           "subject": "Gate/NoViolationAllowed/BlockUnknownCritical"
         },
         {
+          "cause": "one-voice",
           "detail": "Decide.args.mode, Decide.args.verdict, Decide.result asserted only by intent",
           "fragments": [
             "Gate/NoViolationAllowed/BlockConflicting"
@@ -648,6 +880,7 @@
           "id": "dcea34a4e5a9dc38",
           "kind": "single-source",
           "label": "single-source: BlockConflicting",
+          "lane": "hub",
           "practices": [],
           "sources": [
             "intent"
@@ -655,11 +888,13 @@
           "subject": "Gate/NoViolationAllowed/BlockConflicting"
         },
         {
+          "cause": "nothing-to-decide",
           "detail": "reports/executions.ndjson:12: passed, and no witness from UnitTests",
           "fragments": [],
           "id": "513dfc87815f6460",
           "kind": "unobserved-test",
           "label": "unobserved-test: gate.probe.ts::ignores candidate obligations, listing them",
+          "lane": "tdd-test",
           "practices": [],
           "sources": [],
           "subject": "test/gate.probe.ts::ignores candidate obligations, listing them"
@@ -669,10 +904,278 @@
         "passed": 15,
         "total": 15
       },
-      "what": ""
+      "what": "The table's seven rows as candidate sentences, predicates and model, run against the probe of gate.ts."
+    },
+    {
+      "conflicts": 0,
+      "examples": {
+        "citing": 17,
+        "total": 17
+      },
+      "gate": {
+        "mode": "advisory",
+        "overall": "allow"
+      },
+      "id": "precedence",
+      "name": "Precedence stated",
+      "rules": [
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Gate/NoViolationAllowed/AllowSatisfied",
+          "name": "AllowSatisfied",
+          "selfApproved": false,
+          "verdict": "unknown"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Gate/NoViolationAllowed/BlockConflicting",
+          "name": "BlockConflicting",
+          "selfApproved": false,
+          "verdict": "unknown"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Gate/NoViolationAllowed/BlockUnknownCritical",
+          "name": "BlockUnknownCritical",
+          "selfApproved": false,
+          "verdict": "unknown"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver",
+          "name": "BlockViolatedWithoutWaiver",
+          "selfApproved": false,
+          "verdict": "unknown"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Gate/NoViolationAllowed/ReviewSelfApproved",
+          "name": "ReviewSelfApproved",
+          "selfApproved": false,
+          "verdict": "unknown"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Gate/NoViolationAllowed/ReviewUnknown",
+          "name": "ReviewUnknown",
+          "selfApproved": false,
+          "verdict": "unknown"
+        },
+        {
+          "authority": "candidate",
+          "disposition": "candidate",
+          "fragment": "Gate/NoViolationAllowed/WaiveViolatedWithWaiver",
+          "name": "WaiveViolatedWithWaiver",
+          "selfApproved": false,
+          "verdict": "unknown"
+        }
+      ],
+      "signals": [
+        {
+          "cause": "one-voice",
+          "detail": "Decide.args.applicability, Decide.args.critical, Decide.args.verdict, Decide.result asserted only by intent",
+          "fragments": [
+            "Gate/NoViolationAllowed/ReviewUnknown"
+          ],
+          "id": "198d8967a175f166",
+          "kind": "single-source",
+          "label": "single-source: ReviewUnknown",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "Gate/NoViolationAllowed/ReviewUnknown"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Decide.args.verdict, Decide.args.waiverValid, Decide.result asserted only by intent",
+          "fragments": [
+            "Gate/NoViolationAllowed/WaiveViolatedWithWaiver"
+          ],
+          "id": "6e261864f0618dd2",
+          "kind": "single-source",
+          "label": "single-source: WaiveViolatedWithWaiver",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "Gate/NoViolationAllowed/WaiveViolatedWithWaiver"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Decide.args.applicability, Decide.args.needsReview, Decide.args.selfApproved, Decide.args.verdict, Decide.result asserted only by intent",
+          "fragments": [
+            "Gate/NoViolationAllowed/AllowSatisfied"
+          ],
+          "id": "8757e3f8eb7f2bf9",
+          "kind": "single-source",
+          "label": "single-source: AllowSatisfied",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "Gate/NoViolationAllowed/AllowSatisfied"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Decide.args.applicability, Decide.args.needsReview, Decide.args.selfApproved, Decide.args.verdict, Decide.result asserted only by intent",
+          "fragments": [
+            "Gate/NoViolationAllowed/ReviewSelfApproved"
+          ],
+          "id": "90b4650453d9bba3",
+          "kind": "single-source",
+          "label": "single-source: ReviewSelfApproved",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "Gate/NoViolationAllowed/ReviewSelfApproved"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Decide.args.mode, Decide.args.verdict, Decide.args.waiverValid, Decide.result asserted only by intent",
+          "fragments": [
+            "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver"
+          ],
+          "id": "9e25edacb0600b84",
+          "kind": "single-source",
+          "label": "single-source: BlockViolatedWithoutWaiver",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Decide.args.applicability, Decide.args.critical, Decide.args.mode, Decide.args.verdict, Decide.result asserted only by intent",
+          "fragments": [
+            "Gate/NoViolationAllowed/BlockUnknownCritical"
+          ],
+          "id": "a31d499f803ee5fe",
+          "kind": "single-source",
+          "label": "single-source: BlockUnknownCritical",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "Gate/NoViolationAllowed/BlockUnknownCritical"
+        },
+        {
+          "cause": "one-voice",
+          "detail": "Decide.args.mode, Decide.args.verdict, Decide.result asserted only by intent",
+          "fragments": [
+            "Gate/NoViolationAllowed/BlockConflicting"
+          ],
+          "id": "dcea34a4e5a9dc38",
+          "kind": "single-source",
+          "label": "single-source: BlockConflicting",
+          "lane": "hub",
+          "practices": [],
+          "sources": [
+            "intent"
+          ],
+          "subject": "Gate/NoViolationAllowed/BlockConflicting"
+        },
+        {
+          "cause": "nothing-to-decide",
+          "detail": "reports/executions.ndjson:12: passed, and no witness from UnitTests",
+          "fragments": [],
+          "id": "3ac35274ae266004",
+          "kind": "unobserved-test",
+          "label": "unobserved-test: gate.probe.ts::ignores candidate obligations, listing them",
+          "lane": "tdd-test",
+          "practices": [
+            "tdd"
+          ],
+          "sources": [
+            "UnitTests"
+          ],
+          "subject": "UnitTests/test/gate.probe.ts::ignores candidate obligations, listing them"
+        }
+      ],
+      "tests": {
+        "passed": 15,
+        "total": 15
+      },
+      "what": "C1: the sentences, predicates and model state the order gate.ts applies. gate.ts and the tests are unchanged."
     }
   ],
-  "terms": [],
-  "title": "",
-  "whys": []
+  "terms": [
+    {
+      "meaning": "the order in which the table's rows apply: the first that applies decides",
+      "term": "Precedence"
+    },
+    {
+      "meaning": "two rules whose triggers can both be true and whose demands cannot both hold",
+      "term": "Joint conflict"
+    },
+    {
+      "meaning": "a rule whose terms only one source column asserts rules about",
+      "term": "Single-source"
+    },
+    {
+      "meaning": "asked until the answer is a process or a tool, never a person",
+      "term": "5 Whys"
+    }
+  ],
+  "title": "Seven rows, one order",
+  "whys": [
+    {
+      "a": "Their triggers overlap, and on each overlap they demand different dispositions. For example, a satisfied, stale obligation meets AllowSatisfied (allow) and ReviewUnknown (review).",
+      "evidence": {
+        "finding": "5cb9cb853f53bb0c",
+        "resolves": true,
+        "stage": "first"
+      },
+      "q": "Why do the predicates conflict in pairs?"
+    },
+    {
+      "a": "Each predicate copies one row of the Authority tab's table. The table's conditions are not exclusive: \"unknown or stale\" includes stale obligations of every verdict, and \"self-approved and needs-review\" includes every verdict.",
+      "evidence": {
+        "file": "docs/requirements.md",
+        "resolves": true,
+        "stage": "first",
+        "text": "WHEN an approved obligation is satisfied, THE GATE SHALL allow it."
+      },
+      "q": "Why do their triggers overlap?"
+    },
+    {
+      "a": "It reads the table as an ordered list. It checks conflicting (line 89), then violated (line 90), and reaches unknown or stale only through else (line 97). Self-approved review applies only while the row is still allow (line 107).",
+      "evidence": {
+        "file": "src/gate.ts",
+        "resolves": true,
+        "stage": "first",
+        "text": "if (a.selfApproved && a.needsReview && row.disposition === \"allow\")"
+      },
+      "q": "Why does gate.ts not conflict with itself?"
+    },
+    {
+      "a": "They were transcribed faithfully from the table, row by row, and the table states no order. EARS has no rule for how two sentences combine. The model said so itself: where rows overlap, it says no more than the table (A-48).",
+      "evidence": {
+        "file": "spec/gate.csl.ts",
+        "resolves": true,
+        "stage": "first",
+        "text": "Where rows overlap the table does not say which"
+      },
+      "q": "Why did the sentences and the model not carry that order?"
+    },
+    {
+      "a": "The unit tests pass against the code that holds the order, and each test checks one case, never two rows together. The table is reviewed one row at a time. Nothing read the rows side by side until CSH put them in one pool.",
+      "q": "Why did nothing notice before stage 15?",
+      "root": "Root cause, in a process: the table's order of precedence is recorded only in gate.ts's control flow, nowhere a reviewer reads as a requirement. Countermeasures C1 (requirement and model) and C2 (process)."
+    }
+  ]
 }

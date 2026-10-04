@@ -3,7 +3,11 @@
 **Exit:** `csh run` completes on the gate component, and `csh a3 open` produces a skeleton with every signal listed.
 Every earlier fixture and both walkthroughs stay green.
 
-**Status:** exit reached. The sheet is the owner's from here ([issue #13](https://github.com/lgriffin/CSH/issues/13)).
+**Status:** exit reached. The owner then asked an agent to write the sheet's judgments
+([issue #13](https://github.com/lgriffin/CSH/issues/13), [A-68](../../ASSUMPTIONS.md)). They are written, still
+candidate, with a second stage, `precedence`, that records countermeasure C1: the sentences and the model now state the
+order `gate.ts` applies, and the 13 conflicts are gone. See [the sheet](../../packages/gate/csh/a3/dispositions/a3.md).
+The notes below describe the stage as it was built.
 
 ## Built
 

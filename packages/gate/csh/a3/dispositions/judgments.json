@@ -1,39 +1,430 @@
 {
   "schema": "csh-a3-judgments/v1",
-  "title": "",
-  "problem": "",
-  "background": [],
+  "title": "Seven rows, one order",
+  "problem": "The gate's disposition table has seven rows, and nothing says which one wins when two apply. Written as seven sentences and seven predicates, 11 pairs of rows contradict each other and two unit tests contradict a row. gate.ts passes every test because it applies an order that no sentence states.",
+  "background": [
+    "These judgments were written by Claude, an agent, at the owner's request (issue #13, where the owner wrote \"Make that call as an agent as this evolves for 13\"). The owner may revise any of them. Like everything else in this component they are candidates: nothing is approved in any ledger, and the sheet says so in its header.",
+    "The gate turns one approved obligation into a disposition: allow, review, block or waived. Its requirements are the disposition table of the Authority tab (05, section 6). Its code is src/gate.ts, about 140 lines that the safety of every other run rests on. Its tests are test/gate.test.ts, repeated as a probe in test/gate.probe.ts so that each call to gate is a witness (A-49). Stage 15 wrote the table's rows as the sentences GATE-001 to GATE-007, wrote a model of the event Decide with a predicate for each row, and ran the three together for the first time.",
+    "How each practice is judged on its own terms: the table and its sentences by review, one row at a time; the tests by passing against gate.ts. Both pass. In CSH a sentence is cited, never translated, and a person writes the predicate, so the predicates and the model are where the rows meet each other."
+  ],
   "stages": [
     {
       "id": "first",
-      "name": "",
-      "what": ""
+      "name": "First run",
+      "what": "The table's seven rows as candidate sentences, predicates and model, run against the probe of gate.ts."
+    },
+    {
+      "id": "precedence",
+      "name": "Precedence stated",
+      "what": "C1: the sentences, predicates and model state the order gate.ts applies. gate.ts and the tests are unchanged."
     }
   ],
-  "cannotSay": {},
+  "cannotSay": {
+    "ears": "Which row wins when two apply, unless each sentence says so",
+    "tdd": "A rule: each test is one case, judged against the code that holds the order"
+  },
   "lanes": [
     {
-      "id": "ears",
+      "id": "ears-sentence",
       "practice": "ears",
       "step": 1,
-      "title": "EARS",
-      "where": "Authority",
+      "title": "The table's rows written as EARS sentences",
+      "where": "docs/requirements.md",
+      "match": [
+        {
+          "kind": "joint-conflict"
+        },
+        {
+          "kind": "example-conflict"
+        }
+      ]
+    },
+    {
+      "id": "ears-predicate",
+      "practice": "ears",
+      "step": 2,
+      "title": "Predicates and the model cite them",
+      "where": "spec/gate.csl.ts",
       "match": []
     },
     {
-      "id": "tdd",
+      "id": "tdd-test",
       "practice": "tdd",
       "step": 1,
-      "title": "Unit tests",
-      "where": "UnitTests",
-      "match": []
+      "title": "The probe records each call to gate",
+      "where": "test/gate.probe.ts and src/gate.ts",
+      "match": [
+        {
+          "kind": "unobserved-test"
+        }
+      ]
+    },
+    {
+      "id": "hub",
+      "practice": "hub",
+      "step": 3,
+      "title": "CSH: one pool",
+      "where": "rules from the predicates and model, examples from the probe",
+      "match": [
+        {
+          "kind": "single-source"
+        }
+      ]
     }
   ],
-  "causes": [],
-  "decisionPoints": [],
-  "goal": "",
-  "rca": [],
-  "whys": [],
-  "countermeasures": [],
-  "plan": []
+  "causes": [
+    {
+      "id": "order",
+      "name": "The rows' order lives only in gate.ts",
+      "match": [
+        {
+          "kind": "joint-conflict"
+        },
+        {
+          "kind": "example-conflict"
+        }
+      ]
+    },
+    {
+      "id": "one-voice",
+      "name": "Rules come from one source only",
+      "match": [
+        {
+          "kind": "single-source"
+        }
+      ]
+    },
+    {
+      "id": "nothing-to-decide",
+      "name": "A test gives the gate nothing to decide",
+      "match": [
+        {
+          "kind": "unobserved-test"
+        }
+      ]
+    }
+  ],
+  "decisionPoints": [
+    {
+      "point": "Satisfied, but stale",
+      "class": "contradiction",
+      "says": {
+        "ears": {
+          "mark": "clash",
+          "text": "GATE-004/005: review or block · GATE-006: allow"
+        },
+        "tdd": {
+          "mark": "says",
+          "text": "review (stale gives review)"
+        }
+      },
+      "note": "gate.ts checks staleness before allowing (src/gate.ts:97), so the test is right and GATE-006 is too wide.",
+      "match": [
+        {
+          "kind": "joint-conflict",
+          "fragment": "AllowSatisfied",
+          "not": {
+            "kind": "joint-conflict",
+            "fragment": "ReviewSelfApproved"
+          }
+        },
+        {
+          "kind": "example-conflict",
+          "fragment": "WitnessStaleGivesReview"
+        }
+      ]
+    },
+    {
+      "point": "Satisfied, self-approved and needs review",
+      "class": "contradiction",
+      "says": {
+        "ears": {
+          "mark": "clash",
+          "text": "GATE-006: allow · GATE-007: review"
+        },
+        "tdd": {
+          "mark": "says",
+          "text": "review (self-approved needing review gives review)"
+        }
+      },
+      "note": "gate.ts turns an allow into review afterwards (src/gate.ts:107), so GATE-007 wins over GATE-006.",
+      "match": [
+        {
+          "kind": "joint-conflict",
+          "fragment": "AllowSatisfied",
+          "not": {
+            "kind": "joint-conflict",
+            "not": {
+              "kind": "joint-conflict",
+              "fragment": "ReviewSelfApproved"
+            }
+          }
+        },
+        {
+          "kind": "example-conflict",
+          "fragment": "WitnessSelfApprovedNeedingReviewGivesReview"
+        }
+      ]
+    },
+    {
+      "point": "Conflicting, violated or unknown, and self-approved needing review",
+      "class": "contradiction",
+      "says": {
+        "ears": {
+          "mark": "clash",
+          "text": "GATE-001 to 004: block, review or waived · GATE-007: review"
+        },
+        "tdd": {
+          "mark": "silent",
+          "text": "no case"
+        }
+      },
+      "note": "gate.ts applies GATE-007 only while the row is still allow (src/gate.ts:107), so a block or a waiver stands.",
+      "match": [
+        {
+          "kind": "joint-conflict",
+          "fragment": "ReviewSelfApproved",
+          "not": {
+            "kind": "joint-conflict",
+            "fragment": "AllowSatisfied"
+          }
+        }
+      ]
+    },
+    {
+      "point": "Conflicting or violated, and stale",
+      "class": "contradiction",
+      "says": {
+        "ears": {
+          "mark": "clash",
+          "text": "GATE-001 to 003: block, review or waived · GATE-004/005: review or block"
+        },
+        "tdd": {
+          "mark": "silent",
+          "text": "no case"
+        }
+      },
+      "note": "gate.ts reaches its unknown-or-stale branch only through else (src/gate.ts:97), so the verdict decides first.",
+      "match": [
+        {
+          "kind": "joint-conflict",
+          "fragment": "BlockConflicting",
+          "not": {
+            "kind": "joint-conflict",
+            "fragment": "ReviewSelfApproved"
+          }
+        },
+        {
+          "kind": "joint-conflict",
+          "fragment": "BlockViolatedWithoutWaiver",
+          "not": {
+            "kind": "joint-conflict",
+            "fragment": "ReviewSelfApproved"
+          }
+        },
+        {
+          "kind": "joint-conflict",
+          "fragment": "WaiveViolatedWithWaiver",
+          "not": {
+            "kind": "joint-conflict",
+            "fragment": "ReviewSelfApproved"
+          }
+        }
+      ]
+    }
+  ],
+  "goal": "Exactly one row applies to any obligation, and the sentences, the model and gate.ts state the same order. Every gap that remains is a recorded decision, and the rules are ready for the owner to approve.",
+  "rca": [
+    {
+      "id": "Q1",
+      "q": "Why do 11 pairs of rows conflict when gate.ts passes every test?",
+      "a": "The rows' conditions overlap, and each pair that overlaps prescribes different dispositions. Stale crosses every verdict, and self-approved needing review crosses everything. gate.ts never conflicts because it checks in a fixed order (src/gate.ts:89, 90, 97, 107), so an earlier check settles any overlap. Neither the sentences nor the model state that order.",
+      "evidence": {
+        "finding": "5cb9cb853f53bb0c",
+        "stage": "first"
+      },
+      "depth": "5 Whys to the root, below."
+    },
+    {
+      "id": "Q2",
+      "q": "Why do two unit tests conflict with AllowSatisfied?",
+      "a": "GATE-006 allows every satisfied obligation. gate.ts sends a satisfied but stale one to review (src/gate.ts:97), and also one that is self-approved and needs review (src/gate.ts:107). The tests follow the code, so the rule is too wide and the tests are right.",
+      "evidence": {
+        "finding": "226609020dc65386",
+        "stage": "first"
+      },
+      "depth": "Evidence stops: the same missing order as Q1, seen from the tests."
+    },
+    {
+      "id": "Q3",
+      "q": "Why is every row single-source?",
+      "a": "Only rules count towards this gap: the predicates and the model, which share one column (intent). The sentences are cited, never lifted, and the probe adds examples, not rules. Scenarios, the optional fourth practice of section 8, would also add examples, so they would not clear it. The rows are not unsupported: 17 witnesses cite them, and after C1 none contradicts them.",
+      "depth": "Evidence stops: this is how the harness counts sources, and the lockout sheet keeps the same gaps."
+    },
+    {
+      "id": "Q4",
+      "q": "Why does one test record no witness?",
+      "a": "\"ignores candidate obligations, listing them\" has no approved assessment, so the gate has nothing to decide and no Decide event to record. The probe calls gate without the probe on purpose (A-49). The test passes and counts in the Tests column (A-67).",
+      "evidence": {
+        "file": "test/gate.probe.ts",
+        "text": "A case whose report has no approved assessment gives the",
+        "stage": "first"
+      },
+      "depth": "Evidence stops: the case lies outside the event the probe records."
+    },
+    {
+      "id": "Q5",
+      "q": "Should the GateSafety policy mark the intent critical?",
+      "a": "Critical changes one thing: an approved obligation of this intent that is unknown or stale blocks in enforcing mode instead of going to review (src/gate.ts:99). Nothing is approved, so it would change nothing that runs today. Choosing it means deciding how the gate treats its own unproven rules once they are approved, which is a decision about approval. No concrete reason to change it was found, so the policy is left as it is.",
+      "evidence": {
+        "file": "src/gate.ts",
+        "text": "if (a.critical && mode === \"enforcing\")",
+        "stage": "first"
+      },
+      "depth": "Evidence stops: a policy decision, left at its protective default."
+    }
+  ],
+  "whys": [
+    {
+      "q": "Why do the predicates conflict in pairs?",
+      "a": "Their triggers overlap, and on each overlap they demand different dispositions. For example, a satisfied, stale obligation meets AllowSatisfied (allow) and ReviewUnknown (review).",
+      "evidence": {
+        "finding": "5cb9cb853f53bb0c",
+        "stage": "first"
+      }
+    },
+    {
+      "q": "Why do their triggers overlap?",
+      "a": "Each predicate copies one row of the Authority tab's table. The table's conditions are not exclusive: \"unknown or stale\" includes stale obligations of every verdict, and \"self-approved and needs-review\" includes every verdict.",
+      "evidence": {
+        "file": "docs/requirements.md",
+        "text": "WHEN an approved obligation is satisfied, THE GATE SHALL allow it.",
+        "stage": "first"
+      }
+    },
+    {
+      "q": "Why does gate.ts not conflict with itself?",
+      "a": "It reads the table as an ordered list. It checks conflicting (line 89), then violated (line 90), and reaches unknown or stale only through else (line 97). Self-approved review applies only while the row is still allow (line 107).",
+      "evidence": {
+        "file": "src/gate.ts",
+        "text": "if (a.selfApproved && a.needsReview && row.disposition === \"allow\")",
+        "stage": "first"
+      }
+    },
+    {
+      "q": "Why did the sentences and the model not carry that order?",
+      "a": "They were transcribed faithfully from the table, row by row, and the table states no order. EARS has no rule for how two sentences combine. The model said so itself: where rows overlap, it says no more than the table (A-48).",
+      "evidence": {
+        "file": "spec/gate.csl.ts",
+        "text": "Where rows overlap the table does not say which",
+        "stage": "first"
+      }
+    },
+    {
+      "q": "Why did nothing notice before stage 15?",
+      "a": "The unit tests pass against the code that holds the order, and each test checks one case, never two rows together. The table is reviewed one row at a time. Nothing read the rows side by side until CSH put them in one pool.",
+      "root": "Root cause, in a process: the table's order of precedence is recorded only in gate.ts's control flow, nowhere a reviewer reads as a requirement. Countermeasures C1 (requirement and model) and C2 (process)."
+    }
+  ],
+  "countermeasures": [
+    {
+      "id": "C1",
+      "kind": "requirement",
+      "what": "State the order gate.ts already applies (conflicting, then violated, then unknown or stale, then self-approved needing review, then allow) in the condition of each sentence GATE-001 to 007 and of each predicate, and as the Decide transition. Each row then holds only when no higher row applies. gate.ts is unchanged; everything stays candidate.",
+      "answers": [
+        "Q1",
+        "Q2"
+      ],
+      "clears": [
+        {
+          "kind": "joint-conflict"
+        },
+        {
+          "kind": "example-conflict"
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "process",
+      "what": "The owner amends the Authority tab's disposition table (05, section 6) to say that its rows apply in order, highest first, as gate.ts and C1 do. A new row then has to say where it sits. The agent does not edit tabs 00 to 08.",
+      "answers": [
+        "Q1"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "scope",
+      "what": "Accept the seven single-source gaps for now, and add no scenarios in this change. Scenarios would add examples, not rules, so they would not clear the gap. A second rule-bearing source is the owner's choice.",
+      "answers": [
+        "Q3"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "scope",
+      "what": "Accept the unobserved test. A case with no approved obligation is not a Decide event, and A-49 records why the probe leaves it out.",
+      "answers": [
+        "Q4"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "scope",
+      "what": "Leave the GateSafety policy as it is, not critical, until the owner approves the rules and can choose how the gate treats its own unknown or stale rules.",
+      "answers": [
+        "Q5"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "process",
+      "what": "The owner reviews C1 and approves the sentences, predicates and bindings, or revises them. The rules are unknown at the second stage only because their bindings are candidate.",
+      "answers": [
+        "Q1",
+        "Q2"
+      ],
+      "measure": "satisfied"
+    }
+  ],
+  "plan": [
+    {
+      "what": "State the order in the sentences, predicates and model (C1)",
+      "who": "Claude (agent), at the owner's request",
+      "when": "Done: the second stage"
+    },
+    {
+      "what": "Review these judgments and C1; revise or approve the rules and bindings (C6)",
+      "who": "Gate owner",
+      "when": "Before any rule is approved"
+    },
+    {
+      "what": "Amend the table in the Authority tab to state its order (C2)",
+      "who": "Gate owner",
+      "when": "With the next export of the specification"
+    },
+    {
+      "what": "Revisit single-source, the unobserved test and the critical policy (C3 to C5)",
+      "who": "Gate owner",
+      "when": "At approval"
+    }
+  ],
+  "terms": [
+    {
+      "term": "Precedence",
+      "meaning": "the order in which the table's rows apply: the first that applies decides"
+    },
+    {
+      "term": "Joint conflict",
+      "meaning": "two rules whose triggers can both be true and whose demands cannot both hold"
+    },
+    {
+      "term": "Single-source",
+      "meaning": "a rule whose terms only one source column asserts rules about"
+    },
+    {
+      "term": "5 Whys",
+      "meaning": "asked until the answer is a process or a tool, never a person"
+    }
+  ]
 }

@@ -1,0 +1,37 @@
+{
+  "component": "Gate",
+  "gateDigest": "sha256:85d3c7a9fb18d150dce7027a9dd5189c7b06b6ba0dbeac2ededc270463f04264",
+  "harnesses": [
+    {
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=spec",
+        "--test-reporter-destination=stdout",
+        "--test-reporter=@csh/harness/reporter",
+        "--test-reporter-destination=stdout",
+        "test/gate.probe.ts"
+      ],
+      "executions": 15,
+      "exitCode": 0,
+      "practice": "tdd",
+      "sandbox": "none",
+      "witnesses": 17
+    }
+  ],
+  "reportDigest": "sha256:71a68a41c05c3fb2147b4a9f93a513aa39f51c11ce822193bbc0bcf5e20c3222",
+  "schema": "csh-run/v1",
+  "snapshot": {
+    "commit": "331602471bedf42a2f8863e64512bd8de681e2b2",
+    "componentDigest": "sha256:a95636fc876fe8e759bca1474eb873baaf474028f0c8877bf62bebea92bd7d40",
+    "configDigest": "sha256:53484476781ed63293094af3660a6dc4daa44cdeb50ca27c498f98c691493801",
+    "ledgerHead": 0,
+    "lockDigest": "sha256:74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "moduleDigest": "sha256:e2c286becf67aed070b6921d795937e43b406510f4d9a93dcebcedc5fa6b2e50",
+    "tool": {
+      "solver": "z3 5.1.0.0",
+      "version": "0.1.0"
+    }
+  },
+  "snapshotDigest": "sha256:10aef424f6e0dfd7a396dc07f53886bced7ec1d74f6b54d8140f4a57f25f9003"
+}

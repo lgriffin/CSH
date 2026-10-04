@@ -27,4 +27,5 @@ regression fixture for the A3 package.
 
 ## Status
 
-Accepted. Decided by the owner on 3 October 2026.
+Accepted. Decided by the owner on 3 October 2026. The owner later asked an agent to write the A3's judgments, which
+stay candidate ([#13](https://github.com/lgriffin/CSH/issues/13), [A-68](../../ASSUMPTIONS.md)).
