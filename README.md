@@ -185,11 +185,11 @@ self-approved, until a second person joins. See the [Authority tab](docs/spec/05
 - **Predicates are limited.** Linear integer arithmetic, enumerations and booleans, over one state per event. No concurrency, no time, no quantifiers in specifications.
 - **Reserved constructs.** Architectural and temporal obligations are carried and reported, but not evaluated.
 - **Three adapters.** Witness files, EARS requirements in Markdown, and Gherkin scenarios through a step table. Scenarios are read, never executed. Anything else must arrive as claim sets in IR form, or it stays unliftable.
-- **One test runner.** The probe's outcomes come from a reporter for Node's test runner; other runners have none yet ([Q-20](QUESTIONS.md)).
+- **One test runner.** The probe's outcomes come from a reporter for Node's test runner; other runners have none ([Q-20](QUESTIONS.md), decided: the gate's probe is a second file checked against its unit tests).
 - **Unknown is common.** A solver timeout, a missing binding or an unapproved binding all give unknown. That is a correct answer, not a malfunction.
 - **Protection depends on keys.** It also depends on where the gate runs: CI should pin the root maintainers commit with `CSH_ROOT_COMMIT`, outside the repository ([A-28](ASSUMPTIONS.md)).
 - **SSH signatures are untested.** Their verification is implemented through git but no fixture covers it ([Q-16](QUESTIONS.md)).
-- **Choices made during the build are registered.** They are in [ASSUMPTIONS.md](ASSUMPTIONS.md). The owner decided the first seventeen questions in [QUESTIONS.md](QUESTIONS.md) on 3 October 2026; Q-18 to Q-20 are open.
+- **Choices made during the build are registered.** They are in [ASSUMPTIONS.md](ASSUMPTIONS.md). The owner decided every question in [QUESTIONS.md](QUESTIONS.md), Q-01 to Q-20, on 3 October 2026.
 
 ## Status of the build
 

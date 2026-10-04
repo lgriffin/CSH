@@ -50,5 +50,5 @@ It is the "Gate" container, shown in the [containers diagram](../../docs/archite
 
 - The staleness checker drawn in the gate's component diagram is implemented in `@csh/check` (`evidence.ts`) and `@csh/run` (`project.ts`): the gate reads each assessment's applicability and does not compare dependency digests itself. `csh gate` computes the report it decides on, rather than reading one from disk ([A-34](../../ASSUMPTIONS.md)).
 - The gate has no notion of partial delivery; `overall` is the worst disposition.
-- The probe's cases repeat those of `test/gate.test.ts`, and nothing checks that the two copies agree ([Q-20](../../QUESTIONS.md)).
+- The probe's cases repeat those of `test/gate.test.ts`; `test/probe-agrees.test.ts` checks that the two copies state the same table ([Q-20](../../QUESTIONS.md), decided).
 - A snapshot from a working tree with uncommitted changes carries the commit `HEAD-dirty` ([A-16](../../ASSUMPTIONS.md)).

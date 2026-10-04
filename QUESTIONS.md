@@ -3,10 +3,11 @@
 Places where the documents are silent, ambiguous or contradictory (Implementer's brief, rule 2). Each entry gives
 the options, what each implies, and the answer chosen, registered in [ASSUMPTIONS.md](ASSUMPTIONS.md).
 
-**Q-01 to Q-17 are decided.** On 3 October 2026 the owner accepted the answer the build had taken for each of them,
-including the composition fixtures F70 to F78 as written. **Q-18 is open**: it came from verifying the anchor design
-([09](docs/spec/09-anchor-harness-a3.md), section 14.1). **Q-19 and Q-20 are open**, raised in stages 13 and 15. A new question gets the next number and stays open until the
-owner answers it.
+**Q-01 to Q-20 are decided.** On 3 October 2026 the owner accepted the answer the build had taken for each of Q-01 to
+Q-17, including the composition fixtures F70 to F78 as written, and later that day the cautious answer for each of Q-18
+to Q-20 ([#5](https://github.com/lgriffin/CSH/issues/5), [#9](https://github.com/lgriffin/CSH/issues/9),
+[#12](https://github.com/lgriffin/CSH/issues/12)). A new question gets the next number and stays open until the owner
+answers it.
 
 ## Q-01 Which Node release is "the current long-term-support release"?
 
@@ -173,7 +174,7 @@ build step.
 - **Compile always.** Every package exports compiled JavaScript, and the workspace builds before it runs. This reverses ADR-18.
 - **Ship source and require a loader.** Users would run Node with a TypeScript loader; nothing in Node supports this under `node_modules` without a third-party dependency.
 
-Open. Recorded as A-40; stage 16 built the chosen option, and F96 installs the starter from those tarballs.
+Decided on 3 October 2026: the chosen option ([#5](https://github.com/lgriffin/CSH/issues/5)). Recorded as A-40; stage 16 built it, and F96 installs the starter from those tarballs.
 
 ## Q-19 Do tabs 00 to 08 take the amendments of 09, section 6.5?
 
@@ -183,10 +184,10 @@ Section 6.5 lists amendments to the semantic contract, joint evaluation, evidenc
 `deterministic`, the new finding and gap kinds, witness version 2 and `cites`, `componentDigest`, and three
 containers. The implementer may not edit tabs 00 to 08.
 
-- **Record them in 09 and the decision records (chosen meanwhile).** The tabs are unchanged; 09, ADR-33, ADR-34 and A-36 to A-44 are the record.
+- **Record them in 09 and the decision records (chosen).** The tabs are unchanged; 09, ADR-33, ADR-34 and A-36 to A-44 are the record.
 - **The owner amends the tabs.** The tabs stay the single source, and 09 becomes history.
 
-Open. Nothing in the code depends on the answer.
+Decided on 3 October 2026: the chosen option ([#9](https://github.com/lgriffin/CSH/issues/9)). Tabs 00 to 08 stay as they are, and 09 with its decision records is the record of the anchor design. Nothing in the code depends on the answer.
 
 ## Q-20 How should the gate's own unit tests feed the harness?
 
@@ -195,8 +196,8 @@ Raised in stage 15. Tracked as [issue #12](https://github.com/lgriffin/CSH/issue
 The gate component's test practice is its unit tests with a probe around `gate` (09, section 8). Those tests run under
 vitest, and `@csh/harness` has a reporter for Node's test runner only, without which no witness becomes a claim.
 
-- **A separate probe file (chosen meanwhile).** `packages/gate/test/gate.probe.ts` repeats the cases of `gate.test.ts` under `node --test`. The two copies can drift apart, and nothing checks that they agree.
+- **A separate probe file (chosen).** `packages/gate/test/gate.probe.ts` repeats the cases of `gate.test.ts` under `node --test`. The two copies could drift apart; `packages/gate/test/probe-agrees.test.ts` checks that they state the same table and that every probe case is a unit test.
 - **A vitest reporter in `@csh/harness`.** The repository's tests are probed where they are; a second reporter keeps to the identity rules of A-39.
 - **The gate's tests move to Node's test runner.** One copy, outside the vitest suite.
 
-Open. Recorded as A-49.
+Decided on 3 October 2026: the chosen option, with the agreement check ([#12](https://github.com/lgriffin/CSH/issues/12)). Recorded as A-49.
