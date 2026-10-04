@@ -17,7 +17,11 @@ jobs:
       matrix:
         node: ["22", "24"]
     steps:
+      # Full history: an A3 sheet resolves its quoted evidence at each stage's commit, so csh a3 build --check needs
+      # those commits (packages/gate/csh/a3/dispositions).
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
