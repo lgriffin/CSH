@@ -128,14 +128,36 @@ export function inputDigests(p: Project, manifest: ComponentManifest, m: Module)
   const root = resolve(p.root);
   const harnessed = manifest.practices.filter((x) => x.harness !== undefined);
   const written = new Set(harnessed.flatMap((x) => [x.harness!.witnesses, x.harness!.executions ?? DEFAULT_EXECUTIONS]).map((f) => resolve(root, f)));
+  const realRoot = realpathSync(root);
+  const inRoot = (r: string) => !r.startsWith("..") && !isAbsolute(r);
   const out = new Map<string, string>();
+  const walked = new Set<string>();
   const add = (abs: string, follow: boolean): void => {
     const rel = relative(root, abs).split("\\").join("/");
-    if (rel.startsWith("..") || isAbsolute(rel) || written.has(abs) || out.has(rel)) return;
-    if (!existsSync(abs)) return void out.set(rel, "absent");
-    const st = lstatSync(abs);
-    if (st.isSymbolicLink()) return void out.set(rel, `link ${readlinkSync(abs)}`);
+    if (!inRoot(rel) || written.has(abs) || out.has(rel)) return;
+    let st;
+    try {
+      st = lstatSync(abs);
+    } catch {
+      return void out.set(rel, "absent");
+    }
+    if (st.isSymbolicLink()) {
+      // Both the link and what it reaches: runSources follows a link to a target inside the root and reads its bytes.
+      out.set(`${rel} ->`, readlinkSync(abs));
+      let real: string;
+      try {
+        real = realpathSync(abs);
+      } catch {
+        return void out.set(rel, "absent");
+      }
+      if (!inRoot(relative(realRoot, real))) return;
+      st = statSync(abs);
+    }
     if (st.isDirectory()) {
+      // A link back to a directory already walked would never end.
+      const real = realpathSync(abs);
+      if (walked.has(real)) return void out.set(rel, "walked");
+      walked.add(real);
       for (const e of readdirSync(abs)) if (!NOT_INPUTS.has(e)) add(join(abs, e), false);
       return;
     }

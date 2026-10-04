@@ -334,6 +334,24 @@ describe("inputDigests", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it("digests what a source link reaches inside the root, and the link itself (review of #17)", () => {
+    const dir = project({ "spec.ts": "", "data/real.md": "a\n", "other.md": "b\n" });
+    try {
+      symlinkSync("data/real.md", join(dir, "linked.md"));
+      symlinkSync("data", join(dir, "ld"));
+      // A link back up to the root is walked once, never for ever.
+      symlinkSync("..", join(dir, "data", "up"));
+      const two = { sources: [{ name: "A", kind: "Requirements", at: "linked.md" }, { name: "B", kind: "Requirements", at: "ld" }] } as unknown as Module;
+      expect(moved(dir, tdd(), two, () => writeFileSync(join(dir, "data", "real.md"), "changed\n"))).toEqual(["ld/real.md", "ld/up/linked.md", "linked.md"]);
+      expect(moved(dir, tdd(), two, () => {
+        rmSync(join(dir, "linked.md"));
+        symlinkSync("other.md", join(dir, "linked.md"));
+      })).toEqual(["ld/up/linked.md", "ld/up/linked.md ->", "linked.md", "linked.md ->"]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("the executions file joined to a Witnesses source (#22)", () => {
