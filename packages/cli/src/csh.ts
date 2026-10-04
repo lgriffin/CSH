@@ -1,7 +1,7 @@
 // The csh command (Joint evaluation, section 7; Authority tab, sections 3.4 and 6; Anchor, harnesses and A3, section 7.1).
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { a3Dir, readJudgments } from "@csh/a3";
 import { DIVERGENCE_READINGS, type Finding, renderGaps, renderReport, type Report } from "@csh/check";
 import { exitCode, formatDecision as formatGate, type GateDecision, type Mode } from "@csh/gate";
@@ -9,7 +9,7 @@ import { digestOf, fragmentsOf, type Module, stableJson } from "@csh/kernel";
 import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons } from "@csh/ledger";
 import { printFragment } from "@csh/print";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { decideGate as decideFor, evaluateProject, GATE_PATH, ledgerOf, loadProject, MODEL_PATH, type Project, REPORT_PATH, runAt, runComponent, type RunResult, specOf, storedRuns } from "@csh/run";
+import { componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderStatus, ledgerOf, loadProject, MODEL_PATH, type Project, REPORT_PATH, runAt, runComponent, type RunResult, specOf, storedRuns } from "@csh/run";
 import { type Args, parseArgs } from "./args.ts";
 import { init } from "./init.ts";
 import { a3Command, a3Fragment } from "./a3.ts";
@@ -36,6 +36,9 @@ const USAGE = `csh: the Composable Specification Harness
   csh countersign <seq> --actor <name> --rationale <text>
                                   Draft a ledger line. The tool never commits or signs: commit
                                   csh/ledger.ndjson alone, signed with your own key.
+  csh status [--json]             What is and is not protected, for one component: the root of trust, the
+                                  maintainers, what is approved, the gate mode and whether the stored decision is
+                                  for the current snapshot. Reads only; always exits 0 when it can read the component.
   csh gate [--mode advisory|enforcing] [--out decision.json]
                                   Check and decide for the current snapshot. Exits non-zero only on block in enforcing mode.
   csh a3 open <slug> [--at <commit>] [--stage <id>]
@@ -275,6 +278,15 @@ export async function csh(argv: string[], io: Io): Promise<number> {
       return decide(cmd, p, a, io);
     case "gate":
       return runGate(p, a, io);
+    case "status": {
+      const r = await componentStatus(p, await (io.solver ?? defaultSolver)());
+      if (!r.ok) {
+        io.err(`csh status: ${r.message}\n`);
+        return 1;
+      }
+      io.out(a.flags.has("json") ? stableJson(r.status) : renderStatus(r.status, relative(io.cwd, p.root)));
+      return 0;
+    }
     case "a3": {
       const solver = await (io.solver ?? defaultSolver)();
       return a3Command(p, a, {

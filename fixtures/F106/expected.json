@@ -1,0 +1,11 @@
+{
+  "fixture": "F106",
+  "section": "Next layers, section 4.2",
+  "stage": 18,
+  "expect": {
+    "check": {
+      "unliftable": [{ "source": "C4", "reason": "unreadable-line", "spanIncludes": "containers.mmd:7" }],
+      "gaps": [{ "kind": "unobserved-relation", "subject": "web->db" }]
+    }
+  }
+}

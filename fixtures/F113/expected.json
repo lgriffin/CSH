@@ -1,0 +1,20 @@
+{
+  "fixture": "F113",
+  "section": "Next layers, sections 6.1 and 9",
+  "stage": 20,
+  "expect": {
+    "agent": {
+      "project": "base/shop",
+      "tools": [
+        "a3_open",
+        "diff",
+        "explain",
+        "gaps",
+        "print",
+        "queue",
+        "run",
+        "status"
+      ]
+    }
+  }
+}

@@ -15,6 +15,8 @@ export interface TestRepo {
   write(path: string, content: string): void;
   commit(message: string, signer: string | null): string;
   maintainers(names: string[], identities: Record<string, { kind: "person" | "agent"; roles: Role[] }>): Maintainers;
+  /** The public half of a test-only key, ASCII-armoured, as a maintainer would keep it in the repository. */
+  publicKey(name: string): string;
   dispose(): void;
 }
 
@@ -86,6 +88,9 @@ export function createTestRepo(parent: string, identities: string[]): TestRepo {
     maintainers(names, ids) {
       const identities: Identity[] = names.map((n) => ({ name: n, kind: ids[n]!.kind, keys: [keys.get(n)!], roles: ids[n]!.roles }));
       return { schema: "csh-maintainers/v1", identities };
+    },
+    publicKey(name) {
+      return run("gpg", ["--batch", "--armor", "--export", keys.get(name)!]);
     },
     dispose() {
       try {

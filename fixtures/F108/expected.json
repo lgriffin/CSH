@@ -1,0 +1,17 @@
+{
+  "fixture": "F108",
+  "section": "Next layers, section 5.1",
+  "stage": 19,
+  "expect": {
+    "diff": {
+      "signals": {
+        "appeared": [
+          "bbbbbbbbbbbbbbbb"
+        ],
+        "cleared": [
+          "aaaaaaaaaaaaaaaa"
+        ]
+      }
+    }
+  }
+}

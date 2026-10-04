@@ -1,0 +1,4 @@
+[
+  "src/lockout.ts",
+  "test/lockout.test.ts"
+]

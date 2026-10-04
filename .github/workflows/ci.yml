@@ -38,3 +38,24 @@ jobs:
       # starter installed from packed tarballs outside the repository, pnpm typecheck and pnpm test.
       - name: README commands
         run: node packages/testkit/src/triangle.ts readme
+
+  # The gate of a component of the harness itself (Next layers, section 3.2): csh status, then, once the component has a
+  # maintainers file, the enforcing run and the decision verified. CSH_ROOT_COMMIT is a repository variable, set by the
+  # owner outside the repository; until it is set csh status reports the root as taken from history (A-28).
+  gate:
+    name: Gate (packages/gate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Gate job
+        run: .github/scripts/gate-job.sh packages/gate
+        env:
+          CSH_ROOT_COMMIT: ${{ vars.CSH_ROOT_COMMIT }}

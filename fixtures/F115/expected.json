@@ -1,0 +1,15 @@
+{
+  "fixture": "F115",
+  "section": "Next layers, sections 6.5 and 9",
+  "stage": 20,
+  "expect": {
+    "authoredBy": {
+      "project": "base/shop",
+      "fragments": [
+        { "fragment": "Shop/FairShipping/FreeShippingFrom50", "authoredBy": "person" },
+        { "fragment": "Shop/FairShipping/ChargeBelow50", "authoredBy": "agent" },
+        { "fragment": "Shop/FairShipping/NeverNegative", "authoredBy": "unknown" }
+      ]
+    }
+  }
+}

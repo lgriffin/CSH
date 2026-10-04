@@ -1,0 +1,11 @@
+{
+  "fixture": "F100",
+  "section": "Next layers, sections 4.1 to 4.3",
+  "stage": 18,
+  "expect": {
+    "assessments": [
+      { "fragment": "Store/Layering/CoreIgnoresWeb", "verdict": "violated", "applicability": "current", "reasonsInclude": ["packages/core/src/price.ts:2"] },
+      { "fragment": "Store/Layering/WebSeesCoreAndDb", "verdict": "satisfied", "applicability": "current" }
+    ]
+  }
+}

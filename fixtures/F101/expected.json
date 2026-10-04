@@ -1,0 +1,15 @@
+{
+  "fixture": "F101",
+  "section": "Next layers, section 4.3",
+  "stage": 18,
+  "expect": {
+    "check": {
+      "findings": [
+        { "kind": "arch-conflict", "members": ["Store/Layering/WebIgnoresDb", "Store/@C4/web->db"], "crossSource": true }
+      ]
+    },
+    "assessments": [
+      { "fragment": "Store/Layering/WebIgnoresDb", "verdict": "conflicting" }
+    ]
+  }
+}

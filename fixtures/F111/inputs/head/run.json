@@ -1,0 +1,11 @@
+{
+  "schema": "csh-run/v1",
+  "component": "SignInService",
+  "snapshot": {
+    "commit": "dddddddddddddddddddddddddddddddddddddddd"
+  },
+  "snapshotDigest": "sha256:dddddddd00000000000000000000000000000000000000000000000000000000",
+  "harnesses": [],
+  "reportDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "gateDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+}

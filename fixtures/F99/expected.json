@@ -1,0 +1,11 @@
+{
+  "fixture": "F99",
+  "section": "Next layers, sections 3.2 and 9",
+  "stage": 17,
+  "expect": {
+    "status": {
+      "project": "base/shop",
+      "decision": "out-of-date"
+    }
+  }
+}

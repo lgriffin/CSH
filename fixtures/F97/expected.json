@@ -1,0 +1,15 @@
+{
+  "fixture": "F97",
+  "section": "Next layers, sections 3.2 and 9",
+  "stage": 17,
+  "expect": {
+    "status": {
+      "project": "base/shop",
+      "protection": "unprotected",
+      "reasonsInclude": ["no-maintainers"],
+      "root": "none",
+      "maintainers": 0,
+      "fragments": { "approved": 0 }
+    }
+  }
+}

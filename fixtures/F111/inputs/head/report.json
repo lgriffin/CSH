@@ -1,0 +1,38 @@
+{
+  "schema": "csh-report/v1",
+  "moduleDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "snapshot": {
+    "commit": "dddddddddddddddddddddddddddddddddddddddd",
+    "ledgerHead": "0",
+    "digest": "sha256:dddddddd00000000000000000000000000000000000000000000000000000000"
+  },
+  "tool": {
+    "version": "0.1.0",
+    "solver": "z3",
+    "budgetMs": 5000
+  },
+  "findings": [],
+  "notComparable": [],
+  "gapView": {
+    "sources": [
+      "Product",
+      "UnitTests"
+    ],
+    "rows": [],
+    "gaps": []
+  },
+  "assessments": [],
+  "unliftable": [],
+  "errors": [],
+  "diagnostics": [],
+  "executions": [],
+  "items": [],
+  "component": {
+    "name": "SignInService",
+    "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "sources": {
+      "Product": "ears",
+      "UnitTests": "tdd"
+    }
+  }
+}
