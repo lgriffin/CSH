@@ -87,14 +87,25 @@ export function provenance(
       const d = at(c)?.get(fragment);
       if (d !== prev) {
         const info = vcs.commit(c);
-        const m = [...mh.versions].reverse().find((v) => v.commit === info.parents[0] || (info.parents[0] !== undefined && vcs.isAncestor(v.commit, info.parents[0])))?.m ?? mh.versions[0]?.m;
-        const identity = identityOf(m, info.signature);
+        const identity = identityOf(maintainersAt(vcs, mh, c), info.signature);
         found = d === digest ? { commit: c, date: info.date, ...(identity !== undefined ? { identity } : {}) } : undefined;
         prev = d;
       }
     }
     return found;
   };
+}
+
+/**
+ * The maintainers file that names who signed `commit`: the version in force before it, or, for the commit that is the
+ * root of trust, the root's own. A commit older than any maintainers file has none, and its signer is named by no one,
+ * even when a later file lists the key (A-91).
+ */
+export function maintainersAt(vcs: VcsPort, mh: ReturnType<typeof maintainersHistory>, commit: string) {
+  const parent = vcs.commit(commit).parents[0];
+  const before = [...mh.versions].reverse().find((v) => v.commit === parent || (parent !== undefined && vcs.isAncestor(v.commit, parent)));
+  if (before !== undefined) return before.m;
+  return mh.versions[0]?.commit === commit ? mh.versions[0].m : undefined;
 }
 
 export type AuthoredBy = "person" | "agent" | "unknown";

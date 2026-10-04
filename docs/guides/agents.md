@@ -16,7 +16,7 @@ qualified names, verdicts, counts) is produced by the harness.
 1. Before changing anything, call `status` and `run`. Know what is approved.
 2. Make the change. Do not edit `csh/ledger.ndjson`, `csh/maintainers.json` or the CI workflow.
 3. Call `run`, then `diff` against the commit you started from.
-4. If the diff shows an approval lost, a new violation or a new conflict on an approved rule (`says` is `stop`): stop. Report the diff. Do not edit the rule, its binding or the probe to make it pass.
+4. If the diff shows an approval lost, an approved rule removed, or a new violation or conflict on an approved rule (`says` is `stop`): stop. Report the diff. Do not edit the rule, its binding or the probe to make it pass.
 5. If the diff shows only candidates and gaps (`says` is `continue`): continue, and include the diff in your report.
 6. If you believe a rule is wrong, say so and propose the change as a candidate. The person decides.
 7. Never describe a result as passing. Report the four axes as the harness gives them: authority, verdict, evidence, disposition.

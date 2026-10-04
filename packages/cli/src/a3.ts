@@ -102,7 +102,7 @@ function writeJudgments(p: Project, slug: string, j: Judgments): void {
 }
 
 /** Build the three outputs of an A3 in memory. */
-export async function buildOutputs(p: Project, slug: string): Promise<{ files: Record<string, string>; problems: string[] } | { error: string }> {
+export async function buildOutputs(p: Project, slug: string, o: { authoredBy?: "person" | "agent" | "unknown" } = {}): Promise<{ files: Record<string, string>; problems: string[] } | { error: string }> {
   const read = readJudgments(p.root, slug);
   if (read === undefined) return { error: `no ${a3Dir(p.root, slug).slice(p.root.length + 1)}/judgments.json; csh a3 open ${slug} writes one` };
   if (read.problems.length > 0) return { error: `the judgments cannot be used:\n${read.problems.map((x) => `  ${x}`).join("\n")}` };
@@ -127,7 +127,7 @@ export async function buildOutputs(p: Project, slug: string): Promise<{ files: R
     component: { name: p.component?.manifest.name ?? "", practices: p.component?.manifest.practices ?? [] },
     stages,
     authority: await a3Authority(p, slug, digest),
-    authoredBy: authoredByOf(fileProvenance(p, `csh/a3/${slug}/judgments.json`)),
+    authoredBy: o.authoredBy ?? authoredByOf(fileProvenance(p, `csh/a3/${slug}/judgments.json`)),
     readAt: (rec, file) => {
       if (vcs === undefined) return null;
       try {
@@ -209,8 +209,22 @@ export async function a3Command(p: Project, a: Args, io: A3Io): Promise<number> 
   }
 }
 
+/**
+ * The authoredBy the committed sheet records. A check compares with it rather than recomputing it, since the signer
+ * is only known once the judgments are committed, and only where the signer's key is in the keyring (A-91).
+ */
+function recordedAuthoredBy(p: Project, slug: string): "person" | "agent" | "unknown" | undefined {
+  try {
+    const v = (JSON.parse(readFileSync(join(a3Dir(p.root, slug), "a3.json"), "utf8")) as { authoredBy?: unknown }).authoredBy;
+    return v === "person" || v === "agent" || v === "unknown" ? v : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 async function build(p: Project, slug: string, check: boolean, io: A3Io, lead = ""): Promise<number> {
-  const r = await buildOutputs(p, slug);
+  const recorded = check ? recordedAuthoredBy(p, slug) : undefined;
+  const r = await buildOutputs(p, slug, recorded !== undefined ? { authoredBy: recorded } : {});
   if ("error" in r) {
     io.err(`csh a3: ${r.error}\n`);
     return 1;

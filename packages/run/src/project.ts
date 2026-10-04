@@ -1,11 +1,12 @@
 // A project on disk: configuration, component manifest, lock file, version control, ledger and snapshot
 // (Authority tab, sections 2 and 4; Anchor, harnesses and A3, section 2).
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { emit, type Lock, readLock } from "@csh/emit";
+import { TOOL_VERSION } from "@csh/check";
 import { digestJson, digestOf, fragmentsOf } from "@csh/kernel";
-import { authorship, gitVcs, LEDGER_PATH, type LedgerState, MAINTAINERS_PATH, identityOf, maintainersHistory, persons, type Provenance, provenance, readLedger, type VcsPort } from "@csh/ledger";
+import { authorship, gitVcs, LEDGER_PATH, type LedgerState, MAINTAINERS_PATH, identityOf, maintainersAt, maintainersHistory, persons, type Provenance, provenance, readLedger, type VcsPort } from "@csh/ledger";
 import type { Snapshot } from "@csh/gate";
 import { type ComponentProblem, COMPONENT_PATH, type LoadedComponent, loadComponent } from "@csh/component";
 
@@ -127,19 +128,38 @@ export function specOf(p: Project, arg: string | undefined): string {
 }
 
 /**
- * Fragment digests at a commit, for authorship: the specification is emitted from a
- * temporary worktree of that commit.
+ * Fragment digests at a commit, for authorship: the specification is emitted from a temporary worktree of that commit,
+ * with that commit's lock. A commit's digests never change, so they are kept under the cache directory, by commit,
+ * specification and tool version, and a later run, a fresh project load or an agent's next call reads them back.
  */
 async function digestsAtCommit(p: Project, spec: string, commit: string): Promise<ReadonlyMap<string, string> | undefined> {
+  const specRel = relative(p.root, spec);
+  const cached = join(p.root, CACHE_DIR, "digests", `${commit}-${digestJson({ spec: specRel, tool: TOOL_VERSION }).slice(-16)}.json`);
+  try {
+    if (existsSync(cached)) return new Map(Object.entries(JSON.parse(readFileSync(cached, "utf8")) as Record<string, string>));
+  } catch {
+    // An unreadable entry is emitted again.
+  }
   const wt = join(p.root, CACHE_DIR, "worktrees", commit);
   try {
     rmSync(wt, { recursive: true, force: true });
     mkdirSync(dirname(wt), { recursive: true });
     git(p.root, "worktree", "add", "--detach", "--force", wt, commit);
-    const file = join(wt, p.gitPrefix, relative(p.root, spec));
+    const base = join(wt, p.gitPrefix);
+    const file = join(base, specRel);
     if (!existsSync(file)) return undefined;
-    const r = await emit(file, { root: join(wt, p.gitPrefix), skipTypeCheck: true });
-    return r.ok ? new Map(fragmentsOf(r.module).map((f) => [f.name, f.digest])) : undefined;
+    const lock = readLock(join(base, LOCK_PATH));
+    const r = await emit(file, { root: base, skipTypeCheck: true, ...(lock !== undefined ? { lock } : {}) });
+    if (!r.ok) return undefined;
+    const digests = new Map(fragmentsOf(r.module).map((f) => [f.name, f.digest]));
+    try {
+      mkdirSync(dirname(cached), { recursive: true });
+      writeFileSync(`${cached}.tmp`, JSON.stringify(Object.fromEntries(digests)));
+      renameSync(`${cached}.tmp`, cached);
+    } catch {
+      // The cache only saves work.
+    }
+    return digests;
   } catch {
     return undefined;
   } finally {
@@ -213,8 +233,7 @@ export function fileProvenance(p: Project, path: string): Provenance | undefined
   const info = vcs.commit(last);
   const pinned = process.env.CSH_ROOT_COMMIT;
   const mh = maintainersHistory(vcs, pinned !== undefined && pinned !== "" ? { rootCommit: pinned } : {});
-  const m = [...mh.versions].reverse().find((v) => v.commit === info.parents[0] || (info.parents[0] !== undefined && vcs.isAncestor(v.commit, info.parents[0])))?.m ?? mh.versions[0]?.m;
-  const identity = identityOf(m, info.signature);
+  const identity = identityOf(maintainersAt(vcs, mh, last), info.signature);
   return { commit: last, date: info.date, ...(identity !== undefined ? { identity } : {}) };
 }
 

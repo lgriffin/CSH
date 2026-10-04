@@ -6,7 +6,7 @@ import { a3Command, parseArgs } from "@csh/cli";
 import { fragmentsOf, type Module } from "@csh/kernel";
 import { printFragment } from "@csh/print";
 import { diffProject, type RunDiff } from "@csh/review";
-import { componentQueue, componentStatus, evaluateProject, loadProject, type Project, runAt, type RunResult, runComponent, runSources, sourceSettings } from "@csh/run";
+import { type ComponentStatus, componentQueue, componentStatus, evaluateProject, loadProject, type Project, runAt, type RunResult, runComponent, runSources, sourceSettings } from "@csh/run";
 import type { SolverPort } from "@csh/solver";
 import { type Envelope, fail, ok, quote } from "./envelope.ts";
 
@@ -87,19 +87,23 @@ function explainSignal(s: Signal, r: Report, texts: Map<string, string>) {
 }
 
 /** The diff, as an agent reads it: the sections of section 5.2 by name, and whether the guide says to stop (6.3). */
-function diffResult(d: RunDiff) {
+export function diffResult(d: RunDiff) {
   const lost = d.observations.flatMap((o) => (o.k === "approval-lost" ? [o.fragment] : []));
   const broken = d.obligations.filter((o) => o.authority[1] === "approved" && (o.verdict[1] === "violated" || o.verdict[1] === "conflicting") && o.verdict[0] !== o.verdict[1]);
+  // An approved rule that is gone is an approval lost too, though the diff lists it as removed rather than observed.
+  const removed = d.obligations.filter((o) => o.authority[0] === "approved" && o.authority[1] === "absent").map((o) => o.fragment);
   const unknown = d.obligations.filter((o) => (o.verdict[1] === "unknown" && o.verdict[0] !== "unknown") || (o.applicability[1] === "stale" && o.applicability[0] !== "stale"));
-  const says = lost.length > 0 || broken.length > 0 ? "stop" : "continue";
+  const says = lost.length > 0 || removed.length > 0 || broken.length > 0 ? "stop" : "continue";
   return {
     comparison: d.comparison,
     base: "unavailable" in d.base ? { unavailable: quote(d.base.unavailable) } : d.base,
     head: "unavailable" in d.head ? { unavailable: quote(d.head.unavailable) } : d.head,
     says,
     approvalsLost: lost,
+    approvedRulesRemoved: removed,
     newViolationsAndConflictsOnApprovedRules: broken.map((o) => ({ fragment: o.fragment, verdict: o.verdict, disposition: o.disposition[1] })),
     becameUnknownOrStale: unknown.map((o) => ({ fragment: o.fragment, verdict: o.verdict[1], applicability: o.applicability[1] })),
+    fragments: { added: d.fragments.added, removed: d.fragments.removed, changed: d.fragments.changed },
     signalsAppeared: d.signals.appeared.map(listed),
     signalsCleared: d.signals.cleared.map(listed),
     signalsPersisting: d.signals.persisting,
@@ -117,15 +121,32 @@ async function evaluate(p: Project, c: ToolContext) {
   return e;
 }
 
-/** Call one tool. A tool name outside the fixed list is refused. */
+/** The status, with what the maintainers file says about each identity (its names) quoted as source text. */
+function statusResult(s: ComponentStatus) {
+  return { ...s, maintainers: s.maintainers.map((m) => ({ ...m, name: quote(m.name), roles: m.roles.map(quote) })) };
+}
+
+/**
+ * Call one tool. A tool name outside the fixed list is refused before the component is read, and anything a tool
+ * throws comes back as a failed envelope with its detail quoted, never as a protocol error.
+ */
 export async function callTool(name: string, args: Record<string, unknown>, c: ToolContext): Promise<Envelope> {
+  if (!TOOLS.some((t) => t.name === name)) return fail(name, "unknown-tool", `there is no tool ${name}; the tools are ${TOOLS.map((t) => t.name).join(", ")}`);
+  try {
+    return await callKnownTool(name as ToolName, args, c);
+  } catch (err) {
+    return fail(name, "internal-error", err instanceof Error ? err.message : String(err));
+  }
+}
+
+async function callKnownTool(name: ToolName, args: Record<string, unknown>, c: ToolContext): Promise<Envelope> {
   const p = loadProject(c.root, c.root);
   const str = (k: string) => (typeof args[k] === "string" ? (args[k] as string) : undefined);
   const runOptions = async () => ({ root: p.root, solver: c.solver });
-  switch (name as ToolName) {
+  switch (name) {
     case "status": {
       const r = await componentStatus(p, c.solver);
-      return r.ok ? ok(name, r.status) : fail(name, "status-failed", r.message);
+      return r.ok ? ok(name, statusResult(r.status)) : fail(name, "status-failed", r.message);
     }
     case "run": {
       const at = str("at");

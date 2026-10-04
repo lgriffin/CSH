@@ -17,7 +17,7 @@ outside the trusted base: it reads, runs, and writes only the run store and an A
 
 - `bin/csh-agent.js`: the server for one component (`--root`, else the git top level).
 - `createServer(context)`, `serve(context)`: the server, with the low-level `Server` and `StdioServerTransport` of `@modelcontextprotocol/sdk`.
-- `TOOLS`, `callTool(name, args, context)`: the eight tools, `status`, `run`, `gaps`, `explain`, `diff`, `queue`, `print` and `a3_open`; a name outside the list is refused with `unknown-tool`. The `diff` result says `stop` or `continue`, per step 4 of [the agent guide](../../docs/guides/agents.md).
+- `TOOLS`, `callTool(name, args, context)`: the eight tools, `status`, `run`, `gaps`, `explain`, `diff`, `queue`, `print` and `a3_open`; a name outside the list is refused with `unknown-tool` before the component is read, and anything a tool throws comes back as `internal-error` with its detail quoted. The `diff` result says `stop` or `continue`, per step 4 of [the agent guide](../../docs/guides/agents.md).
 - `quote(text)`, `ok`, `fail`, `Envelope`, `AGENT_SCHEMA` (`csh-agent/v1`), `QUOTE_LIMIT`, `NOTE`: the result envelope.
 - `unquotedStrings(value)`: every string not under a key named `quoted`, with its path; the test of section 6.2.
 
