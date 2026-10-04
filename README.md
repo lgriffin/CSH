@@ -97,7 +97,7 @@ Read these in order:
 The design is in [docs/spec](docs/spec), a read-only export of the specification: start with
 [the main tab](docs/spec/00-main.md), and read [09](docs/spec/09-anchor-harness-a3.md) for components, harnesses
 and the A3. The harness also evaluates part of itself: [the gate](packages/gate/README.md) is a component, with an A3
-opened from its first run and left for its owner.
+whose candidate judgments an agent wrote at the owner's request.
 
 ## The two findings
 

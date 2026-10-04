@@ -1,0 +1,20 @@
+{
+  "candidates": {
+    "findings": [],
+    "obligations": [
+      "Gate/NoViolationAllowed/AllowSatisfied",
+      "Gate/NoViolationAllowed/BlockConflicting",
+      "Gate/NoViolationAllowed/BlockUnknownCritical",
+      "Gate/NoViolationAllowed/BlockViolatedWithoutWaiver",
+      "Gate/NoViolationAllowed/ReviewSelfApproved",
+      "Gate/NoViolationAllowed/ReviewUnknown",
+      "Gate/NoViolationAllowed/WaiveViolatedWithWaiver"
+    ]
+  },
+  "invalidLedgerEntries": [],
+  "mode": "advisory",
+  "obligations": [],
+  "overall": "allow",
+  "schema": "csh-gate/v1",
+  "snapshotDigest": "sha256:10aef424f6e0dfd7a396dc07f53886bced7ec1d74f6b54d8140f4a57f25f9003"
+}

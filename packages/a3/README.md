@@ -42,7 +42,7 @@ The sheet is computed where it can be and judged where it must be, so an agent c
 - `test/a3.test.ts`: signals counted and placed by cause and lane; a test counted once however many witnesses it records; a test that recorded no witness counted from its `unobserved-test` gap, with the old subject or the source-qualified one; countermeasure status for clears, expects, a named stage and scope; every problem kind; a file pointer read at the stage's commit, and one that cannot be read; the eight measures and a target override; the same model for the same inputs; stage integrity; "Not yet written." for a skeleton; the authority line; escaping and no external loads in the page.
 - `packages/cli/test/a3.test.ts`: `csh a3 open`, `build --check`, `stage`, `verify` and an approval of `#a3/<slug>` on a copy of the lockout example.
 - Fixtures F91 to F95 through `@csh/testkit`, and the lockout walkthrough, whose committed sheet `csh a3 build --check` compares in CI.
-- The gate component's sheet, opened from its first run and left for its owner ([csh/a3/dispositions](../gate/csh/a3/dispositions/a3.md)), whose committed copy `packages/cli/test/a3.test.ts` compares with a fresh build.
+- The gate component's sheet, with two stages and candidate judgments written by an agent at the owner's request ([csh/a3/dispositions](../gate/csh/a3/dispositions/a3.md), [A-68](../../ASSUMPTIONS.md)), whose committed copy `packages/cli/test/a3.test.ts` compares with a fresh build.
 
 ## Known limits
 
