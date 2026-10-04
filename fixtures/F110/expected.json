@@ -1,0 +1,16 @@
+{
+  "fixture": "F110",
+  "section": "Next layers, section 5.3",
+  "stage": 19,
+  "expect": {
+    "diff": {
+      "base": "base-unavailable",
+      "renderIncludes": [
+        "base-unavailable",
+        "the comparison was not made",
+        "joint-conflict"
+      ],
+      "neverEmpty": true
+    }
+  }
+}

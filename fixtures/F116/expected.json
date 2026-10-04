@@ -1,0 +1,16 @@
+{
+  "fixture": "F116",
+  "section": "Next layers, sections 6.4 and 9",
+  "stage": 20,
+  "expect": {
+    "queue": {
+      "project": "base/shop",
+      "limit": 2,
+      "order": [
+        "Shop/#binding/Quote.args.orderTotal",
+        "Shop/#binding/Quote.result"
+      ],
+      "warning": true
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "csh-gate/v1",
+  "mode": "enforcing",
+  "overall": "allow",
+  "obligations": [],
+  "candidates": {
+    "obligations": []
+  },
+  "invalidLedgerEntries": [],
+  "snapshotDigest": "sha256:dddddddd00000000000000000000000000000000000000000000000000000000"
+}

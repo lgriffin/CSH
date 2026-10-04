@@ -1,0 +1,10 @@
+%% The container diagram of a small store: three containers, two drawn relations.
+C4Container
+  title Store: containers
+  System_Boundary(store, "Store") {
+    Container(web, "Web", "web, ui", "Pages")
+    Container(core, "Core", "core", "Prices and orders")
+    Container(db, "Database access", "db", "Queries")
+  }
+  Rel(web, core, "Calls")
+  Rel(web, db, "Reads")

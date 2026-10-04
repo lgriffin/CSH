@@ -1,0 +1,10 @@
+{
+  "fixture": "F105",
+  "section": "Next layers, sections 4.2 and 4.3",
+  "stage": 18,
+  "expect": {
+    "assessments": [
+      { "fragment": "Store/Layering/CoreIgnoresWeb", "verdict": "unknown", "applicability": "stale", "reasonsInclude": ["no-current-facts"] }
+    ]
+  }
+}

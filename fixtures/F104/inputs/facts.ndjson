@@ -1,0 +1,7 @@
+{"schema":"csh-facts/v1","kind":"package","name":"core","at":"packages/core/package.json","subject":{"commit":"c0ffee0000000000000000000000000000000000"},"tool":{"id":"facts-imports","version":"0.1.0"}}
+{"schema":"csh-facts/v1","kind":"package","name":"web","at":"packages/web/package.json","subject":{"commit":"c0ffee0000000000000000000000000000000000"},"tool":{"id":"facts-imports","version":"0.1.0"}}
+{"schema":"csh-facts/v1","kind":"package","name":"ui","at":"packages/ui/package.json","subject":{"commit":"c0ffee0000000000000000000000000000000000"},"tool":{"id":"facts-imports","version":"0.1.0"}}
+{"schema":"csh-facts/v1","kind":"package","name":"db","at":"packages/db/package.json","subject":{"commit":"c0ffee0000000000000000000000000000000000"},"tool":{"id":"facts-imports","version":"0.1.0"}}
+{"schema":"csh-facts/v1","kind":"depends","from":"web","to":"core","via":"import","typeOnly":false,"at":"packages/web/src/page.ts:1","subject":{"commit":"c0ffee0000000000000000000000000000000000"},"tool":{"id":"facts-imports","version":"0.1.0"}}
+{"schema":"csh-facts/v1","kind":"depends","from":"web","to":"db","via":"import","typeOnly":false,"at":"packages/web/src/page.ts:2","subject":{"commit":"c0ffee0000000000000000000000000000000000"},"tool":{"id":"facts-imports","version":"0.1.0"}}
+{"schema":"csh-facts/v1","kind":"depends","from":"core","to":"db","via":"import","typeOnly":false,"at":"packages/core/src/orders.ts:3","subject":{"commit":"c0ffee0000000000000000000000000000000000"},"tool":{"id":"facts-imports","version":"0.1.0"}}

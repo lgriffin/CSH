@@ -1,0 +1,57 @@
+{
+  "schema": "csh-report/v1",
+  "moduleDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "snapshot": {
+    "commit": "dddddddddddddddddddddddddddddddddddddddd",
+    "ledgerHead": "0",
+    "digest": "sha256:dddddddd00000000000000000000000000000000000000000000000000000000"
+  },
+  "tool": {
+    "version": "0.1.0",
+    "solver": "z3",
+    "budgetMs": 5000
+  },
+  "findings": [],
+  "notComparable": [],
+  "gapView": {
+    "sources": [
+      "Product",
+      "UnitTests"
+    ],
+    "rows": [],
+    "gaps": []
+  },
+  "assessments": [
+    {
+      "fragment": "SignInService/StopPasswordGuessing/LockOnThirdFailure",
+      "kind": "requirement",
+      "source": "intent",
+      "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "authority": "candidate",
+      "selfApproved": false,
+      "needsReview": false,
+      "verdict": "unknown",
+      "applicability": "unavailable",
+      "critical": false,
+      "methods": [],
+      "evidence": [],
+      "reasons": [
+        "candidate: no approval for this digest"
+      ],
+      "findings": []
+    }
+  ],
+  "unliftable": [],
+  "errors": [],
+  "diagnostics": [],
+  "executions": [],
+  "items": [],
+  "component": {
+    "name": "SignInService",
+    "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "sources": {
+      "Product": "ears",
+      "UnitTests": "tdd"
+    }
+  }
+}

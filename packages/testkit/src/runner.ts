@@ -54,9 +54,12 @@ export interface RunnerOptions {
 
 const SPEC_PATH = "spec/account.csl.ts";
 
+/** Fixture directories, F01 to F117, in number order. */
 export function listFixtures(dir: string): string[] {
-  return readdirSync(dir).filter((d) => /^F\d\d$/.test(d)).sort();
+  return readdirSync(dir).filter((d) => FIXTURE_ID.test(d)).sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)));
 }
+
+export const FIXTURE_ID = /^F\d{2,3}$/;
 
 /** Follow a one-line re-export to the file that holds the specification. */
 export function resolveSpecSource(file: string): string {

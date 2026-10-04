@@ -201,3 +201,28 @@ vitest, and `@csh/harness` has a reporter for Node's test runner only, without w
 - **The gate's tests move to Node's test runner.** One copy, outside the vitest suite.
 
 Decided on 3 October 2026: the chosen option, with the agreement check ([#12](https://github.com/lgriffin/CSH/issues/12)). Recorded as A-49.
+
+## Q-21 How does `csh diff` run the merge base of a pull request?
+
+Raised before stage 17, while verifying section 10 of [10](docs/spec/10-next-layers.md).
+
+Section 5.1 has `csh diff <base> <head>` run either side that has no stored run. A run at a past commit (`csh run --at`)
+uses the working tree's installation and refuses a commit whose dependencies or workspace packages differ from it
+(A-38, A-55). A pull request that changes a package the component resolves is exactly that case, so the merge base
+would always be refused in CI.
+
+- **The CI job runs the base in a checkout of its own (chosen).** A second worktree at the merge base, installed with `pnpm install --frozen-lockfile`, runs its own `csh run`; `csh diff` takes that stored run's directory as the base. A side that cannot be installed or run is `base-unavailable`, and the diff shows the head alone. `csh diff` given a commit still runs it with `csh run --at`, and reports `base-unavailable` with the refusal's reason when that is refused.
+- **`csh run --at` installs the commit's dependencies.** One mechanism for every caller, but the harness would then run package installs, which A-38 rules out.
+
+Taken provisionally as A-77, the option that installs nothing inside the harness.
+
+## Q-22 Where is the gate's regression commit kept?
+
+Raised before stage 17. Section 3.2 of [10](docs/spec/10-next-layers.md) keeps the regression on the gate's A3 as "a
+commit, kept under a tag and never merged" that edits `gate.ts` and its probe together.
+
+- **As files in the repository, applied in a scratch copy (chosen).** `packages/gate/regression/` holds the edited `src/gate.ts` and `test/gate.probe.ts`, as `examples/lockout/regression/` does for the lockout. The test of stage 17's exit copies the gate component into a scratch repository, signs approvals with a test-only key, commits the regression there, and records that the enforcing gate job blocks it. No tag is pushed, and `gate.ts` in the repository is never changed.
+- **A tagged commit.** Exactly what section 3.2 says, but a tag is a ref outside the branch every change is reviewed on, and a stage recorded at it in the real gate A3 would show an allow until the owner approves anything, since candidates never block.
+
+Taken provisionally as A-78. The regression stage of the gate's own A3 is recorded once the owner's approvals exist;
+until then the scratch copy is where the block is shown.

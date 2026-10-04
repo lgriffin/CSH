@@ -1,0 +1,10 @@
+{
+  "fixture": "F107",
+  "section": "Next layers, sections 4.2 and 10",
+  "stage": 18,
+  "expect": {
+    "assessments": [
+      { "fragment": "Store/Layering/CoreIgnoresWeb", "verdict": "violated", "reasonsInclude": ["packages/core/src/types.ts:1", "type-only"] }
+    ]
+  }
+}

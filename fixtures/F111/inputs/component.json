@@ -1,0 +1,37 @@
+{
+  "schema": "csh-component/v1",
+  "name": "SignInService",
+  "spec": "spec/lockout.csl.ts",
+  "implementation": [
+    "src"
+  ],
+  "practices": [
+    {
+      "id": "ears",
+      "name": "EARS",
+      "kind": "requirements",
+      "sources": [
+        "Product"
+      ]
+    },
+    {
+      "id": "tdd",
+      "name": "TDD",
+      "kind": "tests",
+      "sources": [
+        "UnitTests"
+      ],
+      "cites": "Product",
+      "harness": {
+        "run": [
+          "node",
+          "--test",
+          "--test-reporter=@csh/harness/reporter",
+          "--test-reporter-destination=stdout",
+          "test/lockout.test.ts"
+        ],
+        "witnesses": "reports/witnesses.ndjson"
+      }
+    }
+  ]
+}

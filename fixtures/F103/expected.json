@@ -1,0 +1,14 @@
+{
+  "fixture": "F103",
+  "section": "Next layers, sections 4.3 and 4.5",
+  "stage": 18,
+  "expect": {
+    "check": {
+      "gaps": [{ "kind": "unobserved-relation", "subject": "web->db", "detailIncludes": "containers.mmd:10" }],
+      "gapsExclude": [{ "kind": "unobserved-relation", "subject": "web->core" }, { "kind": "undrawn-dependency" }]
+    },
+    "assessments": [
+      { "fragment": "Store/Layering/DiagramIsComplete", "verdict": "satisfied", "applicability": "current" }
+    ]
+  }
+}

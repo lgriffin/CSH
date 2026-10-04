@@ -1,0 +1,14 @@
+{
+  "fixture": "F117",
+  "section": "Next layers, sections 6.1 and 9",
+  "stage": 20,
+  "expect": {
+    "status": {
+      "project": "base/shop",
+      "git": true,
+      "invalidEntries": [{ "seq": 1, "reason": "agent-key" }],
+      "fragments": { "approved": 0 },
+      "maintainers": 2
+    }
+  }
+}

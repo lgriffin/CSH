@@ -1,0 +1,9 @@
+{
+  "identities": {
+    "owner": { "kind": "person", "roles": ["intent-owner", "domain-reviewer"] }
+  },
+  "commits": [
+    { "signer": null, "message": "the component", "project": true },
+    { "signer": "owner", "message": "root of trust", "maintainers": ["owner"] }
+  ]
+}

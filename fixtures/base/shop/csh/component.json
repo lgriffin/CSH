@@ -1,0 +1,9 @@
+{
+  "schema": "csh-component/v1",
+  "name": "Shop",
+  "spec": "spec/shipping.csl.ts",
+  "implementation": ["src"],
+  "practices": [
+    { "id": "ears", "name": "EARS", "kind": "requirements", "sources": ["Requirements"], "author": "Product owner", "unit": "the sentence" }
+  ]
+}

@@ -23,3 +23,7 @@ Stages 10 to 16 build the anchor design ([09](../spec/09-anchor-harness-a3.md)):
 runs and the A3. Their fixtures, F80 to F96, were written before any of their code, and the fixture runner reports
 each one as pending until its stage is built (`BUILT_THROUGH_STAGE` in `packages/testkit/src/runner.ts`).
 
+
+Stages 17 to 20 build the next layers ([10](../spec/10-next-layers.md)): authority made real, the C4 diagrams as a
+checked source, change review and an agent interface. Their fixtures, F97 to F117, were written before any of their
+code, and are reported as pending until their stage is built.

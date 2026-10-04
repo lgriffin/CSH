@@ -1,0 +1,13 @@
+{
+  "fixture": "F104",
+  "section": "Next layers, section 4.3",
+  "stage": 18,
+  "expect": {
+    "check": {
+      "gapsExclude": [{ "kind": "undrawn-dependency" }]
+    },
+    "assessments": [
+      { "fragment": "Store/Layering/DiagramIsComplete", "authority": "approved", "verdict": "violated", "reasonsInclude": ["packages/core/src/orders.ts:3"] }
+    ]
+  }
+}

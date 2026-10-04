@@ -1,0 +1,23 @@
+{
+  "fixture": "F109",
+  "section": "Next layers, sections 5.1 and 5.2",
+  "stage": 19,
+  "expect": {
+    "diff": {
+      "fragmentsChanged": [
+        {
+          "fragment": "SignInService/StopPasswordGuessing/LockOnThirdFailure",
+          "authorityBefore": "approved",
+          "authorityAfter": "candidate"
+        }
+      ],
+      "observations": [
+        {
+          "k": "approval-lost",
+          "fragment": "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+        }
+      ],
+      "renderFirst": "Approvals lost"
+    }
+  }
+}

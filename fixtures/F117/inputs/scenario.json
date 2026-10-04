@@ -1,0 +1,11 @@
+{
+  "identities": {
+    "owner": { "kind": "person", "roles": ["intent-owner", "domain-reviewer"] },
+    "bot": { "kind": "agent", "roles": ["contributor"] }
+  },
+  "commits": [
+    { "signer": null, "message": "the component", "project": true },
+    { "signer": "owner", "message": "root of trust", "maintainers": ["owner", "bot"] },
+    { "signer": "bot", "message": "an agent approves", "ledger": [{ "kind": "approve", "fragment": "Shop/FairShipping/FreeShippingFrom50", "actor": "bot" }] }
+  ]
+}

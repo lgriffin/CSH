@@ -1,0 +1,17 @@
+{
+  "fixture": "F112",
+  "section": "Next layers, section 5.2",
+  "stage": 19,
+  "expect": {
+    "diff": {
+      "renderIncludes": [
+        "Approvals lost: none",
+        "New violations and conflicts on approved rules: none",
+        "Rules that became unknown or stale: none",
+        "New signals among candidates: none",
+        "Signals cleared: none",
+        "Observations: none"
+      ]
+    }
+  }
+}
