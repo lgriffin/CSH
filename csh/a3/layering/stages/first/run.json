@@ -1,0 +1,32 @@
+{
+  "component": "Workspace",
+  "gateDigest": "sha256:855913f184657a159c26706b69bf681a338ee2970773a3c9a1cb723f6b39401c",
+  "harnesses": [
+    {
+      "argv": [
+        "node",
+        "packages/facts-imports/bin/facts-imports.js"
+      ],
+      "executions": 0,
+      "exitCode": 0,
+      "practice": "facts",
+      "sandbox": "none",
+      "witnesses": 225
+    }
+  ],
+  "reportDigest": "sha256:b44d3cd904bdc70137a43a47371c4278ed5fd73b7326882bac5df43c2c2f0ea2",
+  "schema": "csh-run/v1",
+  "snapshot": {
+    "commit": "96aee9220c12aea02aa485507530e4e9a7a6132c",
+    "componentDigest": "sha256:1842fb01b5c0038979c83912628420792e78adfa4a863d43c2b7c6edbf447933",
+    "configDigest": "sha256:a469c145f705458b757d5bb23ab71796f4fa56d5ae7b21aeb17317e0cead2c89",
+    "ledgerHead": 0,
+    "lockDigest": "sha256:74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "moduleDigest": "sha256:5c97e6b93e7af702d869c8bf4bb1215fd8bc49752eeb5ebc92b0d4d3f0b602b8",
+    "tool": {
+      "solver": "z3 5.1.0.0",
+      "version": "0.1.0"
+    }
+  },
+  "snapshotDigest": "sha256:54a723922343d3eda3ba8356af117542db6bc101c6a678c6806c2b2dc7883525"
+}

@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A3 layering</title>
+<style>
+/* Layout: one Lean A3 sheet read left to right. Andon tiles on top, Plan (1-4) then Do/Check/Act (5-7). Practices take the colours --p0 to --p4 in manifest order. */
+[hidden]{display:none !important}
+:root{color-scheme:light;--bg:#f4f3ef;--sheet:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#7a7873;--rule:#dddbd4;--box:#ffffff;
+--pass:#2f7a4f;--warn:#8a6119;--fail:#a12a2a;--vital:#2a78d6;--trivial:#b9b7b0;--accent:#2a78d6;--hatch:#c9c7c0;
+--p0:#2a78d6;--p1:#8a4fc4;--p2:#b04e12;--p3:#2f7a4f;--p4:#8a6119;--on:#ffffff;--soft-fail:#f7e3e3;--soft-warn:#f6ecd9;--soft-pass:#e3f0e8;--soft-mute:#ecebe6;
+--font:system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#121211;--sheet:#1a1a19;--ink:#ffffff;--ink2:#c3c2b7;--muted:#9a988f;--rule:#383835;--box:#232322;
+--pass:#3f9a66;--warn:#c28a2a;--fail:#d05050;--vital:#3987e5;--trivial:#5a5953;--accent:#3987e5;--hatch:#4a4945;
+--p0:#4f94e8;--p1:#a77ad8;--p2:#ec8a45;--p3:#3f9a66;--p4:#c28a2a;--on:#1a1a19;--soft-fail:#3a1f1f;--soft-warn:#3a2f1a;--soft-pass:#1d3326;--soft-mute:#26261f}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#121211;--sheet:#1a1a19;--ink:#ffffff;--ink2:#c3c2b7;--muted:#9a988f;--rule:#383835;--box:#232322;
+--pass:#3f9a66;--warn:#c28a2a;--fail:#d05050;--vital:#3987e5;--trivial:#5a5953;--accent:#3987e5;--hatch:#4a4945;
+--p0:#4f94e8;--p1:#a77ad8;--p2:#ec8a45;--p3:#3f9a66;--p4:#c28a2a;--on:#1a1a19;--soft-fail:#3a1f1f;--soft-warn:#3a2f1a;--soft-pass:#1d3326;--soft-mute:#26261f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--font)}
+a{color:var(--accent)} a:focus-visible,summary:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+code{font:12.5px var(--mono)}
+.sheet{max-width:1440px;margin:0 auto;padding-block:20px 40px;padding-inline:16px}
+.title{display:flex;flex-wrap:wrap;gap:4px 24px;align-items:baseline;justify-content:space-between;border-bottom:3px solid var(--ink);padding-bottom:8px}
+.title h1{font-size:1.7rem;margin:0;letter-spacing:-.01em;text-wrap:balance} .title h1 span{font-weight:400;color:var(--ink2)}
+.title .meta{font-size:12.5px;color:var(--ink2)}
+.problem{font-size:1.05rem;margin:14px 0 0;max-width:75ch} .problem strong{font-weight:700}
+.andon{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px;margin:14px 0 4px}
+.tile{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0;grid-column:span 3}
+.tile .k{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink2)}
+.tile .huge{font-size:2.3rem;font-weight:800;line-height:1.05;letter-spacing:-.02em}
+.tile .sub{font-size:12px;color:var(--ink2)}
+.tile.pass{background:var(--pass);border:0;color:#fff} .tile.fail{background:var(--fail);border:0;color:#fff}
+.tile.pass .k,.tile.pass .sub,.tile.fail .k,.tile.fail .sub{color:#ffffffde}
+.note{font-size:12.5px;color:var(--ink2);margin:6px 0 0}
+.a3{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:14px;align-items:start;margin:14px 0}
+.col{display:grid;gap:14px;min-width:0}
+.blk{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:12px 16px 14px;min-width:0}
+.wide{margin:14px 0}
+.blk>h2{font-size:1rem;margin:0 0 8px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.blk>h2 .n{display:inline-grid;place-items:center;width:1.6rem;height:1.6rem;border-radius:50%;background:var(--ink);color:var(--sheet);font-size:.85rem;flex:none}
+.blk>h2 .hint{font-weight:400;font-size:12px;color:var(--ink2)}
+.blk p{margin:6px 0;max-width:80ch} h3{font-size:13px;margin:16px 0 6px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{text-align:left;vertical-align:top;padding:5px 8px;border-bottom:1px solid var(--rule)}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink2);font-weight:600}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.src{font-size:11.5px;color:var(--ink2)}
+.tag{display:inline-block;padding:0 7px;border-radius:4px;font-size:11.5px;font-weight:700;color:var(--on);white-space:nowrap}
+.tag.p0{background:var(--p0)} .tag.p1{background:var(--p1)} .tag.p2{background:var(--p2)} .tag.p3{background:var(--p3)} .tag.p4{background:var(--p4)}
+.cell{display:block;padding:3px 6px;border-radius:4px;font-size:12px}
+.cell.says{background:var(--soft-pass)} .cell.clash{background:var(--soft-fail)} .cell.drift{background:var(--soft-warn)} .cell.silent{background:var(--soft-mute);color:var(--muted)}
+.chip{display:inline-block;padding:0 7px;border-radius:4px;font-size:11.5px;font-weight:700;white-space:nowrap;border:1px solid}
+.chip.contradiction{color:var(--fail);border-color:var(--fail)} .chip.drift{color:var(--warn);border-color:var(--warn)} .chip.silence{color:var(--ink2);border-color:var(--muted);border-style:dashed} .chip.cleared{color:var(--pass);border-color:var(--pass)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--ink2);margin:6px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:6px} .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:10px;margin:8px 0}
+.compare>div{border:1px solid var(--rule);border-radius:6px;padding:8px 10px;background:var(--box);min-width:0}
+.compare h4{margin:0 0 4px;font-size:13px;display:flex;gap:8px;align-items:center}
+.compare dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12px} .compare dt{color:var(--ink2)} .compare dd{margin:0}
+figure{margin:12px 0 0} figcaption{display:flex;flex-wrap:wrap;gap:2px 12px;align-items:baseline;margin-bottom:6px}
+.lanes{width:100%;min-width:760px;height:auto;display:block}
+.lanes text{fill:var(--ink);font:12px var(--font)} .lanes .small{fill:var(--ink2);font-size:11px}
+.lanes .box{fill:var(--box);stroke:var(--rule)} .lanes .story{fill:var(--soft-mute);stroke:var(--muted)}
+.lanes .hub{fill:var(--soft-pass);stroke:var(--pass)}
+.lanes .arrow{stroke:var(--ink2);fill:none;stroke-width:1.4} .lanes .head{fill:var(--ink2)}
+.lanes .andon rect{fill:var(--fail)} .lanes .andon text{fill:#fff;font-weight:700;font-size:11px}
+.lanes .lane-p0{fill:var(--p0)} .lanes .lane-p1{fill:var(--p1)} .lanes .lane-p2{fill:var(--p2)} .lanes .lane-p3{fill:var(--p3)} .lanes .lane-p4{fill:var(--p4)}
+.pareto{max-width:760px}
+.phead,.bars li{display:grid;grid-template-columns:minmax(0,15rem) minmax(40px,1fr) 2.6rem 3rem;gap:8px;align-items:center}
+.phead{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)} .phead span:nth-child(n+3){text-align:right}
+ol.bars{list-style:none;margin:0;padding:0} .bars li{padding:3px 0;font-size:12.5px}
+.pl small{display:block;color:var(--ink2);font-size:11px;line-height:1.3}
+.pb{height:14px;display:block} .bar{display:block;height:100%;background:var(--trivial);border-radius:0 4px 4px 0}
+.vital .bar{background:var(--vital)} .vital .pl{font-weight:600}
+.pv,.pc{text-align:right;font-variant-numeric:tabular-nums} .pc{color:var(--ink2)}
+.bars li.cut{display:block;border-top:2px dashed var(--ink2);margin:4px 0 2px;padding:2px 0 0;font-size:11px;color:var(--ink2)}
+ol.rcas{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.rca{display:grid;grid-template-columns:2.2rem minmax(0,1fr);gap:8px}
+.rca .qn{font-weight:800;color:var(--ink2)} .rca .q{font-weight:700;margin:0} .rca p{margin:2px 0}
+.depth{display:inline-block;font-size:11.5px;color:var(--ink2);border-left:3px solid var(--rule);padding-left:8px;margin-top:2px}
+.depth.deep{border-color:var(--fail)}
+ol.chain{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-width:95ch}
+.chain li{display:grid;grid-template-columns:4rem minmax(0,1fr);gap:10px;padding:6px 0;border-bottom:1px solid var(--rule)}
+.chain .wn{font-weight:800;color:var(--ink2)} .chain .q{font-weight:700;margin:0} .chain p{margin:2px 0}
+.chain li.root{background:var(--soft-fail);border-radius:6px;padding:8px;border:0}
+.rootcause{font-weight:700;color:var(--fail)}
+.kind{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink2);border:1px solid var(--rule);border-radius:4px;padding:0 6px;white-space:nowrap}
+.status{display:inline-block;font-size:11.5px;font-weight:700;padding:0 7px;border-radius:4px;white-space:nowrap}
+.status.done{background:var(--pass);color:#fff} .status.proposed{border:1px dashed var(--ink2);color:var(--ink)} .status.decide{border:1px solid var(--warn);color:var(--warn)}
+.ok{color:var(--pass);font-weight:700} .no{color:var(--fail);font-weight:700} .kept{color:var(--warn);font-weight:700}
+.terms dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:6px 18px;margin:0} .terms dt{font-weight:700} .terms dd{margin:0;font-size:12.5px;color:var(--ink2)}
+footer{font-size:12px;color:var(--ink2);margin-top:14px}
+@media (max-width:900px){.a3{grid-template-columns:minmax(0,1fr)} .tile{grid-column:span 6}}
+@media (max-width:520px){.tile{grid-column:span 12} .phead,.bars li{grid-template-columns:minmax(0,9rem) minmax(30px,1fr) 2.2rem 2.8rem}}
+.stages{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 0;align-items:center}
+.stages .k{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink2);margin-right:4px}
+.stages label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);background:var(--sheet);border-radius:999px;padding:3px 12px;cursor:pointer;font-size:13px}
+.stages input{accent-color:var(--accent);margin:0}
+.stages label:has(input:checked){border-color:var(--ink);font-weight:700}
+.stages label:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.stage-what{font-size:12.5px;color:var(--ink2);margin:6px 0 0}
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px;margin:8px 0 0}
+.timeline>div{border:1px solid var(--rule);border-radius:6px;padding:8px 10px;background:var(--box);min-width:0}
+.timeline .sn{font-weight:700;font-size:13px} .timeline .sv{font-size:12px;color:var(--ink2)}
+.verdict{display:inline-block;padding:0 8px;border-radius:4px;font-weight:700;font-size:11.5px;letter-spacing:.03em;text-transform:uppercase;color:#fff}
+.verdict.allow,.verdict.satisfied{background:var(--pass)} .verdict.review,.verdict.unknown{background:var(--warn)} .verdict.block,.verdict.violated,.verdict.conflicting{background:var(--fail)}
+.none{color:var(--muted)}
+.unwritten{color:var(--muted);font-style:italic}
+.problems li{font-size:12.5px} .problems code{font-size:12px}
+.authority{font-weight:700} .authority.candidate{color:var(--warn)} .authority.approved{color:var(--pass)}
+</style>
+</head><body>
+<main class="sheet">
+<header class="title"><h1>A3 <span>· <span class="unwritten">Not yet written.</span></span></h1><span class="meta">Component <code>Workspace</code> · built by <code>csh a3 build layering</code> from its stage records and judgments · <span class="authority candidate">candidate: the judgments are not approved</span></span></header>
+<p class="problem"><strong>Problem.</strong> <span class="unwritten">Not yet written.</span></p>
+<fieldset class="stages" aria-label="Stage"><span class="k">Stage</span><label><input type="radio" name="stage" value="first" id="stage-first" checked>first</label></fieldset>
+<p class="stage-what" data-stage="first"><span class="unwritten">Not yet written.</span></p>
+<section class="andon" aria-label="Scoring at stage first" data-stage="first">
+  <div class="tile pass"><span class="k">Each practice alone</span><span class="huge">Green</span><span class="sub">0 of 0 tests pass</span></div>
+  <div class="tile fail"><span class="k">Read together by CSH</span><span class="huge">19</span><span class="sub">signals: 1 violated, 18 gaps</span></div>
+  <div class="tile"><span class="k">Decision points with a signal</span><span class="huge">0</span><span class="sub">0 contradictions · 0 drifts · 0 silences</span></div>
+  <div class="tile"><span class="k">Gate · advisory</span><span class="huge">allow</span><span class="sub">0 of 3 rules approved</span></div>
+</section>
+<div class="blk wide"><h2>The run, stage by stage <span class="hint">plan, do, check, act, once per stage</span></h2><div class="timeline"><div><span class="sn">first</span><br><span class="sv">0 of 0 tests pass · 19 signals · 0 conflicts · a rule violated</span><br><span class="verdict allow">allow</span> <span class="sv">advisory gate</span></div></div></div>
+
+<div class="a3">
+<section class="blk"><h2><span class="n">1</span>Background <span class="hint">why this matters</span></h2><p><span class="unwritten">Not yet written.</span></p><div class="compare"><div><h4><span class="tag p0">Container diagram</span> architecture</h4><dl><dt>Author</dt><dd>Architect</dd><dt>One artefact</dt><dd>the relation</dd><dt>Sources</dt><dd>C4</dd><dt>Cannot say</dt><dd><span class="unwritten">Not yet written.</span></dd></dl></div><div><h4><span class="tag p1">Written rules</span> requirements</h4><dl><dt>Author</dt><dd>Architect</dd><dt>One artefact</dt><dd>the sentence</dd><dt>Sources</dt><dd>Brief</dd><dt>Cannot say</dt><dd><span class="unwritten">Not yet written.</span></dd></dl></div><div><h4><span class="tag p2">Code facts</span> facts</h4><dl><dt>Author</dt><dd>facts-imports</dd><dt>One artefact</dt><dd>the dependency</dd><dt>Sources</dt><dd>Code</dd><dt>Cannot say</dt><dd><span class="unwritten">Not yet written.</span></dd></dl></div></div></section>
+<section class="blk"><h2><span class="n">3</span>Goal <span class="hint">the target condition, measured at every stage</span></h2>
+<p><span class="unwritten">Not yet written.</span></p><div class="scroll"><table><thead><tr><th>Measure</th><th class="num">Target</th><th class="num" title="first">1</th></tr></thead><tbody><tr><td>Conflicts between claims</td><td class="num">0</td><td class="num">0 <span class="ok">✓</span></td></tr><tr><td>Not comparable</td><td class="num">0</td><td class="num">0 <span class="ok">✓</span></td></tr><tr><td>Shape mismatches and dangling citations</td><td class="num">0</td><td class="num">0 <span class="ok">✓</span></td></tr><tr><td>Examples with no rule</td><td class="num">0</td><td class="num">0 <span class="ok">✓</span></td></tr><tr><td>Silences without an owner decision</td><td class="num">0</td><td class="num">0 <span class="ok">✓</span></td></tr><tr><td>Rules satisfied on approved evidence</td><td class="num">all</td><td class="num">0 of 3 <span class="no">·</span></td></tr><tr><td>Enforcing gate allows</td><td class="num">allow</td><td class="num">allow (advisory) <span class="no">·</span></td></tr><tr><td>Examples that cite a requirement</td><td class="num">all</td><td class="num">0 of 0 <span class="no">·</span></td></tr></tbody></table></div>
+<p class="src">Stages: 1 first. ✓ meets the target at that stage. Every value is counted from that stage's report and gate decision.</p></section>
+</div>
+
+<section class="blk wide"><h2><span class="n">2</span>Current condition <span class="hint">go and see: how intent travels to the code, and where it is lost</span></h2>
+<figure><figcaption><strong>One lane per practice</strong><span class="src">each red mark counts the signals placed at that hand-off by the lane rules in the judgments</span></figcaption>
+<div class="scroll" data-stage="first"><svg class="lanes" viewBox="0 0 651 347" role="img" aria-label="The intent is translated by each practice in its own lane, and the lanes meet in the harness. At stage first, 0 signals are placed on the hand-offs.">
+  <defs><marker id="ah-first" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" class="head"/></marker></defs>
+  <rect x="10" y="138.5" width="120" height="70" rx="8" class="story"/><text x="70" y="168.5" text-anchor="middle">Intent</text><text x="70" y="185.5" text-anchor="middle" class="small">Workspace</text>
+  <path d="M130 173.5 C145 173.5 145 55 172 55" class="arrow" marker-end="url(#ah-first)"/><path d="M366 55 C401 55 401 173.5 427 173.5" class="arrow" marker-end="url(#ah-first)"/><path d="M130 173.5 C145 173.5 145 160 172 160" class="arrow" marker-end="url(#ah-first)"/><path d="M366 160 C401 160 401 173.5 427 173.5" class="arrow" marker-end="url(#ah-first)"/><path d="M130 173.5 C145 173.5 145 265 172 265" class="arrow" marker-end="url(#ah-first)"/><path d="M366 265 C401 265 401 173.5 427 173.5" class="arrow" marker-end="url(#ah-first)"/>
+  <rect x="160" y="22" width="6" height="66" class="lane-p0"/>
+  <rect x="176" y="22" width="190" height="66" rx="6" class="box"/><text x="186" y="44">Container diagram</text><text x="186" y="62"></text><text x="186" y="78" class="small">C4</text>
+  <rect x="160" y="127" width="6" height="66" class="lane-p1"/>
+  <rect x="176" y="127" width="190" height="66" rx="6" class="box"/><text x="186" y="149">Written rules</text><text x="186" y="167"></text><text x="186" y="183" class="small">Brief</text>
+  <rect x="160" y="232" width="6" height="66" class="lane-p2"/>
+  <rect x="176" y="232" width="190" height="66" rx="6" class="box"/><text x="186" y="254">Code facts</text><text x="186" y="272"></text><text x="186" y="288" class="small">Code</text>
+</svg></div>
+<div class="legend"><span><i style="background:var(--p0)"></i>Container diagram</span><span><i style="background:var(--p1)"></i>Written rules</span><span><i style="background:var(--p2)"></i>Code facts</span><span><i style="background:var(--fail)"></i>signals at that hand-off</span></div>
+</figure>
+<h3>What each practice says at each decision point</h3>
+<p data-stage="first">Decision points: <span class="unwritten">Not yet written.</span></p>
+<div class="legend"><span><i style="background:var(--soft-pass)"></i>states it</span><span><i style="background:var(--soft-fail)"></i>contradicts another practice</span><span><i style="background:var(--soft-warn)"></i>states it in a form that drifted</span><span><i style="background:var(--soft-mute)"></i>silent</span></div>
+<figure class="pareto" data-stage="first"><figcaption><strong>Pareto: the 19 signals by cause</strong><span class="src">every signal of the first report, placed by the cause rules in the judgments</span></figcaption>
+<div class="phead" aria-hidden="true"><span></span><span></span><span>n</span><span>cum.</span></div>
+<ol class="bars"><li class="vital"><span class="pl">Unclassified: no cause places it</span><span class="pb"><span class="bar" style="width:100.0%"></span></span><span class="pv">19</span><span class="pc">100%</span></li></ol></figure>
+<details data-stage="first"><summary>Every signal at first (19)</summary><div class="scroll"><table><thead><tr><th>Kind</th><th>Signal</th><th>Cause</th></tr></thead><tbody><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: check-&gt;adapters</td><td><span class="no">unclassified</span></td></tr><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: testkit-&gt;check</td><td><span class="no">unclassified</span></td></tr><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: testkit-&gt;a3</td><td><span class="no">unclassified</span></td></tr><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: run-&gt;kernel</td><td><span class="no">unclassified</span></td></tr><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: cli-&gt;check</td><td><span class="no">unclassified</span></td></tr><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: a3-&gt;kernel</td><td><span class="no">unclassified</span></td></tr><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: testkit-&gt;ledger</td><td><span class="no">unclassified</span></td></tr><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: testkit-&gt;adapters</td><td><span class="no">unclassified</span></td></tr><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: cli-&gt;kernel</td><td><span class="no">unclassified</span></td></tr><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: cli-&gt;emission</td><td><span class="no">unclassified</span></td></tr><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: cli-&gt;gate</td><td><span class="no">unclassified</span></td></tr><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: gate-&gt;kernel</td><td><span class="no">unclassified</span></td></tr><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: testkit-&gt;emission</td><td><span class="no">unclassified</span></td></tr><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: testkit-&gt;gate</td><td><span class="no">unclassified</span></td></tr><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: testkit-&gt;component</td><td><span class="no">unclassified</span></td></tr><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: testkit-&gt;kernel</td><td><span class="no">unclassified</span></td></tr><tr><td><code>undrawn-dependency</code></td><td>undrawn-dependency: cli-&gt;ledger</td><td><span class="no">unclassified</span></td></tr><tr><td><code>unobserved-relation</code></td><td>unobserved-relation: run-&gt;harness</td><td><span class="no">unclassified</span></td></tr><tr><td><code>violated</code></td><td>violated: DiagramIsComplete (candidate)</td><td><span class="no">unclassified</span></td></tr></tbody></table></div></details>
+</section>
+
+<div class="a3">
+<section class="blk"><h2><span class="n">4</span>Root cause analysis <span class="hint">each question as deep as the evidence goes</span></h2><p><span class="unwritten">Not yet written.</span></p></section>
+<div class="col">
+<section class="blk"><h2><span class="n">5</span>Countermeasures <span class="hint">to the system, never to a person</span></h2><p><span class="unwritten">Not yet written.</span></p></section>
+<section class="blk"><h2><span class="n">6</span>Plan <span class="hint">who, what, when</span></h2><p><span class="unwritten">Not yet written.</span></p></section>
+<section class="blk"><h2><span class="n">7</span>Follow-up <span class="hint">the rules at this stage, as the gate sees them</span></h2>
+<p>At the last stage the advisory gate says <span class="verdict allow">allow</span>.</p>
+<div class="scroll" data-stage="first"><table><thead><tr><th>Rule</th><th>Authority</th><th>Verdict</th><th>Gate</th></tr></thead><tbody><tr><td><code>AdaptersSeeKernelAndWitnessOnly</code></td><td>candidate</td><td><span class="verdict satisfied">satisfied</span></td><td><span class="none">candidate, never blocks</span></td></tr><tr><td><code>DiagramIsComplete</code></td><td>candidate</td><td><span class="verdict violated">violated</span></td><td><span class="none">candidate, never blocks</span></td></tr><tr><td><code>KernelDependsOnNothing</code></td><td>candidate</td><td><span class="verdict satisfied">satisfied</span></td><td><span class="none">candidate, never blocks</span></td></tr></tbody></table></div></section>
+</div>
+</div>
+
+<section class="blk wide"><h2><span class="n">4</span>The 5 Whys <span class="hint">asked until the answer is a process or a tool, never a person</span></h2><p><span class="unwritten">Not yet written.</span></p></section>
+
+<section class="blk wide"><h2>Problems with the judgments <span class="hint">reported by the builder, never repaired</span></h2><ul class="problems"><li><code>unclassified</code> at first: undrawn-dependency: check-&gt;adapters. no cause places this signal.</li><li><code>unclassified</code> at first: undrawn-dependency: testkit-&gt;check. no cause places this signal.</li><li><code>unclassified</code> at first: undrawn-dependency: testkit-&gt;a3. no cause places this signal.</li><li><code>unclassified</code> at first: undrawn-dependency: run-&gt;kernel. no cause places this signal.</li><li><code>unclassified</code> at first: undrawn-dependency: cli-&gt;check. no cause places this signal.</li><li><code>unclassified</code> at first: undrawn-dependency: a3-&gt;kernel. no cause places this signal.</li><li><code>unclassified</code> at first: undrawn-dependency: testkit-&gt;ledger. no cause places this signal.</li><li><code>unclassified</code> at first: undrawn-dependency: testkit-&gt;adapters. no cause places this signal.</li><li><code>unclassified</code> at first: undrawn-dependency: cli-&gt;kernel. no cause places this signal.</li><li><code>unclassified</code> at first: undrawn-dependency: cli-&gt;emission. no cause places this signal.</li><li><code>unclassified</code> at first: undrawn-dependency: cli-&gt;gate. no cause places this signal.</li><li><code>unclassified</code> at first: undrawn-dependency: gate-&gt;kernel. no cause places this signal.</li><li><code>unclassified</code> at first: undrawn-dependency: testkit-&gt;emission. no cause places this signal.</li><li><code>unclassified</code> at first: undrawn-dependency: testkit-&gt;gate. no cause places this signal.</li><li><code>unclassified</code> at first: undrawn-dependency: testkit-&gt;component. no cause places this signal.</li><li><code>unclassified</code> at first: undrawn-dependency: testkit-&gt;kernel. no cause places this signal.</li><li><code>unclassified</code> at first: undrawn-dependency: cli-&gt;ledger. no cause places this signal.</li><li><code>unclassified</code> at first: unobserved-relation: run-&gt;harness. no cause places this signal.</li><li><code>unclassified</code> at first: violated: DiagramIsComplete (candidate). no cause places this signal.</li></ul></section>
+<footer>Advisory, like the harness's own report: an A3 never changes a verdict or a gate decision. It reads them.</footer>
+</main>
+<script>
+(function () {
+  var key = "a3-stage-layering";
+  var pick = function (id) {
+    document.querySelectorAll("[data-stage]").forEach(function (el) { el.hidden = el.getAttribute("data-stage") !== id; });
+    try { localStorage.setItem(key, id); } catch (e) {}
+  };
+  document.querySelectorAll('input[name="stage"]').forEach(function (r) { r.addEventListener("change", function () { pick(r.value); }); });
+  var saved = null;
+  try { saved = localStorage.getItem(key); } catch (e) {}
+  var input = saved && document.getElementById("stage-" + saved);
+  if (input) { input.checked = true; pick(saved); }
+})();
+</script>
+</body></html>
