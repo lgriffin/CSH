@@ -60,28 +60,45 @@ export type RunResult =
 
 const countLines = (file: string) => (existsSync(file) ? readFileSync(file, "utf8").split("\n").filter((l) => l.trim() !== "").length : 0);
 
+/** Signals that end csh while a harness runs; its process group no longer hears the terminal, so csh passes them on. */
+const PASSED_ON = ["SIGINT", "SIGTERM", "SIGHUP"] as const;
+
 function exec(argv: string[], cwd: string, env: NodeJS.ProcessEnv, out: (s: string) => void, timeoutMs: number): Promise<{ exitCode: number | null; error?: string }> {
   return new Promise((done) => {
     // A process group of its own, so that a timeout kills the command and everything it started (#20).
     const child = spawn(argv[0]!, argv.slice(1), { cwd, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
-    let timedOut = false;
-    const timer = setTimeout(() => {
-      timedOut = true;
+    const kill = (signal: NodeJS.Signals) => {
       try {
-        if (process.platform !== "win32" && child.pid !== undefined) process.kill(-child.pid, "SIGKILL");
-        else child.kill("SIGKILL");
+        if (process.platform !== "win32" && child.pid !== undefined) process.kill(-child.pid, signal);
+        else child.kill(signal);
       } catch {
         // Already gone.
       }
+    };
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      kill("SIGKILL");
     }, timeoutMs);
+    // Interrupted, csh takes the harness's whole tree with it, then ends as the signal would have ended it.
+    const onSignal = (signal: NodeJS.Signals) => {
+      kill(signal);
+      release();
+      process.kill(process.pid, signal);
+    };
+    const release = () => {
+      clearTimeout(timer);
+      for (const sig of PASSED_ON) process.removeListener(sig, onSignal);
+    };
+    for (const sig of PASSED_ON) process.on(sig, onSignal);
     child.stdout.on("data", (d: Buffer) => out(d.toString()));
     child.stderr.on("data", (d: Buffer) => out(d.toString()));
     child.on("error", (e) => {
-      clearTimeout(timer);
+      release();
       done({ exitCode: null, error: e.message });
     });
     child.on("close", (code) => {
-      clearTimeout(timer);
+      release();
       done(timedOut ? { exitCode: null, error: `timed out after ${timeoutMs} ms` } : { exitCode: code });
     });
   });
@@ -121,22 +138,43 @@ const NOT_INPUTS = new Set([".git", "node_modules", CACHE_DIR]);
 
 /**
  * What a run evaluates, by project path, with each file's digest: the specification and the files it imports, every
- * source no harness writes, the manifest, the configuration and the lock. A harness's own sources and output files are
- * left out, since writing them is its job.
+ * file of every source, each practice's project-local adapter and step table, the manifest, the configuration and the lock. Only the harnesses' own witness and executions
+ * files are left out, since writing them is their job; any other file in a harness's source directory is an input.
  */
 export function inputDigests(p: Project, manifest: ComponentManifest, m: Module): Map<string, string> {
   const root = resolve(p.root);
   const harnessed = manifest.practices.filter((x) => x.harness !== undefined);
   const written = new Set(harnessed.flatMap((x) => [x.harness!.witnesses, x.harness!.executions ?? DEFAULT_EXECUTIONS]).map((f) => resolve(root, f)));
-  const theirs = new Set(harnessed.flatMap((x) => x.sources));
+  const realRoot = realpathSync(root);
+  const inRoot = (r: string) => !r.startsWith("..") && !isAbsolute(r);
   const out = new Map<string, string>();
+  const walked = new Set<string>();
   const add = (abs: string, follow: boolean): void => {
     const rel = relative(root, abs).split("\\").join("/");
-    if (rel.startsWith("..") || isAbsolute(rel) || written.has(abs) || out.has(rel)) return;
-    if (!existsSync(abs)) return void out.set(rel, "absent");
-    const st = lstatSync(abs);
-    if (st.isSymbolicLink()) return void out.set(rel, `link ${readlinkSync(abs)}`);
+    if (!inRoot(rel) || written.has(abs) || out.has(rel)) return;
+    let st;
+    try {
+      st = lstatSync(abs);
+    } catch {
+      return void out.set(rel, "absent");
+    }
+    if (st.isSymbolicLink()) {
+      // Both the link and what it reaches: runSources follows a link to a target inside the root and reads its bytes.
+      out.set(`${rel} ->`, readlinkSync(abs));
+      let real: string;
+      try {
+        real = realpathSync(abs);
+      } catch {
+        return void out.set(rel, "absent");
+      }
+      if (!inRoot(relative(realRoot, real))) return;
+      st = statSync(abs);
+    }
     if (st.isDirectory()) {
+      // A link back to a directory already walked would never end.
+      const real = realpathSync(abs);
+      if (walked.has(real)) return void out.set(rel, "walked");
+      walked.add(real);
       for (const e of readdirSync(abs)) if (!NOT_INPUTS.has(e)) add(join(abs, e), false);
       return;
     }
@@ -145,7 +183,12 @@ export function inputDigests(p: Project, manifest: ComponentManifest, m: Module)
     if (follow) for (const i of bytes.toString("utf8").matchAll(RELATIVE_IMPORT)) add(resolve(dirname(abs), i[1]!), true);
   };
   add(specOf(p, undefined), true);
-  for (const s of m.sources) if (!theirs.has(s.name)) add(resolve(root, s.at), false);
+  for (const s of m.sources) add(resolve(root, s.at), false);
+  // A practice's own code runs after the harnesses too: a project-local adapter and a step table, with what they import.
+  for (const x of manifest.practices) {
+    if (x.adapter !== undefined && (x.adapter.startsWith(".") || x.adapter.startsWith("/"))) add(resolve(root, x.adapter), true);
+    if (x.steps !== undefined) add(resolve(root, x.steps), true);
+  }
   for (const f of [COMPONENT_PATH, CONFIG_PATH, LOCK_PATH]) add(join(root, f), false);
   return out;
 }

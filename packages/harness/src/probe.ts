@@ -45,24 +45,30 @@ export interface Probe<A extends unknown[], R> {
 const calls = new Map<string, number>();
 const used = new Set<string>();
 
+/** Escapes after "0" in a file token: one letter each, so the code is prefix-free. */
+const ESCAPES: Record<string, string> = { "/": "s", ".": "d", "-": "h", _: "u", "0": "z" };
+
 /**
- * The test file as a segment of a witness id: lower-case letters and digits kept, "/" as "-", "." as "_", and any other
- * character as "~" and its UTF-8 bytes in hex. Two paths never share a segment, and a segment never holds "--" (#25).
+ * The test file as a token of a witness id, of letters and digits only so that the example name the witness-files
+ * adapter derives from the id keeps it whole: lower-case letters and the digits 1 to 9 kept, "/" as "0s", "." as "0d",
+ * "-" as "0h", "_" as "0u", "0" as "0z", an upper-case letter as "0c" and the letter, anything else as "0x" and its
+ * UTF-8 bytes in hex, and "0e" to end it. The code is prefix-free and holds no upper-case letter, so two files never
+ * share a token, in the id or in the example name, whatever test names follow it (#25).
  */
 export function fileSlug(path: string): string {
   let out = "";
   for (const ch of path) {
-    if (/^[a-z0-9]$/.test(ch)) out += ch;
-    else if (ch === "/") out += "-";
-    else if (ch === ".") out += "_";
-    else for (const b of new TextEncoder().encode(ch)) out += `~${b.toString(16).padStart(2, "0")}`;
+    if (/^[a-z1-9]$/.test(ch)) out += ch;
+    else if (ESCAPES[ch] !== undefined) out += `0${ESCAPES[ch]}`;
+    else if (/^[A-Z]$/.test(ch)) out += `0c${ch.toLowerCase()}`;
+    else for (const b of new TextEncoder().encode(ch)) out += `0x${b.toString(16).padStart(2, "0")}`;
   }
-  return out;
+  return `${out}0e`;
 }
 
 /**
  * A witness id from the test's file and full name: "locks on the third failure" in test/lockout.test.ts becomes
- * "test-lockout_test_ts--locks-on-the-third-failure". Node runs each file in its own process, so the file keeps ids
+ * "test0slockout0dtest0dts0e--locks-on-the-third-failure". Node runs each file in its own process, so the file keeps ids
  * from two files apart; within a process, later calls are numbered, skipping any id already given (A-42).
  */
 export function witnessId(fullName: string, file?: string): string {

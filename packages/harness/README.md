@@ -11,7 +11,7 @@ It is the "Harnesses" container, shown in the [containers diagram](../../docs/ar
 ## Public interface
 
 - `probe(event, fn, mappers, ctx?)`, `Probe`, `ProbeMappers`, `ProbeContext`: wrap `fn`; `probe.in(t, { cites })` returns the function, recording each call made by the test `t`. The mappers `pre`, `args`, `post` and `result` are the only place that names witness keys; `mocked` lists the test doubles the author states.
-- `witnessId(fullName, file?)`, `fileSlug(path)`: the witness id from the test file (relative to the harness's directory) and the test's full name, `test-lockout_test_ts--locks-on-the-third-failure`, numbering later calls in the same test. `fileSlug` is injective and never holds `--`, so two files never share an id ([A-65](../../ASSUMPTIONS.md)).
+- `witnessId(fullName, file?)`, `fileSlug(path)`: the witness id from the test file (relative to the harness's directory) and the test's full name, `test0slockout0dtest0dts0e--locks-on-the-third-failure`, numbering later calls in the same test. `fileSlug` is a prefix-free code of letters and digits ending in `0e`, so two files never share an id, nor an example name once the witness-files adapter drops the separators ([A-65](../../ASSUMPTIONS.md)).
 - `testFile(file, cwd?)`: the test file as the identity and the id use it.
 - `testIdentity(file, fullName, cwd?)`: the identity shared by witnesses and execution lines ([A-39](../../ASSUMPTIONS.md)).
 - `@csh/harness/reporter`: the default export is a reporter for `node --test` that writes csh-execution/v1 lines to `CSH_EXECUTIONS_FILE` (default `reports/executions.ndjson`) and prints nothing. Run by hand before `csh check`, its file must be named explicitly, as a practice's `executions` or `csh/config.json`'s `executions`: no file is joined to a Witnesses source that names none ([A-62](../../ASSUMPTIONS.md)). `executionOf(event, fullName)` and `nameTracker()` are its parts.
@@ -45,5 +45,5 @@ A hand-built record lets a test say anything about itself, and its default outco
 ## Known limits
 
 - Only Node's built-in test runner has a reporter.
-- Ids are long: the file is spelled out in the id and in the example's name (`WitnessTestLockoutTestTs…`). Tests a file runs concurrently number their calls in the order the calls happen.
+- Ids are long: the file is spelled out in the id and in the example's name (`WitnessTest0slockout0dtest0dts0e…`). Tests a file runs concurrently number their calls in the order the calls happen.
 - A test that calls the probed function inside a helper with its own test context must pass the right `t`; the probe cannot find it.

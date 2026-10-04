@@ -1,13 +1,14 @@
 // csh run (Anchor, harnesses and A3, section 4): a run executes each harness, evaluates, decides and stores one record
 // per snapshot; a run at a past commit uses a throwaway worktree and installs nothing (A-38).
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ComponentManifest } from "@csh/component";
 import { digestOf, type Module } from "@csh/kernel";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { evaluateSpec, type Project, type RunRecord, runAt, runComponent, runHarnesses, runSources, type RunSourcesOptions, unchangedSince } from "../src/index.ts";
+import { changedInputs, evaluateSpec, inputDigests, type Project, type RunRecord, runAt, runComponent, runHarnesses, runSources, type RunSourcesOptions, unchangedSince } from "../src/index.ts";
 
 const REPO = resolve(import.meta.dirname, "../../..");
 let proj: string;
@@ -304,6 +305,97 @@ describe("runHarnesses", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   }, 60000);
+});
+
+describe("an interrupted run", () => {
+  it("takes the harness's whole process tree with it (review of #20)", async () => {
+    const dir = mkdtempSync(join(REPO, ".csh-cache", "run-interrupt-"));
+    try {
+      // csh, in a process of its own, running a harness that starts a grandchild and hangs; each records its pid.
+      const hang = ["node", "-e", 'const {spawn}=require("child_process");const c=spawn(process.execPath,["-e","setInterval(()=>{},1000)"],{stdio:"ignore"});require("fs").writeFileSync("pids",process.pid+" "+c.pid);setInterval(()=>{},1000)'];
+      const practices = [{ id: "a", name: "A", kind: "tests", sources: ["A"], harness: { run: hang, witnesses: "reports/w.ndjson" } }];
+      writeFileSync(join(dir, "csh.mjs"), `import { runHarnesses } from ${JSON.stringify(pathToFileURL(join(REPO, "packages", "run", "src", "index.ts")).href)};\nawait runHarnesses({ root: ${JSON.stringify(dir)}, commit: "c" }, ${JSON.stringify({ ...manifest, practices })}, () => undefined);\n`);
+      const csh = spawn(process.execPath, [join(dir, "csh.mjs")], { stdio: "ignore" });
+      const exited = new Promise((r) => csh.on("exit", r));
+      for (let i = 0; i < 200 && !existsSync(join(dir, "pids")); i++) await new Promise((r) => setTimeout(r, 100));
+      const pids = readFileSync(join(dir, "pids"), "utf8").split(" ").map(Number);
+      csh.kill("SIGINT");
+      await exited;
+      const alive = (pid: number) => {
+        try {
+          process.kill(pid, 0);
+          return true;
+        } catch {
+          return false;
+        }
+      };
+      for (let i = 0; i < 50 && pids.some(alive); i++) await new Promise((r) => setTimeout(r, 100));
+      const left = pids.filter(alive);
+      for (const pid of left) process.kill(pid, "SIGKILL");
+      expect(left).toEqual([]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 60000);
+});
+
+describe("inputDigests", () => {
+  // A project of plain files: the specification, a harness-owned source directory, and the manifest's other inputs.
+  const project = (files: Record<string, string>) => {
+    const dir = mkdtempSync(join(REPO, ".csh-cache", "run-inputs-"));
+    for (const [f, text] of Object.entries(files)) {
+      mkdirSync(join(dir, f, ".."), { recursive: true });
+      writeFileSync(join(dir, f), text);
+    }
+    return dir;
+  };
+  const tdd = (extra: object = {}) => ({ ...manifest, spec: "spec.ts", practices: [{ id: "tdd", name: "TDD", kind: "tests", sources: ["UnitTests"], harness: { run: ["node"], witnesses: "w/out.ndjson" }, ...extra }] }) as ComponentManifest;
+  const mod = (at: string) => ({ sources: [{ name: "UnitTests", kind: "Witnesses", at }] }) as unknown as Module;
+  const moved = (dir: string, c: ComponentManifest, m: Module, change: () => void) => {
+    const p = { root: dir, config: {}, component: { manifest: c, digest: "" } } as unknown as Project;
+    const before = inputDigests(p, c, m);
+    change();
+    return changedInputs(before, inputDigests(p, c, m));
+  };
+
+  it("digests every file of a harness's source directory but the harness's own output (review of #17)", () => {
+    const dir = project({ "spec.ts": "", "w/out.ndjson": "a\n", "w/recorded.ndjson": "b\n" });
+    try {
+      expect(moved(dir, tdd(), mod("w"), () => writeFileSync(join(dir, "w", "out.ndjson"), "changed\n"))).toEqual([]);
+      expect(moved(dir, tdd(), mod("w"), () => writeFileSync(join(dir, "w", "recorded.ndjson"), "changed\n"))).toEqual(["w/recorded.ndjson"]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("digests a practice's project-local adapter and step table, with what they import (review of #17)", () => {
+    const dir = project({ "spec.ts": "", "w/out.ndjson": "", "adapters/a.mjs": 'import { x } from "./helper.mjs";\n', "adapters/helper.mjs": "export const x = 1;\n", "csh/steps.ts": "export {};\n" });
+    try {
+      const c = { ...manifest, spec: "spec.ts", practices: [{ id: "tdd", name: "TDD", kind: "tests", sources: ["UnitTests"], adapter: "./adapters/a.mjs", harness: { run: ["node"], witnesses: "w/out.ndjson" } }, { id: "bdd", name: "BDD", kind: "scenarios", sources: ["Scenarios"], steps: "csh/steps.ts" }] } as ComponentManifest;
+      expect(moved(dir, c, mod("w"), () => writeFileSync(join(dir, "adapters", "helper.mjs"), "export const x = 2;\n"))).toEqual(["adapters/helper.mjs"]);
+      expect(moved(dir, c, mod("w"), () => writeFileSync(join(dir, "csh", "steps.ts"), "export const changed = 1;\n"))).toEqual(["csh/steps.ts"]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("digests what a source link reaches inside the root, and the link itself (review of #17)", () => {
+    const dir = project({ "spec.ts": "", "data/real.md": "a\n", "other.md": "b\n" });
+    try {
+      symlinkSync("data/real.md", join(dir, "linked.md"));
+      symlinkSync("data", join(dir, "ld"));
+      // A link back up to the root is walked once, never for ever.
+      symlinkSync("..", join(dir, "data", "up"));
+      const two = { sources: [{ name: "A", kind: "Requirements", at: "linked.md" }, { name: "B", kind: "Requirements", at: "ld" }] } as unknown as Module;
+      expect(moved(dir, tdd(), two, () => writeFileSync(join(dir, "data", "real.md"), "changed\n"))).toEqual(["ld/real.md", "ld/up/linked.md", "linked.md"]);
+      expect(moved(dir, tdd(), two, () => {
+        rmSync(join(dir, "linked.md"));
+        symlinkSync("other.md", join(dir, "linked.md"));
+      })).toEqual(["ld/up/linked.md", "ld/up/linked.md ->", "linked.md", "linked.md ->"]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("the executions file joined to a Witnesses source (#22)", () => {

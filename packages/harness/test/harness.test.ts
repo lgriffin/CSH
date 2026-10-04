@@ -59,11 +59,13 @@ describe("probe", () => {
   });
 
   it("puts the test file into the id, so that no two files share one (#25)", () => {
-    expect(witnessId("Locks on the third failure", "test/lockout.test.ts")).toBe("test-lockout_test_ts--locks-on-the-third-failure");
-    expect(fileSlug("test/a-b.test.ts")).toBe("test-a~2db_test_ts");
-    expect(fileSlug("test/a/b.test.ts")).toBe("test-a-b_test_ts");
-    expect(fileSlug("Test/É.ts")).toBe("~54est-~c3~89_ts");
-    expect(new Set(["test/a-b.ts", "test/a/b.ts", "test/a_b.ts", "test/a.b.ts", "Test/a.ts", "test/a.ts"].map(fileSlug)).size).toBe(6);
+    expect(witnessId("Locks on the third failure", "test/lockout.test.ts")).toBe("test0slockout0dtest0dts0e--locks-on-the-third-failure");
+    expect(fileSlug("test/a-b.test.ts")).toBe("test0sa0hb0dtest0dts0e");
+    expect(fileSlug("Test/É0.ts")).toBe("0ctest0s0xc30x890z0dts0e");
+    const paths = ["test/a-b.ts", "test/a/b.ts", "test/a_b.ts", "test/a.b.ts", "Test/a.ts", "test/a.ts", "test/a0.ts", "test/a/b.test.ts", "test/a.b.test.ts", "test.x.ts", "test/x.ts"];
+    expect(new Set(paths.map(fileSlug)).size).toBe(paths.length);
+    // Letters and digits only, with no upper case: an example name keeps the token whole.
+    for (const p of paths) expect(fileSlug(p)).toMatch(/^[a-z0-9]+$/);
   });
 
   it("gives same-named tests in two files, writing one witness file, ids that both parse (#25)", () => {
@@ -75,7 +77,7 @@ describe("probe", () => {
     execFileSync(process.execPath, ["--test", "test/a.test.ts", "test/b.test.ts"], { cwd: root, env: { ...process.env, CSH_WITNESS_FILE: "reports/w.ndjson" }, stdio: "pipe" });
     const parsed = parseWitnesses(readFileSync(join(root, "reports", "w.ndjson"), "utf8"));
     expect(parsed.problems).toEqual([]);
-    expect(parsed.witnesses.map((x) => x.w.id).sort()).toEqual(["test-a_test_ts--adds", "test-a_test_ts--adds-2", "test-b_test_ts--adds", "test-b_test_ts--adds-2"]);
+    expect(parsed.witnesses.map((x) => x.w.id).sort()).toEqual(["test0sa0dtest0dts0e--adds", "test0sa0dtest0dts0e--adds-2", "test0sb0dtest0dts0e--adds", "test0sb0dtest0dts0e--adds-2"]);
   }, 60000);
 });
 
