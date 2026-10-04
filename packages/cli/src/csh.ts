@@ -13,6 +13,7 @@ import { componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, r
 import { type Args, parseArgs } from "./args.ts";
 import { init } from "./init.ts";
 import { a3Command, a3Fragment } from "./a3.ts";
+import { diffCommand } from "./diff.ts";
 
 const USAGE = `csh: the Composable Specification Harness
 
@@ -39,6 +40,11 @@ const USAGE = `csh: the Composable Specification Harness
   csh status [--json]             What is and is not protected, for one component: the root of trust, the
                                   maintainers, what is approved, the gate mode and whether the stored decision is
                                   for the current snapshot. Reads only; always exits 0 when it can read the component.
+  csh diff <base> <head> [--json] [--out <dir>]
+                                  What a change did to the results: approvals lost, new violations, rules gone
+                                  unknown, signals appeared and cleared, observations, counts. Each side is a stored
+                                  run's directory, a commit (run when no run of it is stored) or . for the working
+                                  tree. A side that cannot be run is unavailable, never an empty diff. Exits 0.
   csh gate [--mode advisory|enforcing] [--out decision.json]
                                   Check and decide for the current snapshot. Exits non-zero only on block in enforcing mode.
   csh a3 open <slug> [--at <commit>] [--stage <id>]
@@ -286,6 +292,16 @@ export async function csh(argv: string[], io: Io): Promise<number> {
       }
       io.out(a.flags.has("json") ? stableJson(r.status) : renderStatus(r.status, relative(io.cwd, p.root)));
       return 0;
+    }
+    case "diff": {
+      const solver = await (io.solver ?? defaultSolver)();
+      return diffCommand(p, a, {
+        out: io.out,
+        err: io.err,
+        ci: process.env.CI === "true",
+        cwd: io.cwd,
+        runOptions: async () => ({ root: p.root, solver, ...(a.options.budget !== undefined ? { budgetMs: Number(a.options.budget) } : {}), ...(a.flags.has("no-cache") ? { noCache: true } : {}), harnessOutput: (x: string) => io.err(x) }),
+      });
     }
     case "a3": {
       const solver = await (io.solver ?? defaultSolver)();

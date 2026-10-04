@@ -131,6 +131,9 @@ importers:
       '@csh/print':
         specifier: workspace:*
         version: link:../print
+      '@csh/review':
+        specifier: workspace:*
+        version: link:../review
       '@csh/run':
         specifier: workspace:*
         version: link:../run
@@ -228,6 +231,21 @@ importers:
         specifier: workspace:*
         version: link:../kernel
 
+  packages/review:
+    dependencies:
+      '@csh/check':
+        specifier: workspace:*
+        version: link:../check
+      '@csh/gate':
+        specifier: workspace:*
+        version: link:../gate
+      '@csh/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+      '@csh/run':
+        specifier: workspace:*
+        version: link:../run
+
   packages/run:
     dependencies:
       '@csh/adapter-c4-mermaid':
@@ -311,6 +329,9 @@ importers:
       '@csh/print':
         specifier: workspace:*
         version: link:../print
+      '@csh/review':
+        specifier: workspace:*
+        version: link:../review
       '@csh/run':
         specifier: workspace:*
         version: link:../run

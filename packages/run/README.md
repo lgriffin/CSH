@@ -12,7 +12,7 @@ It is the "Run" container, shown in the [containers diagram](../../docs/architec
 
 - `runComponent(o)`: harnesses, evaluation, gate and stored record for the root's current state; returns the record, report, decision and directory, or a refusal code (`no-component`, `component-unusable`, `evaluation-failed`, `inputs-changed-by-harness`).
 - `runAt(o)`: the same for a past commit, in a throwaway worktree. It writes nothing outside the run store: no `reports/` files, which belong to the working tree ([A-59](../../ASSUMPTIONS.md)). It refuses with `dependencies-differ`, `workspace-differs` or `unknown-commit` ([A-38](../../ASSUMPTIONS.md), [A-55](../../ASSUMPTIONS.md)).
-- `RunRecord`, `HarnessRecord`, `RunResult`, `RunOptions`, `RUNS_DIR`, `GATE_PATH`, `DEPENDENCY_FILES`, `runDir(store, digest)`, `storedRuns(store, commit)` (newest first), `runHarnesses(project, manifest, out)`, `inputDigests(project, manifest, module)`, `changedInputs(before, after)`.
+- `RunRecord`, `HarnessRecord`, `RunResult`, `RunOptions`, `RUNS_DIR`, `GATE_PATH`, `DEPENDENCY_FILES`, `runDir(store, digest)`, `storedRuns(store, commit)` (newest first), `readStoredRun(dir)` (a stored run's record, report, decision and kept model, as `csh diff` and the A3 read them), `runHarnesses(project, manifest, out)`, `inputDigests(project, manifest, module)`, `changedInputs(before, after)`.
 - `evaluateProject(project, opts)`, `decideGate(project, evaluation, mode)`: one evaluation and its gate decision, shared by `csh check`, `csh gate` and `csh run`. `emitProject(project, opts)` and `emissionProblem(emission)` make and judge the emission alone; `opts.emission` hands it to `evaluateProject` so that it is not made twice.
 - `evaluateSpec(spec, opts, emission?)`, `emitSpec(spec, opts)`, `Emission`, `checkModule(module, digest, opts)`, `PipelineOptions`, `PipelineResult`, `sourceSettings(component)`: the pipeline for one specification, with or without a component.
 - `runSources(module, opts)`, `runIsolated(adapterUrl, input, timeoutMs)`, `BUILTIN_ADAPTERS`: sources through their adapters, each in a permission-restricted subprocess; a practice's adapter overrides the built-in one for its sources. A Scenarios source that names no adapter and whose every file is JSON declaring `csh-ir/v1` is read as pre-lifted claims (`claims-json`), not by the Gherkin adapter ([A-66](../../ASSUMPTIONS.md)). The built-in adapters are the witness, Gherkin and EARS adapters, and since stage 18 `@csh/adapter-c4-mermaid` for `Architecture` and `@csh/facts` for `Facts`.
@@ -22,7 +22,7 @@ It is the "Run" container, shown in the [containers diagram](../../docs/architec
 ## Depends on and used by
 
 - Depends on: `@csh/kernel`, `@csh/component`, `@csh/emit`, `@csh/solver`, `@csh/check`, `@csh/witness`, `@csh/adapter-witness-files`, `@csh/adapter-ears-markdown`, `@csh/ledger` and `@csh/gate`. The adapters are loaded by module specifier inside the adapter subprocess rather than imported. External: the `git` executable.
-- Used by: `@csh/cli` (`csh run`, `csh check`, `csh gate`, the decision commands, `csl lock`) and `@csh/testkit` (the fixture runner calls `evaluateSpec`).
+- Used by: `@csh/review` (types), `@csh/cli` (`csh run`, `csh check`, `csh gate`, the decision commands, `csl lock`) and `@csh/testkit` (the fixture runner calls `evaluateSpec`).
 
 ## Invariants it protects
 

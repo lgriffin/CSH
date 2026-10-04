@@ -7,7 +7,7 @@ the `.mmd` sources directly; the SVG files are for anywhere else.
 | Level | Source | Shows |
 | --- | --- | --- |
 | 1 Context | [context.mmd](context.mmd) | Contributors, intent owners and agents; version control, existing practice, CI |
-| 2 Containers | [containers.mmd](containers.mmd) | The twelve runtime containers, with every package by name, and the development-only test kit. It is also a checked source: the `Workspace` component reads it ([architecture rules](../guides/architecture-rules.md)) |
+| 2 Containers | [containers.mmd](containers.mmd) | The thirteen runtime containers, with every package by name, and the development-only test kit. It is also a checked source: the `Workspace` component reads it ([architecture rules](../guides/architecture-rules.md)) |
 | 3 Components | [components-cli.mmd](components-cli.mmd) | Command line |
 | 3 Components | [components-run.mmd](components-run.mmd) | Run |
 | 3 Components | [components-component.mmd](components-component.mmd) | Component |
@@ -22,6 +22,7 @@ the `.mmd` sources directly; the SVG files are for anywhere else.
 | 3 Components | [components-kernel.mmd](components-kernel.mmd) | Kernel |
 | 3 Components | [components-arch.mmd](components-arch.mmd) | Architecture rules |
 | 3 Components | [components-facts.mmd](components-facts.mmd) | Facts: the import scan and the facts reader |
+| 3 Components | [components-review.mmd](components-review.mmd) | Change review |
 
 Level 4 is the code: the types in `packages/kernel/src/model.ts`, `packages/check/src/types.ts`,
 `packages/witness/src/witness.ts`, `packages/ledger/src/types.ts` and `packages/gate/src/gate.ts`. They are the single

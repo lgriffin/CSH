@@ -59,3 +59,34 @@ jobs:
         run: .github/scripts/gate-job.sh packages/gate
         env:
           CSH_ROOT_COMMIT: ${{ vars.CSH_ROOT_COMMIT }}
+
+  # The change review (Next layers, section 5.4): for each component, csh diff between the merge base and the head,
+  # rendered to the job summary and kept as artifacts. Read access only; nothing is posted on the pull request (A-75).
+  # It explains the gate job's decision and never fails on what the diff says.
+  diff:
+    name: Change review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Diff each component against the merge base
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          base="$(git merge-base "origin/$BASE_REF" HEAD)"
+          .github/scripts/diff-job.sh packages/gate "$base" csh-diff/gate
+          .github/scripts/diff-job.sh . "$base" csh-diff/workspace
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: csh-diff
+          path: csh-diff/
+

@@ -44,4 +44,5 @@ Checked against [the container diagram](../../docs/architecture/containers.mmd) 
 - `component`: `csh/component.json`, read by `csh run`
 - `ledger`: `csh approve` drafting ledger lines, and authority from signed commits
 - `a3`: `csh a3 stage`, `build` and `verify`
+- `review`: `csh diff` between each pair of stages
 - `harness`: the probe in the unit tests, and the reporter

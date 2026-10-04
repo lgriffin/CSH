@@ -18,7 +18,8 @@
     "@csh/ledger": "workspace:*",
     "@csh/gate": "workspace:*",
     "@csh/run": "workspace:*",
-    "@csh/a3": "workspace:*"
+    "@csh/a3": "workspace:*",
+    "@csh/review": "workspace:*"
   },
   "bin": {
     "csl": "./bin/csl.js",

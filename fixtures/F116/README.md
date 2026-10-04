@@ -1,6 +1,6 @@
 # F116
 
-The candidate queue of the shop component, with its limit set to 2 in \`csh/config.json\`. Nothing is approved, so the
+The candidate queue of the shop component, with its limit set to 2 in `csh/config.json`. Nothing is approved, so the
 queue holds both rules and both bindings. Each binding unlocks both rules, since each rule needs every term it
 constrains bound and approved; each rule unlocks only its own verdict. The queue is ordered by what each entry unlocks,
 then by age, then by name, so the two bindings come first. It holds more than its limit and prints a warning that the scope should
