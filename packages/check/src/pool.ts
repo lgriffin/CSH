@@ -12,7 +12,7 @@ import {
   validateObligation,
   ViolationCollector,
 } from "@csh/kernel";
-import type { AdapterOutput, SourceItem, Witness } from "@csh/witness";
+import type { AdapterOutput, ItemEdge, SourceItem, Witness } from "@csh/witness";
 
 /** One source after its adapter ran (the command line runs adapters; the check engine reads their output). */
 export interface SourceRun {
@@ -38,6 +38,8 @@ export interface Prepared {
   unliftable: { source: string; span: string; reason: string; text: string }[];
   witnesses: SourcedWitness[];
   items: (SourceItem & { source: string })[];
+  /** Edges between items, and from items to files, by the source that read them (stage 22). */
+  edges: (ItemEdge & { source: string })[];
   diagnostics: { source: string; code: string; severity: string; message: string; span?: string }[];
   /** Execution lines read beside witness sources (Anchor, harnesses and A3, section 3.2). */
   executions: { source: string; test: string; outcome: string; span: string }[];
@@ -64,7 +66,7 @@ function typeCheckClaim(m: Module, c: Claim): { code: string; message: string } 
 
 export function prepare(emitted: Module, runs: SourceRun[]): Prepared {
   const module: Module = structuredClone(emitted);
-  const out: Prepared = { module, fragments: [], notComparable: [], unliftable: [], witnesses: [], items: [], diagnostics: [], executions: [], runs };
+  const out: Prepared = { module, fragments: [], notComparable: [], unliftable: [], witnesses: [], items: [], edges: [], diagnostics: [], executions: [], runs };
   // Add adapter claims to the claim set of their source.
   for (const r of runs) {
     for (const d of r.output.diagnostics) {
@@ -79,6 +81,7 @@ export function prepare(emitted: Module, runs: SourceRun[]): Prepared {
       out.witnesses.push(sw);
     }
     for (const it of r.output.items ?? []) out.items.push({ ...it, source: r.source });
+    for (const e of r.output.edges ?? []) out.edges.push({ ...e, source: r.source });
     for (const e of r.output.executions ?? []) out.executions.push({ ...e, source: r.source });
     const lifted = r.output.claims;
     if (lifted === undefined) continue;

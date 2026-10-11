@@ -10,3 +10,4 @@ export * from "./render.ts";
 export * from "./refine.ts";
 export * from "./signals.ts";
 export * from "./arch.ts";
+export * from "./trace.ts";

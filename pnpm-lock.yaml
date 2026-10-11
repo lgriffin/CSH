@@ -75,6 +75,18 @@ importers:
         specifier: workspace:*
         version: link:../witness
 
+  packages/adapter-items:
+    dependencies:
+      '@csh/adapter-ears-markdown':
+        specifier: workspace:*
+        version: link:../adapter-ears-markdown
+      '@csh/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+      '@csh/witness':
+        specifier: workspace:*
+        version: link:../witness
+
   packages/adapter-witness-files:
     dependencies:
       '@csh/kernel':
@@ -284,6 +296,9 @@ importers:
       '@csh/adapter-gherkin':
         specifier: workspace:*
         version: link:../adapter-gherkin
+      '@csh/adapter-items':
+        specifier: workspace:*
+        version: link:../adapter-items
       '@csh/adapter-witness-files':
         specifier: workspace:*
         version: link:../adapter-witness-files

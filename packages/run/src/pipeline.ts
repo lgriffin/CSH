@@ -3,7 +3,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { check, type CheckResult, type EvidenceStore, makeRefiner, type Report, type AuthorityResolver, type SourceRun } from "@csh/check";
-import { runSources, type RunSourcesOptions } from "./sources.ts";
+import { runSources, type RunSourcesOptions, trackedFiles } from "./sources.ts";
 import { emit, type EmitOptions, type EmitResult, type Lock } from "@csh/emit";
 import { digestJson, fragmentsOf, refName, type Module } from "@csh/kernel";
 import { type LedgerState, resolveAuthority } from "@csh/ledger";
@@ -97,8 +97,14 @@ export function sourceSettings(c: LoadedComponent | undefined): RunSourcesOption
       else if (p.executions !== undefined) set.executions = p.executions;
       if (p.cites !== undefined) set.cites = p.cites;
       if (p.steps !== undefined) set.steps = p.steps;
+      if (p.settings !== undefined) set.settings = p.settings;
       out[s] = set;
     }
+  }
+  // A source the manifest declares may narrow the files read under it (stage 22).
+  for (const s of c.manifest.sources ?? []) {
+    if (s.include === undefined && s.exclude === undefined) continue;
+    out[s.name] = { ...(out[s.name] ?? {}), ...(s.include !== undefined ? { include: s.include } : {}), ...(s.exclude !== undefined ? { exclude: s.exclude } : {}) };
   }
   return out;
 }
@@ -137,6 +143,11 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   if (state !== undefined) checkOpts.ledger = { head: state.head, invalid: state.invalid.map(({ seq, reason, commit }) => (commit !== undefined ? { seq, reason, commit } : { seq, reason })) };
   if (opts.unchangedSince !== undefined) checkOpts.unchangedSince = opts.unchangedSince;
   if (opts.composition !== undefined) checkOpts.composition = opts.composition;
+  // Edges to files resolve against what the repository tracks; listed only when some source produced an edge.
+  if (runs.some((r) => (r.output.edges ?? []).length > 0)) {
+    const files = trackedFiles(opts.sourceRoot ?? opts.root);
+    if (files !== undefined) checkOpts.files = files;
+  }
   if (opts.component !== undefined) {
     const { unowned } = checkAgainstModule(opts.component.manifest, module);
     checkOpts.component = { name: opts.component.manifest.name, digest: opts.component.digest, sources: ownersOf(opts.component.manifest), unowned };

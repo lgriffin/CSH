@@ -229,13 +229,15 @@ scripted session on the lockout regression that ends at "stop".
 
 A component can evaluate a repository it does not hold. A `csh-component/v2` manifest names the subject and a pinned
 commit, and may leave out the specification ([the manifest guide](docs/guides/manifest.md)). [subjects/esi-ts](subjects/esi-ts)
-does this for ESI.ts, the first codebase CSH is being refactored to ingest ([11](docs/spec/11-ingesting-a-codebase.md)).
+does this for ESI.ts, the first codebase CSH is being refactored to ingest ([11](docs/spec/11-ingesting-a-codebase.md)). It reads
+ESI.ts's charter, guides, feature files, tests and issues as an inventory: what each requirement is verified by, which
+rule each scenario sits under, and what refers to nothing.
 
 ## Limits
 
 - **Predicates are limited.** Linear integer arithmetic, enumerations and booleans, over one state per event. No concurrency, no time, no quantifiers in specifications.
 - **Reserved constructs.** Temporal obligations are carried and reported, but not evaluated. Architectural obligations are evaluated when written with the `forbid`, `only` and `closed` builders, against a container diagram and the imports of TypeScript and JavaScript code ([architecture rules](docs/guides/architecture-rules.md)); any other value stays reserved.
-- **Five adapters.** Witness files, EARS requirements in Markdown, Gherkin scenarios through a step table, Mermaid C4 container diagrams, and dependency facts. Scenarios are read, never executed. Anything else must arrive as claim sets in IR form, or it stays unliftable.
+- **Five lifting adapters.** Witness files, EARS requirements in Markdown, Gherkin scenarios through a step table, Mermaid C4 container diagrams, and dependency facts. Scenarios are read, never executed. Anything else must arrive as claim sets in IR form, or it stays unliftable. Documents, feature files, test files and issue exports can also be read as an inventory of items and edges, which gives gaps and no claims.
 - **One test runner.** The probe's outcomes come from a reporter for Node's test runner; other runners have none ([Q-20](QUESTIONS.md), decided: the gate's probe is a second file checked against its unit tests).
 - **Unknown is common.** A solver timeout, a missing binding or an unapproved binding all give unknown. That is a correct answer, not a malfunction.
 - **Protection depends on keys.** It also depends on where the gate runs: CI should pin the root maintainers commit with `CSH_ROOT_COMMIT`, outside the repository ([A-28](ASSUMPTIONS.md)).
@@ -263,7 +265,7 @@ with a summary.
 
 | Path | Contents |
 | --- | --- |
-| `packages/` | Twenty-four packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `arch`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `adapter-gherkin`, `adapter-c4-mermaid`, `facts`, `facts-imports`, `ledger`, `gate`, `component`, `run`, `review`, `agent`, `harness`, `a3`, `cli`, `testkit` |
+| `packages/` | Twenty-five packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `arch`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `adapter-gherkin`, `adapter-c4-mermaid`, `adapter-items`, `facts`, `facts-imports`, `ledger`, `gate`, `component`, `run`, `review`, `agent`, `harness`, `a3`, `cli`, `testkit` |
 | `docs/guides/` | How to write a component manifest, a probe, a step table, an A3 and architecture rules, and the owner's runbook for authority |
 | `csh/` | The `Workspace` component: the repository's own architecture rules, read against its container diagram and its imports ([examples/workspace](examples/workspace/README.md)) |
 | `fixtures/` | Golden fixtures, one directory each, plus the shared bases and the test pack |

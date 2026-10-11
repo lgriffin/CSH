@@ -5,11 +5,111 @@
     "repo": "https://github.com/lgriffin/ESI.ts",
     "commit": "2a2da8a626821bef77ad8726da2c8018e2961236"
   },
-  "implementation": ["src"],
+  "implementation": [
+    "src"
+  ],
   "sources": [
-    { "name": "Charter", "kind": "Requirements", "at": "guides/CHARTER.md" }
+    {
+      "name": "Charter",
+      "kind": "Requirements",
+      "at": "guides/CHARTER.md"
+    },
+    {
+      "name": "Guides",
+      "kind": "Documents",
+      "at": "guides",
+      "include": [
+        "**/*.md"
+      ],
+      "exclude": [
+        "CHARTER.md"
+      ]
+    },
+    {
+      "name": "Features",
+      "kind": "Features",
+      "at": "tests/bdd/features"
+    },
+    {
+      "name": "Tests",
+      "kind": "TestFiles",
+      "at": "tests",
+      "include": [
+        "**/*.test.ts"
+      ],
+      "exclude": [
+        "**/fixtures/**"
+      ]
+    },
+    {
+      "name": "Beads",
+      "kind": "Issues",
+      "at": ".beads/issues.jsonl"
+    }
   ],
   "practices": [
-    { "id": "charter", "name": "Charter", "kind": "requirements", "sources": ["Charter"], "author": "Maintainer", "unit": "the requirement" }
+    {
+      "id": "charter",
+      "name": "Charter",
+      "kind": "requirements",
+      "sources": [
+        "Charter"
+      ],
+      "adapter": "@csh/adapter-items/markdown",
+      "settings": {
+        "headingFields": "form,status"
+      },
+      "author": "Maintainer",
+      "unit": "the requirement"
+    },
+    {
+      "id": "guides",
+      "name": "Guides",
+      "kind": "documents",
+      "sources": [
+        "Guides"
+      ],
+      "author": "Maintainer",
+      "unit": "the guide",
+      "settings": {
+        "headings": "references"
+      }
+    },
+    {
+      "id": "bdd",
+      "name": "BDD",
+      "kind": "scenarios",
+      "sources": [
+        "Features"
+      ],
+      "author": "Maintainer",
+      "unit": "the rule"
+    },
+    {
+      "id": "tdd",
+      "name": "TDD",
+      "kind": "tests",
+      "sources": [
+        "Tests"
+      ],
+      "author": "Maintainer",
+      "unit": "the test file",
+      "settings": {
+        "idPattern": "(?:ARCH|DES|TEST|SEC|DOC|REL|GATE|PROC)-[0-9]+"
+      }
+    },
+    {
+      "id": "beads",
+      "name": "Beads",
+      "kind": "issues",
+      "sources": [
+        "Beads"
+      ],
+      "author": "Maintainer",
+      "unit": "the issue",
+      "settings": {
+        "idPattern": "(?:ARCH|DES|TEST|SEC|DOC|REL|GATE|PROC)-[0-9]+"
+      }
+    }
   ]
 }

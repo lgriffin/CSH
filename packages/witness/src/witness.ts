@@ -34,13 +34,40 @@ export interface SourceItem {
   span: string;
   textDigest: string;
   pattern?: string;
+  /**
+   * What the item is, when an inventory adapter read it (Ingesting a codebase, stage 22): a requirement, a rule, a
+   * scenario, a feature, a test file, a document or an issue. An item with a kind is traced through edges, not cited
+   * by fragments, so it is never reported uncited.
+   */
+  kind?: ItemKind;
+  /** Fields the source states beside the item, such as a requirement's status, by field name. */
+  attrs?: Record<string, string>;
+}
+
+export type ItemKind = "requirement" | "rule" | "scenario" | "feature" | "test-file" | "document" | "issue";
+
+/**
+ * How one item refers to another, or to a file of the repository (stage 22). `implements`: a document says it
+ * implements a requirement. `verified-by`: a requirement names the mechanism that verifies it. `exemplifies`: a
+ * scenario sits under a rule. `cites`: a test names a requirement in its title. `mentions`: free text names an item; it
+ * counts only when it resolves. `mentions-file`: text names a path.
+ */
+export type EdgeRel = "implements" | "verified-by" | "exemplifies" | "cites" | "mentions" | "mentions-file";
+
+export interface ItemEdge {
+  /** The item the edge starts from, in the same source. */
+  from: string;
+  rel: EdgeRel;
+  /** An item identifier, bare or as Source/id, or "file:" and a path relative to the repository root. */
+  to: string;
+  span: string;
 }
 
 export interface AdapterManifest {
   id: string;
   version: string;
   ir: "csh-ir/v1";
-  produces: ("claims" | "witnesses" | "items" | "diagram" | "facts")[];
+  produces: ("claims" | "witnesses" | "items" | "edges" | "diagram" | "facts")[];
   inputKinds: string[];
 }
 
@@ -136,6 +163,8 @@ export interface AdapterOutput {
   facts?: Fact[];
   witnesses?: Witness[];
   items?: SourceItem[];
+  /** References between items, and from items to files (stage 22). */
+  edges?: ItemEdge[];
   diagnostics: Diagnostic[];
   /** Spans of witnesses, by witness id (every claim, witness and item carries a span). */
   witnessSpans?: Record<string, string>;
