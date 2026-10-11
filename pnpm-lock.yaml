@@ -104,6 +104,9 @@ importers:
       '@csh/cli':
         specifier: workspace:*
         version: link:../cli
+      '@csh/component':
+        specifier: workspace:*
+        version: link:../component
       '@csh/kernel':
         specifier: workspace:*
         version: link:../kernel

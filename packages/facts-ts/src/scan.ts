@@ -4,9 +4,10 @@
 // checked, so the facts of a commit depend on its source files alone, never on a lockfile or node_modules.
 //
 // Facts: one module per file; one dependency per import, re-export, import-equals, literal dynamic import and literal
-// require, to the module it resolves to or to the package a bare specifier names; one export per exported name; and
-// the fields of a package.json that say what the package is. A relative specifier that resolves to no file is a
-// skipped fact, never dropped.
+// require, to the module it resolves to or to the package a bare specifier names; one export per exported name; one
+// declaration per top-level name, with the class it extends and a constant's literal value (stage 24); the fields of
+// a package.json that say what the package is, and its scripts; and every value of any other JSON file the source
+// names, such as generated metrics. A relative specifier that resolves to no file is a skipped fact, never dropped.
 import { builtinModules } from "node:module";
 import { posix } from "node:path";
 import ts from "typescript";
@@ -18,7 +19,7 @@ export const SCHEMA = "csh-facts/v2";
 const CODE = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/;
 const BUILTIN = new Set(builtinModules);
 /** The package.json fields read as facts: what the package is called, its version, its entry points and its floor. */
-const FIELDS = ["name", "version", "type", "main", "types", "engines", "exports", "bin"];
+const FIELDS = ["name", "version", "type", "main", "types", "engines", "exports", "bin", "scripts"];
 
 export const manifest = {
   id: "csh.adapter.facts-ts",
@@ -62,8 +63,54 @@ const literal = (n: ts.Node | undefined): string | undefined => (n !== undefined
 const hasExport = (n: ts.Node) => ts.canHaveModifiers(n) && (ts.getModifiers(n) ?? []).some((m) => m.kind === ts.SyntaxKind.ExportKeyword);
 const hasDefault = (n: ts.Node) => ts.canHaveModifiers(n) && (ts.getModifiers(n) ?? []).some((m) => m.kind === ts.SyntaxKind.DefaultKeyword);
 
-/** Every module reference and every exported name of one file. */
-export function readFile(path: string, text: string): { refs: Reference[]; exports: { symbol: string; from?: string; typeOnly: boolean }[]; computed: number[] } {
+export interface Declaration {
+  symbol: string;
+  declares: "class" | "function" | "const" | "let" | "var" | "interface" | "type" | "enum" | "namespace";
+  line: number;
+  base?: string;
+  value?: string;
+}
+
+/** A literal's value as text: a string, a number, a boolean, or one of these with `as const`. */
+function literalValue(n: ts.Expression | undefined): string | undefined {
+  if (n === undefined) return undefined;
+  if (ts.isAsExpression(n) || ts.isSatisfiesExpression(n) || ts.isParenthesizedExpression(n)) return literalValue(n.expression);
+  if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) return n.text;
+  if (ts.isNumericLiteral(n)) return String(Number(n.text));
+  if (n.kind === ts.SyntaxKind.TrueKeyword) return "true";
+  if (n.kind === ts.SyntaxKind.FalseKeyword) return "false";
+  return undefined;
+}
+
+/** The names a file declares at its top level. */
+function declarationsOf(sf: ts.SourceFile): Declaration[] {
+  const out: Declaration[] = [];
+  for (const n of sf.statements) {
+    const line = lineOf(sf, n);
+    if (ts.isClassDeclaration(n)) {
+      const heritage = n.heritageClauses?.find((h) => h.token === ts.SyntaxKind.ExtendsKeyword)?.types[0]?.expression;
+      const symbol = n.name?.text ?? (hasDefault(n) ? "default" : undefined);
+      if (symbol !== undefined) out.push({ symbol, declares: "class", line, ...(heritage !== undefined ? { base: heritage.getText(sf) } : {}) });
+    } else if (ts.isFunctionDeclaration(n)) {
+      const symbol = n.name?.text ?? (hasDefault(n) ? "default" : undefined);
+      if (symbol !== undefined) out.push({ symbol, declares: "function", line });
+    } else if (ts.isVariableStatement(n)) {
+      const flags = n.declarationList.flags;
+      const declares = flags & ts.NodeFlags.Const ? "const" : flags & ts.NodeFlags.Let ? "let" : "var";
+      for (const d of n.declarationList.declarations) {
+        const value = declares === "const" && ts.isIdentifier(d.name) ? literalValue(d.initializer) : undefined;
+        for (const symbol of bindingNames(d.name)) out.push({ symbol, declares, line, ...(value !== undefined ? { value } : {}) });
+      }
+    } else if (ts.isInterfaceDeclaration(n)) out.push({ symbol: n.name.text, declares: "interface", line });
+    else if (ts.isTypeAliasDeclaration(n)) out.push({ symbol: n.name.text, declares: "type", line });
+    else if (ts.isEnumDeclaration(n)) out.push({ symbol: n.name.text, declares: "enum", line });
+    else if (ts.isModuleDeclaration(n) && ts.isIdentifier(n.name)) out.push({ symbol: n.name.text, declares: "namespace", line });
+  }
+  return out;
+}
+
+/** Every module reference, exported name and top-level declaration of one file. */
+export function readFile(path: string, text: string): { refs: Reference[]; exports: { symbol: string; from?: string; typeOnly: boolean }[]; computed: number[]; declarations: Declaration[] } {
   const kind = path.endsWith(".tsx") ? ts.ScriptKind.TSX : path.endsWith(".jsx") ? ts.ScriptKind.JSX : /\.(js|mjs|cjs)$/.test(path) ? ts.ScriptKind.JS : ts.ScriptKind.TS;
   const sf = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, kind);
   const refs: Reference[] = [];
@@ -107,7 +154,7 @@ export function readFile(path: string, text: string): { refs: Reference[]; expor
     ts.forEachChild(n, visit);
   };
   visit(sf);
-  return { refs, exports, computed };
+  return { refs, exports, computed, declarations: declarationsOf(sf) };
 }
 
 function bindingNames(n: ts.BindingName): string[] {
@@ -115,17 +162,22 @@ function bindingNames(n: ts.BindingName): string[] {
   return n.elements.flatMap((e) => (ts.isOmittedExpression(e) ? [] : bindingNames(e.name)));
 }
 
-/** The scalar leaves of the package.json fields that say what the package is, by JSON pointer. */
-export function fieldsOf(json: unknown): { path: string; value: string }[] {
+/** The scalar leaves of a JSON value by JSON pointer: of package.json, only the fields that say what the package is;
+ * with `only` null, every leaf. */
+export function fieldsOf(json: unknown, only: readonly string[] | null = FIELDS): { path: string; value: string }[] {
   const out: { path: string; value: string }[] = [];
   const esc = (k: string) => k.replace(/~/g, "~0").replace(/\//g, "~1");
   const walk = (v: unknown, path: string) => {
     if (v === null || typeof v !== "object") out.push({ path, value: String(v) });
     else for (const [k, x] of Object.entries(v as Record<string, unknown>)) walk(x, `${path}/${esc(k)}`);
   };
-  if (typeof json === "object" && json !== null) for (const k of FIELDS) if ((json as Record<string, unknown>)[k] !== undefined) walk((json as Record<string, unknown>)[k], `/${k}`);
+  if (only === null) walk(json, "");
+  else if (typeof json === "object" && json !== null) for (const k of only) if ((json as Record<string, unknown>)[k] !== undefined) walk((json as Record<string, unknown>)[k], `/${esc(k)}`);
   return out;
 }
+
+/** Lockfiles say what was installed, not what the package is: never read, so a lockfile-only change moves no fact. */
+const LOCKFILES = new Set(["package-lock.json", "npm-shrinkwrap.json"]);
 
 export function run(input: AdapterInput): AdapterOutput {
   const commit = input.config?.commit ?? "unknown";
@@ -137,9 +189,10 @@ export function run(input: AdapterInput): AdapterOutput {
   if (input.config?.commit === undefined) diagnostics.push({ code: "no-commit", severity: "warning", message: "the harness gave no commit, so these facts are never current" });
   for (const f of files) {
     const text = new TextDecoder().decode(f.bytes);
-    if (posix.basename(f.path) === "package.json") {
+    if (f.path.endsWith(".json")) {
+      if (LOCKFILES.has(posix.basename(f.path))) continue;
       try {
-        for (const x of fieldsOf(JSON.parse(text))) facts.push({ ...base, kind: "field", at: f.path, file: f.path, path: x.path, value: x.value });
+        for (const x of fieldsOf(JSON.parse(text), posix.basename(f.path) === "package.json" ? FIELDS : null)) facts.push({ ...base, kind: "field", at: f.path, file: f.path, path: x.path, value: x.value });
       } catch (err) {
         diagnostics.push({ code: "malformed-manifest", severity: "warning", message: (err as Error).message, span: f.path });
       }
@@ -157,6 +210,7 @@ export function run(input: AdapterInput): AdapterOutput {
       } else facts.push({ ...base, kind: "depends", at, from: f.path, to: packageOf(ref.specifier), via: "import", typeOnly: ref.typeOnly });
     }
     for (const line of r.computed) facts.push({ ...base, kind: "skipped", at: `${f.path}:${line}`, from: f.path, reason: "computed specifier" });
+    for (const d of r.declarations) facts.push({ ...base, kind: "declare", at: `${f.path}:${d.line}`, module: f.path, symbol: d.symbol, declares: d.declares, ...(d.base !== undefined ? { base: d.base } : {}), ...(d.value !== undefined ? { value: d.value } : {}) });
     for (const e of r.exports) facts.push({ ...base, kind: "export", at: f.path, module: f.path, symbol: e.symbol, ...(e.from !== undefined ? { from: e.from } : {}), typeOnly: e.typeOnly });
   }
   return { facts, diagnostics };

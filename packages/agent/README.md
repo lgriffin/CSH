@@ -17,7 +17,7 @@ outside the trusted base: it reads, runs, and writes only the run store and an A
 
 - `bin/csh-agent.js`: the server for one component (`--root`, else the git top level).
 - `createServer(context)`, `serve(context)`: the server, with the low-level `Server` and `StdioServerTransport` of `@modelcontextprotocol/sdk`.
-- `TOOLS`, `callTool(name, args, context)`: the eight tools, `status`, `run`, `gaps`, `explain`, `diff`, `queue`, `print` and `a3_open`; a name outside the list is refused with `unknown-tool` before the component is read, and anything a tool throws comes back as `internal-error` with its detail quoted. The `diff` result says `stop` or `continue`, per step 4 of [the agent guide](../../docs/guides/agents.md).
+- `TOOLS`, `callTool(name, args, context)`: the nine tools, `status`, `run`, `gaps`, `explain`, `diff`, `queue`, `print`, `a3_open` and `propose_claim` (stage 24, which writes only `csh/claims.json`); a name outside the list is refused with `unknown-tool` before the component is read, and anything a tool throws comes back as `internal-error` with its detail quoted. The `diff` result says `stop` or `continue`, per step 4 of [the agent guide](../../docs/guides/agents.md).
 - `quote(text)`, `ok`, `fail`, `Envelope`, `AGENT_SCHEMA` (`csh-agent/v1`), `QUOTE_LIMIT`, `NOTE`: the result envelope.
 - `unquotedStrings(value)`: every string not under a key named `quoted`, with its path; the test of section 6.2.
 
@@ -43,7 +43,7 @@ but it makes the boundary testable on the harness's side ([10](../../docs/spec/1
 ## How it is tested
 
 - `test/agent.test.ts`: the tool list, refusal of other names, and the envelope (a property: quoted text never appears among the unquoted strings).
-- F113: a scripted client lists exactly the eight tools. F114: it calls every tool on a component whose sources carry an instruction aimed at an agent, and finds that text only under `quoted`.
+- F113: a scripted client lists exactly the nine tools. F114: it calls every tool on a component whose sources carry an instruction aimed at an agent, and finds that text only under `quoted`.
 - `packages/testkit/test/agent-session.test.ts`: the protocol on the lockout regression, ending at `says: stop`, with the transcript that [the agent guide](../../docs/guides/agents.md) shows.
 
 ## Known limits

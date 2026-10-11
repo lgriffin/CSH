@@ -50,9 +50,11 @@ export type ItemKind = "requirement" | "rule" | "scenario" | "feature" | "test-f
  * How one item refers to another, or to a file of the repository (stage 22). `implements`: a document says it
  * implements a requirement. `verified-by`: a requirement names the mechanism that verifies it. `exemplifies`: a
  * scenario sits under a rule. `cites`: a test names a requirement in its title. `mentions`: free text names an item; it
- * counts only when it resolves. `mentions-file`: text names a path.
+ * counts only when it resolves. `mentions-file`: text names a path. `mentions-symbol` (stage 24): text names a symbol
+ * beside the one code path on its line, as "symbol:" path "#" name. `mentions-script`: text names `npm run` and a
+ * script, as "script:" name.
  */
-export type EdgeRel = "implements" | "verified-by" | "exemplifies" | "cites" | "mentions" | "mentions-file";
+export type EdgeRel = "implements" | "verified-by" | "exemplifies" | "cites" | "mentions" | "mentions-file" | "mentions-symbol" | "mentions-script";
 
 export interface ItemEdge {
   /** The item the edge starts from, in the same source. */
@@ -178,10 +180,25 @@ export interface FieldFact extends FactBase {
 }
 
 /**
+ * A name a module declares at its top level, exported or not (version 2, stage 24): what it declares, the class it
+ * extends as written, and a constant's literal value.
+ */
+export interface DeclareFact extends FactBase {
+  kind: "declare";
+  module: string;
+  symbol: string;
+  declares: "class" | "function" | "const" | "let" | "var" | "interface" | "type" | "enum" | "namespace";
+  /** The base a class extends, as written: a name, or a dotted name. */
+  base?: string;
+  /** A const's value, when it is a string, number or boolean literal. */
+  value?: string;
+}
+
+/**
  * The fact format (csh-facts/v1 and v2), evidence beside the witness format; a fact never carries authority. In
  * version 2 a dependency's ends may be modules, by path, as well as packages.
  */
-export type Fact = PackageFact | DependencyFact | SkippedFact | ModuleFact | ExportFact | FieldFact;
+export type Fact = PackageFact | DependencyFact | SkippedFact | ModuleFact | ExportFact | FieldFact | DeclareFact;
 
 export interface AdapterOutput {
   claims?: ClaimSet;

@@ -41,6 +41,8 @@ interface Open {
   field?: string;
 }
 
+const CODE_FILE = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/;
+
 export function run(input: AdapterInput): AdapterOutput {
   const idPattern = idPatternOf(input);
   const headingId = new RegExp(`^(?<id>(?:${idPattern}))(?=$|[\\s·:—–-])\\s*[·:—–-]?\\s*(?<rest>.*)$`);
@@ -91,6 +93,24 @@ export function run(input: AdapterInput): AdapterOutput {
         }
       }
       verifying = undefined;
+    };
+    // A symbol beside a code path ("`buildError` in `src/core/util/error.ts`") says the file declares it, and `npm run x`
+    // says the script exists (stage 24). Only these two shapes are read: a symbol elsewhere on the line is not.
+    const codeMentions = (text: string, from: string, span: string) => {
+      const sym = "([A-Za-z_$][\\w$]*)(?:\\(\\))?";
+      for (const m of text.matchAll(new RegExp(`\`${sym}\`\\s+(?:in|from|of|exported by|declared in)\\s+\`([^\`]+)\``, "g"))) {
+        const p = pathToken(m[2]!);
+        if (p !== undefined && CODE_FILE.test(p)) edges.push({ from, rel: "mentions-symbol", to: `symbol:${p}#${m[1]}`, span });
+      }
+      for (const m of text.matchAll(new RegExp(`\`([^\`]+)\`\\s+(?:exports|declares|defines)\\s+\`${sym}\``, "g"))) {
+        const p = pathToken(m[1]!);
+        if (p !== undefined && CODE_FILE.test(p)) edges.push({ from, rel: "mentions-symbol", to: `symbol:${p}#${m[2]}`, span });
+      }
+      for (const t of backticked(text)) {
+        // The name ends the token or a word: `npm run test:<name>` is a pattern of names, not a script.
+        const s = /^npm run ([\w:.\-]+)(?=$|\s)/.exec(t);
+        if (s !== null) edges.push({ from, rel: "mentions-script", to: `script:${s[1]}`, span });
+      }
     };
     const mentions = (text: string, from: string, span: string) => {
       for (const t of backticked(text)) {
@@ -144,6 +164,7 @@ export function run(input: AdapterInput): AdapterOutput {
           if (add(item)) open = { item, level, paragraph: [], textDone: false };
         }
         mentions(h[2]!, fromId(), span);
+        codeMentions(h[2]!, fromId(), span);
         return;
       }
       const line = raw.trim();
@@ -177,6 +198,7 @@ export function run(input: AdapterInput): AdapterOutput {
       }
       if (verifying !== undefined) for (const t of backticked(line)) verifying.tokens.push({ t, span });
       else mentions(line, fromId(), span);
+      codeMentions(line, verifying?.item.id ?? fromId(), span);
     });
     close();
   }

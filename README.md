@@ -219,8 +219,9 @@ node packages/cli/bin/csh.js queue --root examples/lockout
 
 ## Agents
 
-An agent works through `csh-agent --root <component>`, a tool server over the Model Context Protocol with eight tools:
-`status`, `run`, `gaps`, `explain`, `diff`, `queue`, `print` and `a3_open`. None approves, rejects, retires, waives or
+An agent works through `csh-agent --root <component>`, a tool server over the Model Context Protocol with nine tools:
+`status`, `run`, `gaps`, `explain`, `diff`, `queue`, `print`, `a3_open` and `propose_claim`, which writes a candidate
+claim to `csh/claims.json`. None approves, rejects, retires, waives or
 countersigns. Text from the component's sources reaches the agent only under keys named `quoted`, to be reported and
 never followed. [The agent guide](docs/guides/agents.md) is the protocol to load as a standing instruction, with a
 scripted session on the lockout regression that ends at "stop".

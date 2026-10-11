@@ -7,7 +7,7 @@ import { runSources, type RunSourcesOptions, trackedFiles } from "./sources.ts";
 import { emit, type EmitOptions, type EmitResult, type Lock } from "@csh/emit";
 import { canonicalJson, canonicalModule, digestJson, fragmentsOf, moduleDigest, refName, type Module } from "@csh/kernel";
 import { type LedgerState, resolveAuthority } from "@csh/ledger";
-import { checkAgainstModule, type ComponentProblem, withDeclaredSources, DEFAULT_EXECUTIONS, type LoadedComponent, ownersOf } from "@csh/component";
+import { checkAgainstModule, type ComponentProblem, readClaims, withDeclaredSources, withProposedClaims, DEFAULT_EXECUTIONS, type LoadedComponent, ownersOf } from "@csh/component";
 import type { SolverPort } from "@csh/solver";
 
 export interface FixtureConfig {
@@ -73,14 +73,17 @@ export async function emitSpec(spec: string, opts: PipelineOptions): Promise<Emi
   const emitted = await emit(resolve(spec), emitOpts);
   if (!emitted.ok || opts.component === undefined) return { emitted };
   // Sources the manifest declares beside the specification join the model (stage 23).
-  // The digest and canonical form are then the joined model's, so a report names the model that was checked.
+  // So do the claims proposed in csh/claims.json, each in its intent (stage 24). The digest and canonical form are then
+  // the joined model's, so a report names the model that was checked.
   const joined = withDeclaredSources(opts.component.manifest, emitted.module);
-  if (joined.module !== emitted.module) {
-    emitted.module = canonicalModule(joined.module);
+  const read = readClaims(opts.root);
+  const proposed = withProposedClaims(joined.module, read.claims);
+  if (proposed.module !== emitted.module) {
+    emitted.module = canonicalModule(proposed.module);
     emitted.canonical = canonicalJson(emitted.module);
     emitted.digest = moduleDigest(emitted.module);
   }
-  const errors = [...joined.errors, ...checkAgainstModule(opts.component.manifest, emitted.module, opts.sourceRoot ?? opts.root).errors];
+  const errors = [...joined.errors, ...read.problems, ...proposed.errors, ...checkAgainstModule(opts.component.manifest, emitted.module, opts.sourceRoot ?? opts.root).errors];
   return errors.length > 0 ? { emitted, componentErrors: errors } : { emitted };
 }
 

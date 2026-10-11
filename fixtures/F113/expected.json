@@ -11,6 +11,7 @@
         "explain",
         "gaps",
         "print",
+        "propose_claim",
         "queue",
         "run",
         "status"

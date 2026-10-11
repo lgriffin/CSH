@@ -7,6 +7,8 @@ import {
   type Assumption,
   type Binding,
   type Cite,
+  type Claim,
+  type Prop,
   type ClaimSet,
   type Example,
   type Expr,
@@ -198,6 +200,11 @@ export interface ClaimBuilder {
    * (Next layers, section 4.1); any other value is carried and reported, never evaluated.
    */
   architecture(name: string, native: unknown, opts?: Cites): void;
+  /**
+   * A structural claim (stage 24): the prose at `at` asserts the proposition, or its negation with `holds: false`. It
+   * is judged by the facts, and two claims that contradict each other are a claim-conflict whatever the facts say.
+   */
+  claim(name: string, prop: Prop, opts?: { holds?: boolean; at?: string } & Cites): void;
   /** Reserved: carried and reported, never evaluated. */
   temporal(name: string, native: unknown, opts?: Cites): void;
 }
@@ -379,6 +386,13 @@ function makeClaimBuilder(
     },
     architecture(name, native, opts) {
       const o: Obligation = { kind: "architecture", name, native: native ?? null };
+      const c = citesOf(opts);
+      if (c !== undefined) o.cites = c;
+      target.obligations.push(o);
+    },
+    claim(name, prop, opts) {
+      const native: Claim = { k: "claim", holds: opts?.holds ?? true, p: prop, ...(opts?.at !== undefined ? { at: opts.at } : {}) };
+      const o: Obligation = { kind: "architecture", name, native };
       const c = citesOf(opts);
       if (c !== undefined) o.cites = c;
       target.obligations.push(o);

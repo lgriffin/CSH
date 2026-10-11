@@ -4,6 +4,8 @@ import {
   canonicalJson,
   globRegExp,
   isArchSel,
+  isArchRule,
+  isProp,
   matchesGlobs,
   CanonicalError,
   checkBool,
@@ -219,5 +221,19 @@ describe("globs and module selectors (stages 22 and 23)", () => {
     expect(isArchSel({ k: "modules", globs: [] })).toBe(false);
     expect(isArchSel({ k: "modules", globs: ["a"], except: [] })).toBe(false);
     expect(isArchSel({ k: "modules", globs: ["a"], extra: 1 })).toBe(false);
+  });
+});
+
+describe("claims (stage 24)", () => {
+  it("accept each proposition with exactly its fields, and nothing else", () => {
+    expect(isProp({ k: "inherits", cls: "A", base: "B" })).toBe(true);
+    expect(isProp({ k: "count", file: "package.json", pointer: "/exports", n: 6, except: ["./package.json"] })).toBe(true);
+    expect(isProp({ k: "count", file: "package.json", pointer: "/exports", n: -1 })).toBe(false);
+    expect(isProp({ k: "same", a: { module: "a.ts", name: "X" }, b: { module: "b.ts", name: "X", extra: 1 } })).toBe(false);
+    expect(isProp({ k: "file", path: "x", extra: 1 })).toBe(false);
+    expect(isProp({ k: "nonsense" })).toBe(false);
+    expect(isArchRule({ k: "claim", holds: false, p: { k: "atom", name: "SBOM published" }, at: "x.md:1" })).toBe(true);
+    expect(isArchRule({ k: "claim", holds: "no", p: { k: "atom", name: "x" } })).toBe(false);
+    expect(isArchRule({ k: "claim", holds: true, p: { k: "atom", name: "x" }, why: "?" })).toBe(false);
   });
 });

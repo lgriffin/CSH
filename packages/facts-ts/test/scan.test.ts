@@ -27,6 +27,8 @@ const show = (f: Fact): string => {
       return `field ${f.path} = ${f.value}`;
     case "skipped":
       return `skipped ${f.at} ${f.reason}`;
+    case "declare":
+      return `declare ${f.module} ${f.declares} ${f.symbol}${f.base !== undefined ? ` extends ${f.base}` : ""}${f.value !== undefined ? ` = ${f.value}` : ""}`;
     default:
       return f.kind;
   }
@@ -54,9 +56,14 @@ describe("facts-ts", () => {
       "field /engines/node = >=22",
       "field /exports/. = ./dist/index.js",
       "field /exports/.~1sde/import = ./dist/sde.mjs",
+      "field /scripts/x = y",
       "module src/core/a.ts",
       "src/core/a.ts:1 src/core/a.ts -> src/core/b.ts (type)",
       "src/core/a.ts:2 src/core/a.ts -> node:fs",
+      "declare src/core/a.ts const a = 1",
+      "declare src/core/a.ts const c",
+      "declare src/core/a.ts function f",
+      "declare src/core/a.ts class default",
       "export src/core/a.ts a",
       "export src/core/a.ts c",
       "export src/core/a.ts f",
@@ -67,6 +74,7 @@ describe("facts-ts", () => {
       "src/core/b.ts:5 src/core/b.ts -> src/core/a.ts",
       "src/core/b.ts:6 src/core/b.ts -> src/core/a.ts",
       "skipped src/core/b.ts:3 computed specifier",
+      "declare src/core/b.ts interface B",
       "export src/core/b.ts B (type)",
       "export src/core/b.ts * from ./a",
       "export src/core/b.ts aa from ./a",
@@ -118,6 +126,38 @@ describe("facts-ts", () => {
       { specifier: "./c", line: 2, typeOnly: false },
       { specifier: "./t", line: 3, typeOnly: true },
       { specifier: "fs", line: 4, typeOnly: false },
+    ]);
+  });
+});
+
+describe("declarations and data files (stage 24)", () => {
+  it("reads what each top-level declaration declares, a class's base and a constant's literal value", () => {
+    const out = run(
+      input(
+        {
+          "src/e.ts": "class A extends Error {}\nexport class B extends ns.A<T> {}\nconst N = 3, S = `t`, X = f();\nlet l = 1;\nenum E { a }\nnamespace M {}\ntype T = 1;\nfunction g() { const inner = 1; }\n",
+          "etc/metrics.json": JSON.stringify({ suites: 223, nested: { "a/b": [1, true, null] } }),
+        },
+        "c",
+      ),
+    );
+    expect(out.facts!.map(show)).toEqual([
+      "field /suites = 223",
+      "field /nested/a~1b/0 = 1",
+      "field /nested/a~1b/1 = true",
+      "field /nested/a~1b/2 = null",
+      "module src/e.ts",
+      "declare src/e.ts class A extends Error",
+      "declare src/e.ts class B extends ns.A",
+      "declare src/e.ts const N = 3",
+      "declare src/e.ts const S = t",
+      "declare src/e.ts const X",
+      "declare src/e.ts let l",
+      "declare src/e.ts enum E",
+      "declare src/e.ts namespace M",
+      "declare src/e.ts type T",
+      "declare src/e.ts function g",
+      "export src/e.ts B",
     ]);
   });
 });

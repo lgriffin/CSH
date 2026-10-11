@@ -7,6 +7,7 @@
   "exports": { ".": "./src/index.ts" },
   "bin": { "csh-agent": "./bin/csh-agent.js" },
   "dependencies": {
+    "@csh/component": "workspace:*",
     "@csh/kernel": "workspace:*",
     "@csh/print": "workspace:*",
     "@csh/solver": "workspace:*",

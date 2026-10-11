@@ -3,7 +3,7 @@
 // nothing verifies, is a gap. Nothing here judges whether an edge is right: a document that says it implements a
 // requirement is taken at its word, and only a reference to nothing is reported.
 import { compareCodePoints } from "@csh/kernel";
-import type { ItemEdge } from "@csh/witness";
+import type { Fact, ItemEdge } from "@csh/witness";
 import type { Prepared } from "./pool.ts";
 import type { Gap, Report } from "./types.ts";
 
@@ -11,6 +11,8 @@ export interface TraceInput {
   prepared: Prepared;
   /** The files the repository tracks at the evaluated commit, relative to its root; undefined when not known. */
   files?: string[];
+  /** The code facts of the run: a symbol or script named in prose is resolved against them (stage 24). */
+  facts?: Fact[];
 }
 
 export interface TraceResult {
@@ -37,8 +39,21 @@ export function trace(input: TraceInput): TraceResult {
   /** The item an edge names, as Source/id, preferring the edge's own source; "file" for a tracked path; undefined
    * when it names nothing; null when it cannot be checked (a mechanism in prose, a path outside the repository's
    * top-level entries, or a file edge when the tracked files are unknown). */
+  const facts = input.facts ?? [];
+  const modules = new Set(facts.flatMap((f) => (f.kind === "module" ? [f.name] : [])));
+  const named = new Set(facts.flatMap((f) => (f.kind === "declare" || f.kind === "export" ? [`${f.module}#${f.symbol}`] : [])));
+  const scripts = facts.filter((f) => f.kind === "field" && f.file === "package.json");
   const resolve = (source: string, e: ItemEdge): string | undefined | null => {
     if (e.to.startsWith("text:")) return null;
+    // A symbol resolves when its module was read and declares or exports it; a module not read cannot be checked.
+    if (e.to.startsWith("symbol:")) {
+      const ref = e.to.slice(7);
+      return !modules.has(ref.split("#")[0]!) ? null : named.has(ref) ? "file" : undefined;
+    }
+    if (e.to.startsWith("script:")) {
+      const name = e.to.slice(7).replace(/~/g, "~0").replace(/\//g, "~1");
+      return scripts.length === 0 ? null : scripts.some((f) => f.kind === "field" && f.path === `/scripts/${name}`) ? "file" : undefined;
+    }
     if (e.to.startsWith("file:")) {
       if (files === undefined) return null;
       const p = e.to.slice(5).replace(/\/$/, "");
@@ -62,7 +77,7 @@ export function trace(input: TraceInput): TraceResult {
     if (r !== undefined && r !== null && r !== "file") row.target = r;
     if (r === undefined && e.rel !== "mentions") {
       row.dangling = true;
-      dangling.set(from, [...(dangling.get(from) ?? []), `${e.span} ${e.rel} ${e.to.startsWith("file:") ? e.to.slice(5) : e.to}`]);
+      dangling.set(from, [...(dangling.get(from) ?? []), `${e.span} ${e.rel} ${/^(file|symbol|script):/.test(e.to) ? e.to.slice(e.to.indexOf(":") + 1) : e.to}`]);
     }
     out.push(row);
     if (e.rel === "verified-by") verifiedBy.add(from);

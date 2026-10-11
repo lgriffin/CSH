@@ -56,9 +56,9 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
   const env = { solver: opts.solver, vocabulary: v, budgetMs };
   const pool = buildPool(prepared.fragments, v, authority);
   const outcome = await runQueries(pool, env, authority);
-  const arch = evaluateArchitecture({ prepared, fragments: prepared.fragments, authority, live: (n) => pool.byName.has(n), ...(opts.snapshot !== undefined ? { snapshotCommit: opts.snapshot.commit } : {}), ...(opts.subjectCommit !== undefined ? { subjectCommit: opts.subjectCommit } : {}) });
+  const arch = evaluateArchitecture({ prepared, fragments: prepared.fragments, authority, live: (n) => pool.byName.has(n), ...(opts.files !== undefined ? { files: opts.files } : {}), ...(opts.snapshot !== undefined ? { snapshotCommit: opts.snapshot.commit } : {}), ...(opts.subjectCommit !== undefined ? { subjectCommit: opts.subjectCommit } : {}) });
   outcome.findings = sortFindings([...outcome.findings, ...arch.findings]);
-  const traced = trace({ prepared, ...(opts.files !== undefined ? { files: opts.files } : {}) });
+  const traced = trace({ prepared, facts: prepared.runs.flatMap((r) => r.output.facts ?? []), ...(opts.files !== undefined ? { files: opts.files } : {}) });
   const gaps = await gapView({ prepared, pool, outcome, env, authority, archGaps: arch.gaps, traceGaps: traced.gaps, ...(opts.component !== undefined ? { unowned: opts.component.unowned } : {}) });
   const tool = { version: TOOL_VERSION, solver: opts.solver.id, budgetMs };
   const assessInput: Parameters<typeof assess>[0] = {

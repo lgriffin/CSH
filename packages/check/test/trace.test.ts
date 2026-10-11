@@ -72,3 +72,39 @@ describe("trace", () => {
     expect(trace({ prepared: prepare(module, bare), files }).gaps.map((g) => [g.kind, g.subject])).toEqual([["unverified", "Charter/R-1"], ["unverified", "Features/f#r"]]);
   });
 });
+
+describe("trace against code facts (stage 24)", () => {
+  const fact = (f: Record<string, unknown>) => ({ schema: "csh-facts/v2", subject: { commit: "c" }, tool: { id: "facts-ts", version: "1" }, ...f }) as never;
+  const prose: SourceRun[] = [
+    {
+      source: "Guides",
+      kind: "Documents",
+      files: [],
+      output: {
+        diagnostics: [],
+        items: [item("g.md", "document")],
+        edges: [
+          { from: "g.md", rel: "mentions-symbol", to: "symbol:src/e.ts#LibError", span: "g:1" },
+          { from: "g.md", rel: "mentions-symbol", to: "symbol:src/e.ts#buildError", span: "g:2" },
+          { from: "g.md", rel: "mentions-symbol", to: "symbol:src/unread.ts#x", span: "g:3" },
+          { from: "g.md", rel: "mentions-script", to: "script:gen:types", span: "g:4" },
+          { from: "g.md", rel: "mentions-script", to: "script:gone", span: "g:5" },
+        ],
+      },
+    },
+  ];
+  const facts = [
+    fact({ kind: "module", name: "src/e.ts" }),
+    fact({ kind: "declare", module: "src/e.ts", symbol: "LibError", declares: "class", at: "src/e.ts:1" }),
+    fact({ kind: "field", file: "package.json", path: "/scripts/gen:types", value: "x" }),
+  ];
+
+  it("resolves a symbol in a module that was read and a script package.json names; the rest dangle", () => {
+    const r = trace({ prepared: prepare(module, prose), facts });
+    expect(r.gaps).toEqual([{ kind: "dangling-reference", subject: "Guides/g.md", fragments: [], detail: "names what does not exist: g:2 mentions-symbol src/e.ts#buildError; g:5 mentions-script gone" }]);
+  });
+
+  it("checks nothing about code it was given no facts for", () => {
+    expect(trace({ prepared: prepare(module, prose) }).gaps).toEqual([]);
+  });
+});

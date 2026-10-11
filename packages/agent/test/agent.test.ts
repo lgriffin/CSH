@@ -6,8 +6,8 @@ import type { SolverPort } from "@csh/solver";
 import { callTool, diffResult, fail, NOTE, ok, QUOTE_LIMIT, quote, TOOLS, unquotedStrings } from "../src/index.ts";
 
 describe("the tool list", () => {
-  it("is the eight tools of section 6.1, and none decides", () => {
-    expect(TOOLS.map((t) => t.name).sort()).toEqual(["a3_open", "diff", "explain", "gaps", "print", "queue", "run", "status"]);
+  it("is the eight tools of section 6.1 and propose_claim (stage 24), and none decides", () => {
+    expect(TOOLS.map((t) => t.name).sort()).toEqual(["a3_open", "diff", "explain", "gaps", "print", "propose_claim", "queue", "run", "status"]);
     for (const t of TOOLS) expect(t.name).not.toMatch(/approve|reject|retire|waive|countersign|ledger|sign/);
   });
 
@@ -15,6 +15,11 @@ describe("the tool list", () => {
     const e = await callTool("approve", { fragment: "X/Y/Z" }, { root: "/nonexistent", solver: {} as SolverPort });
     expect(e.ok).toBe(false);
     expect(e.error?.code).toBe("unknown-tool");
+  });
+
+  it("refuses a claim proposal that lacks its name, intent or claim, before reading anything", async () => {
+    const e = await callTool("propose_claim", { name: "X" }, { root: "/nonexistent", solver: {} as SolverPort });
+    expect(e.error?.code).toBe("missing-argument");
   });
 
   it("returns a failed envelope, with its detail quoted, when a tool throws", async () => {

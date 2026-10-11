@@ -15,6 +15,7 @@ It is the "Architecture rules" container of the [containers diagram](../../docs/
 - `undrawnDependencies(diagram, facts)`, `unobservedRelations(diagram, facts)`, `unplacedPackages(diagram, facts)`: the diagram against the facts, for the gaps `undrawn-dependency`, `unobserved-relation` and `unplaced-package`.
 - `selects(sel, package, diagram)` (a `modules` selector matches a name of the facts against its globs, [A-101](../../ASSUMPTIONS.md)), `containersOf(diagram, package)`, `unknownContainers(rule, diagram)`, `sameName(a, b)`, `bareName(name)`: selectors and name matching.
 - `describeDependency(dep)`: a dependency as a witness reads, `file:line: from -> to`, marked `(manifest)` or `(type-only)`.
+- `evaluateClaim(claim, facts)`, `truthOf(prop, facts)`, `claimConflict(a, b)`, `describeClaim`, `describeProp`, `ClaimFacts`, `ClaimResult`: structural claims (stage 24), judged by lookup in the facts: `holds`, `refuted` with what was found, or `unknown` with the reason; and whether two claims can both hold ([A-104](../../ASSUMPTIONS.md), [A-105](../../ASSUMPTIONS.md)).
 - `ArchDiagram`, `ArchFacts`, `ArchDependency`: the inputs, structurally; the adapter output of `@csh/witness` fits them.
 
 ## Depends on and used by

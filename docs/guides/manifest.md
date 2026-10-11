@@ -106,5 +106,14 @@ built. A profile with rules over the code declares the source beside its specifi
 }
 ```
 
+Since stage 24, `facts-ts` also reads each top-level declaration and every value of any other JSON file the source
+includes, such as a metrics file ([A-108](../../ASSUMPTIONS.md)). A source the manifest declares with the same name,
+kind and place as one the specification declares narrows it with the manifest's globs, so a claim can cite it.
+Proposed claims sit beside the manifest in `csh/claims.json`:
+
+```json
+{ "schema": "csh-claims/v1", "claims": [{ "name": "ErrorsSubpathLacksIsCircuitOpen", "intent": "ProseAboutCode", "claim": { "k": "claim", "holds": false, "p": { "k": "exports", "module": "src/errors.ts", "symbol": "isCircuitOpen" } }, "cites": [{ "source": "Charter", "id": "ARCH-07" }] }] }
+```
+
 The rules themselves are in the specification, written with `modules(...)` ([the architecture rules
 guide](architecture-rules.md#modules-of-a-codebase-stage-23)).
