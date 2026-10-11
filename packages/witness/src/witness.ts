@@ -69,7 +69,7 @@ export interface AdapterManifest {
   id: string;
   version: string;
   ir: "csh-ir/v1";
-  produces: ("claims" | "witnesses" | "items" | "edges" | "diagram" | "facts")[];
+  produces: ("claims" | "witnesses" | "items" | "edges" | "diagram" | "facts" | "results")[];
   inputKinds: string[];
 }
 
@@ -215,6 +215,23 @@ export interface AdapterOutput {
   witnessSpans?: Record<string, string>;
   /** Execution lines read beside the witnesses, so that tests that recorded nothing can be counted. */
   executions?: { test: string; outcome: LocalResult | "unknown"; span: string }[];
+  /**
+   * A test-file source's results (Ingesting a codebase, stage 26): one per finished test, with the test file it ran
+   * in, as an item id of the source, and the identifiers its full name cites. The test's name is never carried.
+   */
+  results?: TestResult[];
+}
+
+/** What a test runner says of one test: passed, failed, errored (its file could not run), or skipped (never run). */
+export type TestOutcome = LocalResult | "skipped";
+
+/** One finished test of a test-file source, joined to its file and to what its name cites. */
+export interface TestResult {
+  file: string;
+  outcome: TestOutcome;
+  cites: string[];
+  /** Where in the results file the test is reported. */
+  span: string;
 }
 
 export interface Adapter {
@@ -322,4 +339,66 @@ export function parseExecutions(text: string): { executions: { e: Execution; lin
     executions.push({ e: v as unknown as Execution, line });
   });
   return { executions, problems };
+}
+
+/** One test as a runner's results report it: the file it ran in, as the runner wrote it, and its full name. */
+export interface RunnerResult {
+  file: string;
+  name: string;
+  outcome: TestOutcome;
+  /** The line of an execution file, or the test's position in a JSON report as `testResults[i].assertionResults[j]`. */
+  at: string;
+}
+
+const RUNNER_STATUS: Record<string, TestOutcome> = { passed: "passed", failed: "failed", pending: "skipped", skipped: "skipped", todo: "skipped", disabled: "skipped", focused: "passed" };
+
+/**
+ * A test runner's results (Ingesting a codebase, stage 26): the JSON report Jest's --json and Vitest's json reporter
+ * write, or csh-execution/v1 lines. A file of a JSON report that failed to run and reports no test is one errored
+ * result for that file, with an empty name. Malformed input is reported, never dropped silently.
+ */
+export function parseTestResults(text: string): { results: RunnerResult[]; problems: WitnessProblem[] } {
+  const trimmed = text.trimStart();
+  if (!trimmed.startsWith("{") || !/"testResults"\s*:/.test(trimmed)) {
+    const parsed = parseExecutions(text);
+    return {
+      results: parsed.executions.map(({ e, line }) => {
+        const cut = e.test.indexOf("::");
+        return { file: cut < 0 ? "" : e.test.slice(0, cut), name: cut < 0 ? e.test : e.test.slice(cut + 2), outcome: e.outcome, at: String(line) };
+      }),
+      problems: parsed.problems,
+    };
+  }
+  let v: unknown;
+  try {
+    v = JSON.parse(text);
+  } catch (err) {
+    return { results: [], problems: [{ line: 1, message: `not JSON: ${(err as Error).message}` }] };
+  }
+  const files = isRecord(v) ? v.testResults : undefined;
+  if (!Array.isArray(files)) return { results: [], problems: [{ line: 1, message: "a JSON report needs a testResults array" }] };
+  const results: RunnerResult[] = [];
+  const problems: WitnessProblem[] = [];
+  files.forEach((f: unknown, i) => {
+    if (!isRecord(f) || typeof f.name !== "string") {
+      problems.push({ line: 1, message: `testResults[${i}] names no file` });
+      return;
+    }
+    const file = f.name;
+    const tests = Array.isArray(f.assertionResults) ? f.assertionResults : [];
+    if (tests.length === 0 && f.status === "failed") results.push({ file, name: "", outcome: "errored", at: `testResults[${i}]` });
+    tests.forEach((t: unknown, j) => {
+      const at = `testResults[${i}].assertionResults[${j}]`;
+      const outcome = isRecord(t) && typeof t.status === "string" ? RUNNER_STATUS[t.status] : undefined;
+      if (!isRecord(t) || outcome === undefined) {
+        problems.push({ line: 1, message: `${at} has no status a runner reports` });
+        return;
+      }
+      const titles = [...(Array.isArray(t.ancestorTitles) ? t.ancestorTitles.filter((x): x is string => typeof x === "string") : []), ...(typeof t.title === "string" ? [t.title] : [])];
+      const full = t.fullName;
+      const name = typeof full === "string" && full !== "" ? full : titles.join(" ");
+      results.push({ file, name, outcome, at });
+    });
+  });
+  return { results, problems };
 }

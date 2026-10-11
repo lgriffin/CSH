@@ -195,6 +195,75 @@ describe("the test-file adapter", () => {
   });
 });
 
+describe("test results (stage 26)", () => {
+  const FILE = ["describe('SEC-11: indexing', () => {", "  it('lists ARCH-01', () => {});", "  it('runs', () => {});", "});"].join("\n");
+  const withResults = (results: Record<string, string>) => {
+    const i = input({ "tests/a.test.ts": FILE, "tests/b.test.ts": "it('x', () => {});\n" }, undefined, "TestFiles");
+    i.executions = Object.entries(results).map(([path, text]) => {
+      const bytes = new TextEncoder().encode(text);
+      return { path, digest: digestOf(bytes), bytes };
+    });
+    return i;
+  };
+  const jest = JSON.stringify({
+    numTotalTests: 4,
+    testResults: [
+      {
+        name: "/ci/work/tests/a.test.ts",
+        status: "failed",
+        assertionResults: [
+          { ancestorTitles: ["SEC-11: indexing"], title: "lists ARCH-01", fullName: "SEC-11: indexing lists ARCH-01", status: "failed" },
+          { ancestorTitles: ["SEC-11: indexing"], title: "runs", fullName: "SEC-11: indexing runs", status: "passed" },
+          { ancestorTitles: [], title: "later", fullName: "later", status: "pending" },
+        ],
+      },
+      { name: "/ci/work/vendor/c.test.ts", status: "passed", assertionResults: [{ title: "elsewhere", status: "passed" }] },
+      { name: "/ci/work/tests/d.test.ts", status: "failed", assertionResults: [], failureMessage: "Cannot find module" },
+    ],
+  });
+
+  it("joins a Jest or Vitest JSON report to each file and to what each test's full name cites", () => {
+    const out = tests(withResults({ "results/jest.json": jest }));
+    expect(out.results).toEqual([
+      { file: "tests/a.test.ts", outcome: "failed", cites: ["ARCH-01", "SEC-11"], span: "results/jest.json#testResults[0].assertionResults[0]" },
+      { file: "tests/a.test.ts", outcome: "passed", cites: ["SEC-11"], span: "results/jest.json#testResults[0].assertionResults[1]" },
+      { file: "tests/a.test.ts", outcome: "skipped", cites: [], span: "results/jest.json#testResults[0].assertionResults[2]" },
+    ]);
+    expect(out.items!.find((i) => i.id === "tests/a.test.ts")!.attrs).toEqual({ tests: "2", passed: "1", failed: "1", errored: "0", skipped: "1" });
+    // Runner file names are never repeated: the files outside the source are counted, and the unrun file is too.
+    expect(out.diagnostics.map((d) => [d.code, d.message])).toEqual([
+      ["results-unmatched", "2 results in 2 files name no test file of the source"],
+      ["results-missing", "1 test files declare tests and have no result: their outcomes are unknown"],
+    ]);
+  });
+
+  it("joins a nested file to its longest matching path, and replaces a declared skip with the runner's count", () => {
+    const i = input({ "test/a.test.ts": "it.skip('x', () => {});\nit('y', () => {});\n", "packages/x/test/a.test.ts": "it('z', () => {});\n" }, undefined, "TestFiles");
+    const report = JSON.stringify({ testResults: [{ name: "/r/packages/x/test/a.test.ts", assertionResults: [{ title: "z", status: "passed" }] }, { name: "/r/test/a.test.ts", assertionResults: [{ title: "y", status: "passed" }] }] });
+    i.executions = [{ path: "r.json", ...(() => { const bytes = new TextEncoder().encode(report); return { digest: digestOf(bytes), bytes }; })() }];
+    const out = tests(i);
+    expect(out.results!.map((r) => r.file)).toEqual(["packages/x/test/a.test.ts", "test/a.test.ts"]);
+    expect(out.items!.find((x) => x.id === "test/a.test.ts")!.attrs).toEqual({ tests: "2", passed: "1", failed: "0", errored: "0", skipped: "0" });
+    expect(out.diagnostics).toEqual([]);
+  });
+
+  it("reads csh-execution/v1 lines too, by file and full name", () => {
+    const lines = [JSON.stringify({ schema: "csh-execution/v1", test: "tests/b.test.ts::x", outcome: "errored" }), "{oops"].join("\n");
+    const out = tests(withResults({ "results/run.ndjson": lines }));
+    expect(out.results).toEqual([{ file: "tests/b.test.ts", outcome: "errored", cites: [], span: "results/run.ndjson:1" }]);
+    expect(out.diagnostics.map((d) => [d.code, d.span])).toEqual([
+      ["malformed-results", "results/run.ndjson:2"],
+      ["results-missing", undefined],
+    ]);
+  });
+
+  it("says so when the practice names a results file and none was found, and reads none without one", () => {
+    expect(tests(withResults({})).diagnostics.map((d) => d.code)).toEqual(["no-results"]);
+    const without = tests(input({ "tests/a.test.ts": FILE }, undefined, "TestFiles"));
+    expect(without.results).toBeUndefined();
+  });
+});
+
 describe("the issue adapter", () => {
   it("reads one issue per line, with its fields and the identifiers its text mentions", () => {
     const lines = [JSON.stringify({ id: "esi-1", title: "Fix ARCH-07", description: "See SEC-02 and ARCH-07", status: "open", priority: 2 }), "", "{bad", JSON.stringify({ id: "esi-1" })].join("\n");

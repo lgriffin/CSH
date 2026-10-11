@@ -105,7 +105,8 @@
       "unit": "the test file",
       "settings": {
         "idPattern": "(?:ARCH|DES|TEST|SEC|DOC|REL|GATE|PROC)-[0-9]+"
-      }
+      },
+      "executions": "results/jest.json"
     },
     {
       "id": "beads",

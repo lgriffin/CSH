@@ -12,7 +12,7 @@ import {
   validateObligation,
   ViolationCollector,
 } from "@csh/kernel";
-import type { AdapterOutput, ItemEdge, SourceItem, Witness } from "@csh/witness";
+import type { AdapterOutput, ItemEdge, SourceItem, TestResult, Witness } from "@csh/witness";
 
 /** One source after its adapter ran (the command line runs adapters; the check engine reads their output). */
 export interface SourceRun {
@@ -43,6 +43,8 @@ export interface Prepared {
   diagnostics: { source: string; code: string; severity: string; message: string; span?: string }[];
   /** Execution lines read beside witness sources (Anchor, harnesses and A3, section 3.2). */
   executions: { source: string; test: string; outcome: string; span: string }[];
+  /** Test results joined to test files by a test-file source (stage 26): counted, never a verdict (P2). */
+  results: (TestResult & { source: string })[];
   runs: SourceRun[];
 }
 
@@ -66,7 +68,7 @@ function typeCheckClaim(m: Module, c: Claim): { code: string; message: string } 
 
 export function prepare(emitted: Module, runs: SourceRun[]): Prepared {
   const module: Module = structuredClone(emitted);
-  const out: Prepared = { module, fragments: [], notComparable: [], unliftable: [], witnesses: [], items: [], edges: [], diagnostics: [], executions: [], runs };
+  const out: Prepared = { module, fragments: [], notComparable: [], unliftable: [], witnesses: [], items: [], edges: [], diagnostics: [], executions: [], results: [], runs };
   // Add adapter claims to the claim set of their source.
   for (const r of runs) {
     for (const d of r.output.diagnostics) {
@@ -83,6 +85,7 @@ export function prepare(emitted: Module, runs: SourceRun[]): Prepared {
     for (const it of r.output.items ?? []) out.items.push({ ...it, source: r.source });
     for (const e of r.output.edges ?? []) out.edges.push({ ...e, source: r.source });
     for (const e of r.output.executions ?? []) out.executions.push({ ...e, source: r.source });
+    for (const t of r.output.results ?? []) out.results.push({ ...t, source: r.source });
     const lifted = r.output.claims;
     if (lifted === undefined) continue;
     let set = module.claims.find((c) => c.source === r.source);

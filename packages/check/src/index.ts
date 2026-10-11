@@ -11,3 +11,4 @@ export * from "./refine.ts";
 export * from "./signals.ts";
 export * from "./arch.ts";
 export * from "./trace.ts";
+export * from "./results.ts";

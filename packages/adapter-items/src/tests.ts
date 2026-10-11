@@ -2,16 +2,18 @@
 // tests it declares. An identifier in the title of a describe, it or test call cites that identifier: the title is
 // what the runner reports, so it is what a reader of a failure sees. Identifiers elsewhere in the file, in data or
 // comments, cite nothing. The file is read as text and never run: a small lexer tells comments, strings and regular
-// expressions from code, so a test written inside a fixture string is not a test. The runner's results are stage 26's.
+// expressions from code, so a test written inside a fixture string is not a test. The runner's results, when the
+// practice names a results file (stage 26), are joined to each file and to the identifiers each test's full name cites;
+// they are counted, and never decide anything.
 import { digestOf } from "@csh/kernel";
-import type { Adapter, AdapterInput, AdapterOutput, Diagnostic, ItemEdge, SourceItem } from "@csh/witness";
+import { type Adapter, type AdapterInput, type AdapterOutput, type Diagnostic, type ItemEdge, parseTestResults, type SourceItem, type TestOutcome, type TestResult } from "@csh/witness";
 import { decode, idPatternOf, sortedFiles } from "./common.ts";
 
 export const manifest = {
   id: "csh.adapter.items.tests",
   version: "0.1.0",
   ir: "csh-ir/v1",
-  produces: ["items", "edges"],
+  produces: ["items", "edges", "results"],
   inputKinds: ["TestFiles"],
 } as const;
 
@@ -139,7 +141,60 @@ export function run(input: AdapterInput): AdapterOutput {
     items.push({ id: file.path, kind: "test-file", text: file.path, span: `${file.path}:1`, textDigest: digestOf(text), attrs });
     if (tests === 0) diagnostics.push({ code: "no-tests", severity: "info", message: `${file.path} declares no it or test call with a literal title`, span: file.path });
   }
-  return { items, edges, diagnostics };
+  if (input.executions === undefined) return { items, edges, diagnostics };
+  const results = joinResults(input, items, id, diagnostics);
+  return { items, edges, diagnostics, results };
+}
+
+/**
+ * The file of the source a runner's file name is: the same path, or the longest item path that ends the runner's
+ * (runners write absolute paths, or paths from their own root), so `packages/x/test/a.test.ts` wins over
+ * `test/a.test.ts`. Undefined when none matches, or two of the longest length do.
+ */
+function fileOf(name: string, paths: string[]): string | undefined {
+  const n = name.replace(/\\/g, "/").replace(/^\.\//, "");
+  if (paths.includes(n)) return n;
+  const ends = paths.filter((p) => n.endsWith(`/${p}`)).sort((a, b) => b.length - a.length);
+  return ends.length > 0 && (ends.length === 1 || ends[1]!.length < ends[0]!.length) ? ends[0] : undefined;
+}
+
+/** Each test the results files report, joined to its file and to the identifiers its full name cites (A-115). */
+function joinResults(input: AdapterInput, items: SourceItem[], id: RegExp, diagnostics: Diagnostic[]): TestResult[] {
+  const paths = items.map((i) => i.id);
+  const results: TestResult[] = [];
+  const unmatched = new Map<string, number>();
+  const counts = new Map<string, Record<TestOutcome, number>>();
+  for (const f of input.executions ?? []) {
+    const parsed = parseTestResults(decode(f.bytes));
+    for (const p of parsed.problems) diagnostics.push({ code: "malformed-results", severity: "error", message: p.message, span: `${f.path}:${p.line}` });
+    for (const r of parsed.results) {
+      const file = fileOf(r.file, paths);
+      if (file === undefined) {
+        unmatched.set(r.file, (unmatched.get(r.file) ?? 0) + 1);
+        continue;
+      }
+      const cites = [...new Set([...r.name.matchAll(id)].map((m) => m[0]))].sort();
+      results.push({ file, outcome: r.outcome, cites, span: /^\d+$/.test(r.at) ? `${f.path}:${r.at}` : `${f.path}#${r.at}` });
+      const c = counts.get(file) ?? { passed: 0, failed: 0, errored: 0, skipped: 0 };
+      c[r.outcome]++;
+      counts.set(file, c);
+    }
+  }
+  if ((input.executions ?? []).length === 0) diagnostics.push({ code: "no-results", severity: "info", message: "the practice names a results file and none was found: every test's outcome is unknown" });
+  // A runner's file outside the source is reported once, by count, never by name: names can be anything.
+  if (unmatched.size > 0) diagnostics.push({ code: "results-unmatched", severity: "info", message: `${[...unmatched.values()].reduce((a, b) => a + b, 0)} results in ${unmatched.size} files name no test file of the source` });
+  let unrun = 0;
+  for (const it of items) {
+    const c = counts.get(it.id);
+    if (c === undefined) {
+      if ((input.executions ?? []).length > 0 && it.attrs?.tests !== "0") unrun++;
+      continue;
+    }
+    // The runner's counts, zeros too, replace what the declarations said: `skipped` is then what the runner skipped.
+    it.attrs = { ...(it.attrs ?? {}), ...Object.fromEntries(Object.entries(c).map(([k, n]) => [k, String(n)])) };
+  }
+  if (unrun > 0) diagnostics.push({ code: "results-missing", severity: "info", message: `${unrun} test files declare tests and have no result: their outcomes are unknown` });
+  return results;
 }
 
 export const adapter: Adapter = { manifest: { ...manifest, produces: [...manifest.produces], inputKinds: [...manifest.inputKinds] }, run };

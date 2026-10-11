@@ -146,6 +146,11 @@ export interface Report {
   errors: ReportError[];
   /** Extension: adapter diagnostics, by source. */
   diagnostics: { source: string; code: string; severity: string; message: string; span?: string }[];
+  /**
+   * Extension: what test runners said, counted per test file and per item a test cites (Ingesting a codebase, stage
+   * 26). Present when a test-file source read results; never entering a verdict (P2).
+   */
+  outcomes?: { item: string; tests: number; passed: number; failed: number; errored: number; skipped: number }[];
   /** Extension: test executions, stored and reported, never entering a verdict (P2). */
   executions: { witness: string; source: string; event: string; localResult: string; test?: string; span?: string }[];
   /**

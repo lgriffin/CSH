@@ -9,6 +9,7 @@ import { outcomeOf } from "@csh/witness";
 import { gapView } from "./gaps.ts";
 import { prepare, type Prepared, type SourceRun } from "./pool.ts";
 import { buildPool, runQueries, sortFindings } from "./run.ts";
+import { testOutcomes } from "./results.ts";
 import { trace } from "./trace.ts";
 import { ALL_CANDIDATE, type AuthorityInfo, type AuthorityResolver, type ComponentInfo, type Gap, type HistoryPort, type Report, TOOL_VERSION } from "./types.ts";
 
@@ -69,7 +70,8 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
   const arch = evaluateArchitecture({ prepared, fragments: prepared.fragments, authority, live: (n) => pool.byName.has(n), ...(opts.files !== undefined ? { files: opts.files } : {}), ...(opts.snapshot !== undefined ? { snapshotCommit: opts.snapshot.commit } : {}), ...(opts.subjectCommit !== undefined ? { subjectCommit: opts.subjectCommit } : {}), ...(opts.history !== undefined ? { history: opts.history } : {}) });
   outcome.findings = sortFindings([...outcome.findings, ...arch.findings]);
   const traced = trace({ prepared, facts: currentFacts(prepared.runs.flatMap((r) => r.output.facts ?? []), opts.snapshot?.commit, opts.subjectCommit), ...(opts.files !== undefined ? { files: opts.files } : {}), ...(opts.history !== undefined ? { history: opts.history } : {}) });
-  const gaps = await gapView({ prepared, pool, outcome, env, authority, archGaps: arch.gaps, traceGaps: [...traced.gaps, ...untracedChanges(opts.history)], ...(opts.component !== undefined ? { unowned: opts.component.unowned } : {}) });
+  const tested = testOutcomes(prepared, traced.edges);
+  const gaps = await gapView({ prepared, pool, outcome, env, authority, archGaps: arch.gaps, traceGaps: [...traced.gaps, ...untracedChanges(opts.history), ...tested.gaps], ...(opts.component !== undefined ? { unowned: opts.component.unowned } : {}) });
   const tool = { version: TOOL_VERSION, solver: opts.solver.id, budgetMs };
   const assessInput: Parameters<typeof assess>[0] = {
     pool,
@@ -111,6 +113,7 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
     }),
   };
   if (traced.edges.length > 0) report.edges = traced.edges;
+  if (tested.outcomes.length > 0) report.outcomes = tested.outcomes;
   if (opts.snapshot !== undefined) report.snapshot = opts.snapshot;
   if (opts.ledger !== undefined) report.ledger = opts.ledger;
   if (opts.composition !== undefined) report.composition = opts.composition;

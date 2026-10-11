@@ -46,6 +46,8 @@ function assessment(a: Assessment): string {
   return `  ${a.verdict}${scope}  ${a.fragment}  [${flags}; evidence ${a.applicability}]${reasons}`;
 }
 
+const RESULT_PROBLEMS = new Set(["malformed-results", "no-results"]);
+
 export function renderReport(r: Report): string {
   const out: string[] = [`CSH report for ${r.moduleDigest}`, `tool ${r.tool.version}, solver ${r.tool.solver}, budget ${r.tool.budgetMs} ms${r.snapshot !== undefined ? `, commit ${r.snapshot.commit}, ledger head ${r.snapshot.ledgerHead}` : ""}`, ""];
   const section = (title: string, fs: Finding[]) => {
@@ -75,6 +77,13 @@ export function renderReport(r: Report): string {
     for (const e of r.errors) out.push(`  ${e.severity} ${e.code}: ${e.detail}`);
     out.push("");
   }
+  // Test results (stage 26): what could not be read from a results file is shown, not only stored.
+  const resultProblems = r.diagnostics.filter((d) => RESULT_PROBLEMS.has(d.code));
+  if (resultProblems.length > 0) {
+    out.push("== Test results", "");
+    for (const d of resultProblems) out.push(`  ${d.severity} ${d.code} (${d.source}${d.span !== undefined ? ` ${d.span}` : ""}): ${d.message}`);
+    out.push("");
+  }
   if (r.ledger !== undefined && r.ledger.invalid.length > 0) {
     out.push("== Ignored ledger entries", "");
     for (const e of r.ledger.invalid) out.push(`  seq ${e.seq}: ${e.reason}${e.commit !== undefined ? ` (commit ${e.commit.slice(0, 12)})` : ""}`);
@@ -84,6 +93,12 @@ export function renderReport(r: Report): string {
   out.push("== Counts", "");
   out.push(`  findings ${r.findings.length}: ${["state-conflict", "joint-conflict", "example-conflict", "arch-conflict", "claim-conflict", "fact-conflict", "example-divergence", "vacuous", "not-preserved", "not-met", "unknown"].map((k) => `${k} ${count(k)}`).join(", ")}`);
   out.push(`  gaps ${r.gapView.gaps.length}; not comparable ${r.notComparable.length}; unliftable ${r.unliftable.length}`);
+  if (r.outcomes !== undefined) {
+    const files = new Set(r.items.filter((i) => i.kind === "test-file").map((i) => `${i.source}/${i.id}`));
+    const rows = r.outcomes.filter((o) => files.has(o.item));
+    const sum = (k: "tests" | "passed" | "failed" | "errored" | "skipped") => rows.reduce((n, o) => n + o[k], 0);
+    out.push(`  tests ${sum("tests")} in ${rows.length} files: passed ${sum("passed")}, failed ${sum("failed")}, errored ${sum("errored")}, skipped ${sum("skipped")}; cited items ${r.outcomes.length - rows.length}`);
+  }
   if (r.assessments !== undefined) {
     const v = (x: string) => r.assessments!.filter((a) => a.verdict === x).length;
     out.push(`  obligations ${r.assessments.length}: conflicting ${v("conflicting")}, violated ${v("violated")}, satisfied ${v("satisfied")}, unknown ${v("unknown")}`);
