@@ -11,7 +11,7 @@ import { type AuthorityInfo, type LedgerState, MAINTAINERS_PATH, resolveAuthorit
 import type { SolverPort } from "@csh/solver";
 import { emitProject, emissionProblem } from "./evaluate.ts";
 import { sourceSettings } from "./pipeline.ts";
-import { ledgerOf, type Project, snapshotOf, specOf } from "./project.ts";
+import { ledgerOf, type Project, snapshotOf, specPathOf } from "./project.ts";
 import { GATE_PATH } from "./run.ts";
 import { runSources } from "./sources.ts";
 
@@ -105,14 +105,16 @@ export async function componentStatus(p: Project, solver: SolverPort): Promise<S
     const why = p.componentProblems.length > 0 ? `the component manifest cannot be used:\n${p.componentProblems.map((e) => `  ${e.code}: ${e.detail}`).join("\n")}` : `no csh/component.json under ${p.root}`;
     return { ok: false, message: why };
   }
+  // A manifest that loaded can still be unusable here, as a run would find it: a subject not fetched, for one.
+  if (p.componentProblems.length > 0) return { ok: false, message: `the component cannot be evaluated:\n${p.componentProblems.map((e) => `  ${e.code}: ${e.detail}`).join("\n")}` };
   const emission = await emitProject(p, { solver });
   const refused = emissionProblem(emission);
   if (refused !== undefined || !emission.emitted.ok) return { ok: false, message: refused ?? "emission failed" };
   const { module, digest } = emission.emitted;
-  const ledger: LedgerState | undefined = await ledgerOf(p, specOf(p, undefined));
+  const ledger: LedgerState | undefined = await ledgerOf(p, specPathOf(p));
   // The items the sources identify, so that an approval whose cited sentence changed counts as candidate, as in a run.
   const perSource = sourceSettings(p.component);
-  const runs = await runSources(module, { root: p.root, ...(perSource !== undefined ? { perSource } : {}) });
+  const runs = await runSources(module, { root: p.sourceRoot, codeRoot: p.root, ...(perSource !== undefined ? { perSource } : {}) });
   const items = new Map<string, string>();
   for (const r of runs) for (const it of r.output.items ?? []) items.set(`${r.source}/${it.id}`, it.textDigest);
   const authorityOf = (f: { name: string; digest: string; cites: { source: string; id: string }[] }): AuthorityInfo => (ledger === undefined ? { authority: "candidate" } : resolveAuthority(ledger, f, items));

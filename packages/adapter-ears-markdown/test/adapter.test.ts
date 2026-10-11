@@ -41,6 +41,12 @@ describe("EARS Markdown adapter", () => {
     expect(out.diagnostics.map((d) => d.code)).toEqual(["no-pattern"]);
   });
 
+  it("says when a file yields no item, rather than reading as a source with no requirements", () => {
+    const out = run(input({ "charter.md": "#### ARCH-01 · Ubiquitous · Enforced\n\nThe package shall build.\n", "req.md": "REQ-1 The system shall log." }));
+    expect(out.items!.map((i) => i.id)).toEqual(["REQ-1"]);
+    expect(out.diagnostics.map((d) => [d.code, d.span])).toEqual([["no-items", "charter.md"]]);
+  });
+
   it("reports duplicate identifiers", () => {
     const out = run(input({ "a.md": "REQ-1 The system shall a.", "b.md": "REQ-1 The system shall b." }));
     expect(out.items).toHaveLength(1);

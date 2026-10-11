@@ -11,7 +11,7 @@ import { formatDecision, type GateDecision, type Mode, type Snapshot } from "@cs
 import { digestOf, type Module, stableJson } from "@csh/kernel";
 import type { SolverPort } from "@csh/solver";
 import { decideGate, emissionProblem, emitProject, evaluateProject } from "./evaluate.ts";
-import { CACHE_DIR, CONFIG_PATH, loadProject, LOCK_PATH, MODEL_PATH, type Project, REPORT_PATH, specOf } from "./project.ts";
+import { CACHE_DIR, CONFIG_PATH, loadProject, LOCK_PATH, MODEL_PATH, type Project, REPORT_PATH, specPathOf } from "./project.ts";
 
 export const RUNS_DIR = `${CACHE_DIR}/runs`;
 export const GATE_PATH = "reports/csh-gate.json";
@@ -52,6 +52,10 @@ export interface RunOptions {
   noCache?: boolean;
   /** Where harness output goes; the default discards it. */
   harnessOutput?: (chunk: string) => void;
+  /** A checkout of the subject other than the one csh subject fetch made (Ingesting a codebase, stage 21). */
+  subject?: string;
+  /** The component root whose fetched subjects a run reads, when not `root`: a run at a past commit's. */
+  subjectsRoot?: string;
 }
 
 export type RunResult =
@@ -182,8 +186,11 @@ export function inputDigests(p: Project, manifest: ComponentManifest, m: Module)
     out.set(rel, digestOf(bytes));
     if (follow) for (const i of bytes.toString("utf8").matchAll(RELATIVE_IMPORT)) add(resolve(dirname(abs), i[1]!), true);
   };
-  add(specOf(p, undefined), true);
-  for (const s of m.sources) add(resolve(root, s.at), false);
+  const spec = specPathOf(p);
+  if (spec !== undefined) add(spec, true);
+  // A subject's sources are its pinned commit's, in a checkout loadProject found clean: the commit is their digest, and
+  // no harness runs on a subject.
+  if (p.subject === undefined) for (const s of m.sources) add(resolve(root, s.at), false);
   // A practice's own code runs after the harnesses too: a project-local adapter and a step table, with what they import.
   for (const x of manifest.practices) {
     if (x.adapter !== undefined && (x.adapter.startsWith(".") || x.adapter.startsWith("/"))) add(resolve(root, x.adapter), true);
@@ -229,7 +236,7 @@ export function storedRuns(storeRoot: string, commit: string): string[] {
  * only for a run at a past commit, whose worktree is thrown away afterwards, and that run passes `reportFiles: false`.
  */
 export async function runComponent(o: RunOptions & { storeRoot?: string; reportFiles?: boolean }): Promise<RunResult> {
-  const p = loadProject(o.root, o.root);
+  const p = loadProject(o.root, o.root, { ...(o.subject !== undefined ? { subject: o.subject } : {}), ...(o.subjectsRoot !== undefined ? { subjectsRoot: o.subjectsRoot } : {}) });
   if (p.component === undefined && p.componentProblems.length === 0) return { ok: false, code: "no-component", message: `no csh/component.json under ${p.root}; csh run evaluates a component (csh init writes one)` };
   if (p.componentProblems.length > 0 || p.component === undefined) return { ok: false, code: "component-unusable", message: `the component manifest cannot be used:\n${p.componentProblems.map((e) => `  ${e.code}: ${e.detail}`).join("\n")}` };
   const eo = { solver: o.solver, ...(o.budgetMs !== undefined ? { budgetMs: o.budgetMs } : {}), ...(o.noCache === true ? { noCache: true } : {}) };
@@ -382,7 +389,8 @@ export async function runAt(o: RunOptions & { commit: string }): Promise<RunResu
       const installed = join(top, d, "node_modules");
       if (existsSync(installed) && !existsSync(join(wt, d, "node_modules"))) symlinkSync(installed, join(wt, d, "node_modules"), "dir");
     }
-    return await runComponent({ ...o, root: join(wt, prefix), storeRoot: root, reportFiles: false });
+    // A subject is fetched under the component root, never into a worktree that is thrown away.
+    return await runComponent({ ...o, root: join(wt, prefix), storeRoot: root, reportFiles: false, subjectsRoot: o.subjectsRoot ?? root });
   } finally {
     try {
       git(top, "worktree", "remove", "--force", wt);

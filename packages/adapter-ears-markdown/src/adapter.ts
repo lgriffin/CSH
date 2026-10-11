@@ -46,6 +46,7 @@ export function run(input: AdapterInput): AdapterOutput {
   const seen = new Map<string, string>();
   for (const file of [...input.files].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))) {
     const lines = new TextDecoder().decode(file.bytes).split(/\r?\n/);
+    const before = items.length + diagnostics.filter((d) => d.code === "duplicate-id").length;
     lines.forEach((raw, i) => {
       const line = raw.trim();
       const m = tableRow.exec(line) ?? listItem.exec(line) ?? bare.exec(line);
@@ -68,6 +69,10 @@ export function run(input: AdapterInput): AdapterOutput {
       items.push(item);
       if (pattern === "optional-feature") claims.unliftable.push({ span, reason: "feature-scope", text });
     });
+    // A file read whole that yields nothing is said, never left to look like a source with no requirements (P4).
+    if (items.length + diagnostics.filter((d) => d.code === "duplicate-id").length === before) {
+      diagnostics.push({ code: "no-items", severity: "warning", message: `none of the ${lines.length} lines of ${file.path} carries an identifier matching ${idPattern} as a table row, a list item or a line of its own`, span: file.path });
+    }
   }
   const out: AdapterOutput = { items, diagnostics };
   if (claims.unliftable.length > 0) out.claims = claims;

@@ -8,7 +8,7 @@ import { compareCodePoints, digestOf, fragmentsOf } from "@csh/kernel";
 import { type AuthoredBy, authoredByOf, type Provenance, resolveAuthority } from "@csh/ledger";
 import type { SolverPort } from "@csh/solver";
 import { evaluateProject } from "./evaluate.ts";
-import { fileProvenance, fragmentProvenance, type Project, specOf } from "./project.ts";
+import { fileProvenance, fragmentProvenance, type Project, specPathOf } from "./project.ts";
 
 export const DEFAULT_QUEUE_LIMIT = 20;
 
@@ -48,7 +48,7 @@ export async function componentQueue(p: Project, solver: SolverPort): Promise<Qu
   if (!e.ok) return { ok: false, message: e.message };
   const name = p.component?.manifest.name ?? e.model.system;
   const items = new Map(e.report.items.map((i) => [`${i.source}/${i.id}`, i.textDigest]));
-  const provenanceOf = await fragmentProvenance(p, specOf(p, undefined), { withoutMaintainers: true });
+  const provenanceOf = await fragmentProvenance(p, specPathOf(p), { withoutMaintainers: true });
   const head = Date.parse(p.commitDate);
   const assessed = new Map((e.report.assessments ?? []).map((a) => [a.fragment, a]));
   const entry = (fragment: string, kind: QueueEntry["kind"], prov: Provenance | undefined, unlocks: string[]): QueueEntry => {

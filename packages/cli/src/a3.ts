@@ -8,7 +8,7 @@ import { A3_DIR, a3Dir, type Authority, buildA3, type Judgments, readJudgments, 
 import type { Mode } from "@csh/gate";
 import { digestOf, stableJson } from "@csh/kernel";
 import { authoredByOf, resolveAuthority } from "@csh/ledger";
-import { fileProvenance, ledgerOf, type Project, type RunOptions, runAt, RUNS_DIR, specOf } from "@csh/run";
+import { fileProvenance, ledgerOf, type Project, type RunOptions, runAt, RUNS_DIR, specPathOf } from "@csh/run";
 import type { Args } from "./args.ts";
 
 export interface A3Io {
@@ -24,7 +24,7 @@ export const a3Fragment = (component: string, slug: string) => `${component}/#a3
 export async function a3Authority(p: Project, slug: string, digest: string): Promise<Authority> {
   const name = p.component?.manifest.name;
   if (name === undefined) return { authority: "candidate" };
-  const ledger = await ledgerOf(p, specOf(p, undefined));
+  const ledger = await ledgerOf(p, specPathOf(p));
   if (ledger === undefined) return { authority: "candidate" };
   const a = resolveAuthority(ledger, { name: a3Fragment(name, slug), digest, cites: [] });
   if (a.authority === "approved") return { authority: "approved", selfApproved: a.selfApproved === true, ...(a.needsReview === true ? { needsReview: true } : {}) };

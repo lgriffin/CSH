@@ -22,6 +22,7 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 18: Checked C4](stage-18.md)
 - [Stage 19: Change review](stage-19.md)
 - [Stage 20: Agent interface](stage-20.md)
+- [Stage 21: Subject profiles and runs without a model](stage-21.md)
 
 Stages 10 to 16 build the anchor design ([09](../spec/09-anchor-harness-a3.md)): a component to anchor on, harnesses,
 runs and the A3. Their fixtures, F80 to F96, were written before any of their code, and the fixture runner reports
@@ -31,3 +32,6 @@ each one as pending until its stage is built (`BUILT_THROUGH_STAGE` in `packages
 Stages 17 to 20 build the next layers ([10](../spec/10-next-layers.md)): authority made real, the C4 diagrams as a
 checked source, change review and an agent interface. Their fixtures, F97 to F117, were written before any of their
 code, and are reported as pending until their stage is built.
+
+Stages 21 to 28 make CSH ingest a real git codebase ([11](../spec/11-ingesting-a-codebase.md)), with ESI.ts as the
+subject throughout. Its profile is [subjects/esi-ts](../../subjects/esi-ts).

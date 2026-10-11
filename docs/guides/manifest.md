@@ -40,3 +40,29 @@ never what is right: it holds no judgment and no authority ([09](../spec/09-anch
 With a manifest, `csh/config.json` keeps only `mode`, `budgetMs`, `specPaths` and the settings no manifest field covers.
 Setting `spec`, `implementationPaths`, `adapters` or `executions` there as well is the problem `config-superseded`, and the run is
 refused rather than choosing between them.
+
+## Version 2: a subject, and no specification
+
+`csh-component/v2` adds two things ([11](../spec/11-ingesting-a-codebase.md), stage 21). A version 1 manifest is read
+unchanged.
+
+- **A subject.** This is a repository evaluated from outside, at a pinned commit. The profile lives in another repository and the subject is only read. Source paths and `implementation` are relative to the subject's checkout. `csh subject fetch` clones the subject under `.csh-cache/subjects/<commit>/` of the component root. `--subject <dir>` names another checkout instead. Either way, the checkout must be at the pinned commit with no uncommitted changes, or the run is refused (`subject-missing`, `subject-commit-differs`, `subject-dirty`). A practice with a harness is refused on a subject (`harness-on-subject`), since a harness would run in its checkout.
+- **No specification.** `spec` may be left out. The manifest then declares the sources itself, as `s.source(name, { kind, at })` would. The model of the run is the system name and those sources, with no vocabulary, obligation or binding. What such a run reports comes from its sources alone: items, unliftable content, adapter diagnostics and the gaps they give.
+
+```json
+{
+  "schema": "csh-component/v2",
+  "name": "ESI.ts",
+  "subject": { "repo": "https://github.com/lgriffin/ESI.ts", "commit": "2a2da8a626821bef77ad8726da2c8018e2961236" },
+  "implementation": ["src"],
+  "sources": [{ "name": "Charter", "kind": "Requirements", "at": "guides/CHARTER.md" }],
+  "practices": [{ "id": "charter", "name": "Charter", "kind": "requirements", "sources": ["Charter"] }]
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `subject.repo` | Where the subject is fetched from: a URL, or a path to a local clone relative to the component root |
+| `subject.commit` | The full commit, 40 hexadecimal digits. It joins the snapshot, beside the profile's own commit |
+| `spec` | Optional in version 2 |
+| `sources[]` | Only without `spec`: each source's `name`, `kind` and `at`. A practice naming a source not declared here is `practice-unknown-source` |

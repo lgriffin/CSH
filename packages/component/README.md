@@ -16,6 +16,7 @@ It is the "Component" container ([the manifest reference](../../docs/guides/mani
 - `loadComponent(root)`, `parseComponent(bytes)`: the manifest and the digest of its bytes, or its problems.
 - `checkAgainstModule(manifest, module)`: errors (`component-name-mismatch`, `practice-unknown-source`, `harness-file-unread`) and the sources no practice names.
 - `ownersOf(manifest)`, `practiceOf(manifest, source)`: which practice owns each source.
+- `COMPONENT_SCHEMA_V2`, `Subject`, `DeclaredSource`, `declaredSources(manifest)`, `moduleOfManifest(manifest)`: version 2 ([11](../../docs/spec/11-ingesting-a-codebase.md), stage 21). A manifest may name a `subject`, a repository evaluated from outside at a pinned commit. It may also leave out `spec` and declare its `sources` itself. `moduleOfManifest` is the model of such a component: its system name and its sources, and nothing else. Further codes: `duplicate-source`, and `harness-on-subject`, since no harness runs on a subject.
 
 ## Depends on and used by
 
@@ -36,10 +37,11 @@ The component, not the project or the specification, is the unit a run evaluates
 
 ## How it is tested
 
-- `test/manifest.test.ts`: a well-formed manifest; a wrong schema, an empty name and a path outside the root; a duplicate practice and a source owned twice; steps outside a scenarios practice and a harness given as a string; a harness timeout that is not a positive whole number; an `executions` file on a practice that has a harness; the digest follows the bytes; text that is not JSON; the check against a module, with each error code and an unowned source.
+- `test/manifest.test.ts`: a well-formed manifest; a wrong schema, an empty name and a path outside the root; a duplicate practice and a source owned twice; steps outside a scenarios practice and a harness given as a string; a harness timeout that is not a positive whole number; an `executions` file on a practice that has a harness; the digest follows the bytes; text that is not JSON; the check against a module, with each error code and an unowned source. Version 2: a subject profile with no specification; version 1 unchanged; `subject` and `sources` refused in version 1; neither spec nor sources; sources beside a spec, a short commit, a duplicate source and a harness on a subject; the model made from the manifest alone.
 - Fixtures: F80 (a practice naming a source the specification lacks) and F81 (an unowned source).
 
 ## Known limits
 
+- A component with no specification has no vocabulary, so nothing it reads can be lifted into claims or bound. Only items, unliftable content and diagnostics come back.
 - Version 1 has one component per manifest and one manifest per directory. A repository with several components keeps each in its own directory, as `packages/gate` does.
 - The manifest does not say which adapter version a practice expects; it names a module specifier or a path.

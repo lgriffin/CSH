@@ -54,6 +54,23 @@ export interface Project {
   componentProblems: ComponentProblem[];
   /** The root's path below the repository's top level ("" at the top level), for worktrees of the whole repository. */
   gitPrefix: string;
+  /**
+   * The repository under evaluation when the manifest names one (Ingesting a codebase, stage 21): a clean checkout at
+   * the pinned commit. Its files are read and never written.
+   */
+  subject?: { repo: string; commit: string; root: string; vcs: VcsPort };
+  /** Where sources are read from: the subject's checkout when there is a subject, else the root. */
+  sourceRoot: string;
+}
+
+/** Where csh subject fetch puts a subject's checkout, under the component root, by commit. */
+export const SUBJECTS_DIR = ".csh-cache/subjects";
+
+export interface LoadOptions {
+  /** A checkout of the subject to read instead of the one csh subject fetch made. */
+  subject?: string;
+  /** The component root whose SUBJECTS_DIR holds fetched checkouts, when not the root: a run at a past commit's. */
+  subjectsRoot?: string;
 }
 
 export const CONFIG_PATH = "csh/config.json";
@@ -79,7 +96,7 @@ export function projectRoot(cwd: string, rootOverride?: string): string {
   return resolve(cwd, rootOverride ?? gitRoot(cwd) ?? ".");
 }
 
-export function loadProject(cwd: string, rootOverride?: string): Project {
+export function loadProject(cwd: string, rootOverride?: string, o: LoadOptions = {}): Project {
   const root = projectRoot(cwd, rootOverride);
   const cfgFile = join(root, CONFIG_PATH);
   const config = existsSync(cfgFile) ? (JSON.parse(readFileSync(cfgFile, "utf8")) as ProjectConfig) : {};
@@ -93,6 +110,7 @@ export function loadProject(cwd: string, rootOverride?: string): Project {
     commitDate: "",
     componentProblems: [],
     gitPrefix: "",
+    sourceRoot: root,
   };
   const loaded = loadComponent(root);
   if (loaded !== undefined) {
@@ -102,6 +120,18 @@ export function loadProject(cwd: string, rootOverride?: string): Project {
     for (const k of SUPERSEDED_BY_COMPONENT) {
       if (config[k] !== undefined) p.componentProblems.push({ code: "config-superseded", detail: `${CONFIG_PATH} sets ${k}, which ${COMPONENT_PATH} replaces; remove it` });
     }
+  }
+  const subject = p.component?.manifest.subject;
+  if (subject !== undefined) {
+    const dir = resolve(cwd, o.subject ?? subjectCheckout(o.subjectsRoot ?? root, subject.commit));
+    const found = checkoutProblem(dir, subject.commit);
+    if (found !== undefined) p.componentProblems.push(found);
+    else {
+      p.subject = { repo: subject.repo, commit: subject.commit, root: dir, vcs: gitVcs(dir) };
+      p.sourceRoot = dir;
+    }
+  } else if (o.subject !== undefined) {
+    p.componentProblems.push({ code: "no-subject", detail: `--subject names a checkout, but ${COMPONENT_PATH} names no subject` });
   }
   const lock = readLock(lockFile);
   if (lock !== undefined) p.lock = lock;
@@ -119,6 +149,70 @@ export function loadProject(cwd: string, rootOverride?: string): Project {
     }
   }
   return p;
+}
+
+/** Where csh subject fetch keeps the checkout of a subject commit for a component root. */
+export function subjectCheckout(root: string, commit: string): string {
+  return join(root, SUBJECTS_DIR, commit);
+}
+
+/**
+ * Fetch the subject a manifest names into SUBJECTS_DIR, with its whole history, and check out its pinned commit. A
+ * checkout already there at that commit and clean is kept. The subject's repository is only read.
+ */
+export function fetchSubject(p: Project): { ok: true; dir: string; fetched: boolean } | { ok: false; message: string } {
+  const subject = p.component?.manifest.subject;
+  if (subject === undefined) return { ok: false, message: `${COMPONENT_PATH} names no subject` };
+  const dir = subjectCheckout(p.root, subject.commit);
+  const problem = checkoutProblem(dir, subject.commit);
+  if (problem === undefined) return { ok: true, dir, fetched: false };
+  // A checkout with changes in it is never replaced: those changes may be someone's work.
+  if (problem.code === "subject-dirty") return { ok: false, message: `${problem.detail}; remove it or clean it, then fetch again` };
+  // A repository named by a path is a local clone, relative to the component root.
+  const repo = /^[a-z][a-z0-9+.-]*:/i.test(subject.repo) || subject.repo.startsWith("/") ? subject.repo : resolve(p.root, subject.repo);
+  // Cloned beside the checkout and checked first, so a failed fetch leaves whatever was there as it was.
+  const fresh = `${dir}.fetching-${process.pid}`;
+  try {
+    rmSync(fresh, { recursive: true, force: true });
+    mkdirSync(dirname(dir), { recursive: true });
+    execFileSync("git", ["clone", "--quiet", "--no-checkout", repo, fresh], { stdio: ["ignore", "ignore", "pipe"] });
+    execFileSync("git", ["-c", "advice.detachedHead=false", "checkout", "--quiet", "--detach", subject.commit], { cwd: fresh, stdio: ["ignore", "ignore", "pipe"] });
+  } catch (err) {
+    rmSync(fresh, { recursive: true, force: true });
+    return { ok: false, message: `could not fetch ${subject.repo} at ${subject.commit.slice(0, 12)}: ${String((err as { stderr?: Buffer }).stderr ?? (err as Error).message).trim()}` };
+  }
+  const left = checkoutProblem(fresh, subject.commit);
+  if (left !== undefined) {
+    rmSync(fresh, { recursive: true, force: true });
+    return { ok: false, message: left.detail };
+  }
+  rmSync(dir, { recursive: true, force: true });
+  renameSync(fresh, dir);
+  return { ok: true, dir, fetched: true };
+}
+
+/**
+ * Why a directory is not the subject at its pinned commit: missing, not a repository, at another commit, or with
+ * uncommitted changes. A run reads the subject as that commit holds it, or not at all.
+ */
+function checkoutProblem(dir: string, commit: string): ComponentProblem | undefined {
+  if (!existsSync(dir)) return { code: "subject-missing", detail: `no checkout of the subject at ${dir}; csh subject fetch makes one` };
+  let head: string;
+  try {
+    head = git(dir, "rev-parse", "HEAD").trim();
+  } catch {
+    return { code: "subject-missing", detail: `${dir} is not a git checkout` };
+  }
+  if (head !== commit) return { code: "subject-commit-differs", detail: `the checkout at ${dir} is at ${head.slice(0, 12)}; the profile is pinned to ${commit.slice(0, 12)}` };
+  // Ignored files count: a source directory is read whole, so an ignored file in it would enter the run unseen.
+  if (git(dir, "status", "--porcelain", "--ignored").trim() !== "") return { code: "subject-dirty", detail: `the checkout at ${dir} has uncommitted or ignored files; a subject is read as its commit holds it` };
+  return undefined;
+}
+
+/** The specification a project evaluates, or undefined for a component that has none (version 2). */
+export function specPathOf(p: Project, arg?: string): string | undefined {
+  const s = arg ?? p.component?.manifest.spec ?? (p.component === undefined ? p.config.spec : undefined);
+  return s === undefined ? undefined : resolve(p.root, s);
 }
 
 export function specOf(p: Project, arg: string | undefined): string {
@@ -172,7 +266,7 @@ async function digestsAtCommit(p: Project, spec: string, commit: string): Promis
 }
 
 /** Read the ledger from history, when there is one. */
-export async function ledgerOf(p: Project, spec: string): Promise<LedgerState | undefined> {
+export async function ledgerOf(p: Project, spec: string | undefined): Promise<LedgerState | undefined> {
   if (p.vcs === undefined) return undefined;
   const vcs = p.vcs;
   if (vcs.commitsTouching(LEDGER_PATH).length === 0 && vcs.commitsTouching(MAINTAINERS_PATH).length === 0) return undefined;
@@ -182,7 +276,8 @@ export async function ledgerOf(p: Project, spec: string): Promise<LedgerState | 
   const opts = pinned !== undefined && pinned !== "" ? { rootCommit: pinned } : {};
   const plain = readLedger(vcs, opts);
   // Authorship matters only once a second person is listed (Authority tab, section 3.3).
-  if (persons(plain.maintainers).length < 2) return plain;
+  // Without a specification there are no fragments whose authors could be told apart.
+  if (persons(plain.maintainers).length < 2 || spec === undefined) return plain;
   const { specPaths, digests } = await specHistory(p, spec);
   return readLedger(vcs, { ...opts, authorOf: authorship(vcs, specPaths, (c) => digests.get(c), opts) });
 }
@@ -211,9 +306,9 @@ function specHistory(p: Project, spec: string): Promise<{ specPaths: string[]; d
  * signer. Undefined when there is no history, or, unless `withoutMaintainers` (the queue, for ages), when no maintainers
  * file was ever committed, since no signer can then be named; every fragment is then authored by `unknown`.
  */
-export async function fragmentProvenance(p: Project, spec: string, o: { withoutMaintainers?: boolean } = {}): Promise<((fragment: string, digest: string) => Provenance | undefined) | undefined> {
+export async function fragmentProvenance(p: Project, spec: string | undefined, o: { withoutMaintainers?: boolean } = {}): Promise<((fragment: string, digest: string) => Provenance | undefined) | undefined> {
   const vcs = p.vcs;
-  if (vcs === undefined || (o.withoutMaintainers !== true && vcs.commitsTouching(MAINTAINERS_PATH).length === 0)) return undefined;
+  if (vcs === undefined || spec === undefined || (o.withoutMaintainers !== true && vcs.commitsTouching(MAINTAINERS_PATH).length === 0)) return undefined;
   const pinned = process.env.CSH_ROOT_COMMIT;
   const opts = pinned !== undefined && pinned !== "" ? { rootCommit: pinned } : {};
   const { specPaths, digests } = await specHistory(p, spec);
@@ -241,12 +336,14 @@ export function snapshotOf(p: Project, moduleDigest: string, ledger: LedgerState
   const s: Snapshot = { commit: p.commit, moduleDigest, ledgerHead: ledger?.head ?? 0, configDigest: p.configDigest, lockDigest: p.lockDigest, tool: { version: toolVersion, solver } };
   // Changing what is evaluated changes the snapshot (Anchor, harnesses and A3, section 6.4).
   if (p.component !== undefined) s.componentDigest = p.component.digest;
+  if (p.subject !== undefined) s.subject = { repo: p.subject.repo, commit: p.subject.commit };
   return s;
 }
 
 /** A witness from an earlier commit stays current only if no implementation path changed since. */
 export function unchangedSince(p: Project): ((a: string, b: string) => boolean) | undefined {
-  const vcs = p.vcs;
+  // Witnesses of a subject are of the subject's commits, and its implementation paths are its own.
+  const vcs = p.subject?.vcs ?? p.vcs;
   if (vcs === undefined) return undefined;
   // Conservative default (ASSUMPTIONS.md): with no implementation paths configured, every file outside csh/ counts. An
   // empty list configures none (csh init writes one for a blank answer), so it never makes every witness current.
@@ -257,6 +354,6 @@ export function unchangedSince(p: Project): ((a: string, b: string) => boolean) 
     if (!vcs.isAncestor(a, target)) return false;
     const changed = vcs.changedBetween(a, target);
     if (b.endsWith("-dirty")) return false;
-    return !changed.some((f) => (impl === undefined ? !f.startsWith("csh/") : impl.some((i) => f === i || f.startsWith(i.endsWith("/") ? i : `${i}/`))));
+    return !changed.some((f) => (impl === undefined ? p.subject !== undefined || !f.startsWith("csh/") : impl.some((i) => f === i || f.startsWith(i.endsWith("/") ? i : `${i}/`))));
   };
 }

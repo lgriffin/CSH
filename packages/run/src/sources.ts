@@ -24,6 +24,11 @@ export type { SourceRun };
 export interface RunSourcesOptions {
   /** Directory that source locations are relative to. */
   root: string;
+  /**
+   * Directory that a practice's project-local adapter and step table are relative to, when not `root`: the component
+   * root, while sources are read from a subject's checkout (Ingesting a codebase, stage 21).
+   */
+  codeRoot?: string;
   /** Run each adapter in a separate, permission-restricted process (default true). */
   isolated?: boolean;
   /** Adapter settings, such as requirementIdPattern. */
@@ -205,8 +210,9 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
     // A scenarios practice's step table is project code: the adapter receives its file URL, and the sandbox lets it
     // read that one file (Anchor, harnesses and A3, section 3.3).
     // It is one file: a directory is refused, never read through its first file.
-    const table = own?.steps === undefined ? undefined : filesAt(opts.root, own.steps).files;
-    const steps = table?.length === 1 && table[0]!.abs === resolve(opts.root, own!.steps!) ? table[0]!.abs : undefined;
+    const codeRoot = opts.codeRoot ?? opts.root;
+    const table = own?.steps === undefined ? undefined : filesAt(codeRoot, own.steps).files;
+    const steps = table?.length === 1 && table[0]!.abs === resolve(codeRoot, own!.steps!) ? table[0]!.abs : undefined;
     if (own?.steps !== undefined && steps === undefined) {
       runs.push({ ...base, files: files.map(({ path, digest }) => ({ path, digest })), output: { diagnostics: [{ code: "no-step-table", severity: "error", message: `the step table ${own.steps} is missing, outside the project root or not a file` }] } });
       continue;
@@ -217,7 +223,8 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
     // reporter's default for a harness, or its own), or by the configuration of a project with no manifest. A source
     // with no named file never inherits another practice's outcomes (#22).
     const execAt = own !== undefined ? own.executions : source.kind === "Witnesses" ? opts.executions : undefined;
-    const exec = execAt === undefined ? undefined : filesAt(opts.root, execAt);
+    // An executions file is the component's, never the subject's: it is read from the component root.
+    const exec = execAt === undefined ? undefined : filesAt(opts.codeRoot ?? opts.root, execAt);
     const execFiles = (exec?.files ?? []).map((f) => {
       const bytes = new Uint8Array(readFileSync(f.abs));
       return { path: f.path, digest: digestOf(bytes), bytes };
@@ -228,7 +235,7 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
     input.files = files.filter((f) => !execPaths.has(f.path));
     let output: AdapterOutput;
     try {
-      const url = resolveAdapter(spec, opts.root);
+      const url = resolveAdapter(spec, codeRoot);
       if (opts.isolated === false) {
         const mod = (await import(url)) as { adapter: { run: (i: AdapterInput) => AdapterOutput | Promise<AdapterOutput> } };
         output = structuredClone(await mod.adapter.run(input));

@@ -159,6 +159,9 @@ csh diff <base> <head> [--json] [--out <dir>]
                                             Each side is a stored run's directory, a commit, or . for the working tree.
                                             Decides nothing; non-zero only when the head cannot be run.
 csh queue [--json]                          What awaits the owner's decision, ordered by what approving it unlocks.
+csh subject fetch                           Clone the subject a csh-component/v2 manifest names, at its pinned commit,
+                                            under .csh-cache/subjects/. Every command takes --subject <dir> to read
+                                            another checkout of it instead.
 csh-agent [--root <component>]              The agent tool server, over the Model Context Protocol on stdio.
 csh gate [--mode advisory|enforcing]        Check and decide for the current snapshot. Non-zero only on block in enforcing mode.
 csh gate --verify <decision.json>           Recompute; refuse a decision for another snapshot or one that differs.
@@ -221,6 +224,12 @@ An agent works through `csh-agent --root <component>`, a tool server over the Mo
 countersigns. Text from the component's sources reaches the agent only under keys named `quoted`, to be reported and
 never followed. [The agent guide](docs/guides/agents.md) is the protocol to load as a standing instruction, with a
 scripted session on the lockout regression that ends at "stop".
+
+## Subjects
+
+A component can evaluate a repository it does not hold. A `csh-component/v2` manifest names the subject and a pinned
+commit, and may leave out the specification ([the manifest guide](docs/guides/manifest.md)). [subjects/esi-ts](subjects/esi-ts)
+does this for ESI.ts, the first codebase CSH is being refactored to ingest ([11](docs/spec/11-ingesting-a-codebase.md)).
 
 ## Limits
 

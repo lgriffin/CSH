@@ -7,6 +7,12 @@ import { compareCodePoints, digestOf, type Module } from "@csh/kernel";
 
 export const COMPONENT_PATH = "csh/component.json";
 export const COMPONENT_SCHEMA = "csh-component/v1";
+/**
+ * Version 2 (Ingesting a codebase, stage 21) adds a subject, a repository evaluated from outside at a pinned commit,
+ * makes the specification optional, and lets a component without one declare its sources in the manifest. Version 1
+ * manifests are read unchanged.
+ */
+export const COMPONENT_SCHEMA_V2 = "csh-component/v2";
 export const PRACTICE_KINDS = ["requirements", "scenarios", "tests", "design-notes", "architecture", "facts"] as const;
 /** Where a harness's execution lines go when the manifest does not say (section 3.2). */
 export const DEFAULT_EXECUTIONS = "reports/executions.ndjson";
@@ -49,12 +55,32 @@ export interface Practice {
   unit?: string;
 }
 
-export interface ComponentManifest {
-  schema: typeof COMPONENT_SCHEMA;
-  /** Equals the system name in the specification. */
+/** A repository evaluated from outside, at one commit; it is read and never written (version 2). */
+export interface Subject {
+  /** Where the repository is fetched from: a URL, or a path for a local clone. */
+  repo: string;
+  /** The full commit the profile is pinned to. */
+  commit: string;
+}
+
+/** A source declared in the manifest, as s.source(name, { kind, at }) declares one in a specification (version 2). */
+export interface DeclaredSource {
   name: string;
-  /** The CSL module, relative to the component root. */
-  spec: string;
+  kind: string;
+  /** Relative to the subject's checkout when there is a subject, else to the component root. */
+  at: string;
+}
+
+export interface ComponentManifest {
+  schema: typeof COMPONENT_SCHEMA | typeof COMPONENT_SCHEMA_V2;
+  /** Equals the system name in the specification, when there is one. */
+  name: string;
+  /** The CSL module, relative to the component root. Required in version 1; optional in version 2. */
+  spec?: string;
+  /** Version 2: the repository under evaluation, when it is not the one holding the manifest. */
+  subject?: Subject;
+  /** Version 2, without a specification only: the sources, which a specification would otherwise declare. */
+  sources?: DeclaredSource[];
   /** Paths whose change makes a witness stale. */
   implementation: string[];
   practices: Practice[];
@@ -89,9 +115,32 @@ export function validateManifest(v: unknown): ComponentProblem[] {
   const out: ComponentProblem[] = [];
   const bad = (code: string, detail: string) => out.push({ code, detail });
   if (!isRecord(v)) return [{ code: "malformed-manifest", detail: "the manifest must be a JSON object" }];
-  if (v.schema !== COMPONENT_SCHEMA) bad("malformed-manifest", `schema must be ${COMPONENT_SCHEMA}`);
+  const v2 = v.schema === COMPONENT_SCHEMA_V2;
+  if (v.schema !== COMPONENT_SCHEMA && !v2) bad("malformed-manifest", `schema must be ${COMPONENT_SCHEMA} or ${COMPONENT_SCHEMA_V2}`);
   if (typeof v.name !== "string" || v.name === "") bad("malformed-manifest", "name must be a non-empty string");
-  if (!projectPath(v.spec)) bad("malformed-manifest", "spec must be a path inside the component root");
+  if (!(v2 && v.spec === undefined) && !projectPath(v.spec)) bad("malformed-manifest", "spec must be a path inside the component root");
+  if (!v2) for (const k of ["subject", "sources"] as const) if (v[k] !== undefined) bad("malformed-manifest", `${k} needs ${COMPONENT_SCHEMA_V2}`);
+  if (v2 && v.subject !== undefined) {
+    const s = v.subject;
+    if (!isRecord(s) || typeof s.repo !== "string" || s.repo === "") bad("malformed-manifest", "subject.repo must name the repository");
+    if (!isRecord(s) || typeof s.commit !== "string" || !/^[0-9a-f]{40}$/.test(s.commit)) bad("malformed-manifest", "subject.commit must be a full commit, 40 lower-case hexadecimal digits");
+  }
+  if (v2 && v.sources !== undefined) {
+    if (v.spec !== undefined) bad("malformed-manifest", "sources are declared in the manifest only when there is no spec; the specification declares them otherwise");
+    else if (!Array.isArray(v.sources)) bad("malformed-manifest", "sources must be a list");
+    else {
+      const names = new Set<string>();
+      for (const [i, s] of v.sources.entries()) {
+        if (!isRecord(s) || typeof s.name !== "string" || s.name === "" || typeof s.kind !== "string" || s.kind === "" || !(projectPath(s.at) || s.at === ".")) {
+          bad("malformed-manifest", `sources[${i}] must have a name, a kind and a relative path at`);
+          continue;
+        }
+        if (names.has(s.name)) bad("duplicate-source", `source ${s.name} is declared twice`);
+        names.add(s.name);
+      }
+    }
+  }
+  if (v2 && v.spec === undefined && v.sources === undefined) bad("malformed-manifest", "a component without a spec declares its sources in the manifest");
   if (!strings(v.implementation) || !v.implementation.every(projectPath)) bad("malformed-manifest", "implementation must be a list of paths inside the component root");
   if (!Array.isArray(v.practices) || v.practices.length === 0) {
     bad("malformed-manifest", "practices must be a non-empty list");
@@ -124,6 +173,7 @@ export function validateManifest(v: unknown): ComponentProblem[] {
     if (p.executions !== undefined && (!projectPath(p.executions) || p.harness !== undefined)) bad("malformed-manifest", `${name}: executions is a path inside the component root, for a practice without a harness (harness.executions names a harness's)`);
     if (p.steps !== undefined && (!projectPath(p.steps) || p.kind !== "scenarios")) bad("malformed-manifest", `${name}: steps is a path inside the component root, for a scenarios practice only`);
     for (const k of ["author", "unit"] as const) if (p[k] !== undefined && typeof p[k] !== "string") bad("malformed-manifest", `${name}: ${k} must be a string`);
+    if (p.harness !== undefined && v2 && v.subject !== undefined) bad("harness-on-subject", `${name}: a subject is read and never run; a harness would run in its checkout (stage 26 reads its test results instead)`);
     if (p.harness !== undefined) {
       const h = p.harness;
       if (!isRecord(h) || !strings(h.run) || h.run.length === 0) bad("malformed-manifest", `${name}: harness.run must be a non-empty argument vector`);
@@ -203,4 +253,28 @@ export function ownersOf(manifest: ComponentManifest): Record<string, string> {
 /** The practice a source belongs to, or undefined. */
 export function practiceOf(manifest: ComponentManifest, source: string): Practice | undefined {
   return manifest.practices.find((p) => p.sources.includes(source));
+}
+
+/** The sources of a manifest that declares them itself (version 2, no specification), sorted by name. */
+export function declaredSources(manifest: ComponentManifest): DeclaredSource[] {
+  return [...(manifest.sources ?? [])].sort((a, b) => compareCodePoints(a.name, b.name));
+}
+
+/**
+ * The model of a component with no specification: its system name and the sources the manifest declares, and nothing
+ * else. No vocabulary, no obligation, no binding: what such a run reports comes from its sources alone.
+ */
+export function moduleOfManifest(manifest: ComponentManifest): Module {
+  return {
+    schema: "csh-ir/v1",
+    system: manifest.name,
+    uses: [],
+    vocabulary: { units: [], enums: [], states: [], events: [] },
+    transitions: [],
+    policies: [],
+    intents: [],
+    sources: declaredSources(manifest).map(({ name, kind, at }) => ({ name, kind, at })),
+    claims: [],
+    bindings: [],
+  };
 }

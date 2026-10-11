@@ -13,6 +13,8 @@ export interface Snapshot {
   tool: { version: string; solver: string };
   /** Digest of the component manifest, when there is one (Anchor, harnesses and A3, section 6.4). */
   componentDigest?: string;
+  /** The repository evaluated from outside, at its pinned commit, when the component names one (stage 21). */
+  subject?: { repo: string; commit: string };
 }
 
 export function snapshotDigest(s: Snapshot): string {

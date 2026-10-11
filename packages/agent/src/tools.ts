@@ -70,7 +70,7 @@ function explainFinding(f: Finding, m: Module) {
 /** The text of each identified source item, by source/id, as the adapters read it now. */
 async function itemTexts(p: Project, m: Module): Promise<Map<string, string>> {
   const perSource = p.component !== undefined ? sourceSettings(p.component) : undefined;
-  const runs = await runSources(m, { root: p.root, ...(perSource !== undefined ? { perSource } : {}) });
+  const runs = await runSources(m, { root: p.sourceRoot, codeRoot: p.root, ...(perSource !== undefined ? { perSource } : {}) });
   return new Map(runs.flatMap((r) => (r.output.items ?? []).map((it) => [`${r.source}/${it.id}`, it.text] as const)));
 }
 

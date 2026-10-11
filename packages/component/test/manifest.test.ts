@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { Module } from "@csh/kernel";
-import { checkAgainstModule, type ComponentManifest, ownersOf, parseComponent, practiceOf, validateManifest } from "../src/index.ts";
+import { checkAgainstModule, type ComponentManifest, moduleOfManifest, ownersOf, parseComponent, practiceOf, validateManifest } from "../src/index.ts";
 
 const good: ComponentManifest = {
   schema: "csh-component/v1",
@@ -122,6 +122,51 @@ describe("checkAgainstModule", () => {
   it("returns a source no practice names as unowned, not as an error", () => {
     const r = checkAgainstModule({ ...good, practices: [good.practices[0]!] }, signIn);
     expect(r).toEqual({ errors: [], unowned: ["UnitTests"] });
+  });
+});
+
+// Version 2 (Ingesting a codebase, stage 21): a subject evaluated from outside, and a component with no specification.
+const profile: ComponentManifest = {
+  schema: "csh-component/v2",
+  name: "ESI.ts",
+  subject: { repo: "https://github.com/lgriffin/ESI.ts", commit: "2a2da8a626821bef77ad8726da2c8018e2961236" },
+  implementation: ["src"],
+  sources: [
+    { name: "Charter", kind: "Requirements", at: "guides/CHARTER.md" },
+    { name: "Features", kind: "Scenarios", at: "tests/bdd/features" },
+  ],
+  practices: [
+    { id: "charter", name: "Charter", kind: "requirements", sources: ["Charter"] },
+    { id: "bdd", name: "BDD", kind: "scenarios", sources: ["Features"] },
+  ],
+};
+
+describe("version 2", () => {
+  it("accepts a subject profile with no specification, and keeps version 1 unchanged", () => {
+    expect(validateManifest(profile)).toEqual([]);
+    expect(validateManifest({ ...good, schema: "csh-component/v2" })).toEqual([]);
+  });
+
+  it("refuses subject and sources in version 1, and a version 2 component with neither spec nor sources", () => {
+    expect(codes({ ...good, subject: profile.subject })).toEqual(["malformed-manifest"]);
+    const { sources: _s, ...bare } = profile;
+    expect(validateManifest(bare)[0]!.detail).toMatch(/declares its sources/);
+  });
+
+  it("refuses sources beside a specification, a short commit, a duplicate source and a harness on a subject", () => {
+    expect(validateManifest({ ...profile, spec: "spec.csl.ts" })[0]!.detail).toMatch(/only when there is no spec/);
+    expect(validateManifest({ ...profile, subject: { ...profile.subject!, commit: "2a2da8a" } })[0]!.detail).toMatch(/full commit/);
+    expect(codes({ ...profile, sources: [profile.sources![0], profile.sources![0]] })).toEqual(["duplicate-source"]);
+    expect(codes({ ...profile, practices: [{ ...profile.practices[0]!, harness: { run: ["npm", "test"], witnesses: "w.ndjson" } }, profile.practices[1]] })).toEqual(["harness-on-subject"]);
+  });
+
+  it("makes the model of a component with no specification from its manifest alone", () => {
+    const m = moduleOfManifest(profile);
+    expect(m.system).toBe("ESI.ts");
+    expect(m.sources.map((x) => x.name)).toEqual(["Charter", "Features"]);
+    expect(m.intents).toEqual([]);
+    expect(checkAgainstModule(profile, m)).toEqual({ errors: [], unowned: [] });
+    expect(checkAgainstModule({ ...profile, practices: [profile.practices[0]!, { ...profile.practices[1]!, sources: ["Nothing"] }] }, m).errors.map((e) => e.code)).toEqual(["practice-unknown-source"]);
   });
 });
 
