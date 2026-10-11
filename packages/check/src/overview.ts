@@ -123,8 +123,8 @@ export function overviewOf(report: Report, manifest?: PracticeMap): Overview {
     if (v.unreported > 0) entries.push({ outcome: "indeterminate", kind: "verified-by-unreported", practice, subject: v.item, detail: `${v.unreported} of ${named} reported no result`, next: "Run the test files its Verified by names and name their results file", anchor: anchorOf("verified-by-unreported", v.item) });
     else if (v.failed + v.errored === 0 && v.passed > 0) entries.push({ outcome: "converged", kind: "verified-by-tests", practice, subject: v.item, detail: `${v.passed} passing tests in ${named}; none names it`, next: "The tests it names pass; cite its identifier in their titles to say which test checks it", anchor: anchorOf("verified-by-tests", v.item) });
   }
-  // A source's test files that ran and passed converge together; a failing one is its own failing-test gap, and the
-  // entry counts it so that the source never reads as wholly passing.
+  // A source's test files converge together only when every one that reported passed: a failing file is its own
+  // failing-test gap, and a source with one never reads as converged.
   const perSource = new Map<string, { files: number; tests: number; failing: number }>();
   for (const o of report.outcomes ?? []) {
     if (!testFiles.has(o.item)) continue;
@@ -138,9 +138,8 @@ export function overviewOf(report: Report, manifest?: PracticeMap): Overview {
     perSource.set(source, c);
   }
   for (const [source, c] of perSource) {
-    if (c.files === 0) continue;
-    const failing = c.failing > 0 ? `; ${c.failing} other test file${c.failing === 1 ? "" : "s"} failed, each a failing-test gap` : "";
-    entries.push({ outcome: "converged", kind: "tests-pass", practice: practiceOf[source] ?? "-", subject: source, detail: `${c.tests} tests in ${c.files} test files pass${failing}`, next: "Every test the runner reported for these files passed", anchor: anchorOf("tests-pass", source) });
+    if (c.files === 0 || c.failing > 0) continue;
+    entries.push({ outcome: "converged", kind: "tests-pass", practice: practiceOf[source] ?? "-", subject: source, detail: `${c.tests} tests in ${c.files} test files pass`, next: "Every test the runner reported for these files passed", anchor: anchorOf("tests-pass", source) });
   }
   for (const d of report.diagnostics) {
     if (d.code !== "results-missing" && d.code !== "no-results") continue;

@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { Module } from "@csh/kernel";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { check, prepare, renderReport, type SourceRun, testOutcomes, trace } from "../src/index.ts";
+import { check, overviewOf, prepare, renderReport, type SourceRun, testOutcomes, trace } from "../src/index.ts";
 
 const empty: Module = { schema: "csh-ir/v1", system: "S", uses: [], vocabulary: { units: [], enums: [], states: [], events: [] }, transitions: [], policies: [], intents: [], sources: [], claims: [], bindings: [] };
 const item = (id: string, kind: "requirement" | "test-file") => ({ id, kind, text: id, span: `${id}:1`, textDigest: "sha256:0" });
@@ -101,6 +101,15 @@ describe("results in a check", () => {
     expect(withResults.outcomes?.map((o) => o.item)).toEqual(["Charter/R-1", "Charter/R-2", "Tests/a.test.ts", "Tests/b.test.ts"]);
     expect(withResults.gapView.gaps.filter((g) => g.kind !== "failing-test")).toEqual(without.gapView.gaps);
     expect(withResults.gapView.gaps.filter((g) => g.kind === "failing-test").map((g) => g.subject)).toEqual(["Tests/a.test.ts", "Tests/b.test.ts"]);
+  });
+
+  it("converges a source's test files only when none failed (stage 27)", async () => {
+    const opts = { module: account, moduleDigest: "sha256:m", solver: z3, configDigest: "sha256:c" };
+    const failing = overviewOf((await check({ ...opts, runs: [charter, tests(RESULTS)] })).report);
+    expect(failing.entries.filter((e) => e.kind === "tests-pass")).toEqual([]);
+    expect(failing.entries.filter((e) => e.kind === "failing-test").map((e) => e.outcome)).toEqual(["gap", "gap"]);
+    const passing = overviewOf((await check({ ...opts, runs: [charter, tests([RESULTS[0]!, RESULTS[2]!])] })).report);
+    expect(passing.entries.filter((e) => e.kind === "tests-pass").map((e) => [e.outcome, e.subject, e.detail])).toEqual([["converged", "Tests", "1 tests in 1 test files pass"]]);
   });
 
   it("shows the counts, and a results file that could not be read, in the text report", async () => {
