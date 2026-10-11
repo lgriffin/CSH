@@ -8,7 +8,7 @@ import { TOOL_VERSION } from "@csh/check";
 import { digestJson, digestOf, fragmentsOf } from "@csh/kernel";
 import { authorship, gitVcs, LEDGER_PATH, type LedgerState, MAINTAINERS_PATH, identityOf, maintainersAt, maintainersHistory, persons, type Provenance, provenance, readLedger, type VcsPort } from "@csh/ledger";
 import type { Snapshot } from "@csh/gate";
-import { type ComponentProblem, COMPONENT_PATH, type LoadedComponent, loadComponent } from "@csh/component";
+import { CLAIMS_PATH, type ComponentProblem, COMPONENT_PATH, type LoadedComponent, loadComponent, readClaims, withProposedClaims } from "@csh/component";
 
 export interface ProjectConfig {
   /** The specification module, relative to the project root. With a component manifest, the manifest names it. */
@@ -228,7 +228,7 @@ export function specOf(p: Project, arg: string | undefined): string {
  */
 async function digestsAtCommit(p: Project, spec: string, commit: string): Promise<ReadonlyMap<string, string> | undefined> {
   const specRel = relative(p.root, spec);
-  const cached = join(p.root, CACHE_DIR, "digests", `${commit}-${digestJson({ spec: specRel, tool: TOOL_VERSION }).slice(-16)}.json`);
+  const cached = join(p.root, CACHE_DIR, "digests", `${commit}-${digestJson({ spec: specRel, tool: TOOL_VERSION, claims: CLAIMS_PATH }).slice(-16)}.json`);
   try {
     if (existsSync(cached)) return new Map(Object.entries(JSON.parse(readFileSync(cached, "utf8")) as Record<string, string>));
   } catch {
@@ -245,7 +245,9 @@ async function digestsAtCommit(p: Project, spec: string, commit: string): Promis
     const lock = readLock(join(base, LOCK_PATH));
     const r = await emit(file, { root: base, skipTypeCheck: true, ...(lock !== undefined ? { lock } : {}) });
     if (!r.ok) return undefined;
-    const digests = new Map(fragmentsOf(r.module).map((f) => [f.name, f.digest]));
+    // The claims proposed at that commit join the model as they do in a run (A-107), so each has an author.
+    const proposed = withProposedClaims(r.module, readClaims(base).claims).module;
+    const digests = new Map(fragmentsOf(proposed).map((f) => [f.name, f.digest]));
     try {
       mkdirSync(dirname(cached), { recursive: true });
       writeFileSync(`${cached}.tmp`, JSON.stringify(Object.fromEntries(digests)));
@@ -292,7 +294,7 @@ function specHistory(p: Project, spec: string): Promise<{ specPaths: string[]; d
   if (hit !== undefined) return hit;
   const made = (async () => {
     const vcs = p.vcs!;
-    const specPaths = p.config.specPaths ?? [relative(p.root, dirname(spec)) || "."];
+    const specPaths = [...(p.config.specPaths ?? [relative(p.root, dirname(spec)) || "."]), ...(p.component !== undefined ? [CLAIMS_PATH] : [])];
     const digests = new Map<string, ReadonlyMap<string, string> | undefined>();
     for (const c of [...new Set(specPaths.flatMap((sp) => vcs.commitsTouching(sp)))]) digests.set(c, await digestsAtCommit(p, spec, c));
     return { specPaths, digests };

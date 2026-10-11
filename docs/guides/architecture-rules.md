@@ -99,6 +99,37 @@ they are current for a subject at its pinned commit. A modules rule needs no dia
 `unplaced-package`. [`subjects/esi-ts`](../../subjects/esi-ts/csh/spec.csl.ts) states three of ESI.ts's layering
 requirements this way.
 
+## Claims about the code (stage 24)
+
+Prose says things about code that are not layering: that a class extends another, that a module exports a name, that
+the package has six entry points. A claim states one such sentence, true or false, and cites it
+([A-104](../../ASSUMPTIONS.md)):
+
+```ts
+import { inherits, count, exportsName, field, same, constant, fileExists, atom } from "csl";
+
+i.claim("CircuitOpenIsNoEsiError", inherits("CircuitOpenError", "EsiError"), { holds: false, at: "guides/CHARTER.md:190", cites: [{ source: Charter, id: "guides/CHARTER.md" }] });
+i.claim("SixEntryPoints", count("package.json", "/exports", 6, { except: ["./package.json"] }), { at: "guides/CHARTER.md:235" });
+```
+
+| Builder | Says |
+|---|---|
+| `fileExists(path)` | The repository tracks the file |
+| `declares(module, name)`, `exportsName(module, name)` | The module declares, or exports, the name |
+| `inherits(cls, base)` | The class extends the base, through the classes the source declares |
+| `field(file, pointer, value)` | A JSON file holds the value at the pointer |
+| `count(file, pointer, n, { except })` | The object or array at the pointer has n entries, less the exceptions |
+| `script(name)` | `package.json` names the npm script |
+| `same(constant(module, name), constant(module, name))` | Two constants hold the same literal |
+| `atom(name)` | A sentence no fact decides; it stays `unknown`, and two atoms can still conflict |
+
+A claim is looked up in the facts, never solved. One the facts refute is a `fact-conflict`, and its verdict is
+`violated`. Two claims about the same thing that cannot both hold are a `claim-conflict`, and both are `conflicting`
+([A-105](../../ASSUMPTIONS.md)). A claim whose fact was not read is `unknown`, with the reason. Some claims need no
+writing: the Markdown adapter reads a backticked symbol beside its code file, and `npm run <name>`, as edges that trace
+resolves against the facts, so a symbol that does not exist is a `dangling-reference` ([A-106](../../ASSUMPTIONS.md)).
+An agent proposes a claim with `propose_claim`, into `csh/claims.json` ([A-107](../../ASSUMPTIONS.md)).
+
 ## Limits
 
 - Only imports and manifests are seen. A relation through a subprocess, a pipe or a file is invisible, and shows as
@@ -106,5 +137,9 @@ requirements this way.
 - Only the container level is read; component diagrams are not.
 - An import is resolved against the files of its own source, as a bundler would. A path alias from `tsconfig.json` is
   not read, so an aliased import is a bare package name.
+- A claim reads what a sentence says only as a person writes it; nothing reads a claim out of prose but the two
+  mechanical shapes of A-106.
+- `inherits` follows declared names, not resolved imports: two classes of one name in different modules make the claim
+  `unknown` (`ambiguous-class`).
 - TypeScript and JavaScript only. Another language needs its own facts command; the adapter and the evaluation do not
   change.

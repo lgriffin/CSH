@@ -172,7 +172,10 @@ describe("version 2", () => {
     const joined = withDeclaredSources(profile, spec);
     expect(joined.errors).toEqual([]);
     expect(joined.module.sources.map((x) => x.name)).toEqual(["Charter", "Features", "Rules"]);
-    expect(withDeclaredSources(profile, moduleOfManifest(profile)).errors.map((e) => e.code)).toEqual(["duplicate-source", "duplicate-source"]);
+    // The same name, kind and location only narrows the specification's source (stage 24); a different one is refused.
+    expect(withDeclaredSources(profile, moduleOfManifest(profile)).errors).toEqual([]);
+    const moved = { ...profile, sources: [{ ...profile.sources![0]!, at: "guides/OTHER.md" }, { ...profile.sources![1]!, kind: "Features" }] };
+    expect(withDeclaredSources(moved, moduleOfManifest(profile)).errors.map((e) => e.code)).toEqual(["duplicate-source", "duplicate-source"]);
     expect(withDeclaredSources({ ...profile, sources: [] }, spec).module).toBe(spec);
   });
 

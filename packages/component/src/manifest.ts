@@ -275,13 +275,16 @@ export function declaredSources(manifest: ComponentManifest): DeclaredSource[] {
 
 /**
  * The emitted model with the sources the manifest declares beside the specification's (stage 23), or the problem when
- * a name is declared by both. The model is returned unchanged when the manifest declares none.
+ * a name is declared by both differently. A manifest source with the same name, kind and location as one of the
+ * specification's only adds its globs (stage 24), so a specification can cite a source the manifest narrows. The
+ * model is returned unchanged when the manifest declares none.
  */
 export function withDeclaredSources(manifest: ComponentManifest, m: Module): { module: Module; errors: ComponentProblem[] } {
   const extra = declaredSources(manifest);
   if (extra.length === 0) return { module: m, errors: [] };
-  const taken = new Set(m.sources.map((s) => s.name));
-  const errors = extra.filter((s) => taken.has(s.name)).map((s) => ({ code: "duplicate-source", detail: `source ${s.name} is declared by both the specification and the manifest` }));
+  const taken = new Map(m.sources.map((s) => [s.name, s]));
+  const same = (s: DeclaredSource) => taken.get(s.name)?.kind === s.kind && taken.get(s.name)?.at === s.at;
+  const errors = extra.filter((s) => taken.has(s.name) && !same(s)).map((s) => ({ code: "duplicate-source", detail: `source ${s.name} is declared by both the specification and the manifest, differently` }));
   const sources = [...m.sources, ...extra.filter((s) => !taken.has(s.name)).map(({ name, kind, at }) => ({ name, kind, at }))].sort((a, b) => compareCodePoints(a.name, b.name));
   return { module: { ...m, sources }, errors };
 }

@@ -122,6 +122,8 @@ export function evaluateRule(rule: ArchRule, facts: ArchFacts, d: ArchDiagram | 
     by = facts.depends.filter((x) => x.from !== x.to && selects(rule.from, x.from, d) && selects(rule.to, x.to, d));
   } else if (rule.k === "only") {
     by = facts.depends.filter((x) => selects(rule.from, x.from, d) && !selects(rule.from, x.to, d) && !rule.to.some((t) => selects(t, x.to, d)));
+  } else if (rule.k === "claim") {
+    return { result: "unknown", reason: "a claim is judged by evaluateClaim" };
   } else {
     if (d === undefined) return { result: "unknown", reason: `no-diagram: ${rule.source}` };
     by = [...undrawnDependencies(d, facts).values()].flat();
@@ -135,7 +137,7 @@ export function evaluateRule(rule: ArchRule, facts: ArchFacts, d: ArchDiagram | 
  * its own diagram.
  */
 export function conflictingRelations(rule: ArchRule, d: ArchDiagram): ArchDiagram["relations"] {
-  if (rule.k === "closed") return [];
+  if (rule.k === "closed" || rule.k === "claim") return [];
   const el = new Map(d.elements.map((e) => [e.id, e]));
   return d.relations.filter((r) => {
     const a = el.get(r.from);

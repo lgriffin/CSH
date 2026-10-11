@@ -164,8 +164,38 @@ export type ArchSel =
   /** Source files by path, from the repository root: those matching a glob and no exception (stage 23). */
   | { k: "modules"; globs: string[]; except?: string[] };
 
-/** The typed architecture rules (Next layers, section 4.1). */
-export type ArchRule = { k: "forbid"; from: ArchSel; to: ArchSel } | { k: "only"; from: ArchSel; to: ArchSel[] } | { k: "closed"; source: string };
+/**
+ * A proposition about the code that facts can decide (Ingesting a codebase, stage 24). `file`: the repository tracks
+ * the path. `declares`: the module declares the name at its top level. `exports`: the module exports the name.
+ * `inherits`: the class extends the base, directly or through other classes, by name. `field`: a JSON file holds the
+ * value at the pointer. `count`: the value at the pointer has that many entries, less the ones excepted. `script`:
+ * package.json names the npm script. `same`: two constants have the same literal value. `atom`: a named proposition no
+ * fact decides, which two sources can still contradict.
+ */
+export type Prop =
+  | { k: "file"; path: string }
+  | { k: "declares"; module: string; symbol: string }
+  | { k: "exports"; module: string; symbol: string }
+  | { k: "inherits"; cls: string; base: string }
+  | { k: "field"; file: string; pointer: string; value: string }
+  | { k: "count"; file: string; pointer: string; n: number; except?: string[] }
+  | { k: "script"; name: string }
+  | { k: "same"; a: { module: string; name: string }; b: { module: string; name: string } }
+  | { k: "atom"; name: string };
+
+/**
+ * A structural claim (stage 24): a source asserts a proposition, or with `holds: false` its negation. `at` is the span
+ * of the prose that says so.
+ */
+export interface Claim {
+  k: "claim";
+  holds: boolean;
+  p: Prop;
+  at?: string;
+}
+
+/** The typed architecture rules (Next layers, section 4.1), and structural claims (stage 24). */
+export type ArchRule = { k: "forbid"; from: ArchSel; to: ArchSel } | { k: "only"; from: ArchSel; to: ArchSel[] } | { k: "closed"; source: string } | Claim;
 
 const nonEmpty = (x: unknown): x is string => typeof x === "string" && x !== "";
 
@@ -181,14 +211,43 @@ export function isArchSel(x: unknown): x is ArchSel {
   return o.k === "any" && Object.keys(o).length === 1;
 }
 
-/** A value that claims to be an architecture rule: an object whose k names one of the three forms. */
+export function isProp(x: unknown): x is Prop {
+  if (typeof x !== "object" || x === null || Array.isArray(x)) return false;
+  const o = x as Record<string, unknown>;
+  const keys = (...ks: string[]) => Object.keys(o).every((k) => k === "k" || ks.includes(k));
+  const constant = (c: unknown) => typeof c === "object" && c !== null && nonEmpty((c as Record<string, unknown>).module) && nonEmpty((c as Record<string, unknown>).name) && Object.keys(c).length === 2;
+  switch (o.k) {
+    case "file":
+      return nonEmpty(o.path) && keys("path");
+    case "declares":
+    case "exports":
+      return nonEmpty(o.module) && nonEmpty(o.symbol) && keys("module", "symbol");
+    case "inherits":
+      return nonEmpty(o.cls) && nonEmpty(o.base) && keys("cls", "base");
+    case "field":
+      return nonEmpty(o.file) && typeof o.pointer === "string" && typeof o.value === "string" && keys("file", "pointer", "value");
+    case "count":
+      return nonEmpty(o.file) && typeof o.pointer === "string" && Number.isInteger(o.n) && (o.n as number) >= 0 && (o.except === undefined || (Array.isArray(o.except) && o.except.every(nonEmpty))) && keys("file", "pointer", "n", "except");
+    case "script":
+      return nonEmpty(o.name) && keys("name");
+    case "same":
+      return constant(o.a) && constant(o.b) && keys("a", "b");
+    case "atom":
+      return nonEmpty(o.name) && keys("name");
+    default:
+      return false;
+  }
+}
+
+/** A value that claims to be an architecture rule: an object whose k names one of the forms. */
 export function claimsArchRule(x: unknown): boolean {
-  return typeof x === "object" && x !== null && !Array.isArray(x) && ["forbid", "only", "closed"].includes((x as { k?: unknown }).k as string);
+  return typeof x === "object" && x !== null && !Array.isArray(x) && ["forbid", "only", "closed", "claim"].includes((x as { k?: unknown }).k as string);
 }
 
 export function isArchRule(x: unknown): x is ArchRule {
   if (!claimsArchRule(x)) return false;
   const o = x as Record<string, unknown>;
+  if (o.k === "claim") return typeof o.holds === "boolean" && isProp(o.p) && (o.at === undefined || nonEmpty(o.at)) && Object.keys(o).every((k) => ["k", "holds", "p", "at"].includes(k));
   if (o.k === "forbid") return isArchSel(o.from) && isArchSel(o.to) && Object.keys(o).length === 3;
   if (o.k === "only") return isArchSel(o.from) && Array.isArray(o.to) && o.to.every(isArchSel) && Object.keys(o).length === 3;
   return nonEmpty(o.source) && Object.keys(o).length === 2;

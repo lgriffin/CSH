@@ -53,6 +53,7 @@ describe("the Markdown adapter", () => {
     // Only the first sentence of Verified by names mechanisms; a path elsewhere is a mention.
     expect(out.edges!.filter((e) => e.from === "ARCH-01")).toEqual([
       { from: "ARCH-01", rel: "mentions-file", to: "file:src/types/generated/", span: "guides/CHARTER.md:5" },
+      { from: "ARCH-01", rel: "mentions-script", to: "script:generate:types", span: "guides/CHARTER.md:8" },
       { from: "ARCH-01", rel: "verified-by", to: "text:npm run generate:types", span: "guides/CHARTER.md:8" },
       { from: "ARCH-01", rel: "verified-by", to: "text:git diff", span: "guides/CHARTER.md:8" },
       { from: "ARCH-01", rel: "verified-by", to: "file:src/types/generated/", span: "guides/CHARTER.md:8" },
@@ -201,5 +202,24 @@ describe("the issue adapter", () => {
     expect(out.items!.map((i) => [i.id, i.kind, i.text, i.attrs])).toEqual([["esi-1", "issue", "Fix ARCH-07", { status: "open", priority: "2" }]]);
     expect(out.edges!.map((e) => [e.rel, e.to])).toEqual([["mentions", "ARCH-07"], ["mentions", "SEC-02"]]);
     expect(out.diagnostics.map((d) => [d.code, d.span])).toEqual([["malformed-line", ".beads/issues.jsonl:3"], ["duplicate-id", ".beads/issues.jsonl:4"]]);
+  });
+});
+
+describe("code mentions in prose (stage 24)", () => {
+  it("reads a symbol written beside its code file, and an npm script, as edges to check against the facts", () => {
+    const doc = [
+      "# Errors",
+      "",
+      "Errors are built by `buildError` in `src/core/error.ts`; `src/index.ts` exports `LibError`.",
+      "A table names `Shape` in `docs/shapes.md`, which is not code.",
+      "Run `npm run generate:types` first, then `npm run test:<name>` or `npm run lint -- --fix`.",
+    ].join("\n");
+    const out = markdown(input({ "guides/ERRORS.md": doc }));
+    expect(out.edges!.filter((e) => e.rel === "mentions-symbol" || e.rel === "mentions-script").map((e) => [e.rel, e.to, e.span])).toEqual([
+      ["mentions-symbol", "symbol:src/core/error.ts#buildError", "guides/ERRORS.md:3"],
+      ["mentions-symbol", "symbol:src/index.ts#LibError", "guides/ERRORS.md:3"],
+      ["mentions-script", "script:generate:types", "guides/ERRORS.md:5"],
+      ["mentions-script", "script:lint", "guides/ERRORS.md:5"],
+    ]);
   });
 });

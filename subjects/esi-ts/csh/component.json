@@ -47,7 +47,9 @@
       "at": ".",
       "include": [
         "src/**/*.ts",
-        "package.json"
+        "package.json",
+        "etc/doc-metrics.json",
+        "scripts/spec/check-spec-drift.ts"
       ]
     }
   ],

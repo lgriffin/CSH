@@ -22,7 +22,7 @@ export interface AssessInput {
   arch?: Map<string, ArchRuleOutcome>;
 }
 
-const CONFLICT_KINDS = new Set(["state-conflict", "joint-conflict", "example-conflict", "arch-conflict"]);
+const CONFLICT_KINDS = new Set(["state-conflict", "joint-conflict", "example-conflict", "arch-conflict", "claim-conflict"]);
 const SPEC_VIOLATION_KINDS = new Set(["not-preserved", "not-met"]);
 
 /** The headline reason code of a detailed reason, such as key-missing from "key-missing: post.balanceMinor". */
@@ -174,10 +174,18 @@ function assessArchitecture(a: Assessment, f: Fragment, o: ArchRuleOutcome, conf
     return { method: m, met: false, reason: "not-applicable: architecture rules are judged by facts" };
   });
   const r = o.result;
+  const c = o.claim;
   if (conflicts.length > 0) {
     a.verdict = "conflicting";
     a.scope = "specification";
     a.reasons.push(...conflicts.map((fd) => `${fd.kind}: ${fd.id}`), ...conflicts.flatMap((fd) => (fd.reason !== undefined ? [fd.reason] : [])));
+  } else if (c?.result === "refuted") {
+    a.verdict = "violated";
+    a.scope = "implementation";
+    a.reasons.push(`fact-conflict: ${c.detail}`);
+  } else if (c?.result === "holds" && f.policy !== undefined && a.methods.every((m) => m.met)) {
+    a.verdict = "satisfied";
+    a.reasons.push(c.detail, ...a.methods.map((m) => `${m.method} met`));
   } else if (r?.result === "violated") {
     a.verdict = "violated";
     a.scope = "implementation";
@@ -190,6 +198,7 @@ function assessArchitecture(a: Assessment, f: Fragment, o: ArchRuleOutcome, conf
     if (f.policy === undefined) a.reasons.push("no-policy");
     if (o.facts !== "current") a.reasons.push(noFacts);
     if (r?.result === "unknown") a.reasons.push(r.reason);
+    if (c?.result === "unknown") a.reasons.push(c.reason);
     for (const m of a.methods.filter((m) => !m.met)) a.reasons.push(`method-missing: ${m.method}`, ...(m.reason !== undefined ? [m.reason] : []));
   }
   // Each reason once; a file and line is no headline code, so dedupe's listing of codes does not apply.

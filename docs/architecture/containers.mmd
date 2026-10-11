@@ -17,7 +17,7 @@ C4Container
     Container(arch, "Architecture rules", "arch", "Rule selectors and set comparisons: verdicts, conflicts with the diagram and gaps, without a solver")
     Container(gate, "Gate", "gate", "Snapshots, dispositions, waivers, decision record")
     Container(review, "Change review", "review", "csh diff: what a change did, from two stored runs; the rendering; reads and never decides")
-    Container(agent, "Agent tool server", "agent", "Model Context Protocol over standard input and output, per component: eight tools, results as envelopes with source text quoted; no decision tool and no language model")
+    Container(agent, "Agent tool server", "agent", "Model Context Protocol over standard input and output, per component: nine tools, results as envelopes with source text quoted; no decision tool and no language model")
     Container(kernel, "Kernel", "kernel", "Model types, typing, canonical JSON, digests, exact evaluation")
     Container(testkit, "Test kit (development only)", "testkit", "Fixture runner, independent result checks, local packing and the triangle checks")
   }
@@ -34,6 +34,7 @@ C4Container
   Rel(agent, check, "Signals, report types; the solver")
   Rel(agent, cli, "a3_open, through csh a3 open")
   Rel(agent, emission, "print: the canonical printer")
+  Rel(agent, component, "propose_claim: csh/claims.json")
   Rel(agent, kernel, "Uses")
   Rel(review, check, "Report types and signals")
   Rel(review, gate, "Decision types")

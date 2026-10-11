@@ -40,6 +40,7 @@ a decision is needed, say so in your report.
 | `queue` | nothing | What awaits the owner, with who wrote it, how long it has waited and what approving it unlocks | No |
 | `print` | `fragment` | One fragment in canonical form, quoted | No |
 | `a3_open` | `slug`, `at` (optional) | An A3 skeleton for a problem a run found | Writes the skeleton; never overwrites judgments |
+| `propose_claim` | `name`, `intent`, `claim`, `cites` and `why` (optional) | The claim proposed, as a candidate in an intent the specification declares | Writes only `csh/claims.json`; committing it is the proposal ([A-107](../../ASSUMPTIONS.md)) |
 
 Lists (`run`, `gaps`, `diff`) carry ids and kinds only; ask `explain` for one item to see its text.
 

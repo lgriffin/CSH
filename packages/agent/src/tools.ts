@@ -1,8 +1,10 @@
-// The eight tools of the agent interface (Next layers, section 6.1). Each reads, or writes only the run store or an A3
-// skeleton; none approves, rejects, retires, waives, countersigns or drafts a ledger line, in any configuration (A-76).
+// The nine tools of the agent interface (Next layers, section 6.1). Each reads, or writes only the run store, an A3
+// skeleton or a proposed claim (stage 24); none approves, rejects, retires, waives, countersigns or drafts a ledger
+// line, in any configuration (A-76).
 // Each returns harness-produced fields, with source text only under `quoted` (section 6.2).
 import { type Finding, type Report, type Signal, signalsOf } from "@csh/check";
 import { a3Command, parseArgs } from "@csh/cli";
+import { proposeClaim } from "@csh/component";
 import { fragmentsOf, type Module } from "@csh/kernel";
 import { printFragment } from "@csh/print";
 import { diffProject, type RunDiff } from "@csh/review";
@@ -19,6 +21,23 @@ export const TOOLS = [
   { name: "diff", description: "What a change did to the results, between two commits (or . for the working tree): approvals lost, new violations, rules gone unknown, signals appeared and cleared. `says` is stop or continue, per the agent guide. Reads only.", inputSchema: { type: "object", properties: { base: { type: "string" }, head: { type: "string" } }, required: ["base", "head"], additionalProperties: false } },
   { name: "queue", description: "What awaits the owner's decision, each with who wrote it, how long it has waited and what approving it would unlock. Reads only.", inputSchema: { type: "object", properties: {}, additionalProperties: false } },
   { name: "print", description: "One fragment of the specification in canonical form, by qualified name. Reads only.", inputSchema: { type: "object", properties: { fragment: { type: "string" } }, required: ["fragment"], additionalProperties: false } },
+  {
+    name: "propose_claim",
+    description:
+      "Propose a structural claim that prose makes about the code: added to csh/claims.json as a candidate in an intent of the specification, citing the prose it reads. Never approves; commit the file to propose it. Writes only csh/claims.json.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "The claim's name in its intent, such as CircuitOpenErrorIsAnEsiError" },
+        intent: { type: "string", description: "An intent the specification declares" },
+        claim: { type: "object", description: 'A claim: { "k": "claim", "holds": true or false, "p": a proposition, "at": "path:line" of the prose }' },
+        cites: { type: "array", items: { type: "object", properties: { source: { type: "string" }, id: { type: "string" } }, required: ["source", "id"] } },
+        why: { type: "string", description: "Why the prose reads this way" },
+      },
+      required: ["name", "intent", "claim"],
+      additionalProperties: false,
+    },
+  },
   { name: "a3_open", description: "Open an A3 for a problem a run found: record the run as its first stage and write an empty judgments skeleton. Never overwrites judgments.", inputSchema: { type: "object", properties: { slug: { type: "string" }, at: { type: "string" } }, required: ["slug"], additionalProperties: false } },
 ] as const;
 
@@ -63,7 +82,7 @@ function explainFinding(f: Finding, m: Module) {
     collisionTerms: f.collisionTerms,
     ...(f.witness !== undefined ? { witness: quote(Object.entries(f.witness).map(([k, v]) => `${k} = ${v}`).join(", ")) } : {}),
     ...(f.reason !== undefined ? { reason: quote(f.reason) } : {}),
-    readings: ["state-conflict", "joint-conflict", "example-conflict", "arch-conflict"].includes(f.kind) ? ["a member is wrong", "a context is missing", "the intent is undecided"] : [],
+    readings: ["state-conflict", "joint-conflict", "example-conflict", "arch-conflict", "claim-conflict"].includes(f.kind) ? ["a member is wrong", "a context is missing", "the intent is undecided"] : [],
   };
 }
 
@@ -194,6 +213,20 @@ async function callKnownTool(name: ToolName, args: Record<string, unknown>, c: T
       const err: string[] = [];
       const code = await a3Command(p, parseArgs(["open", slug, ...(at !== undefined ? ["--at", at] : [])]), { out: () => {}, err: (s) => err.push(s), runOptions });
       return code === 0 ? ok(name, { slug, judgments: `csh/a3/${slug}/judgments.json`, sheet: `csh/a3/${slug}/a3.md`, stage: "first" }) : fail(name, "a3-open-refused", err.join(""));
+    }
+    case "propose_claim": {
+      const claimName = str("name");
+      const intent = str("intent");
+      if (claimName === undefined || intent === undefined || args.claim === undefined) return fail(name, "missing-argument", "propose_claim needs a name, an intent and a claim");
+      const e = await evaluate(p, c);
+      if (!e.ok) return fail(name, "evaluation-failed", e.message);
+      const target = e.model.intents.find((i) => i.name === intent);
+      if (target === undefined) return fail(name, "unknown-intent", `the specification declares no intent ${intent}; it declares ${e.model.intents.map((i) => i.name).join(", ")}`);
+      // A name the intent already holds would make every later emission fail with claims-duplicate.
+      if ([...target.obligations, ...target.examples, ...target.assumptions].some((o) => o.name === claimName)) return fail(name, "claim-refused", `${intent} already holds ${claimName}`);
+      const proposal = { name: claimName, intent, claim: args.claim, ...(args.cites !== undefined ? { cites: args.cites } : {}), ...(str("why") !== undefined ? { why: str("why") } : {}) } as Parameters<typeof proposeClaim>[1];
+      const r = proposeClaim(p.root, proposal);
+      return r.ok ? ok(name, { proposed: `${e.model.system}/${intent}/${claimName}`, file: r.path, authority: "candidate" }) : fail(name, "claim-refused", r.problem);
     }
     default:
       return fail(name, "unknown-tool", `there is no tool ${name}; the tools are ${TOOLS.map((t) => t.name).join(", ")}`);

@@ -5,7 +5,7 @@
 import { execFileSync, spawn } from "node:child_process";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { COMPONENT_PATH, type ComponentManifest, DEFAULT_EXECUTIONS, DEFAULT_HARNESS_TIMEOUT_MS } from "@csh/component";
+import { CLAIMS_PATH, COMPONENT_PATH, type ComponentManifest, DEFAULT_EXECUTIONS, DEFAULT_HARNESS_TIMEOUT_MS } from "@csh/component";
 import type { Report } from "@csh/check";
 import { formatDecision, type GateDecision, type Mode, type Snapshot } from "@csh/gate";
 import { digestOf, type Module, stableJson } from "@csh/kernel";
@@ -196,7 +196,7 @@ export function inputDigests(p: Project, manifest: ComponentManifest, m: Module)
     if (x.adapter !== undefined && (x.adapter.startsWith(".") || x.adapter.startsWith("/"))) add(resolve(root, x.adapter), true);
     if (x.steps !== undefined) add(resolve(root, x.steps), true);
   }
-  for (const f of [COMPONENT_PATH, CONFIG_PATH, LOCK_PATH]) add(join(root, f), false);
+  for (const f of [COMPONENT_PATH, CLAIMS_PATH, CONFIG_PATH, LOCK_PATH]) add(join(root, f), false);
   return out;
 }
 

@@ -5,4 +5,7 @@ section 6.1: `status`, `run`, `gaps`, `explain`, `diff`, `queue`, `print` and `a
 retires, waives, countersigns or drafts a ledger line, in any configuration (A-76). A scripted client lists them; no
 language model is involved. Next layers, sections 6.1 and 9; exit of stage 20.
 
+Amended by stage 24 ([11](../../docs/spec/11-ingesting-a-codebase.md)): a ninth tool, `propose_claim`, writes a
+candidate structural claim to `csh/claims.json` and decides nothing.
+
 The fixture is written before the code of its stage, from [10](../../docs/spec/10-next-layers.md); the runner reports it as pending until that stage is built.

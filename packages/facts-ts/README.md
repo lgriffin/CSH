@@ -12,9 +12,9 @@ It belongs to the "Adapters" container, shown in the [containers diagram](../../
 
 - `adapter`, `manifest`: the adapter (id `csh.adapter.facts-ts`, input kind `Code`, produces facts).
 - `run(input)`: the facts of the input's files, at the commit `input.config.commit` names. Without a commit it warns `no-commit`, since such facts are never current.
-- `readFile(path, text)`: the module references and exported names of one file.
+- `readFile(path, text)`: the module references, exported names and top-level declarations of one file; `declarationsOf(sourceFile)` gives the declarations alone, each with a class's base and a literal constant's value (stage 24).
 - `resolveRelative(from, specifier, files)`, `packageOf(specifier)`: how a specifier is resolved, and the package a bare one names.
-- `fieldsOf(json)`: the `package.json` fields read, by JSON pointer.
+- `fieldsOf(json, only)`: the scalar leaves of a JSON value by JSON pointer: of `package.json` only the fields that say what the package is, and of any other JSON file (with `only` null) every leaf. Lockfiles are never read ([A-108](../../ASSUMPTIONS.md)).
 
 ## Depends on and used by
 

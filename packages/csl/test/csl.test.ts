@@ -128,3 +128,26 @@ describe("deterministic events", () => {
     expect(validateModule(m).map((v) => v.rule)).toContain("S1");
   });
 });
+
+describe("claims (stage 24)", () => {
+  it("emit a structural claim as an architecture obligation that validates", async () => {
+    const { inherits, count, same, constant, exportsName } = await import("csl");
+    const m = system("C", (s) => {
+      const G = s.source("Guides", { kind: "Documents", at: "guides" });
+      s.policy("P", { require: ["FactsCurrent"] });
+      s.intent("I", { owner: "O", value: "V", assurance: "P" }, (i) => {
+        i.claim("Base", inherits("OpenError", "LibError"), { at: "guides/A.md:3", cites: [{ source: G, id: "A-1" }] });
+        i.claim("NotPublic", exportsName("src/errors.ts", "isOpen"), { holds: false });
+        i.claim("Six", count("package.json", "/exports", 6, { except: ["./package.json"] }));
+        i.claim("Dates", same(constant("src/a.ts", "D"), constant("src/b.ts", "D")));
+      });
+    });
+    expect(validateModule(m)).toEqual([]);
+    expect(m.intents[0]!.obligations.map((o) => ("native" in o ? o.native : undefined))).toEqual([
+      { k: "claim", holds: true, p: { k: "inherits", cls: "OpenError", base: "LibError" }, at: "guides/A.md:3" },
+      { k: "claim", holds: false, p: { k: "exports", module: "src/errors.ts", symbol: "isOpen" } },
+      { k: "claim", holds: true, p: { k: "count", file: "package.json", pointer: "/exports", n: 6, except: ["./package.json"] } },
+      { k: "claim", holds: true, p: { k: "same", a: { module: "src/a.ts", name: "D" }, b: { module: "src/b.ts", name: "D" } } },
+    ]);
+  });
+});
