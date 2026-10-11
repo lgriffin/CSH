@@ -146,6 +146,10 @@ csh a3 verify <slug>                        Re-run every stage at its commit and
 csh check [spec] [--json] [--budget ms] [--no-cache]
                                             Run every check; write reports/csh-report.json. Exits 0 when it completes.
 csh gaps [spec]                             Print the gap view only.
+csh overview [--run <dir|commit>] [--signal <id>] [--out <file>] [--json]
+                                            Place every result of the last report as a gap (a suggestion, with what
+                                            would close it), indeterminate (with what would decide it) or converged;
+                                            write reports/csh-overview.html, which opens on any #<id>.
 csh explain <finding-id> [--run <dir|commit>]
                                             Print one finding, members rendered through the printer; with
                                             --run, from a stored run (csh run --at writes no reports/ files).

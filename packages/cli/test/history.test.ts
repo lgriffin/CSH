@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import type { Report } from "@csh/check";
+import { type Overview, type Report, signalsOf } from "@csh/check";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
 import { gitHistory, runComponent } from "@csh/run";
 import { csh, stageIdOf } from "../src/index.ts";
@@ -144,6 +144,50 @@ describe("the history source", () => {
     }
   });
 
+  it("keeps its answers by HEAD between runs, and reads them back instead of asking git (stage 27)", () => {
+    const file = join(base, "history-cache.json");
+    const h = gitHistory(subject, { implementation: ["src"], since: "previous-tag", cache: file });
+    expect(h.lineCommit("docs/charter.md", 7)?.commit).toBe(commits.c1);
+    expect(h.changedSince(commits.c1!, "src/util.ts").map((d) => d.commit)).toEqual([commits.c4, commits.c2]);
+    h.save();
+    const kept = JSON.parse(readFileSync(file, "utf8"));
+    expect(kept.schema).toBe("csh-history-cache/v1");
+    expect(kept.key).toBe(`${commits.c4} previous-tag`);
+    // What is kept is what the next port answers: change it, and the port says what the file says.
+    kept.blames["docs/charter.md"]["7"] = commits.c2;
+    writeFileSync(file, JSON.stringify(kept));
+    expect(gitHistory(subject, { implementation: ["src"], since: "previous-tag", cache: file }).lineCommit("docs/charter.md", 7)?.commit).toBe(commits.c2);
+    // Kept under another start, or for a file edited since, it is not used.
+    expect(gitHistory(subject, { implementation: ["src"], since: "v1.0.0", cache: file }).lineCommit("docs/charter.md", 7)?.commit).toBe(commits.c1);
+    write(subject, "docs/charter.md", `inserted\n${CHARTER}`);
+    try {
+      expect(gitHistory(subject, { implementation: ["src"], since: "previous-tag", cache: file }).lineCommit("docs/charter.md", 7)).toBeUndefined();
+    } finally {
+      write(subject, "docs/charter.md", CHARTER);
+    }
+    rmSync(file);
+  });
+
+  it("counts no commit of a side branch made before the line, nor the merge that brings it in", () => {
+    const dir = join(base, "branches");
+    mkdirSync(dir);
+    git(dir, ["init", "-q", "-b", "main"]);
+    write(dir, "src/a.ts", "export const a = 1;\n");
+    write(dir, "docs/notes.md", "old\n");
+    commit(dir, "b0", "2026-01-01T00:00:00Z");
+    git(dir, ["checkout", "-q", "-b", "side"]);
+    write(dir, "src/a.ts", "export const a = 2;\n");
+    commit(dir, "side", "2026-01-15T00:00:00Z");
+    git(dir, ["checkout", "-q", "main"]);
+    write(dir, "docs/notes.md", "names src/a.ts\n");
+    commit(dir, "line", "2026-02-01T00:00:00Z");
+    git(dir, ["-c", "user.email=test-only@example.invalid", "-c", "user.name=test-only", "-c", "commit.gpgsign=false", "merge", "-q", "--no-ff", "-m", "merge", "side"], { GIT_AUTHOR_DATE: "2026-03-01T00:00:00Z", GIT_COMMITTER_DATE: "2026-03-01T00:00:00Z" });
+    write(dir, "src/a.ts", "export const a = 3;\n");
+    commit(dir, "after", "2026-04-01T00:00:00Z");
+    const h = gitHistory(dir, { implementation: ["src"] });
+    expect(h.changedSince(commits.line!, "src/a.ts").map((d) => d.commit)).toEqual([commits.after]);
+  });
+
   it("lists no untraced change without a start, and says why when the start names nothing", () => {
     expect(gitHistory(subject, { implementation: ["src"] }).untraced()).toEqual([]);
     const bad = gitHistory(subject, { implementation: ["src"], since: "v0.0.0" });
@@ -199,5 +243,31 @@ describe("csh history", () => {
     expect(h.o.err).toMatch(/no tag of the subject is in that range/);
     expect(stageIdOf("v10.2.3")).toBe("v10-2-3");
     expect(stageIdOf("Release_1")).toBe("release-1");
+  });
+});
+
+describe("csh overview", () => {
+  it("places every signal in one of three outcomes, anchors each in the sheet and prints any one (stage 27)", async () => {
+    const r = await runComponent({ root: profile, solver: z3 });
+    if (!r.ok) throw new Error(r.message);
+    const f = io(profile);
+    expect(await csh(["overview", "--json"], f.io)).toBe(0);
+    const o = JSON.parse(f.o.out) as Overview;
+    expect(o.counts.gap + o.counts.indeterminate + o.counts.converged).toBe(o.entries.length);
+    expect(o.counts.gap).toBeGreaterThan(0);
+    // Every signal is placed, except a violated obligation a finding already names.
+    const placed = new Set(o.entries.flatMap((e) => (e.signal !== undefined ? [e.signal] : [])));
+    const signals = signalsOf(r.report);
+    const named = new Set(signals.filter((s) => s.kind !== "violated" && r.report.findings.some((x) => x.id === s.id)).flatMap((s) => s.fragments));
+    for (const s of signals) if (!(s.kind === "violated" && s.fragments.every((x) => named.has(x)))) expect(placed.has(s.id), s.kind).toBe(true);
+    for (const e of o.entries) expect(e.next.length).toBeGreaterThan(0);
+    expect(o.entries.find((e) => e.kind === "stale-prose")?.outcome).toBe("gap");
+    const html = readFileSync(join(profile, "reports", "csh-overview.html"), "utf8");
+    for (const e of o.entries) expect(html).toContain(`id="${e.anchor}"`);
+    const one = o.entries.find((e) => e.kind === "untraced-change")!;
+    const g = io(profile);
+    expect(await csh(["overview", "--signal", one.signal!.slice(0, 8)], g.io)).toBe(0);
+    expect(g.o.out).toContain(`gap untraced-change  ${one.subject}`);
+    expect(await csh(["overview", "--signal", "nothing"], io(profile).io)).toBe(2);
   });
 });

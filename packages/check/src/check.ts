@@ -114,6 +114,7 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
   };
   if (traced.edges.length > 0) report.edges = traced.edges;
   if (tested.outcomes.length > 0) report.outcomes = tested.outcomes;
+  if (tested.verifiedBy.length > 0) report.verifiedBy = tested.verifiedBy;
   if (opts.snapshot !== undefined) report.snapshot = opts.snapshot;
   if (opts.ledger !== undefined) report.ledger = opts.ledger;
   if (opts.composition !== undefined) report.composition = opts.composition;

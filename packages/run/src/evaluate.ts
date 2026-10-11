@@ -86,6 +86,7 @@ export async function evaluateProject(p: Project, o: EvaluateOptions): Promise<E
       ...(p.config.adapters !== undefined ? { adapters: p.config.adapters } : {}),
       ...(p.config.executions !== undefined ? { executions: p.config.executions } : {}),
       ...(p.component !== undefined ? { component: p.component } : {}),
+      ...(o.noCache !== true ? { cacheDir: join(p.root, CACHE_DIR) } : {}),
     },
     emission,
   );

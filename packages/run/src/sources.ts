@@ -1,12 +1,12 @@
 // Running sources through adapters (Evidence tab, section 4). The harness reads the
 // files; the adapter sees only their bytes, the vocabulary and the bindings.
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { compareCodePoints, digestOf, globRegExp, type Binding, type ClaimSet, type Module, type Source } from "@csh/kernel";
-import type { SourceRun } from "@csh/check";
+import { compareCodePoints, digestJson, digestOf, globRegExp, type Binding, type ClaimSet, type Module, type Source } from "@csh/kernel";
+import { type SourceRun, TOOL_VERSION } from "@csh/check";
 import { installedReadable } from "@csh/emit";
 import type { AdapterInput, AdapterOutput } from "@csh/witness";
 
@@ -52,6 +52,65 @@ export interface RunSourcesOptions {
   /** Authority of each binding, by binding fragment name; candidate when absent. */
   bindingAuthority?: (b: Binding) => string;
   timeoutMs?: number;
+  /**
+   * Keep each source's adapter output between runs (Ingesting a codebase, stage 27), under `dir`. `pinned` is the
+   * commit of a clean checkout the sources are read from: their files are then known by path alone and are not read
+   * at all when nothing else changed. Without it a file is known by its digest.
+   */
+  cache?: { dir: string; pinned?: string };
+}
+
+/** Kept adapter output, by the digest of everything the output depends on. */
+interface KeptRun {
+  schema: "csh-source-cache/v1";
+  run: SourceRun;
+}
+
+let toolCode: string | undefined;
+/**
+ * The tool's own code, by path, size and modification time of each source file of its packages: a kept output is
+ * never reused across a change to an adapter, though the version stays the same while it is developed.
+ */
+function toolCodeDigest(): string {
+  if (toolCode !== undefined) return toolCode;
+  const pkgs = resolve(HERE, "..", "..");
+  const seen: string[] = [];
+  const walk = (dir: string) => {
+    for (const e of readdirSync(dir, { withFileTypes: true }).sort((a, b) => compareCodePoints(a.name, b.name))) {
+      if (e.name === "node_modules" || e.name === "test" || e.name.startsWith(".")) continue;
+      const p = join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (/\.(ts|js|mjs|cjs|json)$/.test(e.name)) {
+        const st = statSync(p);
+        seen.push(`${relative(pkgs, p)} ${st.size} ${st.mtimeMs}`);
+      }
+    }
+  };
+  try {
+    walk(pkgs);
+  } catch {
+    // Unreadable: the version alone decides.
+  }
+  return (toolCode = digestJson({ version: TOOL_VERSION, files: seen }));
+}
+
+function readKept(file: string): SourceRun | undefined {
+  try {
+    const k = JSON.parse(readFileSync(file, "utf8")) as KeptRun;
+    return k.schema === "csh-source-cache/v1" ? k.run : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function keep(file: string, run: SourceRun): void {
+  try {
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(`${file}.tmp`, JSON.stringify({ schema: "csh-source-cache/v1", run } satisfies KeptRun));
+    renameSync(`${file}.tmp`, file);
+  } catch {
+    // The cache only saves work.
+  }
 }
 
 /** True when `p` is `root` or lies inside it. */
@@ -204,11 +263,43 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
     const base0 = relative(opts.root, resolve(opts.root, source.at)).split(sep).join("/");
     const below = (p: string) => (base0 === "" ? p : p.startsWith(`${base0}/`) ? p.slice(base0.length + 1) : p.split("/").pop()!);
     const kept = inc === undefined && exc === undefined ? found : found.filter((f) => (inc === undefined || inc.some((r) => r.test(below(f.path)))) && !(exc ?? []).some((r) => r.test(below(f.path))));
+    const named = opts.perSource?.[source.name]?.adapter ?? opts.adapters?.[source.kind];
+    // A kept output is reused when everything it was made from is the same (stage 27). A project-local adapter is
+    // project code that may import anything, so its output is never kept.
+    const local = named !== undefined && (named.startsWith(".") || named.startsWith("/"));
+    const cacheFile = (() => {
+      if (opts.cache === undefined || local) return undefined;
+      const ownExec = own !== undefined ? own.executions : source.kind === "Witnesses" ? opts.executions : undefined;
+      const execFiles = ownExec === undefined ? [] : (filesAt(opts.codeRoot ?? opts.root, ownExec).files ?? []);
+      const stepFiles = own?.steps === undefined ? [] : (filesAt(opts.codeRoot ?? opts.root, own.steps).files ?? []);
+      const digests = (fs: { path: string; abs: string }[]) => fs.map((f) => [f.path, digestOf(new Uint8Array(readFileSync(f.abs)))]);
+      const key = digestJson({
+        tool: toolCodeDigest(),
+        source,
+        own: own ?? null,
+        named: named ?? null,
+        adapters: opts.adapters ?? null,
+        config: opts.config ?? null,
+        commit: opts.commit ?? null,
+        executions: ownExec ?? null,
+        vocabulary: module.vocabulary,
+        bindings,
+        // A pinned checkout's files are its commit's: their paths say which were read, and none is opened.
+        files: opts.cache.pinned !== undefined ? { pinned: opts.cache.pinned, paths: kept.map((f) => f.path) } : digests(kept),
+        exec: digests(execFiles),
+        steps: digests(stepFiles),
+      });
+      return join(opts.cache.dir, "sources", `${key.replace(/^sha256:/, "")}.json`);
+    })();
+    const hit = cacheFile === undefined ? undefined : readKept(cacheFile);
+    if (hit !== undefined) {
+      runs.push(hit);
+      continue;
+    }
     const files = kept.map((f) => {
       const bytes = new Uint8Array(readFileSync(f.abs));
       return { path: f.path, digest: digestOf(bytes), bytes };
     });
-    const named = opts.perSource?.[source.name]?.adapter ?? opts.adapters?.[source.kind];
     // A Scenarios source named no adapter whose every file declares csh-ir/v1 holds claims already lifted: it is read as
     // data, not handed to the Gherkin adapter (#26). Only Scenarios: other kinds keep their built-in adapter.
     const preLifted = named === undefined && source.kind === "Scenarios" && files.length > 0 && files.every((f) => isIrJson(f.path, f.bytes));
@@ -273,7 +364,10 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
       output = { diagnostics: [{ code: "adapter-failed", severity: "error", message: (err as Error).message }] };
     }
     if (output.claims !== undefined) output.claims.source = source.name;
-    runs.push({ ...base, adapter: spec, files: [...input.files, ...execFiles].map(({ path, digest }) => ({ path, digest })), output });
+    const made: SourceRun = { ...base, adapter: spec, files: [...input.files, ...execFiles].map(({ path, digest }) => ({ path, digest })), output };
+    runs.push(made);
+    // An adapter that failed or timed out is asked again next time.
+    if (cacheFile !== undefined && !output.diagnostics.some((d) => d.code === "adapter-failed")) keep(cacheFile, made);
   }
   return runs;
 }

@@ -3,6 +3,8 @@
 // that changed a file since, and commit trailers say which changes name a reference and which an agent co-authored.
 // Only commit hashes, dates and counts leave this file: never a commit's message or a line's text.
 import { execFileSync } from "node:child_process";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import type { Dated, HistoryPort } from "@csh/check";
 
 export interface HistoryOptions {
@@ -13,6 +15,21 @@ export interface HistoryOptions {
   since?: string;
   /** Paths whose change is a change to the implementation: a path, or a directory and everything under it. */
   implementation: string[];
+  /**
+   * A file to keep answers in between runs (stage 27). A commit's history never changes, so what was read at one HEAD
+   * is read from the file at that HEAD again, and nothing is asked of git twice. Files with uncommitted changes are
+   * never kept.
+   */
+  cache?: string;
+}
+
+interface Kept {
+  schema: "csh-history-cache/v1";
+  key: string;
+  blames: Record<string, Record<string, string>>;
+  origins: Record<string, string | null>;
+  since: Record<string, string[]>;
+  introduced: Record<string, string | null>;
 }
 
 /** The `since` that names the newest tag before the commit evaluated, whatever that commit is. */
@@ -33,7 +50,7 @@ function run(root: string, args: string[]): string | undefined {
 }
 
 /** The history of the repository at `root`, read lazily and kept for the life of the port. */
-export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sinceProblem?: string } {
+export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sinceProblem?: string; save(): void } {
   const dates = new Map<string, string>();
   for (const l of (run(root, ["log", "--format=%H %cI", "HEAD"]) ?? "").split("\n")) {
     const [h, d] = l.split(" ");
@@ -54,11 +71,13 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
   };
   const blames = new Map<string, Map<number, string>>();
   const blameOf = (path: string): Map<number, string> => {
+    // Kept or not, a file with uncommitted changes has no dated line.
+    if (isEdited(path)) return new Map();
     let m = blames.get(path);
     if (m !== undefined) return m;
     m = new Map();
     blames.set(path, m);
-    if (isEdited(path)) return m;
+    dirty = true;
     let commit: string | undefined;
     let line = 0;
     for (const l of (run(root, ["blame", "--line-porcelain", "HEAD", "--", path]) ?? "").split("\n")) {
@@ -75,6 +94,24 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
   const since = new Map<string, Dated[]>();
   const introduced = new Map<string, Dated | undefined>();
 
+  // What an earlier run at the same HEAD read: kept by commit, read back as dated answers.
+  const head = run(root, ["rev-parse", "HEAD"])?.trim();
+  const cacheKey = head === undefined ? undefined : `${head} ${o.since ?? ""}`;
+  let dirty = false;
+  if (o.cache !== undefined && cacheKey !== undefined && existsSync(o.cache)) {
+    try {
+      const k = JSON.parse(readFileSync(o.cache, "utf8")) as Kept;
+      if (k.schema === "csh-history-cache/v1" && k.key === cacheKey) {
+        for (const [path, lines] of Object.entries(k.blames)) blames.set(path, new Map(Object.entries(lines).map(([l, c]) => [Number(l), c])));
+        for (const [key, c] of Object.entries(k.origins)) origins.set(key, c === null ? undefined : dated(c));
+        for (const [key, cs] of Object.entries(k.since)) since.set(key, cs.flatMap((c) => dated(c) ?? []));
+        for (const [key, c] of Object.entries(k.introduced)) introduced.set(key, c === null ? undefined : dated(c));
+      }
+    } catch {
+      // A cache that cannot be read only costs the reads.
+    }
+  }
+
   let sinceProblem: string | undefined;
   let untraced: ReturnType<HistoryPort["untraced"]> | undefined;
   const start = o.since === PREVIOUS_TAG ? run(root, ["describe", "--tags", "--abbrev=0", "HEAD^"])?.trim() : o.since;
@@ -90,11 +127,12 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
     lineCommit: (path, line) => dated(blameOf(path).get(line)),
     lineOrigin(path, line) {
       const key = `${path}:${line}`;
-      if (!origins.has(key) && isEdited(path)) origins.set(key, undefined);
+      if (isEdited(path)) return undefined;
       if (!origins.has(key)) {
         const out = run(root, ["log", "--no-patch", "--format=%H", `-L${line},${line}:${path}`, "HEAD"]);
         const commits = (out ?? "").split("\n").filter((x) => /^[0-9a-f]{40}$/.test(x));
         origins.set(key, dated(commits[commits.length - 1]));
+        dirty = true;
       }
       return origins.get(key);
     },
@@ -102,8 +140,13 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
       const key = `${commit} ${path}`;
       let hit = since.get(key);
       if (hit === undefined) {
-        hit = (run(root, ["rev-list", `${commit}..HEAD`, "--", path]) ?? "").split("\n").flatMap((c) => dated(c) ?? []);
+        // After the line, in time as well as in history: a commit of a branch that forked before the line and merged
+        // after it is reachable from HEAD and not from the line, though it was made first. Merges change nothing of
+        // their own.
+        const from = dated(commit);
+        hit = (run(root, ["rev-list", "--no-merges", `${commit}..HEAD`, "--", path]) ?? "").split("\n").flatMap((c) => dated(c) ?? []).filter((d) => from === undefined || d.date > from.date);
         since.set(key, hit);
+        dirty = true;
       }
       return hit;
     },
@@ -112,6 +155,7 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
       if (!introduced.has(key)) {
         const first = (run(root, ["log", "--format=%H", `-S${text}`, "HEAD", "--", path]) ?? "").split("\n")[0];
         introduced.set(key, dated(first));
+        dirty = true;
       }
       return introduced.get(key);
     },
@@ -134,5 +178,28 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
     },
   };
   if (sinceProblem !== undefined) port.sinceProblem = sinceProblem;
-  return port;
+  return {
+    ...port,
+    save() {
+      if (o.cache === undefined || cacheKey === undefined || !dirty) return;
+      // Only what HEAD alone decides is kept: no blame of a file with uncommitted changes, and no origin of its lines.
+      const clean = (path: string) => edited.get(path) !== true;
+      const pathOf = (key: string) => key.slice(0, key.lastIndexOf(":"));
+      const kept: Kept = {
+        schema: "csh-history-cache/v1",
+        key: cacheKey,
+        blames: Object.fromEntries([...blames].filter(([p]) => clean(p)).map(([p, m]) => [p, Object.fromEntries([...m].map(([l, c]) => [String(l), c]))])),
+        origins: Object.fromEntries([...origins].filter(([k]) => clean(pathOf(k))).map(([k, d]) => [k, d?.commit ?? null])),
+        since: Object.fromEntries([...since].map(([k, ds]) => [k, ds.map((d) => d.commit)])),
+        introduced: Object.fromEntries([...introduced].map(([k, d]) => [k, d?.commit ?? null])),
+      };
+      try {
+        mkdirSync(dirname(o.cache), { recursive: true });
+        writeFileSync(`${o.cache}.tmp`, JSON.stringify(kept));
+        renameSync(`${o.cache}.tmp`, o.cache);
+      } catch {
+        // The cache only saves work.
+      }
+    },
+  };
 }

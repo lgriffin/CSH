@@ -99,6 +99,11 @@ export function renderReport(r: Report): string {
     const sum = (k: "tests" | "passed" | "failed" | "errored" | "skipped") => rows.reduce((n, o) => n + o[k], 0);
     out.push(`  tests ${sum("tests")} in ${rows.length} files: passed ${sum("passed")}, failed ${sum("failed")}, errored ${sum("errored")}, skipped ${sum("skipped")}; cited items ${r.outcomes.length - rows.length}`);
   }
+  if (r.verifiedBy !== undefined) {
+    const passing = r.verifiedBy.filter((v) => v.unreported === 0 && v.failed + v.errored === 0 && v.passed > 0).length;
+    const unreported = r.verifiedBy.filter((v) => v.unreported > 0).length;
+    out.push(`  verified by test files ${r.verifiedBy.length}: every named file passed ${passing}, some named file reported no result ${unreported}`);
+  }
   if (r.assessments !== undefined) {
     const v = (x: string) => r.assessments!.filter((a) => a.verdict === x).length;
     out.push(`  obligations ${r.assessments.length}: conflicting ${v("conflicting")}, violated ${v("violated")}, satisfied ${v("satisfied")}, unknown ${v("unknown")}`);

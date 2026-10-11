@@ -41,9 +41,44 @@ describe("test outcomes", () => {
     ]);
   });
 
+  it("counts the test files an item's Verified by names, by path, directory or unique bare name (stage 27)", () => {
+    const verifying: SourceRun = {
+      ...charter,
+      output: {
+        ...charter.output,
+        edges: [
+          { from: "R-1", rel: "verified-by", to: "file:unit/", span: "c.md:1" },
+          { from: "R-2", rel: "verified-by", to: "file:b.test.ts", span: "c.md:2" },
+          { from: "R-2", rel: "verified-by", to: "file:contract/c.test.ts", span: "c.md:2" },
+          { from: "R-2", rel: "verified-by", to: "text:npm test", span: "c.md:2" },
+        ],
+      },
+    };
+    const files: SourceRun = {
+      source: "Tests",
+      kind: "TestFiles",
+      files: [],
+      output: {
+        diagnostics: [],
+        items: [item("unit/a.test.ts", "test-file"), item("unit/b.test.ts", "test-file"), item("contract/c.test.ts", "test-file")],
+        results: [
+          { file: "unit/a.test.ts", outcome: "passed", cites: [], span: "r.json#0" },
+          { file: "unit/b.test.ts", outcome: "passed", cites: [], span: "r.json#1" },
+          { file: "unit/b.test.ts", outcome: "skipped", cites: [], span: "r.json#2" },
+        ],
+      },
+    };
+    const prepared = prepare(empty, [verifying, files]);
+    expect(testOutcomes(prepared, trace({ prepared }).edges).verifiedBy).toEqual([
+      { item: "Charter/R-1", files: 2, unreported: 0, tests: 3, passed: 2, failed: 0, errored: 0, skipped: 1 },
+      // The contract file declares tests the runner never reported.
+      { item: "Charter/R-2", files: 2, unreported: 1, tests: 2, passed: 1, failed: 0, errored: 0, skipped: 1 },
+    ]);
+  });
+
   it("is nothing without results", () => {
     const prepared = prepare(empty, [charter, tests([])]);
-    expect(testOutcomes(prepared, trace({ prepared }).edges)).toEqual({ outcomes: [], gaps: [] });
+    expect(testOutcomes(prepared, trace({ prepared }).edges)).toEqual({ outcomes: [], verifiedBy: [], gaps: [] });
   });
 });
 
