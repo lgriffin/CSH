@@ -44,11 +44,20 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
     return commit === undefined || date === undefined ? undefined : { commit, date };
   };
 
+  // A file with uncommitted changes has other line numbers than HEAD's: none of its lines is dated.
+  const edited = new Map<string, boolean>();
+  const isEdited = (path: string): boolean => {
+    let e = edited.get(path);
+    if (e === undefined) edited.set(path, (e = run(root, ["diff", "--quiet", "HEAD", "--", path]) === undefined));
+    return e;
+  };
   const blames = new Map<string, Map<number, string>>();
   const blameOf = (path: string): Map<number, string> => {
     let m = blames.get(path);
     if (m !== undefined) return m;
     m = new Map();
+    blames.set(path, m);
+    if (isEdited(path)) return m;
     let commit: string | undefined;
     let line = 0;
     for (const l of (run(root, ["blame", "--line-porcelain", "HEAD", "--", path]) ?? "").split("\n")) {
@@ -58,7 +67,6 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
         line = Number(head[2]);
       } else if (l.startsWith("\t") && commit !== undefined) m.set(line, commit);
     }
-    blames.set(path, m);
     return m;
   };
 
@@ -73,12 +81,15 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
   if (o.since === PREVIOUS_TAG && base === undefined) sinceProblem = "history.since is previous-tag, and no tag precedes the commit evaluated";
   else if (o.since !== undefined && (base === undefined || base === "")) sinceProblem = `history.since names ${o.since}, which is not a commit of the subject`;
   else if (base !== undefined && run(root, ["merge-base", "--is-ancestor", base, "HEAD"]) === undefined) sinceProblem = `history.since names ${o.since}, which is not an ancestor of the commit evaluated`;
-  const impl = (f: string) => o.implementation.some((i) => f === i || f.startsWith(i.endsWith("/") ? i : `${i}/`));
+  // Paths are read as the manifest writes them: `./src` is `src`, and `.` is everything.
+  const paths = o.implementation.map((i) => i.replace(/^(\.\/)+/, "").replace(/\/+$/, ""));
+  const impl = (f: string) => paths.some((i) => i === "" || i === "." || f === i || f.startsWith(`${i}/`));
 
   const port: HistoryPort & { sinceProblem?: string } = {
     lineCommit: (path, line) => dated(blameOf(path).get(line)),
     lineOrigin(path, line) {
       const key = `${path}:${line}`;
+      if (!origins.has(key) && isEdited(path)) origins.set(key, undefined);
       if (!origins.has(key)) {
         const out = run(root, ["log", "--no-patch", "--format=%H", `-L${line},${line}:${path}`, "HEAD"]);
         const commits = (out ?? "").split("\n").filter((x) => /^[0-9a-f]{40}$/.test(x));
@@ -106,9 +117,10 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
     untraced() {
       if (untraced !== undefined) return untraced;
       untraced = [];
+      // --relative names files from the root, as the implementation paths are, when the root is below the top level.
       if (base === undefined || sinceProblem !== undefined) return untraced;
       const format = "%x1e%H%x1f%(trailers:key=Refs,valueonly,separator=%x2c)%x1f%(trailers:key=Claude-Session,valueonly,separator=%x2c)%x1f%(trailers:key=Co-Authored-By,valueonly,separator=%x2c)%x1f";
-      for (const rec of (run(root, ["log", "--no-merges", "--name-only", `--format=${format}`, `${base}..HEAD`]) ?? "").split("\x1e").slice(1)) {
+      for (const rec of (run(root, ["log", "--no-merges", "--relative", "--name-only", `--format=${format}`, `${base}..HEAD`]) ?? "").split("\x1e").slice(1)) {
         const [hash, refs, session, coAuthors, names] = rec.split("\x1f");
         const files = (names ?? "").split("\n").filter((x) => x !== "");
         const changed = files.filter(impl).length;

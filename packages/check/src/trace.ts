@@ -103,6 +103,7 @@ export function trace(input: TraceInput): TraceResult {
   const supported = new Set<string>();
   const unresolvedAt = new Set<string>();
   const scriptsAt = new Set<string>();
+  const testCited = new Set<string>();
   const stale = new Map<string, Map<string, string>>();
   const h = input.history;
   for (const e of edges) {
@@ -119,8 +120,12 @@ export function trace(input: TraceInput): TraceResult {
     // A mechanism that resolves supports a stated status: a verified-by edge to a file or an item, or the script a
     // verified-by `npm run x` names, read as a mentions-script edge on the same line.
     if (e.rel === "verified-by" && typeof r === "string") supported.add(from);
-    if (e.rel === "verified-by" && r === null) unresolvedAt.add(`${from}\u0000${e.span}`);
-    if (e.rel === "mentions-script" && r === "file") scriptsAt.add(`${from}\u0000${e.span}`);
+    // The command and the script are matched by name, so another script on the same line supports nothing.
+    const command = e.rel === "verified-by" && r === null ? /^text:npm run ([\w:.\-]+)(?=$|\s)/.exec(e.to) : null;
+    if (command !== null) unresolvedAt.add(`${from}\u0000${e.span}\u0000${command[1]}`);
+    if (e.rel === "mentions-script" && r === "file") scriptsAt.add(`${from}\u0000${e.span}\u0000${e.to.slice(7)}`);
+    // Only a test file's citation counts as a test citing a requirement: a tagged scenario cites without testing.
+    if (e.rel === "cites" && typeof r === "string" && r !== "file" && byQualified.get(from)?.kind === "test-file") testCited.add(r);
     // Stale prose (stage 25): the line naming a file was last changed before the file was. Documents are not code.
     if (h !== undefined && r === "file" && DESCRIBING.has(e.rel)) {
       const path = fileOf(e.to);
@@ -157,7 +162,9 @@ export function trace(input: TraceInput): TraceResult {
     const into = incoming.get(q) ?? new Set<string>();
     // A status that says the requirement is checked, while nothing it names as a mechanism resolves (stage 25).
     const status = it.attrs?.status;
-    if (it.kind !== undefined && VERIFYING.has(it.kind) && status !== undefined && ASSERTED.has(status) && !supported.has(q) && !into.has("cites")) {
+    // Judged only with history, as the stage that brought it, and only when the tracked files are known: unknown
+    // files leave every file mechanism unresolved.
+    if (h !== undefined && files !== undefined && it.kind !== undefined && VERIFYING.has(it.kind) && status !== undefined && ASSERTED.has(status) && !supported.has(q) && !testCited.has(q)) {
       gaps.push({ kind: "status-unsupported", subject: q, fragments: [], detail: `${it.span}: its stated status is ${status}, and nothing it names as a mechanism resolves, and no test cites it` });
     }
     if (it.kind !== undefined && VERIFYING.has(it.kind) && !verifiedBy.has(q) && !into.has("cites")) {

@@ -129,6 +129,21 @@ describe("the history source", () => {
     expect(h.untraced()).toEqual([{ commit: commits.c2, date: "2026-02-01T00:00:00+00:00", files: 1, agent: true }]);
   });
 
+  it("reads implementation paths as the manifest writes them, from a root below the top level, and dates no line of an edited file", () => {
+    expect(gitHistory(subject, { implementation: ["./src/"], since: "v1.0.0" }).untraced().map((c) => c.commit)).toEqual([commits.c2]);
+    expect(gitHistory(subject, { implementation: ["."], since: "v1.0.0" }).untraced().map((c) => c.commit)).toEqual([commits.c2]);
+    // From src, paths are read from src, and a test outside it is not seen: c4's test lies outside the component.
+    expect(gitHistory(join(subject, "src"), { implementation: ["."], since: "v1.0.0" }).untraced().map((c) => c.commit)).toEqual([commits.c4, commits.c2]);
+    write(subject, "docs/charter.md", `inserted\n${CHARTER}`);
+    try {
+      const h = gitHistory(subject, { implementation: ["src"] });
+      expect(h.lineCommit("docs/charter.md", 7)).toBeUndefined();
+      expect(h.lineOrigin("docs/charter.md", 15)).toBeUndefined();
+    } finally {
+      write(subject, "docs/charter.md", CHARTER);
+    }
+  });
+
   it("lists no untraced change without a start, and says why when the start names nothing", () => {
     expect(gitHistory(subject, { implementation: ["src"] }).untraced()).toEqual([]);
     const bad = gitHistory(subject, { implementation: ["src"], since: "v0.0.0" });
