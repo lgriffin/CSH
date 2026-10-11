@@ -167,13 +167,18 @@ function joinResults(input: AdapterInput, items: SourceItem[], id: RegExp, diagn
   for (const f of input.executions ?? []) {
     const parsed = parseTestResults(decode(f.bytes));
     for (const p of parsed.problems) diagnostics.push({ code: "malformed-results", severity: "error", message: p.message, span: `${f.path}:${p.line}` });
+    // Results from another commit say nothing of this one: a reduced file names its commit, and is joined only at it.
+    if (parsed.commit !== undefined && input.config?.commit !== undefined && parsed.commit !== input.config.commit) {
+      diagnostics.push({ code: "results-other-commit", severity: "warning", message: `the results are of ${parsed.commit.slice(0, 7)}, not ${input.config.commit.slice(0, 7)}: none is joined`, span: f.path });
+      continue;
+    }
     for (const r of parsed.results) {
       const file = fileOf(r.file, paths);
       if (file === undefined) {
         unmatched.set(r.file, (unmatched.get(r.file) ?? 0) + 1);
         continue;
       }
-      const cites = [...new Set([...r.name.matchAll(id)].map((m) => m[0]))].sort();
+      const cites = r.cites ?? [...new Set([...r.name.matchAll(id)].map((m) => m[0]))].sort();
       results.push({ file, outcome: r.outcome, cites, span: /^\d+$/.test(r.at) ? `${f.path}:${r.at}` : `${f.path}#${r.at}` });
       const c = counts.get(file) ?? { passed: 0, failed: 0, errored: 0, skipped: 0 };
       c[r.outcome]++;

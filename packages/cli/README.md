@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`@csh/cli` provides the two commands, `csl` (emit, print, lock) and `csh` (init, run, check, gaps, overview, explain, approve, reject, retire, waive, countersign, gate). It parses arguments and prints; the evaluation itself is in `@csh/run` and the manifest in `@csh/component`.
+`@csh/cli` provides the two commands, `csl` (emit, print, lock) and `csh` (init, run, check, gaps, overview, expect, results, explain, approve, reject, retire, waive, countersign, gate). It parses arguments and prints; the evaluation itself is in `@csh/run` and the manifest in `@csh/component`.
 
 ## Where it sits
 
@@ -14,6 +14,7 @@ It is the "Command line" container, shown in the [containers diagram](../../docs
 - `csl(argv, io)`: the `csl` command; `bin/csl.js` is its entry point.
 - `init(cwd, root, io)`: `csh init`, which writes `csh/component.json` from answers to one question per field, under the root every command uses (`--root`, else the git top level, as `projectRoot` resolves it). `io.ask` replaces standard input in tests.
 - `a3Command(project, args, io)`, `buildOutputs`, `a3Authority`, `a3Fragment`: `csh a3 open | stage | build | verify`. They find an A3's inputs (stored runs, or a run at the commit; authority of the judgments from the ledger; files as they stood at a stage's commit) and hand them to `@csh/a3`. `csh approve #a3/<slug>` drafts a decision on the judgments' digest.
+- `csh results import <practice> <report> [--base]` and `csh expect [--expected] [--run]` (stage 28): a runner's report reduced and written where the practice reads it, and the overview compared with a profile's expected results, exiting 1 on any mismatch ([A-124](../../ASSUMPTIONS.md), [A-125](../../ASSUMPTIONS.md)).
 - `historyCommand(project, args, io)`, `stageIdOf(tag)`: `csh history <slug> [--from] [--to] [--match]` (stage 25). It runs a subject at each release tag in the range, oldest first, and records each run as a stage of the A3, opening it when needed; `csh a3 verify` runs such a stage again at its own subject commit ([A-114](../../ASSUMPTIONS.md)). `csh subject fetch --at <tag|commit>` fetches one such checkout by hand.
 - `csh queue [--json]`: what awaits the owner's decision, from `componentQueue` of `@csh/run`; reads only and exits 0.
 - `diffCommand(project, args, io)`, `DiffIo`: `csh diff <base> <head>`. Each side is a stored run's directory, a commit (its stored run, else a run at that commit), `.` for the working tree (refused in CI when it is dirty) or `unavailable:<reason>`, which the CI job passes when the merge base cannot be run. It finds the paths changed between the two commits with git and hands everything to `@csh/review`; `--json` prints the model, and `--out <dir>` writes `diff.json` and `diff.md`.

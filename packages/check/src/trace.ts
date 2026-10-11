@@ -172,6 +172,12 @@ export function trace(input: TraceInput): TraceResult {
       gaps.push({ kind: "unverified", subject: q, fragments: [], detail: `${it.span}: names no mechanism that verifies it, and no test cites it${status}` });
     } else if (it.kind === "rule" && !into.has("exemplifies")) {
       gaps.push({ kind: "unverified", subject: q, fragments: [], detail: `${it.span}: no scenario sits under this rule` });
+    } else if (it.kind === "property" && !into.has("cites")) {
+      // A structured trace entry no scenario cites (stage 28). One that records why it has none is a justified gap: a
+      // silence stated with its reason reads differently from a bare one.
+      const silent = it.attrs?.silence;
+      if (silent !== undefined && it.attrs?.["silence-reason"] === "stated") gaps.push({ kind: "justified-gap", subject: q, fragments: [], detail: `${it.span}: no scenario or test cites it, and it records ${silent} as none, with a reason` });
+      else gaps.push({ kind: "unverified", subject: q, fragments: [], detail: `${it.span}: no scenario or test cites it${silent !== undefined ? `; it records ${silent} as none, with no reason` : ""}` });
     }
   }
   return { gaps, edges: out };

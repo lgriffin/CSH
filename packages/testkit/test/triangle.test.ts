@@ -1,6 +1,6 @@
 // The two new sides of the triangle (Anchor, harnesses and A3, section 11.1). Continuous integration executes the root
 // README's command blocks (node packages/testkit/src/triangle.ts readme); this test checks the examples against the
-// container diagram, and that the README has the blocks the three doors need.
+// container diagram, and that the README has the blocks the four doors need.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -43,8 +43,8 @@ describe("examples and C4", () => {
 describe("docs and examples", () => {
   const readme = readFileSync(join(repo, "README.md"), "utf8");
 
-  it("the root README opens with three doors", () => {
-    for (const door of ["See it", "Use it", "Understand it"]) expect(readme).toMatch(new RegExp(`^## ${door}$`, "m"));
+  it("the root README opens with four doors", () => {
+    for (const door of ["See it", "Use it", "Understand it", "Analyse it"]) expect(readme).toMatch(new RegExp(`^## ${door}$`, "m"));
   });
 
   it("the root README's command blocks cover the walkthrough, the starter and the checks", () => {

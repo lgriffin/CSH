@@ -5,7 +5,7 @@ import type { Module } from "@csh/kernel";
 import { type HistoryPort, prepare, type SourceRun, trace } from "../src/index.ts";
 
 const module: Module = { schema: "csh-ir/v1", system: "S", uses: [], vocabulary: { units: [], enums: [], states: [], events: [] }, transitions: [], policies: [], intents: [], sources: [], claims: [], bindings: [] };
-const item = (id: string, kind: "requirement" | "rule" | "scenario" | "test-file" | "document", attrs?: Record<string, string>) => ({ id, kind, text: id, span: `${id}:1`, textDigest: "sha256:0", ...(attrs !== undefined ? { attrs } : {}) });
+const item = (id: string, kind: "requirement" | "rule" | "scenario" | "test-file" | "document" | "property", attrs?: Record<string, string>) => ({ id, kind, text: id, span: `${id}:1`, textDigest: "sha256:0", ...(attrs !== undefined ? { attrs } : {}) });
 
 const runs: SourceRun[] = [
   {
@@ -188,5 +188,30 @@ describe("trace with history (stage 25)", () => {
     const r = trace({ prepared: prepare(module, more), files, facts, history });
     // A tagged scenario cites R-5 without testing it; R-6's command names a script other than the one on its line.
     expect(r.gaps.filter((g) => g.kind === "status-unsupported").map((g) => g.subject)).toEqual(["Charter/R-5", "Charter/R-6"]);
+  });
+});
+
+describe("structured trace entries (stage 28)", () => {
+  const model: SourceRun[] = [
+    {
+      source: "Security",
+      kind: "Traces",
+      files: [],
+      output: {
+        diagnostics: [],
+        items: [item("P1", "property"), item("P2", "property"), item("P3", "property", { silence: "rule", "silence-reason": "stated" }), item("P4", "property", { silence: "rule", "silence-reason": "none" })],
+        edges: [],
+      },
+    },
+    { source: "Features", kind: "Features", files: [], output: { diagnostics: [], items: [item("f#r/s", "scenario")], edges: [{ from: "f#r/s", rel: "cites", to: "P1", span: "f:2" }] } },
+  ];
+
+  it("passes a cited property, and tells a silence recorded with its reason from a bare one", () => {
+    const r = trace({ prepared: prepare(module, model) });
+    expect(r.gaps.filter((g) => g.subject.startsWith("Security/"))).toEqual([
+      { kind: "unverified", subject: "Security/P2", fragments: [], detail: "P2:1: no scenario or test cites it" },
+      { kind: "justified-gap", subject: "Security/P3", fragments: [], detail: "P3:1: no scenario or test cites it, and it records rule as none, with a reason" },
+      { kind: "unverified", subject: "Security/P4", fragments: [], detail: "P4:1: no scenario or test cites it; it records rule as none, with no reason" },
+    ]);
   });
 });

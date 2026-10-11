@@ -7,6 +7,8 @@ import { run as gherkin } from "../src/gherkin.ts";
 import { run as jsonl } from "../src/jsonl.ts";
 import { firstSentence, run as markdown } from "../src/markdown.ts";
 import { run as tests } from "../src/tests.ts";
+import { parseYaml, run as yaml } from "../src/yaml.ts";
+import { reduceTestResults } from "@csh/witness";
 import { pathToken, slug } from "../src/common.ts";
 
 const input = (files: Record<string, string>, config?: Record<string, string>, kind = "Documents"): AdapterInput => ({
@@ -257,6 +259,29 @@ describe("test results (stage 26)", () => {
     ]);
   });
 
+  it("reads a reduced results file as the report it was reduced from, and joins none from another commit (stage 28)", () => {
+    const reduced = reduceTestResults(jest, { cite: /\b(?:[A-Z][A-Z0-9]*-[0-9]+)\b/g, base: "/ci/work", commit: "c1" });
+    expect(reduced.problems).toEqual([]);
+    const text = JSON.stringify(reduced.reduced);
+    // Test names are dropped: only paths, counts, outcomes and cited identifiers remain.
+    expect(text).not.toMatch(/lists|indexing|later|elsewhere/);
+    expect(reduced.reduced.files.map((f) => f.file)).toEqual(["tests/a.test.ts", "tests/d.test.ts", "vendor/c.test.ts"]);
+    const fromReport = tests({ ...withResults({ "results/jest.json": jest }), config: { commit: "c1" } });
+    const fromReduced = tests({ ...withResults({ "csh/results.json": text }), config: { commit: "c1" } });
+    const bare = (o: typeof fromReport) => ({ results: o.results!.map((r) => [r.file, r.outcome, r.cites]).sort(), attrs: o.items!.map((i) => i.attrs), codes: o.diagnostics.map((d) => d.code) });
+    expect(bare(fromReduced)).toEqual(bare(fromReport));
+    // The identifiers recorded are joined as given, whatever the practice's pattern is now.
+    const narrowed = tests({ ...withResults({ "csh/results.json": text }), config: { commit: "c1", idPattern: "NONE-[0-9]+" } });
+    expect(narrowed.results!.flatMap((r) => r.cites).sort()).toEqual(["ARCH-01", "SEC-11", "SEC-11"]);
+    const bad = (patch: object) => tests({ ...withResults({ "csh/results.json": JSON.stringify({ ...reduced.reduced, ...patch }) }), config: { commit: "c1" } });
+    expect(bad({ commit: 7 }).diagnostics.map((d) => d.message)).toContain("commit is not a commit");
+    expect(bad({ commit: 7 }).results).toEqual([]);
+    expect(bad({ files: [{ file: "tests/a.test.ts", cited: [{ outcome: "passed", cites: [123] }] }] }).diagnostics.map((d) => d.message)).toContain("files[0].cited[0] needs an outcome and a list of identifiers");
+    const other = tests({ ...withResults({ "csh/results.json": text }), config: { commit: "c2" } });
+    expect(other.results).toEqual([]);
+    expect(other.diagnostics.map((d) => [d.code, d.message])).toContainEqual(["results-other-commit", "the results are of c1, not c2: none is joined"]);
+  });
+
   it("says so when the practice names a results file and none was found, and reads none without one", () => {
     expect(tests(withResults({})).diagnostics.map((d) => d.code)).toEqual(["no-results"]);
     const without = tests(input({ "tests/a.test.ts": FILE }, undefined, "TestFiles"));
@@ -290,5 +315,76 @@ describe("code mentions in prose (stage 24)", () => {
       ["mentions-script", "script:generate:types", "guides/ERRORS.md:5"],
       ["mentions-script", "script:lint", "guides/ERRORS.md:5"],
     ]);
+  });
+});
+
+describe("the structured trace adapter (stage 28)", () => {
+  const MODEL = [
+    "# A security model",
+    "version: 1",
+    "properties:",
+    "  - id: P1",
+    "    claim: >",
+    "      Tokens are never",
+    "      logged.",
+    "    severity: high",
+    "    tests: [tests/a.test.ts, b.test.ts]",
+    "    charter: [SEC-01]",
+    "  - id: P2",
+    "    claim: \"A quoted claim # not a comment\"",
+    "    tests:",
+    "      - tests/c.test.ts",
+    "    charter: [",
+    "      SEC-02,",
+    "      SEC-03,",
+    "    ]",
+    "  - id: P3",
+    "    claim: Nothing to test",
+    "    rule: none",
+    "    rule_reason: |",
+    "      Out of scope.",
+    "  - id: P4",
+    "    rule: none",
+    "  - claim: no id",
+    "  - id: P1",
+    "    claim: twice",
+  ].join("\n");
+
+  it("parses the YAML subset: folded and block scalars, flow sequences over lines, quotes and comments", () => {
+    const { value, problems } = parseYaml(MODEL);
+    expect(problems).toEqual([]);
+    const props = (value as { properties: Record<string, unknown>[] }).properties;
+    expect(props[0]).toEqual({ id: "P1", claim: "Tokens are never logged.", severity: "high", tests: ["tests/a.test.ts", "b.test.ts"], charter: ["SEC-01"] });
+    expect(props[1]).toEqual({ id: "P2", claim: "A quoted claim # not a comment", tests: ["tests/c.test.ts"], charter: ["SEC-02", "SEC-03"] });
+    expect(props[2]!.rule_reason).toBe("Out of scope.");
+    expect(parseYaml('{"a": [1]}').value).toEqual({ a: [1] });
+    expect(parseYaml("a: 1\n  - b").problems.length).toBeGreaterThan(0);
+  });
+
+  it("continues a quoted scalar to its closing quote, and reads on past a line it cannot place", () => {
+    const text = ["properties:", "  - id: P1", '    claim: "one', '      two"', "  - id: P2", "      stray: line", "    claim: kept", "   misaligned: x", "  - id: P3", "    claim: 'it''s'"].join("\n");
+    const { value, problems } = parseYaml(text);
+    expect((value as { properties: unknown[] }).properties).toEqual([{ id: "P1", claim: "one two" }, { id: "P2", claim: "kept" }, { id: "P3", claim: "it's" }]);
+    expect(problems.map((p) => p.line)).toEqual([6, 8]);
+  });
+
+  it("reads each entry as a property with the edges and silence the practice maps, and reports what it cannot read", () => {
+    const out = yaml(input({ "model.yaml": MODEL }, { edges: "tests=verified-by charter=implements other=bogus", fields: "severity", silence: "rule=none:rule_reason" }, "Traces"));
+    expect(out.items!.map((i) => [i.id, i.kind, i.text, i.span, i.attrs])).toEqual([
+      ["P1", "property", "Tokens are never logged.", "model.yaml:4", { severity: "high" }],
+      ["P2", "property", "A quoted claim # not a comment", "model.yaml:11", undefined],
+      ["P3", "property", "Nothing to test", "model.yaml:19", { silence: "rule", "silence-reason": "stated" }],
+      ["P4", "property", "", "model.yaml:24", { silence: "rule", "silence-reason": "none" }],
+    ]);
+    expect(out.edges!.filter((e) => e.from === "P1").map((e) => [e.rel, e.to])).toEqual([
+      ["verified-by", "file:tests/a.test.ts"],
+      ["verified-by", "file:b.test.ts"],
+      ["implements", "SEC-01"],
+    ]);
+    expect(out.diagnostics.map((d) => [d.code, d.span])).toEqual([
+      ["malformed-entry", "model.yaml:26"],
+      ["duplicate-id", "model.yaml:27"],
+    ]);
+    expect(yaml(input({ "m.yaml": "other: []\n" }, undefined, "Traces")).diagnostics.map((d) => d.code)).toEqual(["no-items"]);
   });
 });

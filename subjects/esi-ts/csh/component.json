@@ -42,6 +42,11 @@
       "at": ".beads/issues.jsonl"
     },
     {
+      "name": "Security",
+      "kind": "Traces",
+      "at": "guides/security-model.yaml"
+    },
+    {
       "name": "Code",
       "kind": "Code",
       "at": ".",
@@ -92,7 +97,10 @@
         "Features"
       ],
       "author": "Maintainer",
-      "unit": "the rule"
+      "unit": "the rule",
+      "settings": {
+        "tagCites": "sec-(P[0-9]+)"
+      }
     },
     {
       "id": "tdd",
@@ -106,7 +114,7 @@
       "settings": {
         "idPattern": "(?:ARCH|DES|TEST|SEC|DOC|REL|GATE|PROC)-[0-9]+"
       },
-      "executions": "results/jest.json"
+      "executions": "csh/results.json"
     },
     {
       "id": "beads",
@@ -119,6 +127,23 @@
       "unit": "the issue",
       "settings": {
         "idPattern": "(?:ARCH|DES|TEST|SEC|DOC|REL|GATE|PROC)-[0-9]+"
+      }
+    },
+    {
+      "id": "security",
+      "name": "Security model",
+      "kind": "traces",
+      "sources": [
+        "Security"
+      ],
+      "author": "Maintainer",
+      "unit": "the property",
+      "settings": {
+        "collection": "properties",
+        "textField": "claim",
+        "edges": "tests=verified-by charter=implements",
+        "fields": "severity",
+        "silence": "rule=none:rule_reason"
       }
     },
     {

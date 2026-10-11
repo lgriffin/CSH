@@ -1,0 +1,90 @@
+{
+  "schema": "csh-expected/v1",
+  "counts": { "gap": 114, "indeterminate": 8, "converged": 43 },
+  "rows": [
+    {
+      "row": 1,
+      "title": "Whether CircuitOpenError is an EsiError: two guides against a third and the code",
+      "expect": [
+        { "outcome": "gap", "kind": "claim-conflict", "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError" },
+        { "outcome": "gap", "kind": "claim-conflict", "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError" },
+        { "outcome": "gap", "kind": "fact-conflict", "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError" },
+        { "outcome": "gap", "kind": "fact-conflict", "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError" }
+      ]
+    },
+    {
+      "row": 2,
+      "title": "The charter names a symbol the named file does not hold",
+      "expect": [{ "outcome": "gap", "kind": "dangling-reference", "subject": "Charter/guides/CHARTER.md", "at": "guides/CHARTER.md:201" }]
+    },
+    {
+      "row": 3,
+      "title": "The count of entry points: two requirements and package.json",
+      "expect": [
+        { "outcome": "gap", "kind": "fact-conflict", "subject": "EsiTs/ProseAboutCode/SixEntryPoints" },
+        { "outcome": "gap", "kind": "claim-conflict", "subject": "EsiTs/ProseAboutCode/SevenEntryPoints, EsiTs/ProseAboutCode/SixEntryPoints" }
+      ]
+    },
+    {
+      "row": 4,
+      "title": "A gap register row says an export is missing that the code exports",
+      "expect": [{ "outcome": "gap", "kind": "fact-conflict", "subject": "EsiTs/ProseAboutCode/ErrorsSubpathLacksIsCircuitOpen" }]
+    },
+    {
+      "row": 5,
+      "title": "A gap register row older than the change to the file it names",
+      "expect": [{ "outcome": "gap", "kind": "stale-prose", "subject": "Charter/guides/CHARTER.md", "at": "guides/CHARTER.md:896" }]
+    },
+    {
+      "row": 6,
+      "title": "The Node floor the charter states, against engines",
+      "expect": [
+        { "outcome": "gap", "kind": "fact-conflict", "subject": "EsiTs/ProseAboutCode/NodeFloorIs18" },
+        { "outcome": "gap", "kind": "stale-prose", "subject": "EsiTs/ProseAboutCode/NodeFloorIs18" }
+      ]
+    },
+    {
+      "row": 7,
+      "title": "Hand-typed counts against generated metrics",
+      "expect": [
+        { "outcome": "gap", "kind": "fact-conflict", "subject": "EsiTs/ProseAboutCode/UnitTierHas192Files" },
+        { "outcome": "indeterminate", "kind": "unknown-obligation", "subject": "EsiTs/ProseAboutCode/GateNeeds23Jobs" }
+      ],
+      "unknown": [
+        { "what": "the CI job count of GATE-01", "reason": "no fact holds the jobs ci-success needs: no adapter reads workflow files, so the claim is an atom and stays unknown" },
+        { "what": "the count of exclusion Rules of TEST-11", "reason": "no fact counts Rules by form, and the generated metrics do not hold that count, so no claim is written for it" }
+      ]
+    },
+    {
+      "row": 8,
+      "title": "Two constants that should hold one compatibility date",
+      "expect": [{ "outcome": "gap", "kind": "fact-conflict", "subject": "EsiTs/ProseAboutCode/OneCompatibilityDate" }]
+    },
+    {
+      "row": 9,
+      "title": "ARCH-03 is verified by review alone, and the import graph can check it",
+      "expect": [
+        { "outcome": "gap", "kind": "unverified", "subject": "Charter/ARCH-03" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "EsiTs/Layering/PipelineTakesResilienceAsParameters" }
+      ],
+      "unknown": [{ "what": "a status-unsupported finding for ARCH-03", "reason": "its stated status is Practised, not Enforced, so no status is unsupported; the rule stays a candidate until a person approves it" }]
+    },
+    {
+      "row": 10,
+      "title": "Security properties with no Rules and a recorded reason",
+      "expect": [
+        { "outcome": "converged", "kind": "justified-gap", "subject": "Security/P10" },
+        { "outcome": "converged", "kind": "justified-gap", "subject": "Security/P11" },
+        { "outcome": "converged", "kind": "justified-gap", "subject": "Security/P12" }
+      ]
+    },
+    {
+      "row": 11,
+      "title": "An open issue asks for what the guides say is in place",
+      "expect": [
+        { "outcome": "gap", "kind": "claim-conflict", "subject": "EsiTs/ProseAboutCode/CodeownersInPlace, EsiTs/ProseAboutCode/CodeownersStillToAdd" },
+        { "outcome": "gap", "kind": "fact-conflict", "subject": "EsiTs/ProseAboutCode/CodeownersStillToAdd" }
+      ]
+    }
+  ]
+}

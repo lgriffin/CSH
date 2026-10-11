@@ -287,3 +287,51 @@ describe("csh overview", () => {
     expect(await csh(["overview", "--signal", "nothing"], io(profile).io)).toBe(2);
   });
 });
+
+describe("csh expect (stage 28)", () => {
+  it("passes when every expectation is met, and exits 1 on a mismatch, naming it", async () => {
+    const r = await runComponent({ root: profile, solver: z3 });
+    if (!r.ok) throw new Error(r.message);
+    const expected = (subjectOf: string) => ({
+      schema: "csh-expected/v1",
+      rows: [
+        { row: 1, title: "the Node floor", expect: [{ outcome: "gap", kind: "fact-conflict", subject: subjectOf }], unknown: [{ what: "a count", reason: "no fact holds it" }] },
+        { row: 2, title: "a stale line", expect: [{ outcome: "gap", kind: "stale-prose", subject: "Dated/Prose/NodeFloor" }] },
+      ],
+    });
+    write(profile, "csh/expected.json", JSON.stringify(expected("Dated/Prose/NodeFloor")));
+    const f = io(profile);
+    expect(await csh(["expect"], f.io), f.o.out + f.o.err).toBe(0);
+    expect(f.o.out).toContain("row  1  partly-unknown 1/1 met, 1 unknown  the Node floor");
+    write(profile, "csh/expected.json", JSON.stringify(expected("Dated/Prose/Other")));
+    const g = io(profile);
+    expect(await csh(["expect"], g.io)).toBe(1);
+    expect(g.o.out).toContain("mismatch (row 1): no gap fact-conflict for Dated/Prose/Other");
+    rmSync(join(profile, "csh/expected.json"));
+    expect(await csh(["expect"], io(profile).io)).toBe(2);
+  });
+});
+
+describe("csh results import (stage 28)", () => {
+  it("reduces a runner's report to paths, counts and cited identifiers at the commit, and writes it where the practice reads it", async () => {
+    const dir = join(base, "imports");
+    mkdirSync(dir);
+    git(dir, ["init", "-q", "-b", "main"]);
+    write(dir, "tests/a.test.ts", "it('R-1 holds', () => {});\n");
+    write(dir, "csh/component.json", JSON.stringify({ schema: "csh-component/v2", name: "Imports", implementation: ["src"], sources: [{ name: "Tests", kind: "TestFiles", at: "tests" }], practices: [{ id: "tdd", name: "TDD", kind: "tests", sources: ["Tests"], executions: "csh/results.json" }] }));
+    commit(dir, "imports", "2026-05-01T00:00:00Z");
+    const report = join(base, "jest.json");
+    const work = "/runner/work";
+    writeFileSync(report, JSON.stringify({ testResults: [{ name: `${work}/tests/a.test.ts`, status: "passed", assertionResults: [{ fullName: "R-1 holds", status: "passed" }, { fullName: "a secret name", status: "failed" }] }] }));
+    expect(await csh(["results", "import", "tdd", report], io(dir).io)).toBe(1);
+    const f = io(dir);
+    expect(await csh(["results", "import", "tdd", report, "--base", work], f.io), f.o.err).toBe(0);
+    expect(f.o.out).toContain("2 tests in 1 files, 1 citing an identifier");
+    const written = readFileSync(join(dir, "csh/results.json"), "utf8");
+    // A project with no subject: its results name no commit, since committing them moves HEAD past any they could name.
+    expect(JSON.parse(written)).toEqual({ schema: "csh-results/v1", files: [{ file: "tests/a.test.ts", passed: 0, failed: 1, errored: 0, skipped: 0, cited: [{ outcome: "passed", cites: ["R-1"] }] }] });
+    expect(written).not.toContain("secret");
+    expect(await csh(["results", "import", "nope", report], io(dir).io)).toBe(1);
+    expect(await csh(["results", "import"], io(dir).io)).toBe(2);
+  });
+});

@@ -9,13 +9,14 @@ statements, and gates delivery.
 The output is a view for informed decisions, not a certificate. What the harness cannot establish, it reports as
 unknown.
 
-## Three doors
+## Four doors
 
 | You want to | Go to |
 | --- | --- |
 | See what it does | [See it](#see-it): the lockout A3, then the walkthrough that makes it |
 | Run it on your own code | [Use it](#use-it): the starter, then the ladder |
 | Know how it is built, and why | [Understand it](#understand-it): context, containers, a package, a decision |
+| Find the gaps in a codebase you already have | [Analyse it](#analyse-it): converged, gaps and indeterminate, on ESI.ts |
 
 You need Node 22.18 or later, pnpm, git and GnuPG. Every `sh` block in this file is executed in continuous
 integration (`node packages/testkit/src/triangle.ts readme`), so the commands below run as written.
@@ -108,6 +109,34 @@ The design is in [docs/spec](docs/spec), a read-only export of the specification
 and the A3. The harness also evaluates part of itself: [the gate](packages/gate/README.md) is a component, with an A3
 whose candidate judgments an agent wrote at the owner's request.
 
+## Analyse it
+
+CSH is a static analysis tool. It reads what a codebase already holds (requirements, guides, scenarios, tests, issues,
+structured traces, the code and its history) without running or changing it, and places every result in one of three
+outcomes:
+
+- **Converged:** the claim and the code agree, with evidence: a satisfied rule, a requirement whose tests pass, a silence
+  recorded with its reason.
+- **Gaps:** suggestions that can be addressed, each with where it is and what would close it: prose the code refutes,
+  two documents that disagree, a line older than the file it names, a requirement nothing verifies.
+- **Indeterminate:** what CSH could not decide, with the input that would decide it.
+
+[subjects/esi-ts](subjects/esi-ts) evaluates [ESI.ts](https://github.com/lgriffin/ESI.ts), a mature TypeScript client, from
+outside. At its pinned commit CSH reports 114 gaps, 8 indeterminate and 43 converged, and each of the eleven
+disagreements in [11](docs/spec/11-ingesting-a-codebase.md) is reported or listed as unknown with a reason
+([expected.json](subjects/esi-ts/csh/expected.json)). [The prose-drift A3](subjects/esi-ts/csh/a3/prose-drift/a3.md) follows
+the gaps across twelve releases. CI runs it all in the job `Subject (ESI.ts)`; by hand, with network access:
+
+```
+node packages/cli/bin/csh.js subject fetch --root subjects/esi-ts   # clone ESI.ts at the pinned commit
+node packages/cli/bin/csh.js run --root subjects/esi-ts             # read and check it
+node packages/cli/bin/csh.js overview --root subjects/esi-ts        # converged, gaps and indeterminate
+node packages/cli/bin/csh.js expect --root subjects/esi-ts          # compare with the expected results
+```
+
+The A3 and the Lean foundations serve this outcome: the A3 reads the gaps as one problem with candidate causes and
+countermeasures, and the solver decides which rules hold. Nothing a run finds is approved until a person approves it.
+
 ## The two findings
 
 **Gaps.** The gap view shows, for each term and obligation, which sources assert it, which exercise it, which are
@@ -166,6 +195,11 @@ csh queue [--json]                          What awaits the owner's decision, or
 csh subject fetch [--at <tag|commit>]      Clone the subject a csh-component/v2 manifest names, at its pinned commit
                                             or another, under .csh-cache/subjects/. Every command takes --subject <dir>
                                             to read another checkout of it instead.
+csh results import <practice> <runner-report> [--base <dir>]
+                                            Reduce a Jest or Vitest JSON report to paths, counts and the identifiers
+                                            each test cites, at the commit, and write it where the practice reads it.
+csh expect [--expected <file>] [--run <dir|commit>]
+                                            Compare the overview with csh/expected.json; non-zero on any mismatch.
 csh history <slug> [--from <tag>] [--to <tag>]
                                             Run a subject at each release tag in the range and record each run as a
                                             stage of the A3 <slug>.
@@ -241,6 +275,8 @@ does this for ESI.ts, the first codebase CSH is being refactored to ingest ([11]
 ESI.ts's charter, guides, feature files, tests and issues as an inventory: what each requirement is verified by, which
 rule each scenario sits under, and what refers to nothing. It also reads ESI.ts's history: prose older than the code
 it names, statuses nothing supports, changes with no test and no reference, and how each moved across its releases.
+Its security model is read as a structured trace, its test results are committed reduced to identifiers and paths, and
+[Analyse it](#analyse-it) shows the outcome.
 
 ## Limits
 
