@@ -13,7 +13,7 @@ export type ImportResults = { ok: true; path: string; files: number; tests: numb
 
 /**
  * Reduce the runner's report at `report` and write it to the practice's `executions` path, naming the commit the
- * subject is pinned to (or HEAD). Paths are made relative to `base`; an absolute path left over is refused, since a
+ * subject is pinned to, if any. Paths are made relative to `base`; an absolute path left over is refused, since a
  * path from the machine the tests ran on is joined to no test file and says where they ran.
  */
 export function importResults(p: Project, practiceId: string, report: string, base?: string): ImportResults {
@@ -28,7 +28,9 @@ export function importResults(p: Project, practiceId: string, report: string, ba
   }
   const settings = practice.settings ?? {};
   const cite = new RegExp(`\\b(?:${settings.citePattern ?? settings.idPattern ?? DEFAULT_CITE})\\b`, "g");
-  const commit = p.subject?.commit ?? p.head;
+  // A subject's results are of its pinned commit, whether or not it is checked out yet. A project's own results name no
+  // commit: importing and committing them moves HEAD past any commit they could name, so they would never be joined.
+  const commit = p.component?.manifest.subject?.commit;
   const { reduced, problems } = reduceTestResults(text, { cite, ...(base !== undefined ? { base: resolve(base) } : {}), ...(commit !== undefined ? { commit } : {}) });
   if (problems.length > 0) return { ok: false, message: `the report is malformed: ${problems[0]!.message}${problems.length > 1 ? ` (and ${problems.length - 1} more)` : ""}` };
   if (reduced.files.length === 0) return { ok: false, message: "the report holds no test file" };

@@ -348,6 +348,8 @@ export interface RunnerResult {
   outcome: TestOutcome;
   /** The line of an execution file, or the test's position in a JSON report as `testResults[i].assertionResults[j]`. */
   at: string;
+  /** The identifiers a reduced results file records the test citing; joined as given, not matched again (stage 28). */
+  cites?: string[];
 }
 
 const RUNNER_STATUS: Record<string, TestOutcome> = { passed: "passed", failed: "failed", pending: "skipped", skipped: "skipped", todo: "skipped", disabled: "skipped", focused: "passed" };
@@ -455,14 +457,17 @@ function expandResults(text: string): { results: RunnerResult[]; problems: Witne
     const cited = Array.isArray(f.cited) ? f.cited : [];
     cited.forEach((c: unknown, j) => {
       const at = `files[${i}].cited[${j}]`;
-      if (!isRecord(c) || !OUTCOMES.includes(c.outcome as TestOutcome) || !Array.isArray(c.cites)) {
-        problems.push({ line: 1, message: `${at} needs an outcome and cites` });
+      const cites = isRecord(c) && Array.isArray(c.cites) ? c.cites : [];
+      if (!isRecord(c) || !OUTCOMES.includes(c.outcome as TestOutcome) || cites.length === 0 || !cites.every((x) => typeof x === "string" && x !== "")) {
+        problems.push({ line: 1, message: `${at} needs an outcome and a list of identifiers` });
         return;
       }
-      results.push({ file, name: c.cites.filter((x): x is string => typeof x === "string").join(" "), outcome: c.outcome as TestOutcome, at });
+      results.push({ file, name: "", outcome: c.outcome as TestOutcome, at, cites: [...new Set(cites as string[])].sort() });
     });
   });
-  return { results, problems, ...(typeof v.commit === "string" && v.commit !== "" ? { commit: v.commit } : {}) };
+  // A commit that is present and unreadable is a problem, never no commit: the file would then join at any commit.
+  if (v.commit !== undefined && (typeof v.commit !== "string" || v.commit === "")) return { results: [], problems: [...problems, { line: 1, message: "commit is not a commit" }] };
+  return { results, problems, ...(typeof v.commit === "string" ? { commit: v.commit } : {}) };
 }
 
 /**
@@ -480,7 +485,7 @@ export function reduceTestResults(text: string, opts: { cite: RegExp; base?: str
     if (base !== undefined && file.startsWith(base)) file = file.slice(base.length);
     const f = byFile.get(file) ?? { file, passed: 0, failed: 0, errored: 0, skipped: 0, cited: [] };
     byFile.set(file, f);
-    const cites = [...new Set([...r.name.matchAll(cite)].map((m) => m[0]))].sort();
+    const cites = r.cites ?? [...new Set([...r.name.matchAll(cite)].map((m) => m[0]))].sort();
     if (cites.length === 0) f[r.outcome]++;
     else f.cited.push({ outcome: r.outcome, cites });
   }

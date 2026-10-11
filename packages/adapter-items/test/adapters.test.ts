@@ -270,6 +270,13 @@ describe("test results (stage 26)", () => {
     const fromReduced = tests({ ...withResults({ "csh/results.json": text }), config: { commit: "c1" } });
     const bare = (o: typeof fromReport) => ({ results: o.results!.map((r) => [r.file, r.outcome, r.cites]).sort(), attrs: o.items!.map((i) => i.attrs), codes: o.diagnostics.map((d) => d.code) });
     expect(bare(fromReduced)).toEqual(bare(fromReport));
+    // The identifiers recorded are joined as given, whatever the practice's pattern is now.
+    const narrowed = tests({ ...withResults({ "csh/results.json": text }), config: { commit: "c1", idPattern: "NONE-[0-9]+" } });
+    expect(narrowed.results!.flatMap((r) => r.cites).sort()).toEqual(["ARCH-01", "SEC-11", "SEC-11"]);
+    const bad = (patch: object) => tests({ ...withResults({ "csh/results.json": JSON.stringify({ ...reduced.reduced, ...patch }) }), config: { commit: "c1" } });
+    expect(bad({ commit: 7 }).diagnostics.map((d) => d.message)).toContain("commit is not a commit");
+    expect(bad({ commit: 7 }).results).toEqual([]);
+    expect(bad({ files: [{ file: "tests/a.test.ts", cited: [{ outcome: "passed", cites: [123] }] }] }).diagnostics.map((d) => d.message)).toContain("files[0].cited[0] needs an outcome and a list of identifiers");
     const other = tests({ ...withResults({ "csh/results.json": text }), config: { commit: "c2" } });
     expect(other.results).toEqual([]);
     expect(other.diagnostics.map((d) => [d.code, d.message])).toContainEqual(["results-other-commit", "the results are of c1, not c2: none is joined"]);
@@ -352,6 +359,13 @@ describe("the structured trace adapter (stage 28)", () => {
     expect(props[2]!.rule_reason).toBe("Out of scope.");
     expect(parseYaml('{"a": [1]}').value).toEqual({ a: [1] });
     expect(parseYaml("a: 1\n  - b").problems.length).toBeGreaterThan(0);
+  });
+
+  it("continues a quoted scalar to its closing quote, and reads on past a line it cannot place", () => {
+    const text = ["properties:", "  - id: P1", '    claim: "one', '      two"', "  - id: P2", "      stray: line", "    claim: kept", "   misaligned: x", "  - id: P3", "    claim: 'it''s'"].join("\n");
+    const { value, problems } = parseYaml(text);
+    expect((value as { properties: unknown[] }).properties).toEqual([{ id: "P1", claim: "one two" }, { id: "P2", claim: "kept" }, { id: "P3", claim: "it's" }]);
+    expect(problems.map((p) => p.line)).toEqual([6, 8]);
   });
 
   it("reads each entry as a property with the edges and silence the practice maps, and reports what it cannot read", () => {

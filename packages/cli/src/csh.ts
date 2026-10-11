@@ -72,7 +72,7 @@ const USAGE = `csh: the Composable Specification Harness
                                   executions path. Test names are dropped, so the file can be committed.
   csh expect [--expected <file>] [--run <dir|commit>]
                                   Compare the last report with the expected results (csh/expected.json): each
-                                  expectation names a signal kind and subject that must, or must not, be reported.
+                                  expectation names an outcome, a signal kind and a subject that must be reported.
                                   Exits 1 on any mismatch.
   csh subject fetch [--at <tag|commit>]
                                   Clone the subject and check out its pinned commit, or another commit beside it.

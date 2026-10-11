@@ -178,7 +178,7 @@ function joinResults(input: AdapterInput, items: SourceItem[], id: RegExp, diagn
         unmatched.set(r.file, (unmatched.get(r.file) ?? 0) + 1);
         continue;
       }
-      const cites = [...new Set([...r.name.matchAll(id)].map((m) => m[0]))].sort();
+      const cites = r.cites ?? [...new Set([...r.name.matchAll(id)].map((m) => m[0]))].sort();
       results.push({ file, outcome: r.outcome, cites, span: /^\d+$/.test(r.at) ? `${f.path}:${r.at}` : `${f.path}#${r.at}` });
       const c = counts.get(file) ?? { passed: 0, failed: 0, errored: 0, skipped: 0 };
       c[r.outcome]++;

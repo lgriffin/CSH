@@ -328,7 +328,8 @@ describe("csh results import (stage 28)", () => {
     expect(await csh(["results", "import", "tdd", report, "--base", work], f.io), f.o.err).toBe(0);
     expect(f.o.out).toContain("2 tests in 1 files, 1 citing an identifier");
     const written = readFileSync(join(dir, "csh/results.json"), "utf8");
-    expect(JSON.parse(written)).toEqual({ schema: "csh-results/v1", commit: commits.imports, files: [{ file: "tests/a.test.ts", passed: 0, failed: 1, errored: 0, skipped: 0, cited: [{ outcome: "passed", cites: ["R-1"] }] }] });
+    // A project with no subject: its results name no commit, since committing them moves HEAD past any they could name.
+    expect(JSON.parse(written)).toEqual({ schema: "csh-results/v1", files: [{ file: "tests/a.test.ts", passed: 0, failed: 1, errored: 0, skipped: 0, cited: [{ outcome: "passed", cites: ["R-1"] }] }] });
     expect(written).not.toContain("secret");
     expect(await csh(["results", "import", "nope", report], io(dir).io)).toBe(1);
     expect(await csh(["results", "import"], io(dir).io)).toBe(2);

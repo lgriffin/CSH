@@ -38,6 +38,19 @@ function stripComment(s: string): string {
   return s.trimEnd();
 }
 
+/** Whether a quoted scalar has its closing quote: a double quote not escaped, or a single quote not doubled. */
+function closed(s: string): boolean {
+  const q = s[0]!;
+  for (let i = 1; i < s.length; i++) {
+    if (q === '"' && s[i] === "\\") i++;
+    else if (s[i] === q) {
+      if (q === "'" && s[i + 1] === "'") i++;
+      else return true;
+    }
+  }
+  return false;
+}
+
 /** Where the key of `key: value` ends, outside quotes; -1 when the line is not a mapping entry. */
 function keyEnd(s: string): number {
   let quote: string | undefined;
@@ -145,6 +158,11 @@ export function parseYaml(text: string): { value: Value; problems: { line: numbe
     if (rest.startsWith("[")) return flow(rest);
     if (rest !== "") {
       let s = rest;
+      // A quoted scalar continues on more-indented lines until its closing quote.
+      if (/^["']/.test(s)) {
+        while (!closed(s) && at < lines.length && lines[at]!.indent > indent) s += ` ${raw[lines[at++]!.n - 1]!.trim()}`;
+        return scalar(s);
+      }
       // A plain scalar continues on more-indented lines that are not entries of their own.
       if (!/^["'[]/.test(s)) while (at < lines.length && lines[at]!.indent > indent && !isItem(lines[at]!) && keyEnd(lines[at]!.text) < 0) s += ` ${lines[at++]!.text}`;
       return scalar(s);
@@ -156,10 +174,20 @@ export function parseYaml(text: string): { value: Value; problems: { line: numbe
     return null;
   };
 
+  /** A more-indented line the entry before it did not take: reported and skipped, so later entries are still read. */
+  const stray = (indent: number): boolean => {
+    const l = lines[at];
+    if (l === undefined || l.indent <= indent) return false;
+    problems.push({ line: l.n, message: "a line the YAML subset cannot place" });
+    at++;
+    return true;
+  };
+
   const mapping = (indent: number): Value => {
     const out: { [k: string]: Value } = {};
     LINES.set(out, lines[at]!.n);
-    while (at < lines.length && lines[at]!.indent === indent && !isItem(lines[at]!)) {
+    while (at < lines.length && (stray(indent) || (lines[at] !== undefined && lines[at]!.indent === indent && !isItem(lines[at]!)))) {
+      if (at >= lines.length || lines[at]!.indent !== indent || isItem(lines[at]!)) continue;
       const l = lines[at++]!;
       const k = keyEnd(l.text);
       if (k < 0) {
@@ -175,7 +203,8 @@ export function parseYaml(text: string): { value: Value; problems: { line: numbe
   const sequence = (indent: number): Value => {
     const out: Value[] = [];
     LINES.set(out, lines[at]!.n);
-    while (at < lines.length && lines[at]!.indent === indent && isItem(lines[at]!)) {
+    while (at < lines.length && (stray(indent) || (lines[at] !== undefined && lines[at]!.indent === indent && isItem(lines[at]!)))) {
+      if (at >= lines.length || lines[at]!.indent !== indent || !isItem(lines[at]!)) continue;
       const l = lines[at]!;
       const rest = l.text === "-" ? "" : l.text.slice(2).trimStart();
       if (rest !== "" && keyEnd(rest) >= 0) {

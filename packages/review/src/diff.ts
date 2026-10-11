@@ -115,7 +115,8 @@ function practicePaths(p: ManifestView["practices"][number], model: Module | und
   return out.filter((x) => !written.has(x));
 }
 
-const EVIDENCE_KINDS = new Set(["tests", "scenarios", "facts"]);
+// A structured trace names the tests that verify each entry, so it is evidence like the tests it names (stage 28).
+const EVIDENCE_KINDS = new Set(["tests", "scenarios", "facts", "traces"]);
 
 function observe(d: RunDiff, ctx: DiffContext): void {
   for (const c of d.fragments.changed) if (c.authorityBefore === "approved" && c.authorityAfter !== "approved") d.observations.push({ k: "approval-lost", fragment: c.fragment });
