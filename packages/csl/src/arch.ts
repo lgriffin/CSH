@@ -13,6 +13,15 @@ export function container(id: string): ArchSel {
   return { k: "container", id };
 }
 
+/**
+ * Source files by path from the repository root: every file a glob matches and no exception does, such as
+ * modules("src/core/**", { except: ["src/core/ports/**"] }). The facts are a code scanner's, file by file (stage 23).
+ */
+export function modules(globs: string | readonly string[], opts: { except?: string | readonly string[] } = {}): ArchSel {
+  const list = (x: string | readonly string[]) => (typeof x === "string" ? [x] : [...x]);
+  return opts.except === undefined ? { k: "modules", globs: list(globs) } : { k: "modules", globs: list(globs), except: list(opts.except) };
+}
+
 /** Any package at all. */
 export const anything: ArchSel = { k: "any" };
 

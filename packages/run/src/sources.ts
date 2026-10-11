@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "n
 import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { compareCodePoints, digestOf, type Binding, type ClaimSet, type Module, type Source } from "@csh/kernel";
+import { compareCodePoints, digestOf, globRegExp, type Binding, type ClaimSet, type Module, type Source } from "@csh/kernel";
 import type { SourceRun } from "@csh/check";
 import { installedReadable } from "@csh/emit";
 import type { AdapterInput, AdapterOutput } from "@csh/witness";
@@ -21,6 +21,7 @@ export const BUILTIN_ADAPTERS: Record<string, string> = {
   Features: "@csh/adapter-items/gherkin",
   TestFiles: "@csh/adapter-items/tests",
   Issues: "@csh/adapter-items/jsonl",
+  Code: "@csh/facts-ts",
 };
 
 export type { SourceRun };
@@ -37,6 +38,8 @@ export interface RunSourcesOptions {
   isolated?: boolean;
   /** Adapter settings, such as requirementIdPattern. */
   config?: Record<string, string>;
+  /** The commit the sources are read at, handed to every adapter as `commit` so that facts it reads can be current. */
+  commit?: string;
   /** Extra adapters by source kind. */
   adapters?: Record<string, string>;
   /**
@@ -78,21 +81,8 @@ function filesAt(root: string, at: string): { files?: { path: string; abs: strin
   return { files: out };
 }
 
-/** A glob as a regular expression over a slash-separated path: `**` spans directories, `*` and `?` do not. */
-export function globRegExp(glob: string): RegExp {
-  let re = "";
-  for (let i = 0; i < glob.length; i++) {
-    const c = glob[i]!;
-    if (c === "*" && glob[i + 1] === "*") {
-      const slash = glob[i + 2] === "/";
-      re += slash ? "(?:.*/)?" : ".*";
-      i += slash ? 2 : 1;
-    } else if (c === "*") re += "[^/]*";
-    else if (c === "?") re += "[^/]";
-    else re += c.replace(/[.+^${}()|[\]\\]/g, "\\$&");
-  }
-  return new RegExp(`^${re}$`);
-}
+/** Globs over paths below a source's location; kept here under its stage 22 name, now in the kernel. */
+export { globRegExp };
 
 /** The files a git repository tracks under `root`, relative to it; undefined when `root` is not in one. */
 export function trackedFiles(root: string): string[] | undefined {
@@ -254,8 +244,8 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
       runs.push({ ...base, files: files.map(({ path, digest }) => ({ path, digest })), output: { diagnostics: [{ code: "no-step-table", severity: "error", message: `the step table ${own.steps} is missing, outside the project root or not a file` }] } });
       continue;
     }
-    const config = { ...(opts.config ?? {}), ...(own?.settings ?? {}), ...(own?.cites !== undefined ? { cites: own.cites } : {}), ...(steps !== undefined ? { steps: pathToFileURL(realpathSync(steps)).href } : {}) };
-    if (opts.config !== undefined || own?.settings !== undefined || own?.cites !== undefined || steps !== undefined) input.config = config;
+    const config = { ...(opts.config ?? {}), ...(own?.settings ?? {}), ...(own?.cites !== undefined ? { cites: own.cites } : {}), ...(steps !== undefined ? { steps: pathToFileURL(realpathSync(steps)).href } : {}), ...(opts.commit !== undefined ? { commit: opts.commit } : {}) };
+    if (opts.config !== undefined || opts.commit !== undefined || own?.settings !== undefined || own?.cites !== undefined || steps !== undefined) input.config = config;
     // The execution file sits beside a witness source only where it is named: by the practice (its harness's, the
     // reporter's default for a harness, or its own), or by the configuration of a project with no manifest. A source
     // with no named file never inherits another practice's outcomes (#22).

@@ -65,7 +65,7 @@ unchanged.
 | `subject.repo` | Where the subject is fetched from: a URL, or a path to a local clone relative to the component root |
 | `subject.commit` | The full commit, 40 hexadecimal digits. It joins the snapshot, beside the profile's own commit |
 | `spec` | Optional in version 2 |
-| `sources[]` | Only without `spec`: each source's `name`, `kind` and `at`. A practice naming a source not declared here is `practice-unknown-source` |
+| `sources[]` | Each source's `name`, `kind` and `at`. Without `spec` they are the model's only sources; beside a `spec` they join its sources, and a name both declare is `duplicate-source` ([A-102](../../ASSUMPTIONS.md)). A practice naming a source declared in neither is `practice-unknown-source` |
 
 ## Inventory sources (stage 22)
 
@@ -90,3 +90,21 @@ is read:
 
 What nothing verifies and what names nothing are gaps: `unverified` ([A-97](../../ASSUMPTIONS.md)) and
 `dangling-reference` ([A-96](../../ASSUMPTIONS.md)). An inventory item is never `uncited`.
+
+## Code sources (stage 23)
+
+A source of kind `Code` is read by `@csh/facts-ts` into `csh-facts/v2` facts: one `module` per source file, one
+`depends` per import, re-export, import type and literal dynamic import or require, one `export` per exported name, and
+the `field`s of a `package.json` that say what the package is ([A-100](../../ASSUMPTIONS.md)). Nothing is installed or
+built. A profile with rules over the code declares the source beside its specification, so that it can carry globs:
+
+```json
+{
+  "spec": "csh/spec.csl.ts",
+  "sources": [{ "name": "Code", "kind": "Code", "at": ".", "include": ["src/**/*.ts", "package.json"] }],
+  "practices": [{ "id": "code", "name": "Code facts", "kind": "facts", "sources": ["Code"] }]
+}
+```
+
+The rules themselves are in the specification, written with `modules(...)` ([the architecture rules
+guide](architecture-rules.md#modules-of-a-codebase-stage-23)).

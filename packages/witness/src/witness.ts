@@ -122,7 +122,8 @@ export interface Diagram {
 }
 
 interface FactBase {
-  schema: "csh-facts/v1";
+  /** Version 2 (Ingesting a codebase, stage 23) adds module, export and field facts; version 1 lines read unchanged. */
+  schema: "csh-facts/v1" | "csh-facts/v2";
   /** Where the fact was read: a manifest, or a file and line. */
   at: string;
   subject: { commit: string };
@@ -152,8 +153,35 @@ export interface SkippedFact extends FactBase {
   reason: string;
 }
 
-/** The fact format (csh-facts/v1), evidence beside the witness format; a fact never carries authority. */
-export type Fact = PackageFact | DependencyFact | SkippedFact;
+/** One source file of the code, by its path from the repository root (version 2). */
+export interface ModuleFact extends FactBase {
+  kind: "module";
+  name: string;
+}
+
+/** A name a module exports: a declaration, a renamed or re-exported name, or "*" for `export * from` (version 2). */
+export interface ExportFact extends FactBase {
+  kind: "export";
+  module: string;
+  symbol: string;
+  /** The module a re-export takes it from, when it is one. */
+  from?: string;
+  typeOnly: boolean;
+}
+
+/** One value of a manifest, such as package.json's engines.node, by its dotted path (version 2). */
+export interface FieldFact extends FactBase {
+  kind: "field";
+  file: string;
+  path: string;
+  value: string;
+}
+
+/**
+ * The fact format (csh-facts/v1 and v2), evidence beside the witness format; a fact never carries authority. In
+ * version 2 a dependency's ends may be modules, by path, as well as packages.
+ */
+export type Fact = PackageFact | DependencyFact | SkippedFact | ModuleFact | ExportFact | FieldFact;
 
 export interface AdapterOutput {
   claims?: ClaimSet;

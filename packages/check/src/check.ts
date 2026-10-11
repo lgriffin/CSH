@@ -30,6 +30,8 @@ export interface CheckOptions {
   ledger?: Report["ledger"];
   composition?: Report["composition"];
   component?: ComponentInfo;
+  /** The subject's pinned commit, when sources were read from a subject: facts taken at it are current (stage 23). */
+  subjectCommit?: string;
   /** The files the repository tracks, relative to the root sources are read from; edges to files resolve against it. */
   files?: string[];
 }
@@ -54,7 +56,7 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
   const env = { solver: opts.solver, vocabulary: v, budgetMs };
   const pool = buildPool(prepared.fragments, v, authority);
   const outcome = await runQueries(pool, env, authority);
-  const arch = evaluateArchitecture({ prepared, fragments: prepared.fragments, authority, live: (n) => pool.byName.has(n), ...(opts.snapshot !== undefined ? { snapshotCommit: opts.snapshot.commit } : {}) });
+  const arch = evaluateArchitecture({ prepared, fragments: prepared.fragments, authority, live: (n) => pool.byName.has(n), ...(opts.snapshot !== undefined ? { snapshotCommit: opts.snapshot.commit } : {}), ...(opts.subjectCommit !== undefined ? { subjectCommit: opts.subjectCommit } : {}) });
   outcome.findings = sortFindings([...outcome.findings, ...arch.findings]);
   const traced = trace({ prepared, ...(opts.files !== undefined ? { files: opts.files } : {}) });
   const gaps = await gapView({ prepared, pool, outcome, env, authority, archGaps: arch.gaps, traceGaps: traced.gaps, ...(opts.component !== undefined ? { unowned: opts.component.unowned } : {}) });

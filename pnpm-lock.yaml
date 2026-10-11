@@ -231,6 +231,18 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
+  packages/facts-ts:
+    dependencies:
+      '@csh/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+      '@csh/witness':
+        specifier: workspace:*
+        version: link:../witness
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
   packages/gate:
     dependencies:
       '@csh/check':
@@ -314,6 +326,9 @@ importers:
       '@csh/facts':
         specifier: workspace:*
         version: link:../facts
+      '@csh/facts-ts':
+        specifier: workspace:*
+        version: link:../facts-ts
       '@csh/gate':
         specifier: workspace:*
         version: link:../gate

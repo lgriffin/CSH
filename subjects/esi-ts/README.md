@@ -19,7 +19,9 @@ The clone, the runs and the reports stay under this directory's `.csh-cache/` an
 | 22 | BDD | `tests/bdd/features` | 77 features, 619 rules and 792 scenarios; every rule has a scenario |
 | 22 | TDD | `tests/**/*.test.ts` but fixtures | 261 test files and 3,902 tests, parameterised ones included; only 10 cite a charter requirement in a title, and 4 declare no test with a literal title |
 | 22 | Beads | `.beads/issues.jsonl` | 69 issues, 63 mentions of charter requirements |
+| 23 | Code facts | `src/**/*.ts` and `package.json`, through `facts-ts` | 288 modules, 1,116 dependencies, 3,024 exports and 35 manifest fields, none skipped, with nothing installed. Lockfile-only commits such as `54f7b20` give identical facts |
+| 23 | Layering | [`csh/spec.csl.ts`](csh/spec.csl.ts), three candidate rules over modules | ARCH-03's rule (the request pipeline takes the cache, rate limiter and circuit breaker as parameters) and both ARCH-10 rules (the SDE imports only ports and peers, and nothing imports the SDE) are `satisfied` at `2a2da8a` |
 
-Of the eleven, stage 22 reports half of row 9: ARCH-03 is `unverified`; that it could be checked is stage 23's. The `dangling-reference` gaps for files that were deleted, such as `guides/MUTATION-TESTING.md`, need history to tell a stale mention from a mention of a deletion, and DOC-01 is the second kind. That is stage 25's.
+Stage 22 reports half of row 9: ARCH-03 is `unverified`. Stage 23 reports the other half: ARCH-03 can be checked, and its rule holds. The charter still says code review is the only check, and ARCH-03 stays `unverified` until a person approves the rule. Seeing that a satisfied rule contradicts the charter's own word is stage 24's work (claims). The `dangling-reference` gaps for files that were deleted, such as `guides/MUTATION-TESTING.md`, need history to tell a stale mention from a mention of a deletion, and DOC-01 is the second kind. That is stage 25's.
 
 Each later stage adds a row, until the eleven disagreements listed in [11](../../docs/spec/11-ingesting-a-codebase.md) are reported or listed as unknown with a reason.

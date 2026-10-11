@@ -27,15 +27,19 @@ export function archRuleOf(f: Fragment): ArchRule | undefined {
   return isArchRule(native) ? native : undefined;
 }
 
-export function evaluateArchitecture(input: { prepared: Prepared; fragments: Fragment[]; authority: Map<string, AuthorityInfo>; snapshotCommit?: string; live: (name: string) => boolean }): ArchOutcome {
+export function evaluateArchitecture(input: { prepared: Prepared; fragments: Fragment[]; authority: Map<string, AuthorityInfo>; snapshotCommit?: string; subjectCommit?: string; live: (name: string) => boolean }): ArchOutcome {
   const { prepared } = input;
   const system = prepared.module.system;
   const diagrams = new Map<string, ArchDiagram>();
   for (const r of [...prepared.runs].sort((a, b) => compareCodePoints(a.source, b.source))) if (r.output.diagram !== undefined) diagrams.set(r.source, r.output.diagram);
   const primary = [...diagrams.entries()][0];
   const all: Fact[] = prepared.runs.flatMap((r) => r.output.facts ?? []);
-  const current = all.filter((f) => input.snapshotCommit !== undefined && f.subject.commit === input.snapshotCommit);
-  const factsState: ArchRuleOutcome["facts"] = current.length > 0 ? "current" : all.length > 0 ? "stale" : "none";
+  // Facts are current when taken at the snapshot's commit, or, for a subject, at the subject's pinned commit (stage 23).
+  const current = all.filter((f) => (input.snapshotCommit !== undefined && f.subject.commit === input.snapshotCommit) || (input.subjectCommit !== undefined && f.subject.commit === input.subjectCommit));
+  // Only facts that say what the code is (a package or a module) make the graph current: manifest fields or exports alone
+  // describe no dependency, and an empty graph from them would satisfy every rule.
+  const graph = (f: Fact) => f.kind === "package" || f.kind === "module";
+  const factsState: ArchRuleOutcome["facts"] = current.some(graph) ? "current" : all.some(graph) ? "stale" : "none";
   const facts: ArchFacts = {
     packages: current.flatMap((f) => (f.kind === "package" ? [f.name] : [])),
     depends: current.flatMap((f) => (f.kind === "depends" ? [{ from: f.from, to: f.to, at: f.at, typeOnly: f.typeOnly, via: f.via }] : [])),

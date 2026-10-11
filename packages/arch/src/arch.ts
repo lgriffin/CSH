@@ -1,7 +1,7 @@
 // Architecture rules against a container diagram and dependency facts (Next layers, section 4.3). No solver is
 // involved: the elements are a finite set and every comparison is a set comparison, so every result is exact. This
 // package is in the trusted base, since it produces verdicts.
-import { type ArchRule, type ArchSel, compareCodePoints } from "@csh/kernel";
+import { type ArchRule, type ArchSel, compareCodePoints, matchesGlobs } from "@csh/kernel";
 
 /** The diagram as this package reads it: elements holding written package names, and relations between them. */
 export interface ArchDiagram {
@@ -19,6 +19,7 @@ export interface ArchDependency {
 }
 
 export interface ArchFacts {
+  /** Packages of the workspace; the source files a modules selector reads are not among them (stage 23). */
   packages: string[];
   depends: ArchDependency[];
 }
@@ -49,6 +50,7 @@ export function unknownContainers(rule: ArchRule, d: ArchDiagram | undefined): s
 export function selects(sel: ArchSel, pkgName: string, d: ArchDiagram | undefined): boolean {
   if (sel.k === "any") return true;
   if (sel.k === "package") return sameName(sel.name, pkgName);
+  if (sel.k === "modules") return matchesGlobs(pkgName, sel.globs, sel.except);
   return containersOf(d, pkgName).includes(sel.id);
 }
 
@@ -56,6 +58,7 @@ export function selects(sel: ArchSel, pkgName: string, d: ArchDiagram | undefine
 function selectsWritten(sel: ArchSel, name: string, elementId: string, d: ArchDiagram): boolean {
   if (sel.k === "any") return true;
   if (sel.k === "package") return sameName(sel.name, name);
+  if (sel.k === "modules") return matchesGlobs(name, sel.globs, sel.except);
   return elementId === sel.id || containersOf(d, name).includes(sel.id);
 }
 

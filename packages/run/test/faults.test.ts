@@ -82,11 +82,11 @@ describe("no silent satisfaction", () => {
     expect(satisfied(report)).toEqual([]);
   }, 20000);
 
-  it("an adapter that reads the clock while it loads", async () => {
-    const d = fresh("clock");
+  it.each(["clock-at-load", "clock-by-constructor"])("an adapter that reads the clock while it loads (%s)", async (name) => {
+    const d = fresh(name);
     const e = await emit(join(d, "spec.csl.ts"), { root: d, readable: [resolve(d, "..")] });
     if (!e.ok) throw new Error("emit failed");
-    const runs = await runSources(e.module, { root: d, adapters: { Witnesses: join(ADAPTERS, "clock-at-load.ts") }, bindingAuthority: () => "approved" });
+    const runs = await runSources(e.module, { root: d, adapters: { Witnesses: join(ADAPTERS, `${name}.ts`) }, bindingAuthority: () => "approved" });
     const diag = runs.find((x) => x.source === "UnitTests")!.output.diagnostics[0]!;
     expect(diag.code).toBe("adapter-failed");
     expect(diag.message).toMatch(/E-ACCESS: adapters may not use the clock/);

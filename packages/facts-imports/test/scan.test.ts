@@ -62,7 +62,7 @@ describe("the import scan", () => {
       "packages/c/package.json": JSON.stringify({ name: "@s/c" }),
     });
     const facts = scanWorkspace(root, "abc");
-    expect(facts.map((f) => (f.kind === "package" ? `package ${f.name}` : f.kind === "depends" ? `${f.from} -> ${f.to} ${f.via} ${f.at}` : `skipped ${f.from} ${f.at}`))).toEqual([
+    expect(facts.map((f) => (f.kind === "package" ? `package ${f.name}` : f.kind === "depends" ? `${f.from} -> ${f.to} ${f.via} ${f.at}` : f.kind === "skipped" ? `skipped ${f.from} ${f.at}` : f.kind))).toEqual([
       "package @s/a",
       "package @s/b",
       "package @s/c",

@@ -1,0 +1,9 @@
+{
+  "name": "@csh/facts-ts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@csh/kernel": "workspace:*", "@csh/witness": "workspace:*", "typescript": "5.9.3" }
+}

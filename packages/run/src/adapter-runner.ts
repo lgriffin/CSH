@@ -17,19 +17,30 @@ function deny(what: string): never {
   throw new Error(`E-ACCESS: adapters may not use ${what}`);
 }
 
-const NODE_INTERNAL_ENV = /^(NODE_[A-Z_]+|WATCH_REPORT_DEPENDENCIES|UV_[A-Z_]+|FORCE_COLOR|NO_COLOR|TERM)$/;
 
 function lockDown(): void {
   const g = globalThis as Record<string, unknown>;
-  const FakeDate = function () {
-    deny("the clock (Date)");
+  // A date built from a value it is given is not the clock: TypeScript builds new Date(0) while it loads (stage 23).
+  // A date with no value, Date() called as a function and Date.now all read the clock, and are denied.
+  const RealDate = Date;
+  const FakeDate = function (this: unknown, ...args: unknown[]) {
+    if (new.target === undefined || args.length === 0) deny("the clock (Date)");
+    return Reflect.construct(RealDate, args, new.target);
   } as unknown as DateConstructor;
+  Object.defineProperty(FakeDate, "prototype", { value: RealDate.prototype });
+  // Every date's constructor is the replacement, so new Date(0).constructor cannot reach the clock.
+  Object.defineProperty(RealDate.prototype, "constructor", { value: FakeDate, writable: true, configurable: true });
+  Object.defineProperty(FakeDate, "UTC", { value: RealDate.UTC });
+  Object.defineProperty(FakeDate, "parse", { value: RealDate.parse });
   Object.defineProperty(FakeDate, "now", { value: () => deny("the clock (Date.now)") });
   g.Date = FakeDate;
   Math.random = () => deny("randomness (Math.random)");
   for (const t of ["setTimeout", "setInterval", "setImmediate"]) g[t] = () => deny(`timers (${t})`);
+  // The subprocess starts with an empty environment, so a variable read is always undefined and cannot make two runs
+  // differ. Reads are allowed for that reason: a library such as TypeScript reads a dozen variables while it loads
+  // (stage 23). Setting or deleting one is still denied.
   Object.defineProperty(process, "env", {
-    value: new Proxy({}, { get: (_t, k) => (typeof k === "symbol" || NODE_INTERNAL_ENV.test(k) ? undefined : deny(`environment variables (${String(k)})`)) }),
+    value: new Proxy({}, { get: () => undefined, set: (_t, k) => deny(`environment variables (${String(k)})`), deleteProperty: (_t, k) => deny(`environment variables (${String(k)})`) }),
   });
   g.fetch = () => deny("the network (fetch)");
   const require = createRequire(import.meta.url);

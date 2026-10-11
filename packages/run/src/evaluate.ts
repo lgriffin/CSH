@@ -74,6 +74,7 @@ export async function evaluateProject(p: Project, o: EvaluateOptions): Promise<E
     {
       root: p.root,
       sourceRoot: p.sourceRoot,
+      ...(p.subject !== undefined ? { subjectCommit: p.subject.commit } : {}),
       solver: o.solver,
       config: cfg,
       ...(p.lock !== undefined ? { lock: p.lock } : {}),

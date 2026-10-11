@@ -13,7 +13,7 @@ It is the "Architecture rules" container of the [containers diagram](../../docs/
 - `evaluateRule(rule, facts, diagram)`, `RuleResult`: a rule against current facts: `violated` with each dependency that breaks it, `holds`, or `unknown` for a container the diagram lacks or a `closed` rule with no diagram.
 - `conflictingRelations(rule, diagram)`: the drawn relations a rule forbids, which the check engine reports as `arch-conflict`.
 - `undrawnDependencies(diagram, facts)`, `unobservedRelations(diagram, facts)`, `unplacedPackages(diagram, facts)`: the diagram against the facts, for the gaps `undrawn-dependency`, `unobserved-relation` and `unplaced-package`.
-- `selects(sel, package, diagram)`, `containersOf(diagram, package)`, `unknownContainers(rule, diagram)`, `sameName(a, b)`, `bareName(name)`: selectors and name matching.
+- `selects(sel, package, diagram)` (a `modules` selector matches a name of the facts against its globs, [A-101](../../ASSUMPTIONS.md)), `containersOf(diagram, package)`, `unknownContainers(rule, diagram)`, `sameName(a, b)`, `bareName(name)`: selectors and name matching.
 - `describeDependency(dep)`: a dependency as a witness reads, `file:line: from -> to`, marked `(manifest)` or `(type-only)`.
 - `ArchDiagram`, `ArchFacts`, `ArchDependency`: the inputs, structurally; the adapter output of `@csh/witness` fits them.
 

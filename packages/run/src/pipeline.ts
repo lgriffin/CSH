@@ -5,9 +5,9 @@ import { dirname, join, resolve } from "node:path";
 import { check, type CheckResult, type EvidenceStore, makeRefiner, type Report, type AuthorityResolver, type SourceRun } from "@csh/check";
 import { runSources, type RunSourcesOptions, trackedFiles } from "./sources.ts";
 import { emit, type EmitOptions, type EmitResult, type Lock } from "@csh/emit";
-import { digestJson, fragmentsOf, refName, type Module } from "@csh/kernel";
+import { canonicalJson, canonicalModule, digestJson, fragmentsOf, moduleDigest, refName, type Module } from "@csh/kernel";
 import { type LedgerState, resolveAuthority } from "@csh/ledger";
-import { checkAgainstModule, type ComponentProblem, DEFAULT_EXECUTIONS, type LoadedComponent, ownersOf } from "@csh/component";
+import { checkAgainstModule, type ComponentProblem, withDeclaredSources, DEFAULT_EXECUTIONS, type LoadedComponent, ownersOf } from "@csh/component";
 import type { SolverPort } from "@csh/solver";
 
 export interface FixtureConfig {
@@ -26,6 +26,8 @@ export interface PipelineOptions {
   root: string;
   /** Where sources are read from when not the root: a subject's checkout (Ingesting a codebase, stage 21). */
   sourceRoot?: string;
+  /** The subject's pinned commit, when sources are read from a subject: facts read at it are current (stage 23). */
+  subjectCommit?: string;
   solver: SolverPort;
   config?: FixtureConfig;
   /** A stand-in for the ledger, used by fixtures before stage 7. */
@@ -70,7 +72,15 @@ export async function emitSpec(spec: string, opts: PipelineOptions): Promise<Emi
   if (opts.lock !== undefined) emitOpts.lock = opts.lock;
   const emitted = await emit(resolve(spec), emitOpts);
   if (!emitted.ok || opts.component === undefined) return { emitted };
-  const errors = checkAgainstModule(opts.component.manifest, emitted.module, opts.sourceRoot ?? opts.root).errors;
+  // Sources the manifest declares beside the specification join the model (stage 23).
+  // The digest and canonical form are then the joined model's, so a report names the model that was checked.
+  const joined = withDeclaredSources(opts.component.manifest, emitted.module);
+  if (joined.module !== emitted.module) {
+    emitted.module = canonicalModule(joined.module);
+    emitted.canonical = canonicalJson(emitted.module);
+    emitted.digest = moduleDigest(emitted.module);
+  }
+  const errors = [...joined.errors, ...checkAgainstModule(opts.component.manifest, emitted.module, opts.sourceRoot ?? opts.root).errors];
   return errors.length > 0 ? { emitted, componentErrors: errors } : { emitted };
 }
 
@@ -124,7 +134,8 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
     return opts.authority?.({ name, digest: f?.digest ?? "", kind: "binding", cites: [] }).authority ?? "candidate";
   };
   const perSource = sourceSettings(opts.component);
-  const runs = await runSources(module, { root: opts.sourceRoot ?? opts.root, codeRoot: opts.root, config: adapterConfig, isolated: opts.isolatedAdapters ?? true, bindingAuthority, ...(opts.adapters !== undefined ? { adapters: opts.adapters } : {}), ...(perSource !== undefined ? { perSource } : {}), ...(opts.executions !== undefined ? { executions: opts.executions } : {}) });
+  const commit = opts.subjectCommit ?? opts.snapshot?.commit ?? cfg.snapshot?.commit;
+  const runs = await runSources(module, { root: opts.sourceRoot ?? opts.root, codeRoot: opts.root, config: adapterConfig, ...(commit !== undefined ? { commit } : {}), isolated: opts.isolatedAdapters ?? true, bindingAuthority, ...(opts.adapters !== undefined ? { adapters: opts.adapters } : {}), ...(perSource !== undefined ? { perSource } : {}), ...(opts.executions !== undefined ? { executions: opts.executions } : {}) });
   const items = new Map<string, string>();
   for (const r of runs) for (const it of r.output.items ?? []) items.set(`${r.source}/${it.id}`, it.textDigest);
   const resolver: AuthorityResolver | undefined = state !== undefined ? (f) => resolveAuthority(state, f, items) : opts.authority;
@@ -143,6 +154,7 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   if (state !== undefined) checkOpts.ledger = { head: state.head, invalid: state.invalid.map(({ seq, reason, commit }) => (commit !== undefined ? { seq, reason, commit } : { seq, reason })) };
   if (opts.unchangedSince !== undefined) checkOpts.unchangedSince = opts.unchangedSince;
   if (opts.composition !== undefined) checkOpts.composition = opts.composition;
+  if (opts.subjectCommit !== undefined) checkOpts.subjectCommit = opts.subjectCommit;
   // Edges to files resolve against what the repository tracks; listed only when some source produced an edge.
   if (runs.some((r) => (r.output.edges ?? []).length > 0)) {
     const files = trackedFiles(opts.sourceRoot ?? opts.root);
