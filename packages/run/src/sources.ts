@@ -66,13 +66,13 @@ interface KeptRun {
   run: SourceRun;
 }
 
-let toolCode: string | undefined;
 /**
- * The tool's own code, by path, size and modification time of each source file of its packages: a kept output is
- * never reused across a change to an adapter, though the version stays the same while it is developed.
+ * The tool's own code, by path, size and modification time of each source file of its packages, and the lockfile
+ * that pins what they import: a kept output is never reused across a change to an adapter or a dependency, though
+ * the version stays the same while it is developed. Computed for each run, so a change between two runs of one
+ * process is seen.
  */
-function toolCodeDigest(): string {
-  if (toolCode !== undefined) return toolCode;
+export function toolCodeDigest(): string {
   const pkgs = resolve(HERE, "..", "..");
   const seen: string[] = [];
   const walk = (dir: string) => {
@@ -91,7 +91,8 @@ function toolCodeDigest(): string {
   } catch {
     // Unreadable: the version alone decides.
   }
-  return (toolCode = digestJson({ version: TOOL_VERSION, files: seen }));
+  const lock = join(pkgs, "..", "pnpm-lock.yaml");
+  return digestJson({ version: TOOL_VERSION, files: seen, lock: existsSync(lock) ? digestOf(new Uint8Array(readFileSync(lock))) : null });
 }
 
 function readKept(file: string): SourceRun | undefined {
@@ -243,6 +244,8 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
   const registry = { ...BUILTIN_ADAPTERS, ...(opts.adapters ?? {}) };
   const runs: SourceRun[] = [];
   const bindings = module.bindings.map((b) => ({ ...b, authority: opts.bindingAuthority?.(b) ?? "candidate" }));
+  // The tool and its dependencies, read once per run (stage 27).
+  const tool = opts.cache === undefined ? undefined : toolCodeDigest();
   for (const source of [...module.sources].sort((a, b) => compareCodePoints(a.name, b.name))) {
     const located = filesAt(opts.root, source.at);
     const base = { source: source.name, kind: source.kind };
@@ -274,7 +277,8 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
       const stepFiles = own?.steps === undefined ? [] : (filesAt(opts.codeRoot ?? opts.root, own.steps).files ?? []);
       const digests = (fs: { path: string; abs: string }[]) => fs.map((f) => [f.path, digestOf(new Uint8Array(readFileSync(f.abs)))]);
       const key = digestJson({
-        tool: toolCodeDigest(),
+        tool,
+        isolated: opts.isolated ?? true,
         source,
         own: own ?? null,
         named: named ?? null,

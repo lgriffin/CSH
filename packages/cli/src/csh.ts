@@ -114,7 +114,7 @@ function readReport(p: Project, a: Args): Report {
 }
 
 /** The report and model files of a stored run: --run names its directory, or a commit whose newest stored run is read. */
-function storedRunFiles(p: Project, run: string): { report: string; model: string } | { error: string } {
+function storedRunFiles(p: Project, run: string, needsModel = true): { report: string; model: string } | { error: string } {
   const dir = resolve(p.root, run);
   let found = existsSync(join(dir, "report.json")) && statSync(dir).isDirectory() ? dir : undefined;
   if (found === undefined) {
@@ -127,7 +127,7 @@ function storedRunFiles(p: Project, run: string): { report: string; model: strin
     found = storedRuns(p.root, commit)[0];
     if (found === undefined) return { error: `no stored run of ${commit.slice(0, 12)}; csh run --at ${run} makes one` };
   }
-  if (!existsSync(join(found, "model.json"))) return { error: `the run in ${found} stores no model; it was made before runs stored one, so run it again` };
+  if (needsModel && !existsSync(join(found, "model.json"))) return { error: `the run in ${found} stores no model; it was made before runs stored one, so run it again` };
   return { report: join(found, "report.json"), model: join(found, "model.json") };
 }
 
@@ -305,7 +305,8 @@ export async function csh(argv: string[], io: Io): Promise<number> {
       return 0;
     }
     case "overview": {
-      const stored = a.options.run === undefined ? undefined : storedRunFiles(p, a.options.run);
+      // The overview reads only the report, so a run stored before runs kept their model is still read.
+      const stored = a.options.run === undefined ? undefined : storedRunFiles(p, a.options.run, false);
       if (stored !== undefined && "error" in stored) {
         io.err(`csh overview: ${stored.error}\n`);
         return 2;

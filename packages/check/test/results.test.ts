@@ -74,6 +74,8 @@ describe("test outcomes", () => {
       // The contract file declares tests the runner never reported.
       { item: "Charter/R-2", files: 2, unreported: 1, tests: 2, passed: 1, failed: 0, errored: 0, skipped: 1 },
     ]);
+    // A bare name another tracked file shares names no test file.
+    expect(testOutcomes(prepared, trace({ prepared }).edges, ["unit/a.test.ts", "unit/b.test.ts", "contract/c.test.ts", "fixtures/b.test.ts"]).verifiedBy.find((v) => v.item === "Charter/R-2")).toEqual({ item: "Charter/R-2", files: 1, unreported: 1, tests: 0, passed: 0, failed: 0, errored: 0, skipped: 0 });
   });
 
   it("is nothing without results", () => {

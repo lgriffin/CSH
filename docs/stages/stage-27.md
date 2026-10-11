@@ -17,7 +17,7 @@
 
 - **The three outcomes are lopsided.** Of 143 results, 107 are gaps, most of them `stale-prose` (75) and `unverified` (8). Only 31 converge: 9 requirements cited by passing tests, 18 whose named test files all pass, 3 satisfied obligations and the TDD source as a whole.
 - **"Verified by" carries most of the test evidence.** 21 charter requirements name test files under "Verified by". The files of 18 all ran and passed; 3 (ARCH-02, TEST-05 and TEST-08) name contract or gated integration tests the unit run does not report, so they stay indeterminate. None of these tests names the requirement, so the overview says so in each entry. This and the BDD suites' silence about the charter are ESI.ts [#639](https://github.com/lgriffin/ESI.ts/issues/639) and [#640](https://github.com/lgriffin/ESI.ts/issues/640).
-- **Stale prose is the bulk of the work to do.** 813 mentions on 75 items name a file changed since their line. Row 5 is still one: `guides/CHARTER.md:896` names `tests/tdd/core/security.test.ts`, changed in 1 commit since the line (`4ca8384`).
+- **Stale prose is the bulk of the work to do.** 815 mentions on 75 items name a file changed since their line. Row 5 is still one: `guides/CHARTER.md:896` names `tests/tdd/core/security.test.ts`, changed in 1 commit since the line (`4ca8384`).
 
 ## What proved wrong or costly in the documents
 

@@ -21,6 +21,8 @@ export interface HistoryOptions {
    * never kept.
    */
   cache?: string;
+  /** The tool's code, kept with the answers: a change to how history is read is never answered from the cache. */
+  tool?: string;
 }
 
 interface Kept {
@@ -96,7 +98,7 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
 
   // What an earlier run at the same HEAD read: kept by commit, read back as dated answers.
   const head = run(root, ["rev-parse", "HEAD"])?.trim();
-  const cacheKey = head === undefined ? undefined : `${head} ${o.since ?? ""}`;
+  const cacheKey = head === undefined ? undefined : `${head} ${o.since ?? ""} ${o.tool ?? ""}`;
   let dirty = false;
   if (o.cache !== undefined && cacheKey !== undefined && existsSync(o.cache)) {
     try {
@@ -141,10 +143,11 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
       let hit = since.get(key);
       if (hit === undefined) {
         // After the line, in time as well as in history: a commit of a branch that forked before the line and merged
-        // after it is reachable from HEAD and not from the line, though it was made first. Merges change nothing of
-        // their own.
+        // after it is reachable from HEAD and not from the line, though it was made first. A merge that only brings a
+        // branch in is the same as one parent and is left out by git; one that resolves a conflict in the file is kept.
+        // A commit made in the same second as the line counts, since scripted and rebased commits share a time.
         const from = dated(commit);
-        hit = (run(root, ["rev-list", "--no-merges", `${commit}..HEAD`, "--", path]) ?? "").split("\n").flatMap((c) => dated(c) ?? []).filter((d) => from === undefined || d.date > from.date);
+        hit = (run(root, ["rev-list", `${commit}..HEAD`, "--", path]) ?? "").split("\n").flatMap((c) => dated(c) ?? []).filter((d) => from === undefined || d.date >= from.date);
         since.set(key, hit);
         dirty = true;
       }

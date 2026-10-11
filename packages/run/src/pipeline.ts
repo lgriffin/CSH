@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { check, type CheckResult, type EvidenceStore, makeRefiner, type Report, type AuthorityResolver, type SourceRun } from "@csh/check";
 import { gitHistory } from "./history.ts";
-import { runSources, type RunSourcesOptions, trackedFiles } from "./sources.ts";
+import { runSources, type RunSourcesOptions, toolCodeDigest, trackedFiles } from "./sources.ts";
 import { emit, type EmitOptions, type EmitResult, type Lock } from "@csh/emit";
 import { canonicalJson, canonicalModule, digestJson, digestOf, fragmentsOf, isArchRule, moduleDigest, refName, type Module } from "@csh/kernel";
 import { type LedgerState, resolveAuthority } from "@csh/ledger";
@@ -175,7 +175,7 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   const wanted = opts.component?.manifest.history;
   const historyRoot = resolve(opts.sourceRoot ?? opts.root);
   const historyCache = opts.cacheDir === undefined ? undefined : join(opts.cacheDir, "history", `${digestOf(new TextEncoder().encode(historyRoot)).slice(-16)}.json`);
-  const history = wanted !== undefined ? gitHistory(historyRoot, { implementation: opts.component!.manifest.implementation, ...(wanted.since !== undefined ? { since: wanted.since } : {}), ...(historyCache !== undefined ? { cache: historyCache } : {}) }) : undefined;
+  const history = wanted !== undefined ? gitHistory(historyRoot, { implementation: opts.component!.manifest.implementation, ...(wanted.since !== undefined ? { since: wanted.since } : {}), ...(historyCache !== undefined ? { cache: historyCache, tool: toolCodeDigest() } : {}) }) : undefined;
   if (history !== undefined) checkOpts.history = history;
   const checked = await check(checkOpts);
   history?.save();

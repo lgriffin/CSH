@@ -152,7 +152,7 @@ describe("the history source", () => {
     h.save();
     const kept = JSON.parse(readFileSync(file, "utf8"));
     expect(kept.schema).toBe("csh-history-cache/v1");
-    expect(kept.key).toBe(`${commits.c4} previous-tag`);
+    expect(kept.key).toBe(`${commits.c4} previous-tag `);
     // What is kept is what the next port answers: change it, and the port says what the file says.
     kept.blames["docs/charter.md"]["7"] = commits.c2;
     writeFileSync(file, JSON.stringify(kept));
@@ -186,6 +186,22 @@ describe("the history source", () => {
     commit(dir, "after", "2026-04-01T00:00:00Z");
     const h = gitHistory(dir, { implementation: ["src"] });
     expect(h.changedSince(commits.line!, "src/a.ts").map((d) => d.commit)).toEqual([commits.after]);
+    // A merge that resolves a conflict in the file changes it, and counts.
+    git(dir, ["checkout", "-q", "-b", "other", commits.after!]);
+    write(dir, "src/a.ts", "export const a = 4;\n");
+    commit(dir, "other", "2026-04-10T00:00:00Z");
+    git(dir, ["checkout", "-q", "main"]);
+    write(dir, "src/a.ts", "export const a = 5;\n");
+    commit(dir, "main5", "2026-04-20T00:00:00Z");
+    const env = { GIT_AUTHOR_DATE: "2026-05-01T00:00:00Z", GIT_COMMITTER_DATE: "2026-05-01T00:00:00Z" };
+    try {
+      git(dir, ["merge", "-q", "other"], env);
+    } catch {
+      // The conflict is expected: it is resolved by hand below.
+    }
+    write(dir, "src/a.ts", "export const a = 6;\n");
+    commit(dir, "resolved", "2026-05-01T00:00:00Z");
+    expect(gitHistory(dir, { implementation: ["src"] }).changedSince(commits.main5!, "src/a.ts").map((d) => d.commit)).toEqual([commits.resolved]);
   });
 
   it("lists no untraced change without a start, and says why when the start names nothing", () => {

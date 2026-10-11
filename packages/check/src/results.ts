@@ -9,7 +9,7 @@ import type { Gap, Report } from "./types.ts";
 type Outcomes = NonNullable<Report["outcomes"]>[number];
 type VerifiedBy = NonNullable<Report["verifiedBy"]>[number];
 
-export function testOutcomes(prepared: Prepared, edges: NonNullable<Report["edges"]>): { outcomes: Outcomes[]; verifiedBy: VerifiedBy[]; gaps: Gap[] } {
+export function testOutcomes(prepared: Prepared, edges: NonNullable<Report["edges"]>, tracked?: string[]): { outcomes: Outcomes[]; verifiedBy: VerifiedBy[]; gaps: Gap[] } {
   if (prepared.results.length === 0) return { outcomes: [], verifiedBy: [], gaps: [] };
   // The item a cited identifier is: as the test file's own edge resolved it, else as any edge to it did.
   const own = new Map<string, string>();
@@ -52,7 +52,7 @@ export function testOutcomes(prepared: Prepared, edges: NonNullable<Report["edge
       const what = o.errored > 0 && o.failed === 0 ? `could not run (${o.errored} errored)` : `${o.failed + o.errored} of ${o.tests} tests failed${o.errored > 0 ? ` (${o.errored} errored)` : ""}`;
       return { kind: "failing-test", subject: o.item, fragments: [], detail: `${what}${c.length > 0 ? `; they cite ${c.join(", ")}` : ""}` };
     });
-  return { outcomes, verifiedBy: verifiedThrough(prepared, edges, rows), gaps };
+  return { outcomes, verifiedBy: verifiedThrough(prepared, edges, rows, tracked), gaps };
 }
 
 /**
@@ -60,7 +60,7 @@ export function testOutcomes(prepared: Prepared, edges: NonNullable<Report["edge
  * file at it, or every test file under it; a bare name names the one test file with that name. Only files of a
  * test-file source that read results count: another source's files were never run.
  */
-function verifiedThrough(prepared: Prepared, edges: NonNullable<Report["edges"]>, rows: Map<string, Outcomes>): VerifiedBy[] {
+function verifiedThrough(prepared: Prepared, edges: NonNullable<Report["edges"]>, rows: Map<string, Outcomes>, tracked?: string[]): VerifiedBy[] {
   const run = new Set(prepared.results.map((t) => t.source));
   const testFiles = prepared.items.filter((i) => i.kind === "test-file" && run.has(i.source));
   const byBase = new Map<string, string[]>();
@@ -68,11 +68,18 @@ function verifiedThrough(prepared: Prepared, edges: NonNullable<Report["edges"]>
     const base = f.id.split("/").pop()!;
     byBase.set(base, [...(byBase.get(base) ?? []), `${f.source}/${f.id}`]);
   }
+  // A bare name is unique as trace judges it, among every tracked file when they are known (A-110): a test file that
+  // shares its name with a fixture names neither.
+  const trackedBase = new Map<string, number>();
+  for (const f of tracked ?? []) {
+    const base = f.slice(f.lastIndexOf("/") + 1);
+    trackedBase.set(base, (trackedBase.get(base) ?? 0) + 1);
+  }
   const named = (to: string): string[] => {
     if (!to.startsWith("file:")) return [];
     const raw = to.slice(5);
     // A bare name is a file's name; `unit/` names a directory, though no slash is left once the last is dropped.
-    if (!raw.includes("/")) return byBase.get(raw)?.length === 1 ? byBase.get(raw)! : [];
+    if (!raw.includes("/")) return byBase.get(raw)?.length === 1 && (tracked === undefined || trackedBase.get(raw) === 1) ? byBase.get(raw)! : [];
     const p = raw.replace(/\/$/, "");
     return testFiles.filter((f) => f.id === p || f.id.startsWith(`${p}/`)).map((f) => `${f.source}/${f.id}`);
   };
