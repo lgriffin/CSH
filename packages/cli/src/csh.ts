@@ -3,13 +3,13 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { a3Dir, readJudgments } from "@csh/a3";
-import { DIVERGENCE_READINGS, type Finding, renderGaps, renderReport, type Report } from "@csh/check";
+import { DIVERGENCE_READINGS, type Finding, overviewOf, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report } from "@csh/check";
 import { exitCode, formatDecision as formatGate, type GateDecision, type Mode } from "@csh/gate";
 import { digestOf, fragmentsOf, type Module, stableJson } from "@csh/kernel";
 import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons } from "@csh/ledger";
 import { printFragment } from "@csh/print";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { componentQueue, componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderQueue, renderStatus, ledgerOf, loadProject, MODEL_PATH, type Project, REPORT_PATH, runAt, runComponent, type RunResult, fetchSubject, specPathOf, storedRuns } from "@csh/run";
+import { componentQueue, componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderQueue, renderStatus, ledgerOf, loadProject, MODEL_PATH, OVERVIEW_PATH, type Project, REPORT_PATH, runAt, runComponent, type RunResult, fetchSubject, specPathOf, storedRuns } from "@csh/run";
 import { type Args, parseArgs } from "./args.ts";
 import { init } from "./init.ts";
 import { a3Command, a3Fragment, historyCommand } from "./a3.ts";
@@ -26,6 +26,11 @@ const USAGE = `csh: the Composable Specification Harness
   csh check [spec] [--out report.json] [--json] [--budget ms] [--no-cache]
                                   Run every check and write the report. Exits 0 when the run completed.
   csh gaps [spec]                 Print the gap view only.
+  csh overview [--run <dir|commit>] [--signal <id>] [--out <file>] [--json]
+                                  Place every result of the last report in one of three outcomes: gaps (suggestions,
+                                  with what would close each), indeterminate (with what would decide it) and
+                                  converged. Prints the counts by practice and kind and writes the sheet to
+                                  reports/csh-overview.html, which opens on any signal as #<id>. --signal prints one.
   csh explain <finding-id> [--run <dir|commit>]
                                   Print one finding, members rendered through the printer. With --run, from a stored
                                   run (its directory, or a commit whose newest stored run is read) rather than reports/.
@@ -109,7 +114,7 @@ function readReport(p: Project, a: Args): Report {
 }
 
 /** The report and model files of a stored run: --run names its directory, or a commit whose newest stored run is read. */
-function storedRunFiles(p: Project, run: string): { report: string; model: string } | { error: string } {
+function storedRunFiles(p: Project, run: string, needsModel = true): { report: string; model: string } | { error: string } {
   const dir = resolve(p.root, run);
   let found = existsSync(join(dir, "report.json")) && statSync(dir).isDirectory() ? dir : undefined;
   if (found === undefined) {
@@ -122,7 +127,7 @@ function storedRunFiles(p: Project, run: string): { report: string; model: strin
     found = storedRuns(p.root, commit)[0];
     if (found === undefined) return { error: `no stored run of ${commit.slice(0, 12)}; csh run --at ${run} makes one` };
   }
-  if (!existsSync(join(found, "model.json"))) return { error: `the run in ${found} stores no model; it was made before runs stored one, so run it again` };
+  if (needsModel && !existsSync(join(found, "model.json"))) return { error: `the run in ${found} stores no model; it was made before runs stored one, so run it again` };
   return { report: join(found, "report.json"), model: join(found, "model.json") };
 }
 
@@ -297,6 +302,31 @@ export async function csh(argv: string[], io: Io): Promise<number> {
       const res = await runCheck(p, a, io);
       if (res === undefined) return 1;
       io.out(`${renderGaps(res.report).join("\n")}\n`);
+      return 0;
+    }
+    case "overview": {
+      // The overview reads only the report, so a run stored before runs kept their model is still read.
+      const stored = a.options.run === undefined ? undefined : storedRunFiles(p, a.options.run, false);
+      if (stored !== undefined && "error" in stored) {
+        io.err(`csh overview: ${stored.error}\n`);
+        return 2;
+      }
+      const report = stored === undefined ? readReport(p, a) : (JSON.parse(readFileSync(stored.report, "utf8")) as Report);
+      const o = overviewOf(report, p.component !== undefined ? { sources: Object.fromEntries(p.component.manifest.practices.flatMap((x) => x.sources.map((s) => [s, x.id]))) } : undefined);
+      const id = a.options.signal;
+      if (id !== undefined) {
+        const e = o.entries.find((x) => x.anchor === id || x.signal === id) ?? o.entries.find((x) => x.anchor.startsWith(id));
+        if (e === undefined) {
+          io.err(`no entry ${id} in the overview\n`);
+          return 2;
+        }
+        io.out(renderEntry(e));
+        return 0;
+      }
+      const name = report.component?.name ?? p.component?.manifest.name ?? "component";
+      const title = `${name} overview${report.subject !== undefined ? ` at ${report.subject.commit.slice(0, 12)}` : report.snapshot !== undefined ? ` at ${report.snapshot.commit.slice(0, 12)}` : ""}`;
+      write(join(p.root, a.options.out ?? OVERVIEW_PATH), renderOverviewHtml(o, title));
+      io.out(a.flags.has("json") ? stableJson(o) : renderOverview(o));
       return 0;
     }
     case "explain": {

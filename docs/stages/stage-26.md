@@ -27,7 +27,7 @@
 
 - BDD results are not joined to Gherkin scenarios. Scenario titles are what jest-cucumber reports, so the Gherkin inventory adapter could join them as this one does.
 - The results file records no commit. A file made at another commit of the subject would be read as if it were current. The runner's report has no field for it, and the profile does not yet record one.
-- The stage 25 side-branch over-count (`rev-list A..HEAD` counts commits that are not descendants of the line's commit) is stage 27's.
+- The stage 25 side-branch over-count (`rev-list A..HEAD` counts commits that are not descendants of the line's commit) is stage 27's. (Fixed in [stage 27](stage-27.md).)
 
 ## Effort
 

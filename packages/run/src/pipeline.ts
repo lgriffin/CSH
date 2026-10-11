@@ -4,9 +4,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { check, type CheckResult, type EvidenceStore, makeRefiner, type Report, type AuthorityResolver, type SourceRun } from "@csh/check";
 import { gitHistory } from "./history.ts";
-import { runSources, type RunSourcesOptions, trackedFiles } from "./sources.ts";
+import { runSources, type RunSourcesOptions, toolCodeDigest, trackedFiles } from "./sources.ts";
 import { emit, type EmitOptions, type EmitResult, type Lock } from "@csh/emit";
-import { canonicalJson, canonicalModule, digestJson, fragmentsOf, isArchRule, moduleDigest, refName, type Module } from "@csh/kernel";
+import { canonicalJson, canonicalModule, digestJson, digestOf, fragmentsOf, isArchRule, moduleDigest, refName, type Module } from "@csh/kernel";
 import { type LedgerState, resolveAuthority } from "@csh/ledger";
 import { checkAgainstModule, type ComponentProblem, readClaims, withDeclaredSources, withProposedClaims, DEFAULT_EXECUTIONS, type LoadedComponent, ownersOf } from "@csh/component";
 import type { SolverPort } from "@csh/solver";
@@ -50,6 +50,8 @@ export interface PipelineOptions {
   component?: LoadedComponent;
   /** Without a component: the executions file joined to every Witnesses source (csh/config.json's `executions`). */
   executions?: string;
+  /** Where adapter output and history answers are kept between runs (stage 27); nothing is kept without it. */
+  cacheDir?: string;
 }
 
 export interface PipelineResult {
@@ -139,7 +141,7 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   };
   const perSource = sourceSettings(opts.component);
   const commit = opts.subjectCommit ?? opts.snapshot?.commit ?? cfg.snapshot?.commit;
-  const runs = await runSources(module, { root: opts.sourceRoot ?? opts.root, codeRoot: opts.root, config: adapterConfig, ...(commit !== undefined ? { commit } : {}), isolated: opts.isolatedAdapters ?? true, bindingAuthority, ...(opts.adapters !== undefined ? { adapters: opts.adapters } : {}), ...(perSource !== undefined ? { perSource } : {}), ...(opts.executions !== undefined ? { executions: opts.executions } : {}) });
+  const runs = await runSources(module, { root: opts.sourceRoot ?? opts.root, codeRoot: opts.root, config: adapterConfig, ...(commit !== undefined ? { commit } : {}), isolated: opts.isolatedAdapters ?? true, bindingAuthority, ...(opts.adapters !== undefined ? { adapters: opts.adapters } : {}), ...(perSource !== undefined ? { perSource } : {}), ...(opts.executions !== undefined ? { executions: opts.executions } : {}), ...(opts.cacheDir !== undefined ? { cache: { dir: opts.cacheDir, ...(opts.sourceRoot !== undefined && opts.subjectCommit !== undefined ? { pinned: opts.subjectCommit } : {}) } } : {}) });
   const items = new Map<string, string>();
   for (const r of runs) for (const it of r.output.items ?? []) items.set(`${r.source}/${it.id}`, it.textDigest);
   const resolver: AuthorityResolver | undefined = state !== undefined ? (f) => resolveAuthority(state, f, items) : opts.authority;
@@ -171,9 +173,12 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   }
   // The repository's history, when the manifest asks for it (stage 25), read where the sources are.
   const wanted = opts.component?.manifest.history;
-  const history = wanted !== undefined ? gitHistory(opts.sourceRoot ?? opts.root, { implementation: opts.component!.manifest.implementation, ...(wanted.since !== undefined ? { since: wanted.since } : {}) }) : undefined;
+  const historyRoot = resolve(opts.sourceRoot ?? opts.root);
+  const historyCache = opts.cacheDir === undefined ? undefined : join(opts.cacheDir, "history", `${digestOf(new TextEncoder().encode(historyRoot)).slice(-16)}.json`);
+  const history = wanted !== undefined ? gitHistory(historyRoot, { implementation: opts.component!.manifest.implementation, ...(wanted.since !== undefined ? { since: wanted.since } : {}), ...(historyCache !== undefined ? { cache: historyCache, tool: toolCodeDigest() } : {}) }) : undefined;
   if (history !== undefined) checkOpts.history = history;
   const checked = await check(checkOpts);
+  history?.save();
   if (history?.sinceProblem !== undefined) checked.report.errors.push({ code: "history-since-unknown", severity: "warning", detail: `${history.sinceProblem}; no untraced-change is reported` });
   return { runs, checked };
 }

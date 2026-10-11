@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`@csh/cli` provides the two commands, `csl` (emit, print, lock) and `csh` (init, run, check, gaps, explain, approve, reject, retire, waive, countersign, gate). It parses arguments and prints; the evaluation itself is in `@csh/run` and the manifest in `@csh/component`.
+`@csh/cli` provides the two commands, `csl` (emit, print, lock) and `csh` (init, run, check, gaps, overview, explain, approve, reject, retire, waive, countersign, gate). It parses arguments and prints; the evaluation itself is in `@csh/run` and the manifest in `@csh/component`.
 
 ## Where it sits
 

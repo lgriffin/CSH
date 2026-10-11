@@ -78,6 +78,8 @@ export interface LoadOptions {
 export const CONFIG_PATH = "csh/config.json";
 export const LOCK_PATH = "csh/lock.json";
 export const REPORT_PATH = "reports/csh-report.json";
+/** Where csh overview writes its sheet (stage 27). */
+export const OVERVIEW_PATH = "reports/csh-overview.html";
 export const MODEL_PATH = "reports/csh-model.json";
 export const CACHE_DIR = ".csh-cache";
 

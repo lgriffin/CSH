@@ -1,7 +1,7 @@
 // A subject profile (Ingesting a codebase, stage 21): a component with no specification, evaluating a repository it
 // does not hold from outside, at a pinned commit, without writing to it.
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
@@ -133,6 +133,34 @@ describe("a subject profile", () => {
     if (!r.ok) throw new Error(r.message);
     expect(r.record.snapshot.commit).toBe(profileCommit);
     expect(r.report.items.map((i) => i.id)).toEqual(["REQ-1", "REQ-2"]);
+  });
+
+  it("keeps each source's output by commit and paths, and reuses it without reading the checkout again (stage 27)", async () => {
+    const kept = join(profile, ".csh-cache", "sources");
+    rmSync(kept, { recursive: true, force: true });
+    const first = await runComponent({ root: profile, solver: z3, reportFiles: false });
+    if (!first.ok) throw new Error(first.message);
+    // One directory per source, holding its one kept output.
+    const dirs = readdirSync(kept);
+    expect(dirs.length).toBe(1);
+    const files = readdirSync(join(kept, dirs[0]!));
+    expect(files.length).toBe(1);
+    const again = await runComponent({ root: profile, solver: z3, reportFiles: false });
+    if (!again.ok) throw new Error(again.message);
+    expect(JSON.stringify(again.report)).toBe(JSON.stringify(first.report));
+    // The kept output is what the second run used: change it, and the run reports what it says, not what the file says.
+    const file = join(kept, dirs[0]!, files[0]!);
+    const k = JSON.parse(readFileSync(file, "utf8"));
+    k.run.output.items = k.run.output.items.filter((i: { id: string }) => i.id === "REQ-1");
+    writeFileSync(file, JSON.stringify(k));
+    const reused = await runComponent({ root: profile, solver: z3, reportFiles: false });
+    if (!reused.ok) throw new Error(reused.message);
+    expect(reused.report.items.map((i) => i.id)).toEqual(["REQ-1"]);
+    // Without the cache, the checkout is read again.
+    const fresh = await runComponent({ root: profile, solver: z3, reportFiles: false, noCache: true });
+    if (!fresh.ok) throw new Error(fresh.message);
+    expect(fresh.report.items.map((i) => i.id)).toEqual(["REQ-1", "REQ-2"]);
+    rmSync(kept, { recursive: true, force: true });
   });
 
   it("refuses --subject for a component that names no subject", () => {

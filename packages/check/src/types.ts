@@ -151,6 +151,13 @@ export interface Report {
    * 26). Present when a test-file source read results; never entering a verdict (P2).
    */
   outcomes?: { item: string; tests: number; passed: number; failed: number; errored: number; skipped: number }[];
+  /**
+   * Extension: for each item whose "verified by" names test files (a file, a directory, or a unique bare name), what
+   * the runner said of those files (stage 27): how many it names, how many reported no result, and the counts of the
+   * rest. A test that does not name the item still says nothing of which item it checks, so this is reported apart
+   * from `outcomes`, and never enters a verdict (P2).
+   */
+  verifiedBy?: { item: string; files: number; unreported: number; tests: number; passed: number; failed: number; errored: number; skipped: number }[];
   /** Extension: test executions, stored and reported, never entering a verdict (P2). */
   executions: { witness: string; source: string; event: string; localResult: string; test?: string; span?: string }[];
   /**

@@ -70,7 +70,7 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
   const arch = evaluateArchitecture({ prepared, fragments: prepared.fragments, authority, live: (n) => pool.byName.has(n), ...(opts.files !== undefined ? { files: opts.files } : {}), ...(opts.snapshot !== undefined ? { snapshotCommit: opts.snapshot.commit } : {}), ...(opts.subjectCommit !== undefined ? { subjectCommit: opts.subjectCommit } : {}), ...(opts.history !== undefined ? { history: opts.history } : {}) });
   outcome.findings = sortFindings([...outcome.findings, ...arch.findings]);
   const traced = trace({ prepared, facts: currentFacts(prepared.runs.flatMap((r) => r.output.facts ?? []), opts.snapshot?.commit, opts.subjectCommit), ...(opts.files !== undefined ? { files: opts.files } : {}), ...(opts.history !== undefined ? { history: opts.history } : {}) });
-  const tested = testOutcomes(prepared, traced.edges);
+  const tested = testOutcomes(prepared, traced.edges, opts.files);
   const gaps = await gapView({ prepared, pool, outcome, env, authority, archGaps: arch.gaps, traceGaps: [...traced.gaps, ...untracedChanges(opts.history), ...tested.gaps], ...(opts.component !== undefined ? { unowned: opts.component.unowned } : {}) });
   const tool = { version: TOOL_VERSION, solver: opts.solver.id, budgetMs };
   const assessInput: Parameters<typeof assess>[0] = {
@@ -114,6 +114,7 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
   };
   if (traced.edges.length > 0) report.edges = traced.edges;
   if (tested.outcomes.length > 0) report.outcomes = tested.outcomes;
+  if (tested.verifiedBy.length > 0) report.verifiedBy = tested.verifiedBy;
   if (opts.snapshot !== undefined) report.snapshot = opts.snapshot;
   if (opts.ledger !== undefined) report.ledger = opts.ledger;
   if (opts.composition !== undefined) report.composition = opts.composition;
