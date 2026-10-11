@@ -27,6 +27,7 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 23: Code facts](stage-23.md)
 - [Stage 24: Structural claims](stage-24.md)
 - [Stage 25: History](stage-25.md)
+- [Stage 26: Test results](stage-26.md)
 
 Stages 10 to 16 build the anchor design ([09](../spec/09-anchor-harness-a3.md)): a component to anchor on, harnesses,
 runs and the A3. Their fixtures, F80 to F96, were written before any of their code, and the fixture runner reports

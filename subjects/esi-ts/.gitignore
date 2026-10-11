@@ -1,2 +1,4 @@
 # Each release's A3 stages hold reports that quote ESI.ts, which is GPL-3.0: they stay local (#37).
 csh/a3/
+# Jest results name ESI.ts's tests, so they stay local too; CI writes its own (stage 26).
+results/
