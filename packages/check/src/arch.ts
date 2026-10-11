@@ -6,7 +6,7 @@ import { type ArchRule, type Claim, compareCodePoints, digestJson, type Fragment
 import type { Fact } from "@csh/witness";
 import type { Prepared } from "./pool.ts";
 import { findingId, sourceColumn } from "./run.ts";
-import type { AuthorityInfo, Finding, Gap } from "./types.ts";
+import type { AuthorityInfo, Dated, Finding, Gap, HistoryPort } from "./types.ts";
 
 export interface ArchRuleOutcome {
   /** current: facts taken at the snapshot's commit; stale: facts only from other commits; none: no facts at all. */
@@ -34,7 +34,30 @@ export function currentFacts(all: Fact[], snapshotCommit: string | undefined, su
   return all.filter((f) => (snapshotCommit !== undefined && f.subject.commit === snapshotCommit) || (subjectCommit !== undefined && f.subject.commit === subjectCommit));
 }
 
-export function evaluateArchitecture(input: { prepared: Prepared; fragments: Fragment[]; authority: Map<string, AuthorityInfo>; snapshotCommit?: string; subjectCommit?: string; files?: string[]; live: (name: string) => boolean }): ArchOutcome {
+const SPAN = /^(.*):(\d+)$/;
+const short = (d: Dated) => `${d.commit.slice(0, 12)}, ${d.date.slice(0, 10)}`;
+
+/**
+ * Whether a refuted claim's sentence is older than the code that refutes it (stage 25): the sentence was true, or
+ * meant to be, when written, and the code moved on. Undefined when the sentence is the newer, or history cannot date
+ * either side: the prose was then wrong when written, and the fact-conflict says all there is.
+ */
+function staleClaim(claim: Claim, evidence: { at: string; text?: string }[], h: HistoryPort): string | undefined {
+  const prose = claim.at === undefined ? null : SPAN.exec(claim.at);
+  if (prose === null) return undefined;
+  const written = h.lineOrigin(prose[1]!, Number(prose[2]));
+  if (written === undefined) return undefined;
+  let code: { at: string; when: Dated } | undefined;
+  for (const e of evidence) {
+    const line = SPAN.exec(e.at);
+    const when = line !== null ? h.lineCommit(line[1]!, Number(line[2])) : e.text !== undefined ? h.introduced(e.at, e.text) : undefined;
+    if (when !== undefined && (code === undefined || Date.parse(when.date) > Date.parse(code.when.date))) code = { at: e.at, when };
+  }
+  if (code === undefined || Date.parse(code.when.date) <= Date.parse(written.date)) return undefined;
+  return `${claim.at}: first written at ${short(written)}; ${code.at} took the form that refutes it later, at ${short(code.when)}`;
+}
+
+export function evaluateArchitecture(input: { prepared: Prepared; fragments: Fragment[]; authority: Map<string, AuthorityInfo>; snapshotCommit?: string; subjectCommit?: string; files?: string[]; live: (name: string) => boolean; history?: HistoryPort }): ArchOutcome {
   const { prepared } = input;
   const system = prepared.module.system;
   const diagrams = new Map<string, ArchDiagram>();
@@ -81,6 +104,8 @@ export function evaluateArchitecture(input: { prepared: Prepared; fragments: Fra
     // A claim the facts refute: the prose and the code disagree.
     if (o.claim?.result === "refuted") {
       out.findings.push({ id: findingId("fact-conflict", [f.name]), kind: "fact-conflict", scope: "implementation", members: [member(f)], context: [], crossSource: false, collisionTerms: [], reason: `${at(claim)}says ${describeClaim(claim)}; ${o.claim.detail}`, query: `Q-CLAIM(${f.local})` });
+      const stale = input.history !== undefined ? staleClaim(claim, o.claim.evidence ?? [], input.history) : undefined;
+      if (stale !== undefined) out.gaps.push({ kind: "stale-prose", subject: f.name, fragments: [f.name], detail: stale });
     }
   }
   // Two claims that cannot both be true: the sources disagree with each other, whatever the code says.

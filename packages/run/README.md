@@ -24,6 +24,8 @@ It is the "Run" container, shown in the [containers diagram](../../docs/architec
     - `loadProject(cwd, root, { subject, subjectsRoot })` finds the subject's checkout. That is the `--subject` directory, or the one `fetchSubject(project)` made under `SUBJECTS_DIR` (`subjectCheckout(root, commit)`). The checkout must be clean and at the pinned commit.
     - `Project.subject` and `Project.sourceRoot` say where sources are read from.
     - `specPathOf(project)` is undefined for a component with no specification. Such a component's model is made from its manifest, not emitted.
+    - Since stage 25, `subjectCommit` in `LoadOptions` and `RunOptions` reads another commit of the subject than the pinned one, from the checkout `fetchSubject(project, commit)` makes beside the pinned one, cloned from it.
+- `gitHistory(root, { since, implementation })`, `TEST_FILE`, `PREVIOUS_TAG`: the history source ([11](../../docs/spec/11-ingesting-a-codebase.md), stage 25), a `HistoryPort` over git in the checkout sources are read from, read when the manifest sets `history`. Blame, `git log -L`, rev-list and the pickaxe date lines and values; commit trailers give the untraced changes since `history.since` and mark those an agent co-authored. Only hashes, dates and counts leave it ([A-109](../../ASSUMPTIONS.md), [A-113](../../ASSUMPTIONS.md)). A start that names nothing is the report warning `history-since-unknown`.
 - `loadProject(cwd, root)`, `projectRoot(cwd, root)` (the root every command defaults to, `csh init` included), `Project`, `ProjectConfig`, `specOf`, `ledgerOf`, `snapshotOf`, `unchangedSince`, `readConfig`, `fixtureRoot`, and the paths `CONFIG_PATH`, `LOCK_PATH`, `REPORT_PATH`, `MODEL_PATH`, `CACHE_DIR`.
 
 ## Depends on and used by

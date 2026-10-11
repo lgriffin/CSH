@@ -3,6 +3,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { check, type CheckResult, type EvidenceStore, makeRefiner, type Report, type AuthorityResolver, type SourceRun } from "@csh/check";
+import { gitHistory } from "./history.ts";
 import { runSources, type RunSourcesOptions, trackedFiles } from "./sources.ts";
 import { emit, type EmitOptions, type EmitResult, type Lock } from "@csh/emit";
 import { canonicalJson, canonicalModule, digestJson, fragmentsOf, isArchRule, moduleDigest, refName, type Module } from "@csh/kernel";
@@ -168,7 +169,12 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
     const { unowned } = checkAgainstModule(opts.component.manifest, module);
     checkOpts.component = { name: opts.component.manifest.name, digest: opts.component.digest, sources: ownersOf(opts.component.manifest), unowned };
   }
+  // The repository's history, when the manifest asks for it (stage 25), read where the sources are.
+  const wanted = opts.component?.manifest.history;
+  const history = wanted !== undefined ? gitHistory(opts.sourceRoot ?? opts.root, { implementation: opts.component!.manifest.implementation, ...(wanted.since !== undefined ? { since: wanted.since } : {}) }) : undefined;
+  if (history !== undefined) checkOpts.history = history;
   const checked = await check(checkOpts);
+  if (history?.sinceProblem !== undefined) checked.report.errors.push({ code: "history-since-unknown", severity: "warning", detail: `${history.sinceProblem}; no untraced-change is reported` });
   return { runs, checked };
 }
 

@@ -159,9 +159,12 @@ csh diff <base> <head> [--json] [--out <dir>]
                                             Each side is a stored run's directory, a commit, or . for the working tree.
                                             Decides nothing; non-zero only when the head cannot be run.
 csh queue [--json]                          What awaits the owner's decision, ordered by what approving it unlocks.
-csh subject fetch                           Clone the subject a csh-component/v2 manifest names, at its pinned commit,
-                                            under .csh-cache/subjects/. Every command takes --subject <dir> to read
-                                            another checkout of it instead.
+csh subject fetch [--at <tag|commit>]      Clone the subject a csh-component/v2 manifest names, at its pinned commit
+                                            or another, under .csh-cache/subjects/. Every command takes --subject <dir>
+                                            to read another checkout of it instead.
+csh history <slug> [--from <tag>] [--to <tag>]
+                                            Run a subject at each release tag in the range and record each run as a
+                                            stage of the A3 <slug>.
 csh-agent [--root <component>]              The agent tool server, over the Model Context Protocol on stdio.
 csh gate [--mode advisory|enforcing]        Check and decide for the current snapshot. Non-zero only on block in enforcing mode.
 csh gate --verify <decision.json>           Recompute; refuse a decision for another snapshot or one that differs.
@@ -232,7 +235,8 @@ A component can evaluate a repository it does not hold. A `csh-component/v2` man
 commit, and may leave out the specification ([the manifest guide](docs/guides/manifest.md)). [subjects/esi-ts](subjects/esi-ts)
 does this for ESI.ts, the first codebase CSH is being refactored to ingest ([11](docs/spec/11-ingesting-a-codebase.md)). It reads
 ESI.ts's charter, guides, feature files, tests and issues as an inventory: what each requirement is verified by, which
-rule each scenario sits under, and what refers to nothing.
+rule each scenario sits under, and what refers to nothing. It also reads ESI.ts's history: prose older than the code
+it names, statuses nothing supports, changes with no test and no reference, and how each moved across its releases.
 
 ## Limits
 

@@ -5,7 +5,7 @@
 import { compareCodePoints } from "@csh/kernel";
 import type { Fact, ItemEdge } from "@csh/witness";
 import type { Prepared } from "./pool.ts";
-import type { Gap, Report } from "./types.ts";
+import type { Gap, HistoryPort, Report } from "./types.ts";
 
 export interface TraceInput {
   prepared: Prepared;
@@ -13,6 +13,8 @@ export interface TraceInput {
   files?: string[];
   /** The code facts of the run: a symbol or script named in prose is resolved against them (stage 24). */
   facts?: Fact[];
+  /** The repository's history (stage 25): with it, prose that names a file changed since is stale-prose. */
+  history?: HistoryPort;
 }
 
 export interface TraceResult {
@@ -21,6 +23,12 @@ export interface TraceResult {
 }
 
 const VERIFYING = new Set(["requirement"]);
+/** Edges whose target, once resolved, says the prose describes that file: a later change to it can leave the prose stale. */
+const DESCRIBING = new Set(["mentions-file", "verified-by", "mentions-symbol"]);
+
+/** Statuses that say a requirement is checked by something (A-111). */
+const ASSERTED = new Set(["Enforced"]);
+const DOCUMENT = /\.(md|markdown)$/i;
 
 export function trace(input: TraceInput): TraceResult {
   const { items, edges } = input.prepared;
@@ -34,6 +42,12 @@ export function trace(input: TraceInput): TraceResult {
   // A path counts as one of the repository's only when its first segment is a top-level entry of it (A-96): prose
   // writes application/json and CJS/ESM in backticks too.
   const top = new Set((input.files ?? []).map((f) => f.split("/")[0]!));
+  // A bare file name (`security.test.ts`) names the one tracked file with that name, when only one has it (A-110).
+  const byBase = new Map<string, string[]>();
+  for (const f of input.files ?? []) {
+    const b = f.slice(f.lastIndexOf("/") + 1);
+    byBase.set(b, [...(byBase.get(b) ?? []), f]);
+  }
   const dirs = new Set((input.files ?? []).flatMap((f) => f.split("/").slice(0, -1).map((_, n, parts) => parts.slice(0, n + 1).join("/"))));
 
   /** The item an edge names, as Source/id, preferring the edge's own source; "file" for a tracked path; undefined
@@ -45,6 +59,17 @@ export function trace(input: TraceInput): TraceResult {
   // A module that re-exports with * may supply any name, and the re-export is not followed (A-106).
   const starred = new Set(facts.flatMap((f) => (f.kind === "export" && f.symbol === "*" ? [f.module] : [])));
   const scripts = facts.filter((f) => f.kind === "field" && f.file === "package.json");
+  /** The tracked file an edge that resolved to "file" names: the file, a bare name's only match, or a symbol's module. */
+  const fileOf = (to: string): string | undefined => {
+    if (to.startsWith("symbol:")) return to.slice(7).split("#")[0];
+    if (!to.startsWith("file:")) return undefined;
+    const p = to.slice(5).replace(/\/$/, "");
+    // A directory changes whenever anything under it does: only a file is dated.
+    if (files?.has(p) === true) return p;
+    if (p.includes("/")) return undefined;
+    const found = byBase.get(p);
+    return found?.length === 1 ? found[0] : undefined;
+  };
   const resolve = (source: string, e: ItemEdge): string | undefined | null => {
     if (e.to.startsWith("text:")) return null;
     // A symbol resolves when its module was read and declares or exports it; a module not read cannot be checked.
@@ -60,6 +85,8 @@ export function trace(input: TraceInput): TraceResult {
     if (e.to.startsWith("file:")) {
       if (files === undefined) return null;
       const p = e.to.slice(5).replace(/\/$/, "");
+      // A bare name that is not a top-level file resolves when it is unique, and is unchecked otherwise: never dangling.
+      if (!p.includes("/") && !files.has(p)) return byBase.get(p)?.length === 1 ? "file" : null;
       if (!top.has(p.split("/")[0]!)) return null;
       return files.has(p) || dirs.has(p) ? "file" : undefined;
     }
@@ -73,6 +100,12 @@ export function trace(input: TraceInput): TraceResult {
   const incoming = new Map<string, Set<string>>();
   const verifiedBy = new Set<string>();
   const dangling = new Map<string, string[]>();
+  const supported = new Set<string>();
+  const unresolvedAt = new Set<string>();
+  const scriptsAt = new Set<string>();
+  const testCited = new Set<string>();
+  const stale = new Map<string, Map<string, string>>();
+  const h = input.history;
   for (const e of edges) {
     const r = resolve(e.source, e);
     const from = `${e.source}/${e.from}`;
@@ -84,6 +117,33 @@ export function trace(input: TraceInput): TraceResult {
     }
     out.push(row);
     if (e.rel === "verified-by") verifiedBy.add(from);
+    // A mechanism that resolves supports a stated status: a verified-by edge to a file or an item, or the script a
+    // verified-by `npm run x` names, read as a mentions-script edge on the same line.
+    if (e.rel === "verified-by" && typeof r === "string") supported.add(from);
+    // The command and the script are matched by name, so another script on the same line supports nothing.
+    const command = e.rel === "verified-by" && r === null ? /^text:npm run ([\w:.\-]+)(?=$|\s)/.exec(e.to) : null;
+    if (command !== null) unresolvedAt.add(`${from}\u0000${e.span}\u0000${command[1]}`);
+    if (e.rel === "mentions-script" && r === "file") scriptsAt.add(`${from}\u0000${e.span}\u0000${e.to.slice(7)}`);
+    // Only a test file's citation counts as a test citing a requirement: a tagged scenario cites without testing.
+    if (e.rel === "cites" && typeof r === "string" && r !== "file" && byQualified.get(from)?.kind === "test-file") testCited.add(r);
+    // Stale prose (stage 25): the line naming a file was last changed before the file was. Documents are not code.
+    if (h !== undefined && r === "file" && DESCRIBING.has(e.rel)) {
+      const path = fileOf(e.to);
+      const at = /^(.*):(\d+)$/.exec(e.span);
+      if (path !== undefined && at !== null && !DOCUMENT.test(path)) {
+        const key = `${e.span} ${path}`;
+        const seen = stale.get(from);
+        if (seen?.has(key) !== true) {
+          const line = h.lineCommit(at[1]!, Number(at[2]));
+          const after = line === undefined ? [] : h.changedSince(line.commit, path);
+          if (after.length > 0) {
+            const m = seen ?? new Map<string, string>();
+            m.set(key, `${e.span} names ${path}, changed in ${after.length} commit${after.length === 1 ? "" : "s"} since the line (newest ${after[0]!.commit.slice(0, 12)}, ${after[0]!.date.slice(0, 10)})`);
+            stale.set(from, m);
+          }
+        }
+      }
+    }
     if (typeof r === "string" && r !== "file") {
       const set = incoming.get(r) ?? new Set<string>();
       set.add(e.rel);
@@ -93,9 +153,20 @@ export function trace(input: TraceInput): TraceResult {
   for (const [subject, refs] of dangling) {
     gaps.push({ kind: "dangling-reference", subject, fragments: [], detail: `names what does not exist: ${refs.join("; ")}` });
   }
+  for (const k of unresolvedAt) if (scriptsAt.has(k)) supported.add(k.slice(0, k.indexOf("\u0000")));
+  for (const [subject, refs] of stale) {
+    gaps.push({ kind: "stale-prose", subject, fragments: [], detail: [...refs.keys()].sort(compareCodePoints).map((k) => refs.get(k)!).join("; ") });
+  }
   for (const it of items) {
     const q = `${it.source}/${it.id}`;
     const into = incoming.get(q) ?? new Set<string>();
+    // A status that says the requirement is checked, while nothing it names as a mechanism resolves (stage 25).
+    const status = it.attrs?.status;
+    // Judged only with history, as the stage that brought it, and only when the tracked files are known: unknown
+    // files leave every file mechanism unresolved.
+    if (h !== undefined && files !== undefined && it.kind !== undefined && VERIFYING.has(it.kind) && status !== undefined && ASSERTED.has(status) && !supported.has(q) && !testCited.has(q)) {
+      gaps.push({ kind: "status-unsupported", subject: q, fragments: [], detail: `${it.span}: its stated status is ${status}, and nothing it names as a mechanism resolves, and no test cites it` });
+    }
     if (it.kind !== undefined && VERIFYING.has(it.kind) && !verifiedBy.has(q) && !into.has("cites")) {
       const status = it.attrs?.status !== undefined ? `; its stated status is ${it.attrs.status}` : "";
       gaps.push({ kind: "unverified", subject: q, fragments: [], detail: `${it.span}: names no mechanism that verifies it, and no test cites it${status}` });

@@ -44,6 +44,15 @@ export function pathToken(token: string): string | undefined {
   return t;
 }
 
+/**
+ * A bare file name with a code or data extension, such as `security.test.ts` (stage 25). It names a file by its name
+ * alone: the trace resolves it when exactly one tracked file has that name, and leaves it unchecked otherwise.
+ */
+export function bareFileToken(token: string): string | undefined {
+  const t = token.trim();
+  return /^[\w@-][\w.@-]*\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs|json|ya?ml)$/.test(t) ? t : undefined;
+}
+
 /** Every backticked token on a line, with no nesting. */
 export function backticked(line: string): string[] {
   return [...line.matchAll(/`([^`]+)`/g)].map((m) => m[1]!);

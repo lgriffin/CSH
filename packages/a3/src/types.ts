@@ -61,7 +61,7 @@ export interface Judgments {
 export interface StageRecord {
   id: string;
   /** The run record (csh-run/v1). */
-  run: { snapshot: { commit: string }; snapshotDigest: string; reportDigest: string; gateDigest: string; [k: string]: unknown };
+  run: { snapshot: { commit: string; subject?: { repo: string; commit: string } }; snapshotDigest: string; reportDigest: string; gateDigest: string; [k: string]: unknown };
   report: import("@csh/check").Report;
   gate: { mode: string; overall: string; obligations?: { fragment: string; disposition: string }[] };
   /** Digests of report.json and gate.json as read, byte for byte. */

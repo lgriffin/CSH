@@ -166,6 +166,15 @@ describe("version 2", () => {
     expect(codes({ ...profile, practices: [{ ...profile.practices[0]!, settings: { n: 1 } }, profile.practices[1]] })).toEqual(["malformed-manifest"]);
   });
 
+  it("takes history with a tag or commit to start from, and refuses it in version 1 or with a start git would read as an option (stage 25)", () => {
+    expect(validateManifest({ ...profile, history: {} })).toEqual([]);
+    expect(validateManifest({ ...profile, history: { since: "v11.2.0" } })).toEqual([]);
+    expect(validateManifest({ ...profile, history: { since: "previous-tag" } })).toEqual([]);
+    expect(codes({ ...profile, history: { since: "--all" } })).toEqual(["malformed-manifest"]);
+    expect(codes({ ...profile, history: true })).toEqual(["malformed-manifest"]);
+    expect(codes({ ...good, history: {} })).toEqual(["malformed-manifest"]);
+  });
+
   it("adds the sources the manifest declares to a specification's, and refuses a name both declare (stage 23)", () => {
     expect(validateManifest({ ...profile, spec: "spec.csl.ts" })).toEqual([]);
     const spec = { ...moduleOfManifest({ ...profile, sources: [{ name: "Rules", kind: "Requirements", at: "r.md" }] }) };

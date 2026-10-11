@@ -2,12 +2,13 @@
 // opens with an identifier is one item of kind requirement: its first paragraph is its text, the parts of the heading
 // after the identifier are fields, and each "- **Name:** value" bullet under it is a field. The mechanisms the first
 // sentence of its "Verified by" field names in backticks become verified-by edges; an "**Implements:**" line becomes
-// implements edges from the document; any other backticked repository path becomes a mentions-file edge. It reads
+// implements edges from the document; any other backticked repository path, or bare code file name (stage 25), becomes
+// a mentions-file edge. It reads
 // structure and never meaning: a requirement whose verification is prose alone simply has no verified-by edge.
 import { classify } from "@csh/adapter-ears-markdown";
 import { digestOf } from "@csh/kernel";
 import type { Adapter, AdapterInput, AdapterOutput, Diagnostic, ItemEdge, SourceItem } from "@csh/witness";
-import { backticked, decode, idPatternOf, pathToken, sortedFiles } from "./common.ts";
+import { backticked, bareFileToken, decode, idPatternOf, pathToken, sortedFiles } from "./common.ts";
 
 export const manifest = {
   id: "csh.adapter.items.markdown",
@@ -85,10 +86,10 @@ export function run(input: AdapterInput): AdapterOutput {
       for (const { t, span } of verifying.tokens) {
         if (mechanisms.has(t) && !made.has(t)) {
           made.add(t);
-          const p = pathToken(t);
+          const p = pathToken(t) ?? bareFileToken(t);
           edges.push({ from: verifying.item.id, rel: "verified-by", to: p !== undefined ? `file:${p}` : `text:${t}`, span });
         } else if (!mechanisms.has(t)) {
-          const p = pathToken(t);
+          const p = pathToken(t) ?? bareFileToken(t);
           if (p !== undefined) edges.push({ from: verifying.item.id, rel: "mentions-file", to: `file:${p}`, span });
         }
       }
@@ -114,7 +115,7 @@ export function run(input: AdapterInput): AdapterOutput {
     };
     const mentions = (text: string, from: string, span: string) => {
       for (const t of backticked(text)) {
-        const p = pathToken(t);
+        const p = pathToken(t) ?? bareFileToken(t);
         if (p !== undefined) edges.push({ from, rel: "mentions-file", to: `file:${p}`, span });
       }
     };

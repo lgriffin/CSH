@@ -93,6 +93,11 @@ export interface ComponentManifest {
    * they are added to those it declares, and a name both declare is refused (stage 23).
    */
   sources?: DeclaredSource[];
+  /**
+   * Version 2: read the repository's history (stage 25). Without it no history is read. `since` is the tag or commit
+   * after which a commit with no test and no reference is an untraced-change; without it none is reported.
+   */
+  history?: { since?: string };
   /** Paths whose change makes a witness stale. */
   implementation: string[];
   practices: Practice[];
@@ -131,11 +136,16 @@ export function validateManifest(v: unknown): ComponentProblem[] {
   if (v.schema !== COMPONENT_SCHEMA && !v2) bad("malformed-manifest", `schema must be ${COMPONENT_SCHEMA} or ${COMPONENT_SCHEMA_V2}`);
   if (typeof v.name !== "string" || v.name === "") bad("malformed-manifest", "name must be a non-empty string");
   if (!(v2 && v.spec === undefined) && !projectPath(v.spec)) bad("malformed-manifest", "spec must be a path inside the component root");
-  if (!v2) for (const k of ["subject", "sources"] as const) if (v[k] !== undefined) bad("malformed-manifest", `${k} needs ${COMPONENT_SCHEMA_V2}`);
+  if (!v2) for (const k of ["subject", "sources", "history"] as const) if (v[k] !== undefined) bad("malformed-manifest", `${k} needs ${COMPONENT_SCHEMA_V2}`);
   if (v2 && v.subject !== undefined) {
     const s = v.subject;
     if (!isRecord(s) || typeof s.repo !== "string" || s.repo === "") bad("malformed-manifest", "subject.repo must name the repository");
     if (!isRecord(s) || typeof s.commit !== "string" || !/^[0-9a-f]{40}$/.test(s.commit)) bad("malformed-manifest", "subject.commit must be a full commit, 40 lower-case hexadecimal digits");
+  }
+  if (v2 && v.history !== undefined) {
+    const h = v.history;
+    // A revision is passed to git as an argument: one that could read as an option is refused.
+    if (!isRecord(h) || (h.since !== undefined && (typeof h.since !== "string" || !/^[\w][\w.\/-]*$/.test(h.since)))) bad("malformed-manifest", "history must be an object whose since, when given, names a tag or commit");
   }
   if (v2 && v.sources !== undefined) {
     if (!Array.isArray(v.sources)) bad("malformed-manifest", "sources must be a list");

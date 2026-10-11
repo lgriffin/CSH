@@ -2,7 +2,7 @@
 // names no mechanism and no test cites is unverified, a rule with no scenario is unverified.
 import { describe, expect, it } from "vitest";
 import type { Module } from "@csh/kernel";
-import { prepare, type SourceRun, trace } from "../src/index.ts";
+import { type HistoryPort, prepare, type SourceRun, trace } from "../src/index.ts";
 
 const module: Module = { schema: "csh-ir/v1", system: "S", uses: [], vocabulary: { units: [], enums: [], states: [], events: [] }, transitions: [], policies: [], intents: [], sources: [], claims: [], bindings: [] };
 const item = (id: string, kind: "requirement" | "rule" | "scenario" | "test-file" | "document", attrs?: Record<string, string>) => ({ id, kind, text: id, span: `${id}:1`, textDigest: "sha256:0", ...(attrs !== undefined ? { attrs } : {}) });
@@ -109,5 +109,84 @@ describe("trace against code facts (stage 24)", () => {
 
   it("checks nothing about code it was given no facts for", () => {
     expect(trace({ prepared: prepare(module, prose) }).gaps).toEqual([]);
+  });
+});
+
+describe("trace with history (stage 25)", () => {
+  const dated = (commit: string) => ({ commit, date: `2026-0${commit.length}-01T00:00:00+00:00` });
+  // Every line was last changed by "old"; src/a.ts and docs/x.md changed after it, src/b.ts did not.
+  const history: HistoryPort = {
+    lineCommit: () => dated("old"),
+    lineOrigin: () => dated("old"),
+    changedSince: (_c, path) => (path === "src/a.ts" || path === "docs/x.md" || path === "src" ? [dated("newer"), dated("new")] : []),
+    introduced: () => undefined,
+    untraced: () => [],
+  };
+  const charter: SourceRun[] = [
+    {
+      source: "Charter",
+      kind: "Requirements",
+      files: [],
+      output: {
+        diagnostics: [],
+        items: [item("R-1", "requirement", { status: "Enforced" }), item("R-2", "requirement", { status: "Enforced" }), item("R-3", "requirement", { status: "Enforced" }), item("R-4", "requirement", { status: "Practised" })],
+        edges: [
+          { from: "R-1", rel: "verified-by", to: "file:a.ts", span: "c.md:2" },
+          { from: "R-1", rel: "mentions-file", to: "file:src/b.ts", span: "c.md:3" },
+          { from: "R-1", rel: "mentions-file", to: "file:docs/x.md", span: "c.md:3" },
+          { from: "R-1", rel: "mentions-file", to: "file:src", span: "c.md:4" },
+          { from: "R-2", rel: "verified-by", to: "text:npm run check", span: "c.md:6" },
+          { from: "R-2", rel: "mentions-script", to: "script:check", span: "c.md:6" },
+          { from: "R-3", rel: "verified-by", to: "text:branch protection", span: "c.md:8" },
+          { from: "R-3", rel: "mentions-script", to: "script:check", span: "c.md:9" },
+          { from: "R-3", rel: "mentions-file", to: "file:c.ts", span: "c.md:9" },
+        ],
+      },
+    },
+  ];
+  const files = ["src/a.ts", "src/b.ts", "docs/x.md", "x/c.ts", "y/c.ts"];
+  const facts = [{ schema: "csh-facts/v2", subject: { commit: "c" }, tool: { id: "facts-ts", version: "1" }, kind: "field", file: "package.json", path: "/scripts/check", value: "x", at: "package.json" }] as never[];
+
+  it("reports a line older than the code file it names, by a bare name too, and never a document or a directory", () => {
+    const r = trace({ prepared: prepare(module, charter), files, facts, history });
+    expect(r.gaps.filter((g) => g.kind === "stale-prose")).toEqual([{ kind: "stale-prose", subject: "Charter/R-1", fragments: [], detail: "c.md:2 names src/a.ts, changed in 2 commits since the line (newest newer, 2026-05-01)" }]);
+    // A bare name two files share is not checked, and so not dangling.
+    expect(r.edges.find((e) => e.to === "file:c.ts")?.dangling).toBeUndefined();
+    expect(r.gaps.filter((g) => g.kind === "dangling-reference")).toEqual([]);
+  });
+
+  it("reports an Enforced status that no mechanism it names supports; a script named on the verifying line supports it", () => {
+    const r = trace({ prepared: prepare(module, charter), files, facts, history });
+    expect(r.gaps.filter((g) => g.kind === "status-unsupported")).toEqual([{ kind: "status-unsupported", subject: "Charter/R-3", fragments: [], detail: "R-3:1: its stated status is Enforced, and nothing it names as a mechanism resolves, and no test cites it" }]);
+  });
+
+  it("dates nothing and judges no status without history", () => {
+    const gaps = trace({ prepared: prepare(module, charter), files, facts }).gaps;
+    expect(gaps.filter((g) => g.kind === "stale-prose" || g.kind === "status-unsupported")).toEqual([]);
+  });
+
+  it("counts only a test file's citation, and only the script the verifying command names", () => {
+    const more: SourceRun[] = [
+      {
+        source: "Charter",
+        kind: "Requirements",
+        files: [],
+        output: {
+          diagnostics: [],
+          items: [item("R-5", "requirement", { status: "Enforced" }), item("R-6", "requirement", { status: "Enforced" }), item("R-7", "requirement", { status: "Enforced" })],
+          edges: [
+            { from: "R-5", rel: "verified-by", to: "text:branch protection", span: "c.md:20" },
+            { from: "R-6", rel: "verified-by", to: "text:npm run gone", span: "c.md:22" },
+            { from: "R-6", rel: "mentions-script", to: "script:check", span: "c.md:22" },
+            { from: "R-7", rel: "verified-by", to: "text:branch protection", span: "c.md:24" },
+          ],
+        },
+      },
+      { source: "Features", kind: "Features", files: [], output: { diagnostics: [], items: [item("f#r", "rule"), item("f#r/s", "scenario")], edges: [{ from: "f#r/s", rel: "exemplifies", to: "f#r", span: "f:2" }, { from: "f#r/s", rel: "cites", to: "R-5", span: "f:1" }] } },
+      { source: "Tests", kind: "TestFiles", files: [], output: { diagnostics: [], items: [item("t.test.ts", "test-file")], edges: [{ from: "t.test.ts", rel: "cites", to: "R-7", span: "t:1" }] } },
+    ];
+    const r = trace({ prepared: prepare(module, more), files, facts, history });
+    // A tagged scenario cites R-5 without testing it; R-6's command names a script other than the one on its line.
+    expect(r.gaps.filter((g) => g.kind === "status-unsupported").map((g) => g.subject)).toEqual(["Charter/R-5", "Charter/R-6"]);
   });
 });

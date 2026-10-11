@@ -10,7 +10,7 @@ import { gapView } from "./gaps.ts";
 import { prepare, type Prepared, type SourceRun } from "./pool.ts";
 import { buildPool, runQueries, sortFindings } from "./run.ts";
 import { trace } from "./trace.ts";
-import { ALL_CANDIDATE, type AuthorityInfo, type AuthorityResolver, type ComponentInfo, type Report, TOOL_VERSION } from "./types.ts";
+import { ALL_CANDIDATE, type AuthorityInfo, type AuthorityResolver, type ComponentInfo, type Gap, type HistoryPort, type Report, TOOL_VERSION } from "./types.ts";
 
 export const DEFAULT_BUDGET_MS = 5000;
 
@@ -34,6 +34,8 @@ export interface CheckOptions {
   subjectCommit?: string;
   /** The files the repository tracks, relative to the root sources are read from; edges to files resolve against it. */
   files?: string[];
+  /** The repository's history at the commit evaluated (stage 25): stale-prose and untraced-change come from it. */
+  history?: HistoryPort;
 }
 
 export interface CheckResult {
@@ -48,6 +50,14 @@ export function resolveAll(fragments: Fragment[], resolver: AuthorityResolver): 
   return m;
 }
 
+/**
+ * Commits that change the implementation with no test and no reference (stage 25). Who wrote one is told by its
+ * trailers, and only annotates it: an agent's commit is no more or less a gap than a person's.
+ */
+function untracedChanges(h: HistoryPort | undefined): Gap[] {
+  return (h?.untraced() ?? []).map((c) => ({ kind: "untraced-change", subject: `commit:${c.commit.slice(0, 12)}`, fragments: [], detail: `${c.date.slice(0, 10)}: changes ${c.files} implementation file${c.files === 1 ? "" : "s"}, with no test and no Refs: trailer${c.agent ? "; an agent co-authored it" : ""}` }));
+}
+
 export async function check(opts: CheckOptions): Promise<CheckResult> {
   const budgetMs = opts.budgetMs ?? DEFAULT_BUDGET_MS;
   const prepared = prepare(opts.module, opts.runs ?? []);
@@ -56,10 +66,10 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
   const env = { solver: opts.solver, vocabulary: v, budgetMs };
   const pool = buildPool(prepared.fragments, v, authority);
   const outcome = await runQueries(pool, env, authority);
-  const arch = evaluateArchitecture({ prepared, fragments: prepared.fragments, authority, live: (n) => pool.byName.has(n), ...(opts.files !== undefined ? { files: opts.files } : {}), ...(opts.snapshot !== undefined ? { snapshotCommit: opts.snapshot.commit } : {}), ...(opts.subjectCommit !== undefined ? { subjectCommit: opts.subjectCommit } : {}) });
+  const arch = evaluateArchitecture({ prepared, fragments: prepared.fragments, authority, live: (n) => pool.byName.has(n), ...(opts.files !== undefined ? { files: opts.files } : {}), ...(opts.snapshot !== undefined ? { snapshotCommit: opts.snapshot.commit } : {}), ...(opts.subjectCommit !== undefined ? { subjectCommit: opts.subjectCommit } : {}), ...(opts.history !== undefined ? { history: opts.history } : {}) });
   outcome.findings = sortFindings([...outcome.findings, ...arch.findings]);
-  const traced = trace({ prepared, facts: currentFacts(prepared.runs.flatMap((r) => r.output.facts ?? []), opts.snapshot?.commit, opts.subjectCommit), ...(opts.files !== undefined ? { files: opts.files } : {}) });
-  const gaps = await gapView({ prepared, pool, outcome, env, authority, archGaps: arch.gaps, traceGaps: traced.gaps, ...(opts.component !== undefined ? { unowned: opts.component.unowned } : {}) });
+  const traced = trace({ prepared, facts: currentFacts(prepared.runs.flatMap((r) => r.output.facts ?? []), opts.snapshot?.commit, opts.subjectCommit), ...(opts.files !== undefined ? { files: opts.files } : {}), ...(opts.history !== undefined ? { history: opts.history } : {}) });
+  const gaps = await gapView({ prepared, pool, outcome, env, authority, archGaps: arch.gaps, traceGaps: [...traced.gaps, ...untracedChanges(opts.history)], ...(opts.component !== undefined ? { unowned: opts.component.unowned } : {}) });
   const tool = { version: TOOL_VERSION, solver: opts.solver.id, budgetMs };
   const assessInput: Parameters<typeof assess>[0] = {
     pool,
