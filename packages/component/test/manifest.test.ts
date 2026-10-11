@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { Module } from "@csh/kernel";
-import { checkAgainstModule, type ComponentManifest, moduleOfManifest, ownersOf, parseComponent, practiceOf, validateManifest } from "../src/index.ts";
+import { checkAgainstModule, type ComponentManifest, moduleOfManifest, ownersOf, parseComponent, practiceOf, validateManifest, withDeclaredSources } from "../src/index.ts";
 
 const good: ComponentManifest = {
   schema: "csh-component/v1",
@@ -153,8 +153,7 @@ describe("version 2", () => {
     expect(validateManifest(bare)[0]!.detail).toMatch(/declares its sources/);
   });
 
-  it("refuses sources beside a specification, a short commit, a duplicate source and a harness on a subject", () => {
-    expect(validateManifest({ ...profile, spec: "spec.csl.ts" })[0]!.detail).toMatch(/only when there is no spec/);
+  it("refuses a short commit, a duplicate source and a harness on a subject", () => {
     expect(validateManifest({ ...profile, subject: { ...profile.subject!, commit: "2a2da8a" } })[0]!.detail).toMatch(/full commit/);
     expect(codes({ ...profile, sources: [profile.sources![0], profile.sources![0]] })).toEqual(["duplicate-source"]);
     expect(codes({ ...profile, practices: [{ ...profile.practices[0]!, harness: { run: ["npm", "test"], witnesses: "w.ndjson" } }, profile.practices[1]] })).toEqual(["harness-on-subject"]);
@@ -165,6 +164,16 @@ describe("version 2", () => {
     expect(validateManifest({ ...globbed, practices: [{ ...profile.practices[0]!, kind: "documents", settings: { headingFields: "form,status" } }, profile.practices[1]] })).toEqual([]);
     expect(codes({ ...profile, sources: [{ ...profile.sources![0]!, include: "**/*.md" }, profile.sources![1]] })).toEqual(["malformed-manifest"]);
     expect(codes({ ...profile, practices: [{ ...profile.practices[0]!, settings: { n: 1 } }, profile.practices[1]] })).toEqual(["malformed-manifest"]);
+  });
+
+  it("adds the sources the manifest declares to a specification's, and refuses a name both declare (stage 23)", () => {
+    expect(validateManifest({ ...profile, spec: "spec.csl.ts" })).toEqual([]);
+    const spec = { ...moduleOfManifest({ ...profile, sources: [{ name: "Rules", kind: "Requirements", at: "r.md" }] }) };
+    const joined = withDeclaredSources(profile, spec);
+    expect(joined.errors).toEqual([]);
+    expect(joined.module.sources.map((x) => x.name)).toEqual(["Charter", "Features", "Rules"]);
+    expect(withDeclaredSources(profile, moduleOfManifest(profile)).errors.map((e) => e.code)).toEqual(["duplicate-source", "duplicate-source"]);
+    expect(withDeclaredSources({ ...profile, sources: [] }, spec).module).toBe(spec);
   });
 
   it("makes the model of a component with no specification from its manifest alone", () => {

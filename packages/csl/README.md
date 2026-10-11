@@ -13,7 +13,7 @@
 - `system(name, build)`: builds a `Module`; the callback runs exactly once with symbolic handles.
 - `SystemBuilder`: `enum`, `state`, `event` (with an optional `deterministic: true`, so that two examples answering one input two ways are a conflict rather than a divergence), `transition`, `policy`, `intent`, `source`, `claims`, `bind`, `use` and `relax`.
 - `ClaimBuilder`: `assume`, `invariant`, `requirement`, `example`, `architecture` and the reserved `temporal`.
-- `forbid(from, to)`, `only(from, to[])`, `closed(source)`, `pkg(name)`, `container(id)`, `anything`: the architecture builders; `s.architecture(name, forbid(pkg("kernel"), anything))` writes a rule the check engine evaluates ([architecture rules guide](../../docs/guides/architecture-rules.md)).
+- `forbid(from, to)`, `only(from, to[])`, `closed(source)`, `pkg(name)`, `container(id)`, `modules(globs, { except })`, `anything`: the architecture builders, `modules` since stage 23 ([A-101](../../ASSUMPTIONS.md)); `s.architecture(name, forbid(pkg("kernel"), anything))` writes a rule the check engine evaluates ([architecture rules guide](../../docs/guides/architecture-rules.md)).
 - `unit(dimension, symbol)`, `UnitFn`: a branded unit and its literal constructor.
 - `int(unit?)`, `bool()`, `lit(value)`, `IntType`, `BoolType`, `EnumType`: type descriptors and a unitless literal.
 - `and`, `or`, `not`, `truth`: boolean combinators and the boolean literal.

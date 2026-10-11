@@ -2,6 +2,9 @@ import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import {
   canonicalJson,
+  globRegExp,
+  isArchSel,
+  matchesGlobs,
   CanonicalError,
   checkBool,
   digestJson,
@@ -197,5 +200,24 @@ describe("rules on the model", () => {
     const m = account();
     (m.intents[0]!.obligations[0] as { body: Expr }).body = { k: "ge", l: field("balance", "post"), r: { k: "int", v: "0", unit: EUR } };
     expect(rules(m)).toContain("S3");
+  });
+});
+
+describe("globs and module selectors (stages 22 and 23)", () => {
+  it("match whole paths, with ** spanning directories", () => {
+    expect(globRegExp("src/**/*.ts").test("src/a.ts")).toBe(true);
+    expect(globRegExp("src/**/*.ts").test("src/a/b/c.ts")).toBe(true);
+    expect(globRegExp("src/*.ts").test("src/a/b.ts")).toBe(false);
+    expect(globRegExp("a.b").test("axb")).toBe(false);
+    expect(matchesGlobs("src/core/x.ts", ["src/**"], ["src/core/**"])).toBe(false);
+    expect(matchesGlobs("src/sde/x.ts", ["src/**"], ["src/core/**"])).toBe(true);
+  });
+
+  it("accept a modules selector with globs and optional exceptions, and nothing else", () => {
+    expect(isArchSel({ k: "modules", globs: ["src/**"] })).toBe(true);
+    expect(isArchSel({ k: "modules", globs: ["src/**"], except: ["src/x/**"] })).toBe(true);
+    expect(isArchSel({ k: "modules", globs: [] })).toBe(false);
+    expect(isArchSel({ k: "modules", globs: ["a"], except: [] })).toBe(false);
+    expect(isArchSel({ k: "modules", globs: ["a"], extra: 1 })).toBe(false);
   });
 });

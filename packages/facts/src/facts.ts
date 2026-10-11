@@ -3,6 +3,8 @@
 import type { Fact } from "@csh/witness";
 
 export const FACTS_SCHEMA = "csh-facts/v1";
+/** Version 2 (Ingesting a codebase, stage 23): module, export and field facts beside version 1's kinds. */
+export const FACTS_SCHEMA_V2 = "csh-facts/v2";
 export const FACTS_FILE = "reports/facts.ndjson";
 
 export interface FactProblem {
@@ -16,7 +18,7 @@ const str = (x: unknown): x is string => typeof x === "string" && x !== "";
 export function validateFact(v: unknown): string | undefined {
   if (typeof v !== "object" || v === null || Array.isArray(v)) return "not an object";
   const o = v as Record<string, unknown>;
-  if (o.schema !== FACTS_SCHEMA) return `schema is ${JSON.stringify(o.schema)}, not ${FACTS_SCHEMA}`;
+  if (o.schema !== FACTS_SCHEMA && o.schema !== FACTS_SCHEMA_V2) return `schema is ${JSON.stringify(o.schema)}, not ${FACTS_SCHEMA} or ${FACTS_SCHEMA_V2}`;
   if (!str(o.at)) return "no at";
   const subject = o.subject as { commit?: unknown } | undefined;
   if (typeof subject !== "object" || subject === null || !str(subject.commit)) return "no subject.commit";
@@ -30,6 +32,12 @@ export function validateFact(v: unknown): string | undefined {
     return undefined;
   }
   if (o.kind === "skipped") return str(o.from) && str(o.reason) ? undefined : "a skipped fact needs from and reason";
+  if (o.kind === "module" || o.kind === "export" || o.kind === "field") {
+    if (o.schema !== FACTS_SCHEMA_V2) return `a ${o.kind} fact needs ${FACTS_SCHEMA_V2}`;
+    if (o.kind === "module") return str(o.name) ? undefined : "a module fact has no name";
+    if (o.kind === "export") return str(o.module) && str(o.symbol) && typeof o.typeOnly === "boolean" && (o.from === undefined || str(o.from)) ? undefined : "an export fact needs module, symbol and typeOnly";
+    return str(o.file) && str(o.path) && typeof o.value === "string" ? undefined : "a field fact needs file, path and value";
+  }
   return `unknown kind ${JSON.stringify(o.kind)}`;
 }
 

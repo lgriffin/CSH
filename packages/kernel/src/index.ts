@@ -5,3 +5,4 @@ export * from "./refs.ts";
 export * from "./fragments.ts";
 export * from "./evaluate.ts";
 export * from "./validate.ts";
+export * from "./glob.ts";

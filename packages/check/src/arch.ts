@@ -27,14 +27,15 @@ export function archRuleOf(f: Fragment): ArchRule | undefined {
   return isArchRule(native) ? native : undefined;
 }
 
-export function evaluateArchitecture(input: { prepared: Prepared; fragments: Fragment[]; authority: Map<string, AuthorityInfo>; snapshotCommit?: string; live: (name: string) => boolean }): ArchOutcome {
+export function evaluateArchitecture(input: { prepared: Prepared; fragments: Fragment[]; authority: Map<string, AuthorityInfo>; snapshotCommit?: string; subjectCommit?: string; live: (name: string) => boolean }): ArchOutcome {
   const { prepared } = input;
   const system = prepared.module.system;
   const diagrams = new Map<string, ArchDiagram>();
   for (const r of [...prepared.runs].sort((a, b) => compareCodePoints(a.source, b.source))) if (r.output.diagram !== undefined) diagrams.set(r.source, r.output.diagram);
   const primary = [...diagrams.entries()][0];
   const all: Fact[] = prepared.runs.flatMap((r) => r.output.facts ?? []);
-  const current = all.filter((f) => input.snapshotCommit !== undefined && f.subject.commit === input.snapshotCommit);
+  // Facts are current when taken at the snapshot's commit, or, for a subject, at the subject's pinned commit (stage 23).
+  const current = all.filter((f) => (input.snapshotCommit !== undefined && f.subject.commit === input.snapshotCommit) || (input.subjectCommit !== undefined && f.subject.commit === input.subjectCommit));
   const factsState: ArchRuleOutcome["facts"] = current.length > 0 ? "current" : all.length > 0 ? "stale" : "none";
   const facts: ArchFacts = {
     packages: current.flatMap((f) => (f.kind === "package" ? [f.name] : [])),

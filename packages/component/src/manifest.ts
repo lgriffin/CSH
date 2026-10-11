@@ -88,7 +88,10 @@ export interface ComponentManifest {
   spec?: string;
   /** Version 2: the repository under evaluation, when it is not the one holding the manifest. */
   subject?: Subject;
-  /** Version 2, without a specification only: the sources, which a specification would otherwise declare. */
+  /**
+   * Version 2: sources the manifest declares. Without a specification they are all the model's sources; beside one
+   * they are added to those it declares, and a name both declare is refused (stage 23).
+   */
   sources?: DeclaredSource[];
   /** Paths whose change makes a witness stale. */
   implementation: string[];
@@ -135,8 +138,7 @@ export function validateManifest(v: unknown): ComponentProblem[] {
     if (!isRecord(s) || typeof s.commit !== "string" || !/^[0-9a-f]{40}$/.test(s.commit)) bad("malformed-manifest", "subject.commit must be a full commit, 40 lower-case hexadecimal digits");
   }
   if (v2 && v.sources !== undefined) {
-    if (v.spec !== undefined) bad("malformed-manifest", "sources are declared in the manifest only when there is no spec; the specification declares them otherwise");
-    else if (!Array.isArray(v.sources)) bad("malformed-manifest", "sources must be a list");
+    if (!Array.isArray(v.sources)) bad("malformed-manifest", "sources must be a list");
     else {
       const names = new Set<string>();
       for (const [i, s] of v.sources.entries()) {
@@ -269,6 +271,19 @@ export function practiceOf(manifest: ComponentManifest, source: string): Practic
 /** The sources of a manifest that declares them itself (version 2, no specification), sorted by name. */
 export function declaredSources(manifest: ComponentManifest): DeclaredSource[] {
   return [...(manifest.sources ?? [])].sort((a, b) => compareCodePoints(a.name, b.name));
+}
+
+/**
+ * The emitted model with the sources the manifest declares beside the specification's (stage 23), or the problem when
+ * a name is declared by both. The model is returned unchanged when the manifest declares none.
+ */
+export function withDeclaredSources(manifest: ComponentManifest, m: Module): { module: Module; errors: ComponentProblem[] } {
+  const extra = declaredSources(manifest);
+  if (extra.length === 0) return { module: m, errors: [] };
+  const taken = new Set(m.sources.map((s) => s.name));
+  const errors = extra.filter((s) => taken.has(s.name)).map((s) => ({ code: "duplicate-source", detail: `source ${s.name} is declared by both the specification and the manifest` }));
+  const sources = [...m.sources, ...extra.filter((s) => !taken.has(s.name)).map(({ name, kind, at }) => ({ name, kind, at }))].sort((a, b) => compareCodePoints(a.name, b.name));
+  return { module: { ...m, sources }, errors };
 }
 
 /**

@@ -1,6 +1,6 @@
 {
   "schema": "csh-component/v2",
-  "name": "ESI.ts",
+  "name": "EsiTs",
   "subject": {
     "repo": "https://github.com/lgriffin/ESI.ts",
     "commit": "2a2da8a626821bef77ad8726da2c8018e2961236"
@@ -9,11 +9,6 @@
     "src"
   ],
   "sources": [
-    {
-      "name": "Charter",
-      "kind": "Requirements",
-      "at": "guides/CHARTER.md"
-    },
     {
       "name": "Guides",
       "kind": "Documents",
@@ -45,6 +40,15 @@
       "name": "Beads",
       "kind": "Issues",
       "at": ".beads/issues.jsonl"
+    },
+    {
+      "name": "Code",
+      "kind": "Code",
+      "at": ".",
+      "include": [
+        "src/**/*.ts",
+        "package.json"
+      ]
     }
   ],
   "practices": [
@@ -110,6 +114,17 @@
       "settings": {
         "idPattern": "(?:ARCH|DES|TEST|SEC|DOC|REL|GATE|PROC)-[0-9]+"
       }
+    },
+    {
+      "id": "code",
+      "name": "Code facts",
+      "kind": "facts",
+      "sources": [
+        "Code"
+      ],
+      "author": "facts-ts",
+      "unit": "the module"
     }
-  ]
+  ],
+  "spec": "csh/spec.csl.ts"
 }

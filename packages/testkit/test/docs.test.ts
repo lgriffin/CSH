@@ -59,13 +59,13 @@ describe("decision records", () => {
 });
 
 describe("assumptions and questions", () => {
-  const assumptions = new Set([...readFileSync(join(repo, "ASSUMPTIONS.md"), "utf8").matchAll(/^\| (A-\d\d) \|/gm)].map((m) => m[1]));
+  const assumptions = new Set([...readFileSync(join(repo, "ASSUMPTIONS.md"), "utf8").matchAll(/^\| (A-\d{2,3}) \|/gm)].map((m) => m[1]));
   const questions = new Set([...readFileSync(join(repo, "QUESTIONS.md"), "utf8").matchAll(/^## (Q-\d\d) /gm)].map((m) => m[1]));
   const cited = [...documents, ...markdownFiles(join(repo, "fixtures")), ...packages.flatMap((p) => readdirSync(join(repo, "packages", p, "src")).map((f) => join(repo, "packages", p, "src", f)))];
 
   it.each(cited.map((d) => [d.slice(repo.length + 1), d]))("every assumption and question cited in %s exists", (_name, file) => {
     const text = readFileSync(file, "utf8");
-    for (const m of text.matchAll(/\bA-\d\d\b/g)) expect(assumptions.has(m[0]), `${m[0]} is cited but not registered`).toBe(true);
+    for (const m of text.matchAll(/\bA-\d{2,3}\b/g)) expect(assumptions.has(m[0]), `${m[0]} is cited but not registered`).toBe(true);
     for (const m of text.matchAll(/\bQ-\d\d\b/g)) expect(questions.has(m[0]), `${m[0]} is cited but not asked`).toBe(true);
   });
 });

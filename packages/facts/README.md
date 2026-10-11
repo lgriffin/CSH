@@ -12,13 +12,13 @@ It belongs to the "Adapters" container of the [containers diagram](../../docs/ar
 
 - `adapter`, `manifest`, `readFactFiles(input)`: the adapter for `Facts` sources (id `csh.adapter.facts`, produces `facts`). It returns every fact read, and a `malformed-fact` diagnostic with its line for each line it cannot read.
 - `parseFacts(text)`, `validateFact(value)`, `formatFacts(facts)`: the reader, the validator and the writer.
-- `FACTS_SCHEMA` (`csh-facts/v1`), `FACTS_FILE` (`reports/facts.ndjson`).
+- `FACTS_SCHEMA` (`csh-facts/v1`), `FACTS_SCHEMA_V2` (`csh-facts/v2`, stage 23: adds `module`, `export` and `field` facts, which only a v2 line may carry), `FACTS_FILE` (`reports/facts.ndjson`).
 - The types themselves, `Fact`, `PackageFact`, `DependencyFact` and `SkippedFact`, are in `@csh/witness`, beside the witness format.
 
 ## Depends on and used by
 
 - Depends on: `@csh/kernel` and `@csh/witness` (adapter contract and fact types). No external packages.
-- Used by: `@csh/facts-imports` (the writer), and `@csh/run`, which names it in `BUILTIN_ADAPTERS` and loads it inside the adapter subprocess.
+- Used by: `@csh/facts-imports` (the writer), `@csh/facts-ts` (which writes the same facts as an adapter, with no file between), and `@csh/run`, which names it in `BUILTIN_ADAPTERS` and loads it inside the adapter subprocess.
 
 ## Invariants it protects
 

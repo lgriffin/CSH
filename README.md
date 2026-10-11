@@ -265,7 +265,7 @@ with a summary.
 
 | Path | Contents |
 | --- | --- |
-| `packages/` | Twenty-five packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `arch`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `adapter-gherkin`, `adapter-c4-mermaid`, `adapter-items`, `facts`, `facts-imports`, `ledger`, `gate`, `component`, `run`, `review`, `agent`, `harness`, `a3`, `cli`, `testkit` |
+| `packages/` | Twenty-six packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `arch`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `adapter-gherkin`, `adapter-c4-mermaid`, `adapter-items`, `facts`, `facts-ts`, `facts-imports`, `ledger`, `gate`, `component`, `run`, `review`, `agent`, `harness`, `a3`, `cli`, `testkit` |
 | `docs/guides/` | How to write a component manifest, a probe, a step table, an A3 and architecture rules, and the owner's runbook for authority |
 | `csh/` | The `Workspace` component: the repository's own architecture rules, read against its container diagram and its imports ([examples/workspace](examples/workspace/README.md)) |
 | `fixtures/` | Golden fixtures, one directory each, plus the shared bases and the test pack |

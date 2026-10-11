@@ -31,6 +31,22 @@ describe("selectors", () => {
   });
 });
 
+describe("module selectors (stage 23)", () => {
+  it("select source files by glob, with exceptions, and need no diagram", () => {
+    const sel = { k: "modules" as const, globs: ["src/core/**"], except: ["src/core/ports/**"] };
+    expect(selects(sel, "src/core/a.ts", undefined)).toBe(true);
+    expect(selects(sel, "src/core/ports/p.ts", undefined)).toBe(false);
+    expect(selects(sel, "src/clients/c.ts", undefined)).toBe(false);
+    expect(selects({ k: "modules", globs: ["node:*"] }, "node:fs", undefined)).toBe(true);
+    const rule: ArchRule = { k: "forbid", from: sel, to: { k: "modules", globs: ["src/clients/**"] } };
+    const files = { packages: [], depends: [dep("src/core/a.ts", "src/clients/c.ts", "src/core/a.ts:3"), dep("src/core/ports/p.ts", "src/clients/c.ts"), dep("src/clients/c.ts", "src/core/a.ts")] };
+    expect(evaluateRule(rule, files, undefined)).toEqual({ result: "violated", by: [dep("src/core/a.ts", "src/clients/c.ts", "src/core/a.ts:3")] });
+    const only: ArchRule = { k: "only", from: { k: "modules", globs: ["src/sde/**"] }, to: [{ k: "modules", globs: ["node:*"] }, { k: "package", name: "zod" }] };
+    expect(evaluateRule(only, { packages: [], depends: [dep("src/sde/a.ts", "src/sde/b.ts"), dep("src/sde/a.ts", "node:fs"), dep("src/sde/a.ts", "zod")] }, undefined).result).toBe("holds");
+    expect(evaluateRule(only, { packages: [], depends: [dep("src/sde/a.ts", "src/core/x.ts")] }, undefined).result).toBe("violated");
+  });
+});
+
 describe("rules against facts", () => {
   it("forbid is violated by each dependency it names, with its file and line", () => {
     const r = evaluateRule({ k: "forbid", from: { k: "package", name: "core" }, to: { k: "container", id: "web" } }, facts([dep("@s/core", "@s/ui", "core.ts:2"), dep("@s/web", "@s/core")]), diagram);

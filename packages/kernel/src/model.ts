@@ -157,7 +157,12 @@ export interface Reserved {
 }
 
 /** What an architecture rule is about: one package, the packages a container of the diagram holds, or any package. */
-export type ArchSel = { k: "package"; name: string } | { k: "container"; id: string } | { k: "any" };
+export type ArchSel =
+  | { k: "package"; name: string }
+  | { k: "container"; id: string }
+  | { k: "any" }
+  /** Source files by path, from the repository root: those matching a glob and no exception (stage 23). */
+  | { k: "modules"; globs: string[]; except?: string[] };
 
 /** The typed architecture rules (Next layers, section 4.1). */
 export type ArchRule = { k: "forbid"; from: ArchSel; to: ArchSel } | { k: "only"; from: ArchSel; to: ArchSel[] } | { k: "closed"; source: string };
@@ -169,6 +174,10 @@ export function isArchSel(x: unknown): x is ArchSel {
   const o = x as Record<string, unknown>;
   if (o.k === "package") return nonEmpty(o.name) && Object.keys(o).length === 2;
   if (o.k === "container") return nonEmpty(o.id) && Object.keys(o).length === 2;
+  if (o.k === "modules") {
+    const globs = (x: unknown) => Array.isArray(x) && x.length > 0 && x.every(nonEmpty);
+    return globs(o.globs) && (o.except === undefined || globs(o.except)) && Object.keys(o).length === (o.except === undefined ? 2 : 3);
+  }
   return o.k === "any" && Object.keys(o).length === 1;
 }
 

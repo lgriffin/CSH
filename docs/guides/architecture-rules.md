@@ -77,10 +77,34 @@ csh run --root .
 csh a3 open layering --root .
 ```
 
+## Modules of a codebase (stage 23)
+
+A codebase that is one package has no packages to draw a rule between. Its layers are directories, so a rule selects
+source files by glob, over paths from the repository root ([A-101](../../ASSUMPTIONS.md)):
+
+```ts
+import { forbid, only, modules, pkg } from "csl";
+
+i.architecture("SdeImportsOnlyPortsAndPeers", only(modules("src/sde/**"), [modules("src/core/ports/**"), modules("node:*"), pkg("zod")]));
+i.architecture("NothingImportsTheSde", forbid(modules("src/**", { except: "src/sde/**" }), modules("src/sde/**")));
+```
+
+| Builder | Says |
+|---|---|
+| `modules(globs, { except })` | Every source file or package whose name matches a glob and no exception. `**` spans directories; a built-in is `node:<name>`, so `modules("node:*")` is every built-in |
+
+The facts come from a source of kind `Code`, read by `@csh/facts-ts` at the subject's commit with nothing installed
+([A-100](../../ASSUMPTIONS.md); [the manifest guide](manifest.md#code-sources-stage-23)). No harness writes them, and
+they are current for a subject at its pinned commit. A modules rule needs no diagram, and module facts never count as
+`unplaced-package`. [`subjects/esi-ts`](../../subjects/esi-ts/csh/spec.csl.ts) states three of ESI.ts's layering
+requirements this way.
+
 ## Limits
 
 - Only imports and manifests are seen. A relation through a subprocess, a pipe or a file is invisible, and shows as
   `unobserved-relation`, a gap and not a failure.
 - Only the container level is read; component diagrams are not.
+- An import is resolved against the files of its own source, as a bundler would. A path alias from `tsconfig.json` is
+  not read, so an aliased import is a bare package name.
 - TypeScript and JavaScript only. Another language needs its own facts command; the adapter and the evaluation do not
   change.
