@@ -21,6 +21,7 @@ export const BUILTIN_ADAPTERS: Record<string, string> = {
   Features: "@csh/adapter-items/gherkin",
   TestFiles: "@csh/adapter-items/tests",
   Issues: "@csh/adapter-items/jsonl",
+  Traces: "@csh/adapter-items/yaml",
   Code: "@csh/facts-ts",
 };
 

@@ -44,7 +44,7 @@ export interface SourceItem {
   attrs?: Record<string, string>;
 }
 
-export type ItemKind = "requirement" | "rule" | "scenario" | "feature" | "test-file" | "document" | "issue";
+export type ItemKind = "requirement" | "rule" | "scenario" | "feature" | "test-file" | "document" | "issue" | "property";
 
 /**
  * How one item refers to another, or to a file of the repository (stage 22). `implements`: a document says it
@@ -357,8 +357,9 @@ const RUNNER_STATUS: Record<string, TestOutcome> = { passed: "passed", failed: "
  * write, or csh-execution/v1 lines. A file of a JSON report that failed to run and reports no test is one errored
  * result for that file, with an empty name. Malformed input is reported, never dropped silently.
  */
-export function parseTestResults(text: string): { results: RunnerResult[]; problems: WitnessProblem[] } {
+export function parseTestResults(text: string): { results: RunnerResult[]; problems: WitnessProblem[]; commit?: string } {
   const trimmed = text.trimStart();
+  if (trimmed.startsWith("{") && /"schema"\s*:\s*"csh-results\/v1"/.test(trimmed)) return expandResults(text);
   if (!trimmed.startsWith("{") || !/"testResults"\s*:/.test(trimmed)) {
     const parsed = parseExecutions(text);
     return {
@@ -401,4 +402,90 @@ export function parseTestResults(text: string): { results: RunnerResult[]; probl
     });
   });
   return { results, problems };
+}
+
+/** One test file of a reduced results file: counts of the tests that cite nothing, and the outcome and citations of each test that cites. */
+export interface ReducedFile {
+  file: string;
+  passed: number;
+  failed: number;
+  errored: number;
+  skipped: number;
+  cited: { outcome: TestOutcome; cites: string[] }[];
+}
+
+/**
+ * A reduced results file (Ingesting a codebase, stage 28): what CSH reads of a runner's report and nothing else, so
+ * it can be committed beside a subject whose test names may not be: each file's path, its counts, the identifiers
+ * each citing test cites, and the commit the tests ran at.
+ */
+export interface ReducedResults {
+  schema: "csh-results/v1";
+  commit?: string;
+  files: ReducedFile[];
+}
+
+const OUTCOMES: TestOutcome[] = ["passed", "failed", "errored", "skipped"];
+
+function expandResults(text: string): { results: RunnerResult[]; problems: WitnessProblem[]; commit?: string } {
+  let v: unknown;
+  try {
+    v = JSON.parse(text);
+  } catch (err) {
+    return { results: [], problems: [{ line: 1, message: `not JSON: ${(err as Error).message}` }] };
+  }
+  if (!isRecord(v) || !Array.isArray(v.files)) return { results: [], problems: [{ line: 1, message: "a csh-results/v1 file needs a files array" }] };
+  const results: RunnerResult[] = [];
+  const problems: WitnessProblem[] = [];
+  v.files.forEach((f: unknown, i) => {
+    if (!isRecord(f) || typeof f.file !== "string" || f.file === "") {
+      problems.push({ line: 1, message: `files[${i}] names no file` });
+      return;
+    }
+    const file = f.file;
+    for (const o of OUTCOMES) {
+      const n = f[o];
+      if (n === undefined) continue;
+      if (typeof n !== "number" || !Number.isInteger(n) || n < 0) {
+        problems.push({ line: 1, message: `files[${i}].${o} is not a count` });
+        continue;
+      }
+      for (let k = 0; k < n; k++) results.push({ file, name: "", outcome: o, at: `files[${i}].${o}` });
+    }
+    const cited = Array.isArray(f.cited) ? f.cited : [];
+    cited.forEach((c: unknown, j) => {
+      const at = `files[${i}].cited[${j}]`;
+      if (!isRecord(c) || !OUTCOMES.includes(c.outcome as TestOutcome) || !Array.isArray(c.cites)) {
+        problems.push({ line: 1, message: `${at} needs an outcome and cites` });
+        return;
+      }
+      results.push({ file, name: c.cites.filter((x): x is string => typeof x === "string").join(" "), outcome: c.outcome as TestOutcome, at });
+    });
+  });
+  return { results, problems, ...(typeof v.commit === "string" && v.commit !== "" ? { commit: v.commit } : {}) };
+}
+
+/**
+ * A runner's report reduced to a csh-results/v1 file: each test file's path relative to `base` when it lies under it,
+ * the counts of its tests, and for each test whose full name matches `cite`, its outcome and the identifiers it
+ * cites. Test names are dropped. Files and citations are sorted, so the same report reduces to the same bytes.
+ */
+export function reduceTestResults(text: string, opts: { cite: RegExp; base?: string; commit?: string }): { reduced: ReducedResults; problems: WitnessProblem[] } {
+  const parsed = parseTestResults(text);
+  const cite = new RegExp(opts.cite.source, opts.cite.flags.includes("g") ? opts.cite.flags : `${opts.cite.flags}g`);
+  const base = opts.base === undefined ? undefined : `${opts.base.replace(/\\/g, "/").replace(/\/+$/, "")}/`;
+  const byFile = new Map<string, ReducedFile>();
+  for (const r of parsed.results) {
+    let file = r.file.replace(/\\/g, "/");
+    if (base !== undefined && file.startsWith(base)) file = file.slice(base.length);
+    const f = byFile.get(file) ?? { file, passed: 0, failed: 0, errored: 0, skipped: 0, cited: [] };
+    byFile.set(file, f);
+    const cites = [...new Set([...r.name.matchAll(cite)].map((m) => m[0]))].sort();
+    if (cites.length === 0) f[r.outcome]++;
+    else f.cited.push({ outcome: r.outcome, cites });
+  }
+  const key = (c: { outcome: string; cites: string[] }) => `${c.cites.join(" ")}\u0000${c.outcome}`;
+  const files = [...byFile.values()].sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0));
+  for (const f of files) f.cited.sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
+  return { reduced: { schema: "csh-results/v1", ...(opts.commit !== undefined ? { commit: opts.commit } : {}), files }, problems: parsed.problems };
 }

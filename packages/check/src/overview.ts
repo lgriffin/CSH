@@ -71,6 +71,10 @@ export const INDETERMINATE_NEXT: Record<string, string> = {
   reserved: "The term is reserved: bind it or remove it once its meaning is settled",
   "unconstrained-after": "Say what the event leaves unchanged",
 };
+/** Signal kinds that are a convergence: the source states a silence and its reason, and nothing contradicts it. */
+export const CONVERGED_NEXT: Record<string, string> = {
+  "justified-gap": "The silence is recorded with its reason: revisit the reason when the design changes",
+};
 const OTHER_NEXT = "No rule places this kind yet: read its detail";
 
 /** Where an entry with no practice comes from: a commit of history, or the specification's own intents. */
@@ -88,14 +92,15 @@ export function overviewOf(report: Report, manifest?: PracticeMap): Overview {
   for (const s of signals) {
     if (s.kind === "violated" && s.fragments.every((f) => inFindings.has(f))) continue;
     const gap = GAP_NEXT[s.kind];
+    const converged = CONVERGED_NEXT[s.kind];
     const subject = s.subject ?? (s.fragments.length > 0 ? s.fragments.join(", ") : s.kind);
     entries.push({
-      outcome: gap !== undefined ? "gap" : "indeterminate",
+      outcome: gap !== undefined ? "gap" : converged !== undefined ? "converged" : "indeterminate",
       kind: s.kind,
       practice: s.practices[0] ?? placeOf(s.kind),
       subject,
       ...(s.detail !== undefined && s.detail !== "" ? { detail: s.detail } : {}),
-      next: gap ?? INDETERMINATE_NEXT[s.kind] ?? OTHER_NEXT,
+      next: gap ?? converged ?? INDETERMINATE_NEXT[s.kind] ?? OTHER_NEXT,
       signal: s.id,
       anchor: s.id,
     });

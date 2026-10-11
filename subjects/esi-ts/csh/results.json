@@ -1,0 +1,3335 @@
+{
+  "commit": "2a2da8a626821bef77ad8726da2c8018e2961236",
+  "files": [
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0001-alliance.spec.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0004-corporation-projects.spec.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0007-clones.spec.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0010-cosmetics.spec.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0011-dogma.spec.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0018-insurance.spec.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0019-killmails.spec.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0022-mail.spec.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0023-market.spec.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0025-meta.spec.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0029-route.spec.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0036-universe.spec.ts",
+      "passed": 15,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0037-wallet.spec.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0038-wars.spec.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0039-access-lists.spec.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0055-request-headers.spec.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0056-shared-runtime.spec.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0057-mock-transport.spec.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0058-logging.spec.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0059-path-parameters.spec.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0060-custom-client.spec.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0061-rate-limit-status.spec.ts",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/core/0062-security-boundary.spec.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0001-static-data-lookup.spec.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0002-sde-universe-hierarchy.spec.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0003-sde-market-hierarchy.spec.ts",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0004-sde-dogma-industry.spec.ts",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0005-sde-character-lore.spec.ts",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0006-sde-version-management.spec.ts",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0007-sde-error-handling.spec.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0008-sde-type-classification.spec.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0009-sde-universe-geography.spec.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0010-sde-celestial-bodies.spec.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0011-sde-market-groups.spec.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0012-sde-dogma-definitions.spec.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0013-sde-character-reference.spec.ts",
+      "passed": 15,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0014-sde-npc-organisations.spec.ts",
+      "passed": 25,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0015-sde-presentation-tables.spec.ts",
+      "passed": 15,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0016-sde-universe-reference.spec.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0017-sde-industry-reference.spec.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0018-sde-mission-content.spec.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0019-sde-generic-access.spec.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0020-sde-loading.spec.ts",
+      "passed": 19,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0021-sde-optional-peers.spec.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0022-sde-memory-entry.spec.ts",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/sde/0023-sde-ingestion.spec.ts",
+      "passed": 43,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/specs/step-library.spec.ts",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/assets.steps.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/calendar.steps.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/character.steps.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/contacts.steps.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/contracts.steps.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/corporation.steps.ts",
+      "passed": 17,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/etag-caching.steps.ts",
+      "passed": 38,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/factions.steps.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/fittings.steps.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/fleets.steps.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/freelance-jobs.steps.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/incursions.steps.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/industry.steps.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/location.steps.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/loyalty.steps.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/mercenary.steps.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/military-campaigns.steps.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/paragon-hub.steps.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/pi.steps.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/resilience.steps.ts",
+      "passed": 53,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/response-headers.steps.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/runtime-validation.steps.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/search.steps.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/skills.steps.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/skyhooks.steps.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/sovereignty.steps.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/status.steps.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/token-management.steps.ts",
+      "passed": 45,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/core/ui.steps.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/integration/integration-workflows.steps.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/step-definitions/performance/performance.steps.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/access-lists/AccessListsClient.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/adapters/PipelineTransport.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/adapters/scopeTree.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/alliances/AllianceClient.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/api-semver-gate/api-semver-gate.test.ts",
+      "passed": 39,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/assets/AssetsClient.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/auth/EsiTokenManager.identity.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/auth/EsiTokenManager.lock.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/auth/EsiTokenManager.logger.test.ts",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/auth/EsiTokenManager.test.ts",
+      "passed": 52,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/auth/EveSsoClient.test.ts",
+      "passed": 37,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/auth/FileTokenStorage.lock.test.ts",
+      "passed": 20,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/auth/FileTokenStorage.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/auth/MemoryTokenStorage.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/auth/errors.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/auth/index.test.ts",
+      "passed": 28,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/auth/jwks.test.ts",
+      "passed": 40,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/auth/jwt.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/auth/pkce.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/bdd-binder/binder.test.ts",
+      "passed": 24,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/bdd-seam/bdd-seam-lint.test.ts",
+      "passed": 15,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/bdd-support/logging.test.ts",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/benchmark/bench-compare.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/benchmark/sde-bench.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/benchmark/soak.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/benchmark/tasks.test.ts",
+      "passed": 27,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/calendar/CalendarClient.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/characters/CharacterClient.test.ts",
+      "passed": 19,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/client/identity.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/client/runtime.test.ts",
+      "passed": 16,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/clients/FreelanceJobsClient.test.ts",
+      "passed": 15,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/clients/streamMethods.test.ts",
+      "passed": 71,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/clones/ClonesClient.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/composition/dedupeRejection.test.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/composition/errorLimit.test.ts",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/composition/etagOrdering.test.ts",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/composition/interleave.test.ts",
+      "passed": 22,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/composition/retryCircuit.test.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/composition/staleRefresh.test.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/composition/writeInvalidation.test.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/config/configManager.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/consumer-contract/consumer-contract.test.ts",
+      "passed": 23,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/contacts/ContactsClient.test.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/contracts/ContractsClient.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/ApiClient.test.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/ApiClientBuilder.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/ApiRequestHandler.noContent.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/ApiRequestHandler.test.ts",
+      "passed": 25,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/AsyncPaginationIterator.test.ts",
+      "passed": 20,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/BatchRequestHandler.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/ClientRegistry.test.ts",
+      "passed": 40,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/ConsoleLogger.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/CursorPaginationHandler.test.ts",
+      "passed": 35,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/CursorPaginationIntegration.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/ETagCacheManager.test.ts",
+      "passed": 28,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/ETagIntegration.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/EsiClient.test.ts",
+      "passed": 24,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/EsiClientBuilder.test.ts",
+      "passed": 22,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/EsiDiagnostics.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/EsiError.test.ts",
+      "passed": 22,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/FetchLike.test.ts",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/IRetryStrategy.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/NoopLogger.test.ts",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/PaginationHandler.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/PaginationIntegration.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/RateLimitIntegration.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/RateLimiter.test.ts",
+      "passed": 57,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/RequestDeduplicator.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/RetryBackoff.test.ts",
+      "passed": 17,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/RetryStrategy.test.ts",
+      "passed": 17,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/SpecAwareCaching.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/Timeout.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/WithMetadata.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/apiSurfaceSnapshots.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/buildEndpointPath.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/cacheKey.test.ts",
+      "passed": 25,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/callerIdentity.test.ts",
+      "passed": 24,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/circuitBreaker.test.ts",
+      "passed": 40,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/clientLog.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/concurrency.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/configValidation.test.ts",
+      "passed": 33,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/constants.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/constructionParity.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/coverageBranches.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/createClient.safe.test.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/createClient.test.ts",
+      "passed": 20,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/crossCutting.test.ts",
+      "passed": 15,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/customClientGetters.test.ts",
+      "passed": 79,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/dependencyInjection.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/endpointDefinitions.test.ts",
+      "passed": 1863,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/error.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [
+        {
+          "cites": [
+            "ARCH-07"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-07"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-07"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-07"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-07"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-07"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-07"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-07"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-07"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-07"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-07"
+          ],
+          "outcome": "passed"
+        }
+      ],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/errorFamily.test.ts",
+      "passed": 0,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/errorsEntryParity.test.ts",
+      "passed": 39,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/esiScopes.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/headersUtil.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [
+        {
+          "cites": [
+            "ARCH-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "ARCH-06"
+          ],
+          "outcome": "passed"
+        }
+      ],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/importSideEffects.test.ts",
+      "passed": 0,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/loggerLevelEnabled.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/loggerThreading.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/loggerUtil.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/middleware.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/pageLimit.test.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/paginationBranches.test.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/publicApiSurface.test.ts",
+      "passed": 135,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/redactLog.test.ts",
+      "passed": 19,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/requestBodyValidation.test.ts",
+      "passed": 16,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/requestPipeline/cachePolicy.test.ts",
+      "passed": 29,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/requestPipeline/fetchExecution.test.ts",
+      "passed": 19,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/requestPipeline/headers.test.ts",
+      "passed": 25,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/requestPipeline/middlewareBridge.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/requestPipeline/paginationOrchestration.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/requestPipeline/statusHandling.test.ts",
+      "passed": 29,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/requestPipeline/writeGeneration.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/resilience.test.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/runWithConcurrency.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/security.test.ts",
+      "passed": 26,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/streamEndpoint.test.ts",
+      "passed": 17,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/tokenRefresh.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        }
+      ],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/untrusted-input-sites.test.ts",
+      "passed": 0,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/utilFunctions.test.ts",
+      "passed": 20,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/core/validation.test.ts",
+      "passed": 24,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/corporation-projects/CorporationProjectsClient.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/corporations/CorporationsClient.test.ts",
+      "passed": 27,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/cosmetics/CosmeticsClient.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/determinism-lint/determinism-lint.test.ts",
+      "passed": 39,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/doc-examples/doc-examples.test.ts",
+      "passed": 34,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/dogma/DogmaClient.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/export-coverage/export-coverage.test.ts",
+      "passed": 27,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/factions/FactionClient.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/fittings/FittingsClient.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/fleets/FleetClient.test.ts",
+      "passed": 16,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/helpers/InMemoryFetch.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/import-cycles/import-cycles.test.ts",
+      "passed": 22,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/incursions/IncursionsClient.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/industry/IndustryClient.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/insurance/InsuranceClient.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/killmails/KillmailClient.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/layers/layers-lint.test.ts",
+      "passed": 141,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/layers/logger-imports-lint.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/location/LocationClient.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/loyalty/LoyaltyClient.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/mail/MailClient.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/market/MarketClient.streaming.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/market/MarketClient.test.ts",
+      "passed": 16,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/mercenary/MercenaryClient.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/meta/MetaClient.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/military-campaigns/MilitaryCampaignsClient.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/mutation-ratchet/bddShards.test.ts",
+      "passed": 310,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/mutation-ratchet/mutation-pr.test.ts",
+      "passed": 80,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/mutation-ratchet/mutation-ratchet.test.ts",
+      "passed": 20,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/mutation-ratchet/unitShards.test.ts",
+      "passed": 167,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/package-lint/esm-declarations.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/package-lint/package-lint.test.ts",
+      "passed": 23,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/paragon-hub/ParagonHubClient.test.ts",
+      "passed": 16,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/pi/PiClient.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/ports/ports.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/quality-trend/quality-trend.test.ts",
+      "passed": 17,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/release-canary/release-canary.test.ts",
+      "passed": 31,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/release-changelog/changelog-dedupe.test.ts",
+      "passed": 27,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/release-sbom/release-sbom.test.ts",
+      "passed": 33,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/route/RouteClient.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/rule-schema-check/rule-schema-check.test.ts",
+      "passed": 44,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/schema-drift/schema-drift.test.ts",
+      "passed": 49,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/schemas/common-schemas.test.ts",
+      "passed": 22,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/schemas/esiEnum.test.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/schemas/mutationResponseSchemas.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/schemas/schema-validation.test.ts",
+      "passed": 53,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/schemas/schemaRejection.test.ts",
+      "passed": 483,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/schemas/specOptionalFields.test.ts",
+      "passed": 46,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/schemas/specRequiredFields.test.ts",
+      "passed": 43,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/schemas/specResponseBodies.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/schemas/validation-integration.test.ts",
+      "passed": 20,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/scripts/agent-docs.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/scripts/audit-check.test.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/scripts/charter-audit.test.ts",
+      "passed": 30,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/scripts/client-spec-coverage.test.ts",
+      "passed": 29,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/scripts/doc-metrics.test.ts",
+      "passed": 26,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/scripts/examples-logging.test.ts",
+      "passed": 90,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/scripts/examples-nightly.test.ts",
+      "passed": 154,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/scripts/generated-spec-date.test.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/scripts/live-health.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/scripts/npm-help.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "GATE-06"
+          ],
+          "outcome": "passed"
+        }
+      ],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/scripts/package-scripts.test.ts",
+      "passed": 16,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/scripts/sde-drift.test.ts",
+      "passed": 123,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/scripts/sde-spec-coverage.test.ts",
+      "passed": 32,
+      "skipped": 0
+    },
+    {
+      "cited": [
+        {
+          "cites": [
+            "SEC-09"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-09"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-09"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-09"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-10"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-10"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-10"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-10"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-10"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-10"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-10"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-10"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-10"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-10"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-10"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-11"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-12"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-12"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-12"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "SEC-12"
+          ],
+          "outcome": "passed"
+        }
+      ],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/scripts/security-model-audit.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/scripts/skill-eval-judges.test.ts",
+      "passed": 66,
+      "skipped": 0
+    },
+    {
+      "cited": [
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DOC-01"
+          ],
+          "outcome": "passed"
+        }
+      ],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/scripts/sync-docs.test.ts",
+      "passed": 65,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/IStaticDataProvider.contract.test.ts",
+      "passed": 1,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/MemorySdeProvider.test.ts",
+      "passed": 183,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/SdeDataProvider.test.ts",
+      "passed": 133,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/SdeTestDataFactory.test.ts",
+      "passed": 56,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/clock.test.ts",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/errors.test.ts",
+      "passed": 16,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/index.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/ingestion/SdeDatabaseBuilder.test.ts",
+      "passed": 20,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/ingestion/SdeDownloader.test.ts",
+      "passed": 29,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/ingestion/SdeExtractor.test.ts",
+      "passed": 29,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/ingestion/index.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/ingestion/registry.test.ts",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/ingestion/transforms.test.ts",
+      "passed": 46,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/memory-entry-bundle.test.ts",
+      "passed": 4,
+      "skipped": 1
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/optionalPeers.test.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/order.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sde/schemas.test.ts",
+      "passed": 74,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/search/searchClient.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/skills/SkillsClient.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/skyhooks/SkyhooksClient.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/sovereignty/SovereigntyClient.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/spec-audit/bdd-report.test.ts",
+      "passed": 15,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/spec-audit/ears-report.test.ts",
+      "passed": 32,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/spec-audit/spec-audit-steps.test.ts",
+      "passed": 22,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/spec-audit/spec-audit.test.ts",
+      "passed": 36,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/spec-generate/scope-tree.test.ts",
+      "passed": 19,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/spec-generate/snapshot-args.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/spec-generate/spec-generate.test.ts",
+      "passed": 27,
+      "skipped": 0
+    },
+    {
+      "cited": [
+        {
+          "cites": [
+            "DES-02"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DES-02"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DES-02"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DES-02"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DES-02"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DES-02"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "DES-02"
+          ],
+          "outcome": "passed"
+        }
+      ],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/spec-generate/spec-response-schemas.test.ts",
+      "passed": 0,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/status/StatusClient.inmemory.test.ts",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/status/StatusClient.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/suite-health/suite-health-lint.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/testing/TestDataFactory.schemas.test.ts",
+      "passed": 64,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/testing/TestDataFactory.test.ts",
+      "passed": 111,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/testing/mockTransport.test.ts",
+      "passed": 37,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/type-mutation/type-mutation.test.ts",
+      "passed": 32,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/ui/UiClient.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/universe/UniverseClient.test.ts",
+      "passed": 36,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/verify-local/verify-local.test.ts",
+      "passed": 32,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/wallet/WalletClient.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/warning-ratchet/warning-ratchet.test.ts",
+      "passed": 17,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/wars/WarsClient.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tdd/workflows/workflow-permissions.test.ts",
+      "passed": 34,
+      "skipped": 0
+    }
+  ],
+  "schema": "csh-results/v1"
+}

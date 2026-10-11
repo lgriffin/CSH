@@ -1,0 +1,456 @@
+{
+  "schema": "csh-a3-judgments/v1",
+  "title": "Prose written once, code changed since",
+  "problem": "From v10.0.0 to v11.3.0 the items whose prose names a file changed after the line grew from 31 to 82, and no release lowered the count. Eight claims the prose makes about the code are refuted by it at v11.3.0, and four of them are older than the code that refutes them. ESI.ts's own gates pass at every release: nothing it runs compares a sentence with the file it names.",
+  "background": [
+    "These judgments were written by Claude, an agent, at the owner's request (the stage 28 plan of Ingesting a codebase, docs/spec/11-ingesting-a-codebase.md, where the owner asked that CSH be shown as a static analysis tool whose outcome is convergence, gaps and indeterminate). They are candidates: nothing is approved, and the owner may revise any of them.",
+    "ESI.ts is evaluated from outside, read-only, at each release tag (csh history prose-drift --from v10.0.0 --to v11.3.0). Each stage is the profile in subjects/esi-ts/csh run at that tag. The stage records stay out of git, since their reports quote ESI.ts, which is GPL-3.0; this sheet holds only identifiers, paths, spans, commits and counts, and continuous integration rebuilds the stages and compares the sheet.",
+    "How each practice is judged on its own terms: the charter and guides by review, the scenarios and tests by passing, the security model by its own audit script. All pass at every release. Stale prose is a heuristic: a line is stale when a file it names changed after the line was last written, which says the line should be re-read, not that it is wrong. Fact-conflicts and claim-conflicts are not heuristics: the code or another document refutes the sentence."
+  ],
+  "stages": [
+    {
+      "id": "v10-0-0",
+      "name": "v10.0.0",
+      "what": "The release as tagged: 31 items with stale prose, 3 fact-conflicts, 15 unverified requirements; untraced changes: 5. The charter is new at this release, with 57 requirements."
+    },
+    {
+      "id": "v10-1-0",
+      "name": "v10.1.0",
+      "what": "The release as tagged: 31 items with stale prose, 3 fact-conflicts, 15 unverified requirements; untraced changes: 2. Stale prose unchanged since the last release."
+    },
+    {
+      "id": "v10-1-1",
+      "name": "v10.1.1",
+      "what": "The release as tagged: 31 items with stale prose, 3 fact-conflicts, 15 unverified requirements; untraced changes: 1. Stale prose unchanged since the last release."
+    },
+    {
+      "id": "v10-2-0",
+      "name": "v10.2.0",
+      "what": "The release as tagged: 31 items with stale prose, 3 fact-conflicts, 15 unverified requirements; untraced changes: 1. Stale prose unchanged since the last release."
+    },
+    {
+      "id": "v10-2-1",
+      "name": "v10.2.1",
+      "what": "The release as tagged: 32 items with stale prose, 3 fact-conflicts, 15 unverified requirements; untraced changes: 2. Stale prose +1 since the last release."
+    },
+    {
+      "id": "v10-2-2",
+      "name": "v10.2.2",
+      "what": "The release as tagged: 32 items with stale prose, 3 fact-conflicts, 15 unverified requirements; untraced changes: 1. Stale prose unchanged since the last release."
+    },
+    {
+      "id": "v10-2-3",
+      "name": "v10.2.3",
+      "what": "The release as tagged: 32 items with stale prose, 3 fact-conflicts, 15 unverified requirements; untraced changes: 1. Stale prose unchanged since the last release."
+    },
+    {
+      "id": "v11-0-0",
+      "name": "v11.0.0",
+      "what": "The release as tagged: 66 items with stale prose, 8 fact-conflicts, 8 unverified requirements; untraced changes: 7. Stale prose +34 since the last release. The guides grow from 15 documents to 27 and the scenarios by half; the charter's claims about the Node floor, the entry points and the unit tier are refuted from here on."
+    },
+    {
+      "id": "v11-1-0",
+      "name": "v11.1.0",
+      "what": "The release as tagged: 68 items with stale prose, 8 fact-conflicts, 8 unverified requirements; untraced changes: 1. Stale prose +2 since the last release."
+    },
+    {
+      "id": "v11-1-1",
+      "name": "v11.1.1",
+      "what": "The release as tagged: 68 items with stale prose, 8 fact-conflicts, 8 unverified requirements; untraced changes: 1. Stale prose unchanged since the last release."
+    },
+    {
+      "id": "v11-2-0",
+      "name": "v11.2.0",
+      "what": "The release as tagged: 71 items with stale prose, 8 fact-conflicts, 8 unverified requirements; untraced changes: 3. Stale prose +3 since the last release."
+    },
+    {
+      "id": "v11-3-0",
+      "name": "v11.3.0",
+      "what": "The release as tagged: 82 items with stale prose, 8 fact-conflicts, 8 unverified requirements; untraced changes: 2. Stale prose +11 since the last release. The pinned commit of the profile; the security model's properties are read from here, so 7 of the new stale-prose items are its."
+    }
+  ],
+  "cannotSay": {
+    "charter": "Whether a sentence still holds once the file it names changes: review reads the sentence, not the history of the file",
+    "guides": "The same as the charter: a guide's line is reviewed when the guide is edited, not when the code it names is",
+    "bdd": "Which charter requirement a scenario verifies: 792 scenarios cite none",
+    "tdd": "Which requirement a test verifies, unless its title cites one: 9 of 66 are cited",
+    "beads": "Whether an issue's request is already met: an open issue is a claim about the code",
+    "security": "Why a property has no Rule, beyond the reason it records",
+    "code": "What the prose intends: facts say what the code is, never what it should be"
+  },
+  "lanes": [
+    {
+      "id": "charter-prose",
+      "practice": "charter",
+      "step": 1,
+      "title": "Charter lines name files and state facts",
+      "where": "guides/CHARTER.md",
+      "match": [
+        {
+          "kind": "stale-prose",
+          "practice": "charter"
+        },
+        {
+          "kind": "unverified",
+          "practice": "charter"
+        },
+        {
+          "kind": "status-unsupported",
+          "practice": "charter"
+        },
+        {
+          "kind": "dangling-reference",
+          "practice": "charter"
+        }
+      ]
+    },
+    {
+      "id": "guides-prose",
+      "practice": "guides",
+      "step": 1,
+      "title": "Guides name files and state facts",
+      "where": "guides/**/*.md",
+      "match": [
+        {
+          "kind": "stale-prose",
+          "practice": "guides"
+        },
+        {
+          "kind": "dangling-reference",
+          "practice": "guides"
+        }
+      ]
+    },
+    {
+      "id": "security-trace",
+      "practice": "security",
+      "step": 1,
+      "title": "Properties name tests and requirements",
+      "where": "guides/security-model.yaml",
+      "match": [
+        {
+          "kind": "stale-prose",
+          "practice": "security"
+        },
+        {
+          "kind": "justified-gap",
+          "practice": "security"
+        }
+      ]
+    },
+    {
+      "id": "hub",
+      "practice": "hub",
+      "step": 2,
+      "title": "CSH: claims checked against facts, lines dated by history",
+      "where": "subjects/esi-ts/csh/spec.csl.ts and git",
+      "match": [
+        {
+          "kind": "fact-conflict"
+        },
+        {
+          "kind": "claim-conflict"
+        },
+        {
+          "kind": "violated"
+        },
+        {
+          "kind": "untraced-change"
+        },
+        {
+          "kind": "dangling-citation"
+        }
+      ]
+    }
+  ],
+  "causes": [
+    {
+      "id": "written-once",
+      "name": "A line naming a file is not revisited when the file changes",
+      "match": [
+        {
+          "kind": "stale-prose"
+        }
+      ]
+    },
+    {
+      "id": "unchecked-claims",
+      "name": "Prose states facts about the code that nothing compares with it",
+      "match": [
+        {
+          "kind": "fact-conflict"
+        },
+        {
+          "kind": "claim-conflict"
+        },
+        {
+          "kind": "violated"
+        }
+      ]
+    },
+    {
+      "id": "verified-by-prose",
+      "name": "Verification is named in prose, not by a mechanism or a citing test",
+      "match": [
+        {
+          "kind": "unverified"
+        },
+        {
+          "kind": "status-unsupported"
+        },
+        {
+          "kind": "dangling-citation"
+        }
+      ]
+    },
+    {
+      "id": "names-outlive-files",
+      "name": "Names outlive the files and symbols they name",
+      "match": [
+        {
+          "kind": "dangling-reference"
+        }
+      ]
+    },
+    {
+      "id": "untraced",
+      "name": "Changes to src carry no test and no trace",
+      "match": [
+        {
+          "kind": "untraced-change"
+        }
+      ]
+    },
+    {
+      "id": "recorded-silence",
+      "name": "A silence recorded with its reason",
+      "match": [
+        {
+          "kind": "justified-gap"
+        }
+      ]
+    }
+  ],
+  "decisionPoints": [
+    {
+      "point": "Whether CircuitOpenError is an EsiError",
+      "class": "contradiction",
+      "says": {
+        "charter": {
+          "mark": "clash",
+          "text": "it is not (ArchitectureCircuitOpenIsNoEsiError, CharterCircuitOpenIsNoEsiError)"
+        },
+        "guides": {
+          "mark": "clash",
+          "text": "two guides say it is not, one says it is"
+        },
+        "code": {
+          "mark": "says",
+          "text": "it is: the class inherits EsiError"
+        }
+      },
+      "note": "Row 1 of the acceptance set. ESI.ts issue #631.",
+      "match": [
+        {
+          "kind": "claim-conflict",
+          "fragment": "ErrorsCircuitOpenIsAnEsiError"
+        },
+        {
+          "kind": "fact-conflict",
+          "fragment": "CharterCircuitOpenIsNoEsiError"
+        },
+        {
+          "kind": "fact-conflict",
+          "fragment": "ArchitectureCircuitOpenIsNoEsiError"
+        }
+      ]
+    },
+    {
+      "point": "How many entry points the package has",
+      "class": "contradiction",
+      "says": {
+        "charter": {
+          "mark": "clash",
+          "text": "ARCH-05 says six, ARCH-06 says seven"
+        },
+        "code": {
+          "mark": "says",
+          "text": "package.json exports seven"
+        }
+      },
+      "note": "Row 3. ESI.ts issue #632.",
+      "match": [
+        {
+          "kind": "claim-conflict",
+          "fragment": "SixEntryPoints"
+        },
+        {
+          "kind": "fact-conflict",
+          "fragment": "SixEntryPoints"
+        }
+      ]
+    },
+    {
+      "point": "Which file holds the compatibility date",
+      "class": "drift",
+      "says": {
+        "code": {
+          "mark": "clash",
+          "text": "two constants with different dates"
+        },
+        "guides": {
+          "mark": "silent",
+          "text": "one date is meant, and neither file is named as its owner"
+        }
+      },
+      "note": "Row 8. ESI.ts issue #633.",
+      "match": [
+        {
+          "kind": "fact-conflict",
+          "fragment": "OneCompatibilityDate"
+        },
+        {
+          "kind": "violated",
+          "fragment": "OneCompatibilityDate"
+        }
+      ]
+    },
+    {
+      "point": "Security properties with no Rule",
+      "class": "silence",
+      "says": {
+        "security": {
+          "mark": "says",
+          "text": "P10 to P12 record rule none, with a reason"
+        },
+        "bdd": {
+          "mark": "silent",
+          "text": "no scenario cites them"
+        }
+      },
+      "note": "Row 10: a recorded silence is converged, not a gap.",
+      "match": [
+        {
+          "kind": "justified-gap"
+        }
+      ]
+    }
+  ],
+  "goal": "Every line that names a file is re-read when the file changes, and every fact the prose states about the code is either a claim CSH checks or generated from the code. The count of stale-prose items falls at each release instead of rising, and no claim the code refutes survives a release.",
+  "rca": [
+    {
+      "id": "Q1",
+      "q": "Why does stale prose only grow from release to release?",
+      "a": "Lines are written once, when a feature lands, and the files they name go on changing. Review reads the lines a change edits, not the lines that name the files it changes, so nothing brings an old line back for reading. The two jumps are the releases that added documents: v10.0.0 (the charter) and v11.0.0 (the guides from 15 to 27).",
+      "depth": "5 Whys to the root, below."
+    },
+    {
+      "id": "Q2",
+      "q": "Why do refuted claims survive releases that pass every gate?",
+      "a": "The facts they state (the Node floor, the entry points, the unit tier's size, the compatibility date) are hand-typed in prose. ESI.ts generates some counts into prose through markers (etc/doc-metrics.json), but these sentences are outside the markers, so no generator or check touches them. Four of the eight are older than the code that refutes them: the code moved and the sentence did not.",
+      "evidence": {
+        "finding": "f184674b8c71fca6",
+        "stage": "v11-3-0"
+      },
+      "depth": "Two whys: hand-typed, and outside the markers."
+    },
+    {
+      "id": "Q3",
+      "q": "Why are eight requirements unverified though every gate passes?",
+      "a": "Their Verified-by lines name prose (code review, a process) rather than a check, and no test cites them. The status column says Enforced or Practised regardless. Nothing ties a status to a mechanism the repository holds.",
+      "depth": "One why: the status is asserted, not derived."
+    }
+  ],
+  "whys": [
+    {
+      "q": "Why is a line stale?",
+      "a": "A file it names changed after the line was last written."
+    },
+    {
+      "q": "Why was the line not updated with the file?",
+      "a": "The change that edited the file did not touch the document, and review looked only at the change."
+    },
+    {
+      "q": "Why did review not look at the document?",
+      "a": "Nothing links a file to the lines that name it: the link exists only as a path inside a sentence."
+    },
+    {
+      "q": "Why does nothing link them?",
+      "a": "The guides and the charter are checked for their own form (Markdown lint, EARS audit, link checks), never against the history of what they name."
+    },
+    {
+      "q": "Why are they checked only for form?",
+      "a": "Each practice is judged on its own terms, and no practice owns the relation between a sentence and a file.",
+      "root": "No practice owns the relation between prose and the code it names."
+    }
+  ],
+  "countermeasures": [
+    {
+      "id": "C1",
+      "kind": "process",
+      "what": "Re-read, at each release, the lines csh overview lists as stale-prose for that release, and update or date each one. Lines that are history rather than claims (a changelog, an amendment log) are marked as such so they stop counting.",
+      "answers": [
+        "Q1"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "requirement",
+      "what": "Write each hand-typed fact about the code (Node floor, entry points, tier sizes, CI jobs, compatibility date) through the doc-metrics markers, or as a claim in the profile's ProseAboutCode, so the code is its one source.",
+      "answers": [
+        "Q2"
+      ],
+      "clears": [
+        {
+          "kind": "fact-conflict"
+        },
+        {
+          "kind": "claim-conflict"
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "requirement",
+      "what": "Derive a requirement's status from what verifies it: Enforced only when a mechanism the repository holds, or a test that cites the requirement, is named. ESI.ts issues #634 and #639 track this.",
+      "answers": [
+        "Q3"
+      ],
+      "clears": [
+        {
+          "kind": "status-unsupported"
+        },
+        {
+          "kind": "unverified"
+        }
+      ]
+    }
+  ],
+  "plan": [
+    {
+      "what": "Open ESI.ts issues for the refuted claims and the unverified requirements (#631 to #634, #639, #640)",
+      "who": "Claude (agent), at the owner's request",
+      "when": "Done: 2026-10-11"
+    },
+    {
+      "what": "Decide C1 to C3 and apply them in ESI.ts",
+      "who": "The owner",
+      "when": "Owner decides"
+    },
+    {
+      "what": "Re-run csh history prose-drift after the next release and compare",
+      "who": "CI (Subject (ESI.ts) job)",
+      "when": "Each release"
+    }
+  ],
+  "terms": [
+    {
+      "term": "Stale prose",
+      "meaning": "a line that names a file changed after the line was last written: a suggestion to re-read it, not a proof it is wrong"
+    },
+    {
+      "term": "Justified gap",
+      "meaning": "a silence recorded with its reason, which the overview counts as converged"
+    }
+  ]
+}

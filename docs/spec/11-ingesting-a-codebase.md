@@ -170,7 +170,7 @@ There are eight stages. Each is one PR on CSH, closed by an exit criterion measu
     - an A3 on prose drift whose judgments are agent-written candidates
     - a fourth door in the README
 
-    *Exit:* CI runs the profile green, and each of the eleven rows is either reported or listed as unknown with a reason.
+    *Exit:* CI runs the profile green, and each of the eleven rows is either reported or listed as unknown with a reason. (Amended: the security model is read by a structured trace adapter, and a property that records why it has no Rule is a `justified-gap`, counted as converged; test results are committed reduced to paths, counts and cited identifiers at the pinned commit, since a runner's report names the subject's tests; the expected results are the overview's counts and, for each row, the entries that report it, compared by `csh expect`; the A3 commits its judgments and sheet, and CI rebuilds its stages, whose reports quote the subject.)
 
 ## Amendments and owner decisions
 

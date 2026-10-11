@@ -13,3 +13,4 @@ export * from "./arch.ts";
 export * from "./trace.ts";
 export * from "./results.ts";
 export * from "./overview.ts";
+export * from "./expect.ts";

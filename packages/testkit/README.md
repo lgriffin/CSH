@@ -48,7 +48,7 @@ The fixture runner checks results independently of the code under test ([ADR-26]
 - `test/fixtures.test.ts`: one test per fixture directory: F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64 and F70 to F78, and F80 to F96 from the anchor design. A fixture of a stage not yet built is listed as skipped. The stage of each comes from its `expected.json`, and the stage to package mapping is in the Implementer's brief, section 7.
 - `test/roundtrip.test.ts`: the printer round trip on random models (fast-check) and on every fixture model that emits without packs.
 - F96 copies `examples/starter` to an empty directory outside the repository, installs the tool there from freshly packed tarballs with npm, and runs the installed `csh run`.
-- `test/triangle.test.ts`: every example declares the containers it exercises and its commands reach each one; every runtime container has an example; the root README has its three doors and the command blocks they need. Continuous integration executes those blocks.
+- `test/triangle.test.ts`: every example declares the containers it exercises and its commands reach each one; every runtime container has an example; the root README has its four doors and the command blocks they need. Continuous integration executes those blocks.
 - `test/docs.test.ts`: every package has a README with the eight template headings and is named in `docs/architecture/containers.mmd`; every container has a component diagram; every cited decision record, assumption and question exists.
 - Ledger fixtures need gpg. They are skipped only when `CSH_ALLOW_GPG_SKIP=1`; otherwise a missing gpg fails the test.
 

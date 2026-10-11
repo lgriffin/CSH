@@ -32,7 +32,7 @@ never what is right: it holds no judgment and no authority ([09](../spec/09-anch
 | `practices[].harness.witnesses` | The witness file the command writes; one of the practice's sources must read it |
 | `practices[].harness.executions` | The file the reporter writes; `reports/executions.ndjson` when absent |
 | `practices[].harness.timeoutMs` | Milliseconds the command may run, a positive whole number; 600000 (ten minutes) when absent. On timeout its process tree is killed and the run records `exitCode: null`, `error: "timed out after N ms"` |
-| `practices[].executions` | For a practice without a harness: the file a reporter run by hand writes. An executions file is joined to a practice's Witnesses sources only when its harness or this field names one. On a practice that owns a TestFiles source it names a test runner's results instead: Jest's `--json` report, Vitest's `json` reporter, or `csh-execution/v1` lines, counted per test file and per item a test cites and never deciding a verdict ([A-115](../../ASSUMPTIONS.md)) |
+| `practices[].executions` | For a practice without a harness: the file a reporter run by hand writes. An executions file is joined to a practice's Witnesses sources only when its harness or this field names one. On a practice that owns a TestFiles source it names a test runner's results instead: Jest's `--json` report, Vitest's `json` reporter, or `csh-execution/v1` lines, counted per test file and per item a test cites and never deciding a verdict ([A-115](../../ASSUMPTIONS.md)), or a `csh-results/v1` file `csh results import` writes, which names no test and is joined only at its commit ([A-124](../../ASSUMPTIONS.md)) |
 | `practices[].cites` | The source this practice's citations refer to |
 | `practices[].steps` | For scenarios only: the project's step table |
 | `practices[].author`, `unit` | Shown on the A3: who writes it, and what one artefact is |
@@ -70,7 +70,7 @@ unchanged.
 ## Inventory sources (stage 22)
 
 A source can be read as an inventory: each requirement, rule, scenario, test file, document or issue becomes an
-item, and the references between them become edges ([11](../spec/11-ingesting-a-codebase.md), stage 22). Four source
+item, and the references between them become edges ([11](../spec/11-ingesting-a-codebase.md), stage 22). Five source
 kinds have built-in inventory adapters from `@csh/adapter-items`:
 
 | Kind | Adapter | Items | Edges |
@@ -79,6 +79,7 @@ kinds have built-in inventory adapters from `@csh/adapter-items`:
 | `Features` | `@csh/adapter-items/gherkin` | `feature`, `rule`, `scenario`, with synthetic identifiers ([A-99](../../ASSUMPTIONS.md)) | `exemplifies`, and `cites` from tags |
 | `TestFiles` | `@csh/adapter-items/tests` | one `test-file` per file, with its test count | `cites`, from test titles only ([A-98](../../ASSUMPTIONS.md)) |
 | `Issues` | `@csh/adapter-items/jsonl` | one `issue` per JSON line | `mentions` |
+| `Traces` | `@csh/adapter-items/yaml` | one `property` per entry of a YAML or JSON list, such as a security model (stage 28, [A-122](../../ASSUMPTIONS.md)) | the relations its `edges` setting maps |
 
 A requirements source can use the Markdown adapter by naming it as its practice's `adapter`. Two more fields shape what
 is read:
@@ -86,7 +87,7 @@ is read:
 | Field | Meaning |
 | --- | --- |
 | `sources[].include`, `sources[].exclude` | Globs over paths below the source's `at`. `**` spans directories. A file is read when it matches an include (or there is none) and no exclude |
-| `practices[].settings` | Names to strings, handed to the adapter of each source the practice owns. The Markdown adapter takes `idPattern`, `headingFields` (names for the parts of an identifier heading, such as `form,status`), `verifiedField` (default `Verified by`) and `headings: "references"` (an identifier heading is a section about an item defined elsewhere). The Gherkin adapter takes `tagCites`, a pattern whose first group is the identifier a tag cites. The test and issue adapters take `idPattern` and `citePattern` |
+| `practices[].settings` | Names to strings, handed to the adapter of each source the practice owns. The Markdown adapter takes `idPattern`, `headingFields` (names for the parts of an identifier heading, such as `form,status`), `verifiedField` (default `Verified by`) and `headings: "references"` (an identifier heading is a section about an item defined elsewhere). The Gherkin adapter takes `tagCites`, a pattern whose first group is the identifier a tag cites. The test and issue adapters take `idPattern` and `citePattern`. The trace adapter takes `collection` (the list, default `properties`), `idField` and `textField`, `edges` (field and relation pairs, such as `tests=verified-by charter=implements`), `fields` (kept as attributes) and `silence` (`rule=none:rule_reason`: the field that records a silence, its value, and the field holding why; a silence with a reason is a `justified-gap`, [A-123](../../ASSUMPTIONS.md)). A practice of kind `traces` owns a `Traces` source |
 
 What nothing verifies and what names nothing are gaps: `unverified` ([A-97](../../ASSUMPTIONS.md)) and
 `dangling-reference` ([A-96](../../ASSUMPTIONS.md)). An inventory item is never `uncited`.

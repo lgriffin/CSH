@@ -90,3 +90,33 @@ jobs:
           name: csh-diff
           path: csh-diff/
 
+  # The ESI.ts profile (Ingesting a codebase, stage 28): fetch ESI.ts at the pinned commit, which fails the job when the
+  # fetch fails, run the profile, compare it with the committed expected results, then rebuild the prose-drift A3 from
+  # one run per release and fail when the committed sheet differs. Nothing is written to ESI.ts.
+  subject:
+    name: Subject (ESI.ts)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Fetch ESI.ts at the pinned commit
+        run: node packages/cli/bin/csh.js subject fetch --root subjects/esi-ts
+      - name: Run the profile
+        run: node packages/cli/bin/csh.js run --root subjects/esi-ts
+      - name: Compare with the expected results
+        run: node packages/cli/bin/csh.js expect --root subjects/esi-ts
+      - name: Rebuild the prose-drift A3, one stage per release
+        run: |
+          node packages/cli/bin/csh.js history prose-drift --from v10.0.0 --to v11.3.0 --root subjects/esi-ts
+          node packages/cli/bin/csh.js a3 build prose-drift --check --root subjects/esi-ts
+          git diff --exit-code -- subjects/esi-ts/csh/a3/prose-drift
+      - name: Overview
+        if: always()
+        run: node packages/cli/bin/csh.js overview --root subjects/esi-ts >> "$GITHUB_STEP_SUMMARY"
