@@ -17,7 +17,7 @@ The clone, the runs and the reports stay under this directory's `.csh-cache/` an
 | 22 | Charter | `guides/CHARTER.md`, through the Markdown inventory adapter | 66 requirements and 240 verified-by edges. Eight requirements are `unverified`: ARCH-03, DES-05, DOC-06, PROC-01, PROC-02, PROC-04, PROC-05 and REL-04, each verified by prose alone. DOC-01 is verified by `guides/MUTATION-TESTING.md`, which no longer exists, and the charter names seven other paths that are not tracked |
 | 22 | Guides | `guides/**/*.md` but the charter | 29 documents, 81 implements edges, all resolved; 25 backticked paths in 8 guides name no tracked file |
 | 22 | BDD | `tests/bdd/features` | 77 features, 619 rules and 792 scenarios; every rule has a scenario |
-| 22 | TDD | `tests/**/*.test.ts` but fixtures | 261 test files; only 10 cite a charter requirement in a title, and 15 declare no test with a literal title |
+| 22 | TDD | `tests/**/*.test.ts` but fixtures | 261 test files and 3,902 tests, parameterised ones included; only 10 cite a charter requirement in a title, and 4 declare no test with a literal title |
 | 22 | Beads | `.beads/issues.jsonl` | 69 issues, 63 mentions of charter requirements |
 
 Of the eleven, stage 22 reports half of row 9: ARCH-03 is `unverified`; that it could be checked is stage 23's. The `dangling-reference` gaps for files that were deleted, such as `guides/MUTATION-TESTING.md`, need history to tell a stale mention from a mention of a deletion, and DOC-01 is the second kind. That is stage 25's.

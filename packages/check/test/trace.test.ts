@@ -63,4 +63,12 @@ describe("trace", () => {
     const r = trace({ prepared: prepare(module, runs) });
     expect(r.gaps.filter((g) => g.kind === "dangling-reference").map((g) => g.subject)).toEqual(["Charter/doc.md"]);
   });
+
+  it("reports what nothing verifies even when no source read an edge", () => {
+    const bare: SourceRun[] = [
+      { source: "Charter", kind: "Requirements", files: [], output: { diagnostics: [], items: [item("R-1", "requirement")], edges: [] } },
+      { source: "Features", kind: "Features", files: [], output: { diagnostics: [], items: [item("f#r", "rule")] } },
+    ];
+    expect(trace({ prepared: prepare(module, bare), files }).gaps.map((g) => [g.kind, g.subject])).toEqual([["unverified", "Charter/R-1"], ["unverified", "Features/f#r"]]);
+  });
 });

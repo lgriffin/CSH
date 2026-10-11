@@ -209,9 +209,10 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
     const own = opts.perSource?.[source.name];
     const inc = own?.include?.map(globRegExp);
     const exc = own?.exclude?.map(globRegExp);
-    const base0 = source.at.replace(/\/+$/, "");
-    // Globs match the path below the source's location; a source that is one file matches its own name.
-    const below = (p: string) => (p.startsWith(`${base0}/`) ? p.slice(base0.length + 1) : p.split("/").pop()!);
+    // Globs match the path below the source's location, however it is written ("." and "./guides" too); a source that is
+    // one file matches its own name.
+    const base0 = relative(opts.root, resolve(opts.root, source.at)).split(sep).join("/");
+    const below = (p: string) => (base0 === "" ? p : p.startsWith(`${base0}/`) ? p.slice(base0.length + 1) : p.split("/").pop()!);
     const kept = inc === undefined && exc === undefined ? found : found.filter((f) => (inc === undefined || inc.some((r) => r.test(below(f.path)))) && !(exc ?? []).some((r) => r.test(below(f.path))));
     const files = kept.map((f) => {
       const bytes = new Uint8Array(readFileSync(f.abs));

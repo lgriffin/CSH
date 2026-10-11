@@ -43,7 +43,8 @@ interface Open {
 
 export function run(input: AdapterInput): AdapterOutput {
   const idPattern = idPatternOf(input);
-  const headingId = new RegExp(`^(${idPattern})(?=$|[\\s·:—–-])\\s*[·:—–-]?\\s*(.*)$`);
+  const headingId = new RegExp(`^(?<id>(?:${idPattern}))(?=$|[\\s·:—–-])\\s*[·:—–-]?\\s*(?<rest>.*)$`);
+  const anyId = new RegExp(`\\b(?:${idPattern})\\b`, "g");
   const fieldNames = (input.config?.headingFields ?? "").split(",").map((s) => key(s)).filter((s) => s !== "");
   const verifiedField = key(input.config?.verifiedField ?? "Verified by");
   // "references": a heading that opens with an identifier is a section about an item another source defines, read as
@@ -70,8 +71,35 @@ export function run(input: AdapterInput): AdapterOutput {
     const doc: SourceItem = { id: file.path, kind: "document", text: file.path, span: `${file.path}:1`, textDigest: digestOf(text) };
     add(doc);
     let open: Open | undefined;
-    let fence: string | undefined;
+    // The open fence's character and length: only a fence of the same character, at least as long, closes it.
+    let fence: { char: string; length: number } | undefined;
+    // The Verified by field being read: its mechanisms are the first sentence of the whole value, which may run on to
+    // indented lines, so its edges are made once the field ends.
+    let verifying: { item: SourceItem; value: string; tokens: { t: string; span: string }[] } | undefined;
+    const endField = () => {
+      if (verifying === undefined) return;
+      const mechanisms = new Set(backticked(firstSentence(verifying.value)));
+      const made = new Set<string>();
+      for (const { t, span } of verifying.tokens) {
+        if (mechanisms.has(t) && !made.has(t)) {
+          made.add(t);
+          const p = pathToken(t);
+          edges.push({ from: verifying.item.id, rel: "verified-by", to: p !== undefined ? `file:${p}` : `text:${t}`, span });
+        } else if (!mechanisms.has(t)) {
+          const p = pathToken(t);
+          if (p !== undefined) edges.push({ from: verifying.item.id, rel: "mentions-file", to: `file:${p}`, span });
+        }
+      }
+      verifying = undefined;
+    };
+    const mentions = (text: string, from: string, span: string) => {
+      for (const t of backticked(text)) {
+        const p = pathToken(t);
+        if (p !== undefined) edges.push({ from, rel: "mentions-file", to: `file:${p}`, span });
+      }
+    };
     const close = () => {
+      endField();
       if (open === undefined) return;
       const body = plain(open.paragraph.join(" "));
       if (body !== "") {
@@ -85,10 +113,13 @@ export function run(input: AdapterInput): AdapterOutput {
     const fromId = () => open?.item.id ?? doc.id;
     lines.forEach((raw, i) => {
       const span = `${file.path}:${i + 1}`;
-      const fenceMark = /^\s*(```|~~~)/.exec(raw);
+      const fenceMark = /^\s*(`{3,}|~{3,})(.*)$/.exec(raw);
       if (fenceMark !== null) {
-        if (fence === undefined) fence = fenceMark[1];
-        else if (fence === fenceMark[1]) fence = undefined;
+        const mark = fenceMark[1]!;
+        if (fence === undefined) {
+          endField();
+          fence = { char: mark[0]!, length: mark.length };
+        } else if (mark[0] === fence.char && mark.length >= fence.length && fenceMark[2]!.trim() === "") fence = undefined;
         return;
       }
       if (fence !== undefined) return;
@@ -97,57 +128,55 @@ export function run(input: AdapterInput): AdapterOutput {
         const level = h[1]!.length;
         if (open !== undefined && level <= open.level) close();
         else if (open !== undefined) open.textDone = true;
+        endField();
         const m = headingId.exec(h[2]!);
         if (m !== null && !headingsAreItems) {
           close();
-          edges.push({ from: doc.id, rel: "implements", to: m[1]!, span });
+          edges.push({ from: doc.id, rel: "implements", to: m.groups!.id!, span });
         } else if (m !== null) {
           close();
-          const parts = m[2]!.split("·").map((s) => plain(s)).filter((s) => s !== "");
+          const parts = m.groups!.rest!.split("·").map((s) => plain(s)).filter((s) => s !== "");
           const attrs: Record<string, string> = {};
           parts.forEach((p, n) => (attrs[fieldNames[n] ?? `heading-${n + 1}`] = p));
           const heading = plain(h[2]!);
-          const item: SourceItem = { id: m[1]!, kind: "requirement", text: heading, span, textDigest: digestOf(heading) };
+          const item: SourceItem = { id: m.groups!.id!, kind: "requirement", text: heading, span, textDigest: digestOf(heading) };
           if (parts.length > 0) item.attrs = attrs;
           if (add(item)) open = { item, level, paragraph: [], textDone: false };
         }
+        mentions(h[2]!, fromId(), span);
         return;
       }
       const line = raw.trim();
       // An Implements line names the requirements the document serves.
       const impl = /^\*\*Implements:?\*\*:?\s*(.*)$/.exec(line);
       if (impl !== null) {
-        for (const id of new Set([...impl[1]!.matchAll(new RegExp(`\\b${idPattern}\\b`, "g"))].map((x) => x[0]))) edges.push({ from: doc.id, rel: "implements", to: id, span });
+        endField();
+        for (const id of new Set([...impl[1]!.matchAll(anyId)].map((x) => x[0]))) edges.push({ from: doc.id, rel: "implements", to: id, span });
         return;
       }
-      let mechanisms: string[] = [];
       if (open !== undefined) {
         const bullet = /^[-*+]\s+\*\*([^*]+?):?\*\*:?\s*(.*)$/.exec(line);
         if (bullet !== null) {
+          endField();
           open.textDone = true;
           const name = key(bullet[1]!);
           open.field = name;
           open.item.attrs = { ...(open.item.attrs ?? {}), [name]: bullet[2]! };
-          if (name === verifiedField) {
-            mechanisms = backticked(firstSentence(bullet[2]!));
-            for (const t of mechanisms) {
-              const p = pathToken(t);
-              edges.push({ from: open.item.id, rel: "verified-by", to: p !== undefined ? `file:${p}` : `text:${t}`, span });
-            }
-          }
+          if (name === verifiedField) verifying = { item: open.item, value: bullet[2]!, tokens: [] };
         } else if (line === "") {
+          endField();
           if (open.paragraph.length > 0) open.textDone = true;
           delete open.field;
         } else if (open.field !== undefined && /^\s/.test(raw)) {
           open.item.attrs![open.field] = `${open.item.attrs![open.field]} ${line}`;
-        } else if (!open.textDone) open.paragraph.push(line);
+          if (verifying !== undefined) verifying.value = `${verifying.value} ${line}`;
+        } else {
+          endField();
+          if (!open.textDone) open.paragraph.push(line);
+        }
       }
-      const named = new Set(mechanisms);
-      for (const t of backticked(line)) {
-        if (named.has(t)) continue;
-        const p = pathToken(t);
-        if (p !== undefined) edges.push({ from: fromId(), rel: "mentions-file", to: `file:${p}`, span });
-      }
+      if (verifying !== undefined) for (const t of backticked(line)) verifying.tokens.push({ t, span });
+      else mentions(line, fromId(), span);
     });
     close();
   }

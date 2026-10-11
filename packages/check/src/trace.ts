@@ -24,7 +24,6 @@ export function trace(input: TraceInput): TraceResult {
   const { items, edges } = input.prepared;
   const gaps: Gap[] = [];
   const out: TraceResult["edges"] = [];
-  if (edges.length === 0) return { gaps, edges: out };
   const sources = new Set(items.map((i) => i.source));
   const byQualified = new Map(items.map((i) => [`${i.source}/${i.id}`, i]));
   const byId = new Map<string, string[]>();

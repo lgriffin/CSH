@@ -38,9 +38,9 @@ beforeAll(async () => {
       implementation: ["src"],
       sources: [
         { name: "Charter", kind: "Requirements", at: "guides/CHARTER.md" },
-        { name: "Guides", kind: "Documents", at: "guides", include: ["**/*.md"], exclude: ["CHARTER.md", "draft/**"] },
+        { name: "Guides", kind: "Documents", at: "./guides", include: ["**/*.md"], exclude: ["CHARTER.md", "draft/**"] },
         { name: "Features", kind: "Features", at: "features" },
-        { name: "Tests", kind: "TestFiles", at: "tests", exclude: ["fixtures/**"] },
+        { name: "Tests", kind: "TestFiles", at: ".", include: ["tests/**/*.test.ts"], exclude: ["tests/fixtures/**"] },
       ],
       practices: [
         { id: "charter", name: "Charter", kind: "requirements", sources: ["Charter"], adapter: "@csh/adapter-items/markdown", settings: { headingFields: "status" } },

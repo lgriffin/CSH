@@ -26,7 +26,7 @@ It belongs to the "Adapters" container, shown in the [containers diagram](../../
 - Every item and edge carries a span, `path:line`, and output never depends on the order files were read in.
 - An identifier defined twice in one source is the error `duplicate-id`, and the second is not read. A feature file with nothing to read is the warning `no-items`, and a test file with no test the information `no-tests` (P4).
 - Only what the source states is read: a requirement whose verification is prose alone gets no `verified-by` edge, and nothing guesses one ([A-97](../../ASSUMPTIONS.md)).
-- Text inside a Markdown code fence or a Gherkin doc string is never structure.
+- Text inside a Markdown code fence or a Gherkin doc string is never structure; a fence closes only on one of the same character at least as long as the one that opened it.
 
 ## Rationale
 
@@ -34,7 +34,7 @@ The existing adapters lift claims, and a mature codebase states most of what it 
 
 ## How it is tested
 
-- `test/adapters.test.ts`: requirement headings, fields and the first sentence of Verified by; Implements lines and headings as references; duplicate identifiers; what a path is; features, rules, scenarios, outlines, doc strings, tags and repeated titles; test counts and citations from titles only; issues, mentions and malformed lines.
+- `test/adapters.test.ts`: requirement headings, fields and the first sentence of Verified by, including one that runs on to indented lines; paths in headings; long fences; identifier patterns with groups or alternatives; Implements lines and headings as references; duplicate identifiers; what a path is; features, rules, scenarios, outlines, doc strings, tags and repeated titles; test counts and citations from titles only, parameterised tests, and calls inside strings, comments and regular expressions; issues, mentions and malformed lines.
 - `packages/run/test/items.test.ts`: the four adapters through the isolated runner, with globs and settings from a manifest, and the gaps the trace gives.
 - `subjects/esi-ts`: ESI.ts at `2a2da8a`, whose counts its README records.
 
@@ -43,4 +43,4 @@ The existing adapters lift claims, and a mature codebase states most of what it 
 - Markdown links are not read as references; only backticked paths are ([A-96](../../ASSUMPTIONS.md)).
 - A backticked path that names a file deleted on purpose is reported dangling like any other: telling the two apart needs history (stage 25).
 - Gherkin identifiers follow titles, so a renamed rule is a new item ([A-99](../../ASSUMPTIONS.md)).
-- Tests are found by `describe`, `it` and `test` calls with a literal title; titles built at run time are not read.
+- Tests are found by `describe`, `it` and `test` calls in code with a literal title, including `.each(rows)(title)`, `.each<T>(rows)(title)` and ``.each`table`(title)``; titles built at run time are not read. A small lexer tells code from comments, strings and regular expressions; a slash after `return` is read as division, so a regular expression written straight after `return` can hide the call that follows it on that line.

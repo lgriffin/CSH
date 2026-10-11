@@ -73,6 +73,32 @@ describe("the Markdown adapter", () => {
     expect(out.diagnostics.map((d) => [d.code, d.span])).toEqual([["duplicate-id", "a.md:3"]]);
   });
 
+  it("reads a Verified by that runs on to indented lines, and paths written in headings", () => {
+    const doc = ["# Uses `src/a.ts`", "", "## R-1 · see `src/b.ts`", "", "Text.", "", "- **Verified by:** the", "  `npm test` run and `src/c.ts`. Not `src/d.ts`.", ""].join("\n");
+    const out = markdown(input({ "a.md": doc }));
+    expect(out.edges!.map((e) => [e.from, e.rel, e.to, e.span])).toEqual([
+      ["a.md", "mentions-file", "file:src/a.ts", "a.md:1"],
+      ["R-1", "mentions-file", "file:src/b.ts", "a.md:3"],
+      ["R-1", "verified-by", "text:npm test", "a.md:8"],
+      ["R-1", "verified-by", "file:src/c.ts", "a.md:8"],
+      ["R-1", "mentions-file", "file:src/d.ts", "a.md:8"],
+    ]);
+  });
+
+  it("closes a fence only with one of the same character at least as long", () => {
+    const doc = ["````md", "```", "## R-9 an example", "```", "````", "## R-2 real"].join("\n");
+    expect(markdown(input({ "a.md": doc })).items!.map((i) => i.id)).toEqual(["a.md", "R-2"]);
+  });
+
+  it("takes an identifier pattern with alternatives or groups of its own", () => {
+    const doc = "**Implements:** XARCH-1, SEC-2\n\n## ARCH-3 · Ubiquitous\n\nText.\n";
+    const out = markdown(input({ "a.md": doc }, { idPattern: "(ARCH|SEC)-[0-9]+", headingFields: "form" }));
+    expect(out.edges!.map((e) => e.to)).toEqual(["SEC-2"]);
+    expect(out.items![1]).toMatchObject({ id: "ARCH-3", attrs: { form: "Ubiquitous" } });
+    const alt = markdown(input({ "a.md": doc }, { idPattern: "ARCH-[0-9]+|SEC-[0-9]+" }));
+    expect(alt.edges!.map((e) => e.to)).toEqual(["SEC-2"]);
+  });
+
   it("ends a first sentence at a full stop outside backticks", () => {
     expect(firstSentence("`a.b` then `c`. More.")).toBe("`a.b` then `c`.");
     expect(firstSentence("No stop")).toBe("No stop");
@@ -145,6 +171,26 @@ describe("the test-file adapter", () => {
     expect(out.items!.map((i) => [i.id, i.attrs])).toEqual([["tests/a.test.ts", { tests: "2", skipped: "1" }], ["tests/b.test.ts", { tests: "0" }]]);
     expect(out.edges!.map((e) => [e.to, e.span])).toEqual([["SEC-11", "tests/a.test.ts:1"], ["ARCH-01", "tests/a.test.ts:2"]]);
     expect(out.diagnostics.map((d) => [d.code, d.span])).toEqual([["no-tests", "tests/b.test.ts"]]);
+  });
+
+  it("reads parameterised tests, and never a call inside a string or a comment", () => {
+    const file = [
+      "it.each([",
+      "  [1, 'a)'],",
+      "])('ARCH-02 row %s', (n) => {});",
+      "test.each<Row>(rows)(`ARCH-03 typed`, () => {});",
+      "describe.each`",
+      "  a | b",
+      "`('ARCH-04 table', () => {});",
+      "const src = \"it('ARCH-05 in a fixture', () => {})\";",
+      "// it('ARCH-06 commented out', () => {});",
+      "/* test('ARCH-07 in a block comment') */",
+      "const re = /it\\('ARCH-08'/;",
+      "foo.it('ARCH-09 not a test');",
+    ].join("\n");
+    const out = tests(input({ "tests/p.test.ts": file }, undefined, "TestFiles"));
+    expect(out.items![0]!.attrs).toEqual({ tests: "2" });
+    expect(out.edges!.map((e) => [e.to, e.span])).toEqual([["ARCH-02", "tests/p.test.ts:3"], ["ARCH-03", "tests/p.test.ts:4"], ["ARCH-04", "tests/p.test.ts:7"]]);
   });
 });
 
