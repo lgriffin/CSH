@@ -1,7 +1,7 @@
 // Running sources through adapters (Evidence tab, section 4). The harness reads the
 // files; the adapter sees only their bytes, the vocabulary and the bindings.
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -104,11 +104,14 @@ function readKept(file: string): SourceRun | undefined {
   }
 }
 
+/** Keep a source's output, replacing what was kept for it before: the cache holds one output per source. */
 function keep(file: string, run: SourceRun): void {
   try {
-    mkdirSync(dirname(file), { recursive: true });
+    const dir = dirname(file);
+    mkdirSync(dir, { recursive: true });
     writeFileSync(`${file}.tmp`, JSON.stringify({ schema: "csh-source-cache/v1", run } satisfies KeptRun));
     renameSync(`${file}.tmp`, file);
+    for (const old of readdirSync(dir)) if (join(dir, old) !== file) rmSync(join(dir, old), { force: true });
   } catch {
     // The cache only saves work.
   }
@@ -293,7 +296,8 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
         exec: digests(execFiles),
         steps: digests(stepFiles),
       });
-      return join(opts.cache.dir, "sources", `${key.replace(/^sha256:/, "")}.json`);
+      // One directory per source, holding only its newest output (see keep).
+      return join(opts.cache.dir, "sources", digestOf(new TextEncoder().encode(source.name)).slice(-16), `${key.replace(/^sha256:/, "")}.json`);
     })();
     const hit = cacheFile === undefined ? undefined : readKept(cacheFile);
     if (hit !== undefined) {

@@ -140,13 +140,16 @@ describe("a subject profile", () => {
     rmSync(kept, { recursive: true, force: true });
     const first = await runComponent({ root: profile, solver: z3, reportFiles: false });
     if (!first.ok) throw new Error(first.message);
-    const files = readdirSync(kept);
+    // One directory per source, holding its one kept output.
+    const dirs = readdirSync(kept);
+    expect(dirs.length).toBe(1);
+    const files = readdirSync(join(kept, dirs[0]!));
     expect(files.length).toBe(1);
     const again = await runComponent({ root: profile, solver: z3, reportFiles: false });
     if (!again.ok) throw new Error(again.message);
     expect(JSON.stringify(again.report)).toBe(JSON.stringify(first.report));
     // The kept output is what the second run used: change it, and the run reports what it says, not what the file says.
-    const file = join(kept, files[0]!);
+    const file = join(kept, dirs[0]!, files[0]!);
     const k = JSON.parse(readFileSync(file, "utf8"));
     k.run.output.items = k.run.output.items.filter((i: { id: string }) => i.id === "REQ-1");
     writeFileSync(file, JSON.stringify(k));
