@@ -1,6 +1,6 @@
 // Running sources through adapters (Evidence tab, section 4). The harness reads the
 // files; the adapter sees only their bytes, the vocabulary and the bindings.
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { createRequire } from "node:module";
@@ -17,6 +17,10 @@ export const BUILTIN_ADAPTERS: Record<string, string> = {
   Requirements: "@csh/adapter-ears-markdown",
   Architecture: "@csh/adapter-c4-mermaid",
   Facts: "@csh/facts",
+  Documents: "@csh/adapter-items/markdown",
+  Features: "@csh/adapter-items/gherkin",
+  TestFiles: "@csh/adapter-items/tests",
+  Issues: "@csh/adapter-items/jsonl",
 };
 
 export type { SourceRun };
@@ -39,7 +43,7 @@ export interface RunSourcesOptions {
    * Settings by source name, from the component manifest. A source's own adapter takes precedence over the one for
    * its kind.
    */
-  perSource?: Record<string, { adapter?: string; executions?: string; cites?: string; steps?: string }>;
+  perSource?: Record<string, { adapter?: string; executions?: string; cites?: string; steps?: string; settings?: Record<string, string>; include?: string[]; exclude?: string[] }>;
   /** The executions file joined to a Witnesses source that no practice owns; none when absent (#22). */
   executions?: string;
   /** Authority of each binding, by binding fragment name; candidate when absent. */
@@ -72,6 +76,32 @@ function filesAt(root: string, at: string): { files?: { path: string; abs: strin
   };
   walk(abs);
   return { files: out };
+}
+
+/** A glob as a regular expression over a slash-separated path: `**` spans directories, `*` and `?` do not. */
+export function globRegExp(glob: string): RegExp {
+  let re = "";
+  for (let i = 0; i < glob.length; i++) {
+    const c = glob[i]!;
+    if (c === "*" && glob[i + 1] === "*") {
+      const slash = glob[i + 2] === "/";
+      re += slash ? "(?:.*/)?" : ".*";
+      i += slash ? 2 : 1;
+    } else if (c === "*") re += "[^/]*";
+    else if (c === "?") re += "[^/]";
+    else re += c.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+  }
+  return new RegExp(`^${re}$`);
+}
+
+/** The files a git repository tracks under `root`, relative to it; undefined when `root` is not in one. */
+export function trackedFiles(root: string): string[] | undefined {
+  try {
+    const out = execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], maxBuffer: 256 * 1024 * 1024 });
+    return out.split("\0").filter((f) => f !== "").sort(compareCodePoints);
+  } catch {
+    return undefined;
+  }
 }
 
 const SELF = fileURLToPath(import.meta.url);
@@ -176,7 +206,14 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
       runs.push({ ...base, files: [], output: { diagnostics: [{ code: "source-missing", severity: "info", message: `nothing found at ${source.at}; the source contributes only claims written in the specification` }] } });
       continue;
     }
-    const files = found.map((f) => {
+    const own = opts.perSource?.[source.name];
+    const inc = own?.include?.map(globRegExp);
+    const exc = own?.exclude?.map(globRegExp);
+    const base0 = source.at.replace(/\/+$/, "");
+    // Globs match the path below the source's location; a source that is one file matches its own name.
+    const below = (p: string) => (p.startsWith(`${base0}/`) ? p.slice(base0.length + 1) : p.split("/").pop()!);
+    const kept = inc === undefined && exc === undefined ? found : found.filter((f) => (inc === undefined || inc.some((r) => r.test(below(f.path)))) && !(exc ?? []).some((r) => r.test(below(f.path))));
+    const files = kept.map((f) => {
       const bytes = new Uint8Array(readFileSync(f.abs));
       return { path: f.path, digest: digestOf(bytes), bytes };
     });
@@ -206,7 +243,6 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
       continue;
     }
     const input: AdapterInput = { source, vocabulary: module.vocabulary, bindings, files };
-    const own = opts.perSource?.[source.name];
     // A scenarios practice's step table is project code: the adapter receives its file URL, and the sandbox lets it
     // read that one file (Anchor, harnesses and A3, section 3.3).
     // It is one file: a directory is refused, never read through its first file.
@@ -217,8 +253,8 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
       runs.push({ ...base, files: files.map(({ path, digest }) => ({ path, digest })), output: { diagnostics: [{ code: "no-step-table", severity: "error", message: `the step table ${own.steps} is missing, outside the project root or not a file` }] } });
       continue;
     }
-    const config = { ...(opts.config ?? {}), ...(own?.cites !== undefined ? { cites: own.cites } : {}), ...(steps !== undefined ? { steps: pathToFileURL(realpathSync(steps)).href } : {}) };
-    if (opts.config !== undefined || own?.cites !== undefined || steps !== undefined) input.config = config;
+    const config = { ...(opts.config ?? {}), ...(own?.settings ?? {}), ...(own?.cites !== undefined ? { cites: own.cites } : {}), ...(steps !== undefined ? { steps: pathToFileURL(realpathSync(steps)).href } : {}) };
+    if (opts.config !== undefined || own?.settings !== undefined || own?.cites !== undefined || steps !== undefined) input.config = config;
     // The execution file sits beside a witness source only where it is named: by the practice (its harness's, the
     // reporter's default for a harness, or its own), or by the configuration of a project with no manifest. A source
     // with no named file never inherits another practice's outcomes (#22).

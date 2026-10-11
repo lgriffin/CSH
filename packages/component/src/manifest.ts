@@ -13,7 +13,7 @@ export const COMPONENT_SCHEMA = "csh-component/v1";
  * manifests are read unchanged.
  */
 export const COMPONENT_SCHEMA_V2 = "csh-component/v2";
-export const PRACTICE_KINDS = ["requirements", "scenarios", "tests", "design-notes", "architecture", "facts"] as const;
+export const PRACTICE_KINDS = ["requirements", "scenarios", "tests", "design-notes", "architecture", "facts", "documents", "issues"] as const;
 /** Where a harness's execution lines go when the manifest does not say (section 3.2). */
 export const DEFAULT_EXECUTIONS = "reports/executions.ndjson";
 /** How long a harness command may run when the manifest does not say: ten minutes (owner-decided, #20). */
@@ -53,6 +53,11 @@ export interface Practice {
   author?: string;
   /** What one artefact is: "the sentence", "the scenario", "the test". */
   unit?: string;
+  /**
+   * Settings handed to the adapter of each source the practice owns, by name, such as idPattern or headingFields
+   * (Ingesting a codebase, stage 22). They configure how a source is read, never what it means.
+   */
+  settings?: Record<string, string>;
 }
 
 /** A repository evaluated from outside, at one commit; it is read and never written (version 2). */
@@ -69,6 +74,10 @@ export interface DeclaredSource {
   kind: string;
   /** Relative to the subject's checkout when there is a subject, else to the component root. */
   at: string;
+  /** Globs over paths relative to `at`: only files that match one are read (stage 22). `**` spans directories. */
+  include?: string[];
+  /** Globs over paths relative to `at`: files that match one are not read, even when included. */
+  exclude?: string[];
 }
 
 export interface ComponentManifest {
@@ -135,6 +144,7 @@ export function validateManifest(v: unknown): ComponentProblem[] {
           bad("malformed-manifest", `sources[${i}] must have a name, a kind and a relative path at`);
           continue;
         }
+        for (const k of ["include", "exclude"] as const) if (s[k] !== undefined && !strings(s[k])) bad("malformed-manifest", `sources[${i}].${k} must be a list of globs`);
         if (names.has(s.name)) bad("duplicate-source", `source ${s.name} is declared twice`);
         names.add(s.name);
       }
@@ -173,6 +183,7 @@ export function validateManifest(v: unknown): ComponentProblem[] {
     if (p.executions !== undefined && (!projectPath(p.executions) || p.harness !== undefined)) bad("malformed-manifest", `${name}: executions is a path inside the component root, for a practice without a harness (harness.executions names a harness's)`);
     if (p.steps !== undefined && (!projectPath(p.steps) || p.kind !== "scenarios")) bad("malformed-manifest", `${name}: steps is a path inside the component root, for a scenarios practice only`);
     for (const k of ["author", "unit"] as const) if (p[k] !== undefined && typeof p[k] !== "string") bad("malformed-manifest", `${name}: ${k} must be a string`);
+    if (p.settings !== undefined && !(isRecord(p.settings) && Object.values(p.settings).every((x) => typeof x === "string"))) bad("malformed-manifest", `${name}: settings must map names to strings`);
     if (p.harness !== undefined && v2 && v.subject !== undefined) bad("harness-on-subject", `${name}: a subject is read and never run; a harness would run in its checkout (stage 26 reads its test results instead)`);
     if (p.harness !== undefined) {
       const h = p.harness;

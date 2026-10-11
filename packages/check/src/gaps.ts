@@ -91,6 +91,8 @@ export interface GapInput {
   unowned?: string[];
   /** The diagram against the facts: undrawn dependencies, unobserved relations, unplaced packages (Next layers, 4.3). */
   archGaps?: Gap[];
+  /** Gaps from tracing items through their edges (stage 22). */
+  traceGaps?: Gap[];
 }
 
 export async function gapView(input: GapInput): Promise<{ view: GapView; errors: ReportError[] }> {
@@ -211,7 +213,8 @@ export async function gapView(input: GapInput): Promise<{ view: GapView; errors:
       }
     }
   }
-  for (const it of prepared.items) if (!cited.has(`${it.source}/${it.id}`)) gaps.push({ kind: "uncited", subject: `${it.source}/${it.id}`, fragments: [], detail: `${it.span}: no fragment cites it` });
+  // An item an inventory adapter read (it has a kind) is traced through edges instead (stage 22).
+  for (const it of prepared.items) if (it.kind === undefined && !cited.has(`${it.source}/${it.id}`)) gaps.push({ kind: "uncited", subject: `${it.source}/${it.id}`, fragments: [], detail: `${it.span}: no fragment cites it` });
 
   // unbound: a term an approved obligation references has no binding at all.
   const bound = new Set(m.bindings.map((b) => (b.target.k === "field" ? `${b.target.state}.${b.target.field}` : b.target.k === "arg" ? `${b.target.event}.args.${b.target.name}` : `${b.target.event}.result`)));
@@ -228,7 +231,7 @@ export async function gapView(input: GapInput): Promise<{ view: GapView; errors:
 
   // unowned-source: a source the specification declares that no practice of the component names.
   for (const s of input.unowned ?? []) gaps.push({ kind: "unowned-source", subject: s, fragments: [], detail: `no practice in the component manifest names source ${s}` });
-  gaps.push(...(input.archGaps ?? []));
+  gaps.push(...(input.archGaps ?? []), ...(input.traceGaps ?? []));
 
   const rows = [...cells.entries()].map(([subject, c]) => ({ subject, cells: c }));
   // outcome-unknown: a witness whose test has no outcome, stated or joined, is never a claim (section 3.2).
@@ -251,7 +254,7 @@ export async function gapView(input: GapInput): Promise<{ view: GapView; errors:
   }
   for (const [subject, detail] of unobserved) gaps.push({ kind: "unobserved-test", subject, fragments: [], detail });
 
-  const order = ["unliftable", "unconstrained-after", "no-example", "no-rule", "single-source", "uncited", "unbound", "reserved", "relaxed", "unowned-source", "undrawn-dependency", "unobserved-relation", "unplaced-package", "outcome-unknown", "unobserved-test"];
+  const order = ["unliftable", "unconstrained-after", "no-example", "no-rule", "single-source", "uncited", "unbound", "reserved", "relaxed", "unowned-source", "undrawn-dependency", "unobserved-relation", "unplaced-package", "dangling-reference", "unverified", "outcome-unknown", "unobserved-test"];
   gaps.sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind) || compareCodePoints(a.subject, b.subject) || compareCodePoints(a.detail ?? "", b.detail ?? ""));
   return { view: { sources, rows, gaps }, errors };
 }

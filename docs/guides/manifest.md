@@ -66,3 +66,27 @@ unchanged.
 | `subject.commit` | The full commit, 40 hexadecimal digits. It joins the snapshot, beside the profile's own commit |
 | `spec` | Optional in version 2 |
 | `sources[]` | Only without `spec`: each source's `name`, `kind` and `at`. A practice naming a source not declared here is `practice-unknown-source` |
+
+## Inventory sources (stage 22)
+
+A source can be read as an inventory: each requirement, rule, scenario, test file, document or issue becomes an
+item, and the references between them become edges ([11](../spec/11-ingesting-a-codebase.md), stage 22). Four source
+kinds have built-in inventory adapters from `@csh/adapter-items`:
+
+| Kind | Adapter | Items | Edges |
+| --- | --- | --- | --- |
+| `Documents` | `@csh/adapter-items/markdown` | one `document` per file; a heading that opens with an identifier is a `requirement` | `verified-by`, `implements`, `mentions-file` |
+| `Features` | `@csh/adapter-items/gherkin` | `feature`, `rule`, `scenario`, with synthetic identifiers ([A-99](../../ASSUMPTIONS.md)) | `exemplifies`, and `cites` from tags |
+| `TestFiles` | `@csh/adapter-items/tests` | one `test-file` per file, with its test count | `cites`, from test titles only ([A-98](../../ASSUMPTIONS.md)) |
+| `Issues` | `@csh/adapter-items/jsonl` | one `issue` per JSON line | `mentions` |
+
+A requirements source can use the Markdown adapter by naming it as its practice's `adapter`. Two more fields shape what
+is read:
+
+| Field | Meaning |
+| --- | --- |
+| `sources[].include`, `sources[].exclude` | Globs over paths below the source's `at`. `**` spans directories. A file is read when it matches an include (or there is none) and no exclude |
+| `practices[].settings` | Names to strings, handed to the adapter of each source the practice owns. The Markdown adapter takes `idPattern`, `headingFields` (names for the parts of an identifier heading, such as `form,status`), `verifiedField` (default `Verified by`) and `headings: "references"` (an identifier heading is a section about an item defined elsewhere). The Gherkin adapter takes `tagCites`, a pattern whose first group is the identifier a tag cites. The test and issue adapters take `idPattern` and `citePattern` |
+
+What nothing verifies and what names nothing are gaps: `unverified` ([A-97](../../ASSUMPTIONS.md)) and
+`dangling-reference` ([A-96](../../ASSUMPTIONS.md)). An inventory item is never `uncited`.

@@ -160,6 +160,13 @@ describe("version 2", () => {
     expect(codes({ ...profile, practices: [{ ...profile.practices[0]!, harness: { run: ["npm", "test"], witnesses: "w.ndjson" } }, profile.practices[1]] })).toEqual(["harness-on-subject"]);
   });
 
+  it("takes globs on a declared source and string settings on a practice (stage 22)", () => {
+    const globbed = { ...profile, sources: [{ ...profile.sources![0]!, include: ["**/*.md"], exclude: ["CHARTER.md"] }, profile.sources![1]!] };
+    expect(validateManifest({ ...globbed, practices: [{ ...profile.practices[0]!, kind: "documents", settings: { headingFields: "form,status" } }, profile.practices[1]] })).toEqual([]);
+    expect(codes({ ...profile, sources: [{ ...profile.sources![0]!, include: "**/*.md" }, profile.sources![1]] })).toEqual(["malformed-manifest"]);
+    expect(codes({ ...profile, practices: [{ ...profile.practices[0]!, settings: { n: 1 } }, profile.practices[1]] })).toEqual(["malformed-manifest"]);
+  });
+
   it("makes the model of a component with no specification from its manifest alone", () => {
     const m = moduleOfManifest(profile);
     expect(m.system).toBe("ESI.ts");

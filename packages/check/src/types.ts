@@ -154,7 +154,12 @@ export interface Report {
    */
   examples?: { fragment: string; source: string; cites: string[] }[];
   /** Extension: identified source items (adapter B). */
-  items: { source: string; id: string; pattern?: string; span: string; textDigest: string }[];
+  items: { source: string; id: string; pattern?: string; span: string; textDigest: string; kind?: string; attrs?: Record<string, string> }[];
+  /**
+   * Extension: edges the inventory adapters read (Ingesting a codebase, stage 22), with the item each resolved to as
+   * Source/id, and `dangling` when it names nothing. Present when some source produced an edge.
+   */
+  edges?: { source: string; from: string; rel: string; to: string; span: string; target?: string; dangling?: true }[];
   /** Extension: invalid ledger entries, present from stage 7. */
   ledger?: { head: number; invalid: { seq: number; reason: string; commit?: string }[] };
   /**

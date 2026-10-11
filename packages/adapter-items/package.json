@@ -1,0 +1,19 @@
+{
+  "name": "@csh/adapter-items",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts",
+    "./markdown": "./src/markdown.ts",
+    "./gherkin": "./src/gherkin.ts",
+    "./tests": "./src/tests.ts",
+    "./jsonl": "./src/jsonl.ts"
+  },
+  "dependencies": {
+    "@csh/adapter-ears-markdown": "workspace:*",
+    "@csh/kernel": "workspace:*",
+    "@csh/witness": "workspace:*"
+  }
+}

@@ -20,6 +20,7 @@
     "@csh/gate": "workspace:*",
     "@csh/adapter-gherkin": "workspace:*",
     "@csh/adapter-c4-mermaid": "workspace:*",
-    "@csh/facts": "workspace:*"
+    "@csh/facts": "workspace:*",
+    "@csh/adapter-items": "workspace:*"
   }
 }

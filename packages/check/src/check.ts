@@ -9,6 +9,7 @@ import { outcomeOf } from "@csh/witness";
 import { gapView } from "./gaps.ts";
 import { prepare, type Prepared, type SourceRun } from "./pool.ts";
 import { buildPool, runQueries, sortFindings } from "./run.ts";
+import { trace } from "./trace.ts";
 import { ALL_CANDIDATE, type AuthorityInfo, type AuthorityResolver, type ComponentInfo, type Report, TOOL_VERSION } from "./types.ts";
 
 export const DEFAULT_BUDGET_MS = 5000;
@@ -29,6 +30,8 @@ export interface CheckOptions {
   ledger?: Report["ledger"];
   composition?: Report["composition"];
   component?: ComponentInfo;
+  /** The files the repository tracks, relative to the root sources are read from; edges to files resolve against it. */
+  files?: string[];
 }
 
 export interface CheckResult {
@@ -53,7 +56,8 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
   const outcome = await runQueries(pool, env, authority);
   const arch = evaluateArchitecture({ prepared, fragments: prepared.fragments, authority, live: (n) => pool.byName.has(n), ...(opts.snapshot !== undefined ? { snapshotCommit: opts.snapshot.commit } : {}) });
   outcome.findings = sortFindings([...outcome.findings, ...arch.findings]);
-  const gaps = await gapView({ prepared, pool, outcome, env, authority, archGaps: arch.gaps, ...(opts.component !== undefined ? { unowned: opts.component.unowned } : {}) });
+  const traced = trace({ prepared, ...(opts.files !== undefined ? { files: opts.files } : {}) });
+  const gaps = await gapView({ prepared, pool, outcome, env, authority, archGaps: arch.gaps, traceGaps: traced.gaps, ...(opts.component !== undefined ? { unowned: opts.component.unowned } : {}) });
   const tool = { version: TOOL_VERSION, solver: opts.solver.id, budgetMs };
   const assessInput: Parameters<typeof assess>[0] = {
     pool,
@@ -89,9 +93,12 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
     items: prepared.items.map((i) => {
       const it: Report["items"][number] = { source: i.source, id: i.id, span: i.span, textDigest: i.textDigest };
       if (i.pattern !== undefined) it.pattern = i.pattern;
+      if (i.kind !== undefined) it.kind = i.kind;
+      if (i.attrs !== undefined) it.attrs = i.attrs;
       return it;
     }),
   };
+  if (traced.edges.length > 0) report.edges = traced.edges;
   if (opts.snapshot !== undefined) report.snapshot = opts.snapshot;
   if (opts.ledger !== undefined) report.ledger = opts.ledger;
   if (opts.composition !== undefined) report.composition = opts.composition;
