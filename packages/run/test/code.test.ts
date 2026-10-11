@@ -1,7 +1,7 @@
 // Code facts on a subject (Ingesting a codebase, stage 23): a profile with a specification of module rules and a source
 // the manifest declares beside it, read by facts-ts in the isolated adapter process at the subject's pinned commit.
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
@@ -85,4 +85,14 @@ describe("module rules over code facts", () => {
     expect(r.report.diagnostics.filter((d) => d.severity !== "info")).toEqual([]);
   });
 
+  it("leaves a rule unknown when the source read no module, only manifest fields", async () => {
+    const path = join(profile, "csh/component.json");
+    const manifest = JSON.parse(readFileSync(path, "utf8"));
+    manifest.sources[0].include = ["package.json"];
+    writeFileSync(path, JSON.stringify(manifest));
+    commit(profile);
+    const r = await runComponent({ root: profile, solver: z3 });
+    if (!r.ok) throw new Error(r.message);
+    expect((r.report.assessments ?? []).map((a) => a.verdict)).toEqual(["unknown", "unknown"]);
+  });
 });

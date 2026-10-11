@@ -44,9 +44,9 @@ export function resolveRelative(fromFile: string, specifier: string, files: Set<
   const candidates = [
     base,
     ...(ext === "m" ? [`${stem}.mts`] : ext === "c" ? [`${stem}.cts`] : [`${stem}.ts`, `${stem}.tsx`]),
-    `${stem}.d.ts`,
-    ...["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "d.ts"].map((e) => `${base}.${e}`),
-    ...["ts", "tsx", "js", "jsx", "mjs", "d.ts"].map((e) => `${base}/index.${e}`),
+    ...(ext === "m" ? [`${stem}.d.mts`] : ext === "c" ? [`${stem}.d.cts`] : [`${stem}.d.ts`]),
+    ...["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "d.ts", "d.mts", "d.cts"].map((e) => `${base}.${e}`),
+    ...["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "d.ts", "d.mts", "d.cts"].map((e) => `${base}/index.${e}`),
   ];
   return candidates.find((c) => files.has(c));
 }

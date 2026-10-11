@@ -244,7 +244,7 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
       runs.push({ ...base, files: files.map(({ path, digest }) => ({ path, digest })), output: { diagnostics: [{ code: "no-step-table", severity: "error", message: `the step table ${own.steps} is missing, outside the project root or not a file` }] } });
       continue;
     }
-    const config = { ...(opts.config ?? {}), ...(opts.commit !== undefined ? { commit: opts.commit } : {}), ...(own?.settings ?? {}), ...(own?.cites !== undefined ? { cites: own.cites } : {}), ...(steps !== undefined ? { steps: pathToFileURL(realpathSync(steps)).href } : {}) };
+    const config = { ...(opts.config ?? {}), ...(own?.settings ?? {}), ...(own?.cites !== undefined ? { cites: own.cites } : {}), ...(steps !== undefined ? { steps: pathToFileURL(realpathSync(steps)).href } : {}), ...(opts.commit !== undefined ? { commit: opts.commit } : {}) };
     if (opts.config !== undefined || opts.commit !== undefined || own?.settings !== undefined || own?.cites !== undefined || steps !== undefined) input.config = config;
     // The execution file sits beside a witness source only where it is named: by the practice (its harness's, the
     // reporter's default for a harness, or its own), or by the configuration of a project with no manifest. A source

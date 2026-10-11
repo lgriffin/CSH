@@ -100,6 +100,11 @@ describe("facts-ts", () => {
     expect(resolveRelative("src/x.ts", "./d", files)).toBe("src/d.d.ts");
     expect(resolveRelative("src/b/index.ts", "../a", files)).toBe("src/a.ts");
     expect(resolveRelative("src/x.ts", "./none", files)).toBeUndefined();
+    const more = new Set(["src/e.d.mts", "src/f.d.cts", "src/g/index.mts", "src/h/index.cts"]);
+    expect(resolveRelative("src/x.ts", "./e.mjs", more)).toBe("src/e.d.mts");
+    expect(resolveRelative("src/x.ts", "./f.cjs", more)).toBe("src/f.d.cts");
+    expect(resolveRelative("src/x.ts", "./g", more)).toBe("src/g/index.mts");
+    expect(resolveRelative("src/x.ts", "./h", more)).toBe("src/h/index.cts");
     expect(packageOf("node:fs/promises")).toBe("node:fs");
     expect(packageOf("path")).toBe("node:path");
     expect(packageOf("@a/b/c")).toBe("@a/b");

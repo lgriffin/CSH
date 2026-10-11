@@ -28,6 +28,8 @@ function lockDown(): void {
     return Reflect.construct(RealDate, args, new.target);
   } as unknown as DateConstructor;
   Object.defineProperty(FakeDate, "prototype", { value: RealDate.prototype });
+  // Every date's constructor is the replacement, so new Date(0).constructor cannot reach the clock.
+  Object.defineProperty(RealDate.prototype, "constructor", { value: FakeDate, writable: true, configurable: true });
   Object.defineProperty(FakeDate, "UTC", { value: RealDate.UTC });
   Object.defineProperty(FakeDate, "parse", { value: RealDate.parse });
   Object.defineProperty(FakeDate, "now", { value: () => deny("the clock (Date.now)") });
