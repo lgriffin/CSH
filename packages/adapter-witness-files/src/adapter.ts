@@ -106,7 +106,13 @@ function readExecutions(input: AdapterInput, diagnostics: Diagnostic[]): { outco
   const outcomes = new Map<string, LocalResult | "unknown">();
   const lines: NonNullable<AdapterOutput["executions"]> = [];
   for (const file of input.executions ?? []) {
-    const parsed = parseExecutions(new TextDecoder().decode(file.bytes));
+    const text = new TextDecoder().decode(file.bytes);
+    // A test runner's JSON report is for a practice's TestFiles source (stage 26): a witness joins execution lines only.
+    if (/^\s*\{[\s\S]*"testResults"\s*:/.test(text.slice(0, 4096))) {
+      diagnostics.push({ code: "results-report", severity: "info", message: "a test runner's JSON report, read by the practice's TestFiles source; witnesses join execution lines only", span: file.path });
+      continue;
+    }
+    const parsed = parseExecutions(text);
     for (const p of parsed.problems) diagnostics.push({ code: "malformed-execution", severity: "error", message: p.message, span: `${file.path}:${p.line}` });
     for (const { e, line } of parsed.executions) {
       const prior = outcomes.get(e.test);

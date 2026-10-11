@@ -229,12 +229,22 @@ describe("test results (stage 26)", () => {
       { file: "tests/a.test.ts", outcome: "passed", cites: ["SEC-11"], span: "results/jest.json#testResults[0].assertionResults[1]" },
       { file: "tests/a.test.ts", outcome: "skipped", cites: [], span: "results/jest.json#testResults[0].assertionResults[2]" },
     ]);
-    expect(out.items!.find((i) => i.id === "tests/a.test.ts")!.attrs).toEqual({ tests: "2", passed: "1", failed: "1", skipped: "1" });
+    expect(out.items!.find((i) => i.id === "tests/a.test.ts")!.attrs).toEqual({ tests: "2", passed: "1", failed: "1", errored: "0", skipped: "1" });
     // Runner file names are never repeated: the files outside the source are counted, and the unrun file is too.
     expect(out.diagnostics.map((d) => [d.code, d.message])).toEqual([
       ["results-unmatched", "2 results in 2 files name no test file of the source"],
       ["results-missing", "1 test files declare tests and have no result: their outcomes are unknown"],
     ]);
+  });
+
+  it("joins a nested file to its longest matching path, and replaces a declared skip with the runner's count", () => {
+    const i = input({ "test/a.test.ts": "it.skip('x', () => {});\nit('y', () => {});\n", "packages/x/test/a.test.ts": "it('z', () => {});\n" }, undefined, "TestFiles");
+    const report = JSON.stringify({ testResults: [{ name: "/r/packages/x/test/a.test.ts", assertionResults: [{ title: "z", status: "passed" }] }, { name: "/r/test/a.test.ts", assertionResults: [{ title: "y", status: "passed" }] }] });
+    i.executions = [{ path: "r.json", ...(() => { const bytes = new TextEncoder().encode(report); return { digest: digestOf(bytes), bytes }; })() }];
+    const out = tests(i);
+    expect(out.results!.map((r) => r.file)).toEqual(["packages/x/test/a.test.ts", "test/a.test.ts"]);
+    expect(out.items!.find((x) => x.id === "test/a.test.ts")!.attrs).toEqual({ tests: "2", passed: "1", failed: "0", errored: "0", skipped: "0" });
+    expect(out.diagnostics).toEqual([]);
   });
 
   it("reads csh-execution/v1 lines too, by file and full name", () => {

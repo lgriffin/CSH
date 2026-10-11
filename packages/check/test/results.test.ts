@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { Module } from "@csh/kernel";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { check, prepare, type SourceRun, testOutcomes, trace } from "../src/index.ts";
+import { check, prepare, renderReport, type SourceRun, testOutcomes, trace } from "../src/index.ts";
 
 const empty: Module = { schema: "csh-ir/v1", system: "S", uses: [], vocabulary: { units: [], enums: [], states: [], events: [] }, transitions: [], policies: [], intents: [], sources: [], claims: [], bindings: [] };
 const item = (id: string, kind: "requirement" | "test-file") => ({ id, kind, text: id, span: `${id}:1`, textDigest: "sha256:0" });
@@ -64,5 +64,16 @@ describe("results in a check", () => {
     expect(withResults.outcomes?.map((o) => o.item)).toEqual(["Charter/R-1", "Charter/R-2", "Tests/a.test.ts", "Tests/b.test.ts"]);
     expect(withResults.gapView.gaps.filter((g) => g.kind !== "failing-test")).toEqual(without.gapView.gaps);
     expect(withResults.gapView.gaps.filter((g) => g.kind === "failing-test").map((g) => g.subject)).toEqual(["Tests/a.test.ts", "Tests/b.test.ts"]);
+  });
+
+  it("shows the counts, and a results file that could not be read, in the text report", async () => {
+    const opts = { module: account, moduleDigest: "sha256:m", solver: z3, configDigest: "sha256:c" };
+    const text = renderReport((await check({ ...opts, runs: [charter, tests(RESULTS)] })).report);
+    expect(text).toContain("  tests 4 in 2 files: passed 1, failed 1, errored 1, skipped 1; cited items 2");
+    const bad = tests([]);
+    bad.output.diagnostics.push({ code: "malformed-results", severity: "error", message: "not JSON", span: "r.json:1" });
+    const shown = renderReport((await check({ ...opts, runs: [charter, bad] })).report);
+    expect(shown).toContain("== Test results\n\n  error malformed-results (Tests r.json:1): not JSON");
+    expect(shown).not.toContain("  tests ");
   });
 });

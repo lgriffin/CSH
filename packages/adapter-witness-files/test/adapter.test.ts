@@ -141,6 +141,13 @@ describe("witness-files adapter", () => {
     expect(out.executions!.map((e) => e.outcome)).toEqual(["unknown", "unknown"]);
   });
 
+  it("leaves a test runner's JSON report to the TestFiles source, without calling it malformed (stage 26)", () => {
+    const report = JSON.stringify({ testResults: [{ name: "/w/t.test.ts", assertionResults: [{ title: "x", status: "passed" }] }] }, null, 2);
+    const out = run({ ...input({ "a.ndjson": [v2("w1", "t::x")] }), executions: [{ path: "jest.json", ...bytesOf(report) }] });
+    expect(out.diagnostics.map((d) => [d.code, d.severity])).toEqual([["results-report", "info"]]);
+    expect(out.witnesses![0]!.execution.localResult).toBeUndefined();
+  });
+
   it("keeps a stated outcome, and reports a malformed execution line", () => {
     const out = run({ ...input({ "a.ndjson": [w("w1")] }), executions: [{ path: "e.ndjson", ...bytesOf("not json") }] });
     expect(out.claims!.examples).toHaveLength(1);

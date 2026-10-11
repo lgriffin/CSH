@@ -147,14 +147,15 @@ export function run(input: AdapterInput): AdapterOutput {
 }
 
 /**
- * The file of the source a runner's file name is: the same path, or the one item whose path ends the runner's
- * (runners write absolute paths, or paths from their own root). Undefined when none or several match.
+ * The file of the source a runner's file name is: the same path, or the longest item path that ends the runner's
+ * (runners write absolute paths, or paths from their own root), so `packages/x/test/a.test.ts` wins over
+ * `test/a.test.ts`. Undefined when none matches, or two of the longest length do.
  */
 function fileOf(name: string, paths: string[]): string | undefined {
   const n = name.replace(/\\/g, "/").replace(/^\.\//, "");
   if (paths.includes(n)) return n;
-  const ends = paths.filter((p) => n.endsWith(`/${p}`));
-  return ends.length === 1 ? ends[0] : undefined;
+  const ends = paths.filter((p) => n.endsWith(`/${p}`)).sort((a, b) => b.length - a.length);
+  return ends.length > 0 && (ends.length === 1 || ends[1]!.length < ends[0]!.length) ? ends[0] : undefined;
 }
 
 /** Each test the results files report, joined to its file and to the identifiers its full name cites (A-115). */
@@ -189,7 +190,8 @@ function joinResults(input: AdapterInput, items: SourceItem[], id: RegExp, diagn
       if ((input.executions ?? []).length > 0 && it.attrs?.tests !== "0") unrun++;
       continue;
     }
-    it.attrs = { ...(it.attrs ?? {}), ...Object.fromEntries(Object.entries(c).filter(([, n]) => n > 0).map(([k, n]) => [k, String(n)])) };
+    // The runner's counts, zeros too, replace what the declarations said: `skipped` is then what the runner skipped.
+    it.attrs = { ...(it.attrs ?? {}), ...Object.fromEntries(Object.entries(c).map(([k, n]) => [k, String(n)])) };
   }
   if (unrun > 0) diagnostics.push({ code: "results-missing", severity: "info", message: `${unrun} test files declare tests and have no result: their outcomes are unknown` });
   return results;
