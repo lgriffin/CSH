@@ -136,7 +136,7 @@ describe("declarations and data files (stage 24)", () => {
       input(
         {
           "src/e.ts": "class A extends Error {}\nexport class B extends ns.A<T> {}\nconst N = 3, S = `t`, X = f();\nlet l = 1;\nenum E { a }\nnamespace M {}\ntype T = 1;\nfunction g() { const inner = 1; }\n",
-          "etc/metrics.json": JSON.stringify({ suites: 223, nested: { "a/b": [1, true, null] } }),
+          "etc/metrics.json": JSON.stringify({ suites: 223, nested: { "a/b": [1, true, null] }, none: {}, nil: [] }),
         },
         "c",
       ),
@@ -146,6 +146,8 @@ describe("declarations and data files (stage 24)", () => {
       "field /nested/a~1b/0 = 1",
       "field /nested/a~1b/1 = true",
       "field /nested/a~1b/2 = null",
+      "field /none = {}",
+      "field /nil = []",
       "module src/e.ts",
       "declare src/e.ts class A extends Error",
       "declare src/e.ts class B extends ns.A",

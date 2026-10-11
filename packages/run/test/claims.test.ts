@@ -6,7 +6,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { fetchSubject, loadProject, runComponent } from "../src/index.ts";
+import { componentQueue, fetchSubject, loadProject, runComponent } from "../src/index.ts";
 
 const REPO = resolve(import.meta.dirname, "../../..");
 let base: string;
@@ -97,5 +97,12 @@ describe("structural claims over code facts", () => {
     );
     const dates = r.report.findings.find((f) => f.kind === "fact-conflict" && (f.reason ?? "").includes("DATE"))!;
     expect(dates.reason).toMatch(/src\/a\.ts:1: DATE is "2026-08-18"; src\/b\.ts:1: DATE is "2025-12-16"/);
+  });
+
+  it("traces a proposed claim to the commit that proposed it, as a rule is traced to the one that wrote it", async () => {
+    const q = await componentQueue(loadProject(profile, profile), z3);
+    if (!q.ok) throw new Error(q.message);
+    const proposed = q.queue.entries.find((x) => x.fragment.endsWith("/ThreeEntries"))!;
+    expect(proposed.since).toBe(git(profile, "log", "-1", "--format=%H", "--", "csh/claims.json"));
   });
 });

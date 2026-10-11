@@ -29,6 +29,11 @@ export function archRuleOf(f: Fragment): ArchRule | undefined {
   return isArchRule(native) ? native : undefined;
 }
 
+/** The facts taken at the snapshot's commit, or, for a subject, at its pinned commit (stage 23): the only current ones. */
+export function currentFacts(all: Fact[], snapshotCommit: string | undefined, subjectCommit: string | undefined): Fact[] {
+  return all.filter((f) => (snapshotCommit !== undefined && f.subject.commit === snapshotCommit) || (subjectCommit !== undefined && f.subject.commit === subjectCommit));
+}
+
 export function evaluateArchitecture(input: { prepared: Prepared; fragments: Fragment[]; authority: Map<string, AuthorityInfo>; snapshotCommit?: string; subjectCommit?: string; files?: string[]; live: (name: string) => boolean }): ArchOutcome {
   const { prepared } = input;
   const system = prepared.module.system;
@@ -37,7 +42,7 @@ export function evaluateArchitecture(input: { prepared: Prepared; fragments: Fra
   const primary = [...diagrams.entries()][0];
   const all: Fact[] = prepared.runs.flatMap((r) => r.output.facts ?? []);
   // Facts are current when taken at the snapshot's commit, or, for a subject, at the subject's pinned commit (stage 23).
-  const current = all.filter((f) => (input.snapshotCommit !== undefined && f.subject.commit === input.snapshotCommit) || (input.subjectCommit !== undefined && f.subject.commit === input.subjectCommit));
+  const current = currentFacts(all, input.snapshotCommit, input.subjectCommit);
   // Only facts that say what the code is (a package or a module) make the graph current: manifest fields or exports alone
   // describe no dependency, and an empty graph from them would satisfy every rule.
   const graph = (f: Fact) => f.kind === "package" || f.kind === "module";
@@ -68,8 +73,10 @@ export function evaluateArchitecture(input: { prepared: Prepared; fragments: Fra
   const claims = rules.flatMap((r) => (r.rule.k === "claim" ? [{ f: r.f, claim: r.rule }] : [])).sort((a, b) => compareCodePoints(a.f.name, b.f.name));
   const at = (c: Claim) => (c.at !== undefined ? `${c.at}: ` : "");
   for (const { f, claim } of claims) {
-    const o: ArchRuleOutcome = { facts: claimState };
-    if (claimState === "current") o.claim = evaluateClaim(claim, claimFacts);
+    // Whether a file is tracked is known from the repository itself, without any fact.
+    const decidable = claimState === "current" || (claim.p.k === "file" && claimFacts.files !== undefined);
+    const o: ArchRuleOutcome = { facts: decidable ? "current" : claimState };
+    if (decidable) o.claim = evaluateClaim(claim, claimFacts);
     out.rules.set(f.name, o);
     // A claim the facts refute: the prose and the code disagree.
     if (o.claim?.result === "refuted") {

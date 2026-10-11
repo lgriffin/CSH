@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { check, type CheckResult, type EvidenceStore, makeRefiner, type Report, type AuthorityResolver, type SourceRun } from "@csh/check";
 import { runSources, type RunSourcesOptions, trackedFiles } from "./sources.ts";
 import { emit, type EmitOptions, type EmitResult, type Lock } from "@csh/emit";
-import { canonicalJson, canonicalModule, digestJson, fragmentsOf, moduleDigest, refName, type Module } from "@csh/kernel";
+import { canonicalJson, canonicalModule, digestJson, fragmentsOf, isArchRule, moduleDigest, refName, type Module } from "@csh/kernel";
 import { type LedgerState, resolveAuthority } from "@csh/ledger";
 import { checkAgainstModule, type ComponentProblem, readClaims, withDeclaredSources, withProposedClaims, DEFAULT_EXECUTIONS, type LoadedComponent, ownersOf } from "@csh/component";
 import type { SolverPort } from "@csh/solver";
@@ -158,8 +158,9 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   if (opts.unchangedSince !== undefined) checkOpts.unchangedSince = opts.unchangedSince;
   if (opts.composition !== undefined) checkOpts.composition = opts.composition;
   if (opts.subjectCommit !== undefined) checkOpts.subjectCommit = opts.subjectCommit;
-  // Edges to files resolve against what the repository tracks; listed only when some source produced an edge.
-  if (runs.some((r) => (r.output.edges ?? []).length > 0)) {
+  // Edges to files, and claims that a file exists, resolve against what the repository tracks; listed only when needed.
+  const claimsAFile = module.intents.some((i) => i.obligations.some((o) => o.kind === "architecture" && isArchRule(o.native) && o.native.k === "claim" && o.native.p.k === "file"));
+  if (claimsAFile || runs.some((r) => (r.output.edges ?? []).length > 0)) {
     const files = trackedFiles(opts.sourceRoot ?? opts.root);
     if (files !== undefined) checkOpts.files = files;
   }

@@ -89,6 +89,7 @@ describe("trace against code facts (stage 24)", () => {
           { from: "g.md", rel: "mentions-symbol", to: "symbol:src/unread.ts#x", span: "g:3" },
           { from: "g.md", rel: "mentions-script", to: "script:gen:types", span: "g:4" },
           { from: "g.md", rel: "mentions-script", to: "script:gone", span: "g:5" },
+          { from: "g.md", rel: "mentions-symbol", to: "symbol:src/barrel.ts#Anything", span: "g:6" },
         ],
       },
     },
@@ -97,9 +98,11 @@ describe("trace against code facts (stage 24)", () => {
     fact({ kind: "module", name: "src/e.ts" }),
     fact({ kind: "declare", module: "src/e.ts", symbol: "LibError", declares: "class", at: "src/e.ts:1" }),
     fact({ kind: "field", file: "package.json", path: "/scripts/gen:types", value: "x" }),
+    fact({ kind: "module", name: "src/barrel.ts" }),
+    fact({ kind: "export", module: "src/barrel.ts", symbol: "*", from: "./e", at: "src/barrel.ts" }),
   ];
 
-  it("resolves a symbol in a module that was read and a script package.json names; the rest dangle", () => {
+  it("resolves a symbol in a module that was read and a script package.json names; the rest dangle, but a name a * re-export may supply is not checked", () => {
     const r = trace({ prepared: prepare(module, prose), facts });
     expect(r.gaps).toEqual([{ kind: "dangling-reference", subject: "Guides/g.md", fragments: [], detail: "names what does not exist: g:2 mentions-symbol src/e.ts#buildError; g:5 mentions-script gone" }]);
   });

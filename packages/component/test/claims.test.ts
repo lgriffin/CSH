@@ -1,5 +1,5 @@
 // Proposed claims (stage 24): kept in csh/claims.json, joined into the model's intents as candidates.
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -45,8 +45,26 @@ describe("proposed claims", () => {
       expect(readClaims(root).problems.map((p) => p.code)).toEqual(["claims-malformed"]);
       writeFileSync(join(root, CLAIMS_PATH), "{");
       expect(readClaims(root).problems.map((p) => p.code)).toEqual(["claims-malformed"]);
+      writeFileSync(join(root, CLAIMS_PATH), "null");
+      expect(readClaims(root).problems.map((p) => p.code)).toEqual(["claims-malformed"]);
     } finally {
       rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("are never written through a symbolic link, which could point outside the component", () => {
+    const root = mkdtempSync(join(tmpdir(), "claims-"));
+    const outside = mkdtempSync(join(tmpdir(), "outside-"));
+    try {
+      mkdirSync(join(root, "csh"));
+      symlinkSync(join(outside, "target.json"), join(root, CLAIMS_PATH));
+      expect(proposeClaim(root, proposal("NotPublic"))).toEqual({ ok: false, problem: "csh/claims.json is a symbolic link; claims are written only inside the component" });
+      rmSync(join(root, "csh"), { recursive: true });
+      symlinkSync(outside, join(root, "csh"));
+      expect(proposeClaim(root, proposal("NotPublic"))).toMatchObject({ ok: false, problem: "csh is a symbolic link; claims are written only inside the component" });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+      rmSync(outside, { recursive: true, force: true });
     }
   });
 });

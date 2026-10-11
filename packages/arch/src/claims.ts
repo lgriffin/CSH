@@ -58,11 +58,13 @@ export function truthOf(p: Prop, f: ClaimFacts): Truth {
           if (BUILT_IN_BASES.has(name)) return { value: false, detail: `${chain.join(" -> ")} ends at ${name}` };
           return { reason: `base-not-read: ${name}` };
         }
-        const bases = new Set(found.map((x) => x.base ?? ""));
-        if (bases.size > 1) return { reason: `ambiguous-class: ${name} is declared ${found.length} times` };
+        // Declarations are matched by name, not by binding: a name declared twice could be either class.
+        if (found.length > 1) return { reason: `ambiguous-class: ${name} is declared ${found.length} times` };
         chain.push(`${name} (${found[0]!.at})`);
-        const base = found[0]!.base?.split(".").pop();
+        const base = found[0]!.base;
         if (base === undefined) return { value: false, detail: `${chain.join(" -> ")} extends nothing` };
+        // A qualified or computed base names a class through a binding that is not followed.
+        if (!/^[A-Za-z_$][\w$]*$/.test(base)) return { reason: `qualified-base: ${name} extends ${base}` };
         if (base === p.base) return { value: true, detail: `${chain.join(" -> ")} -> ${base}` };
         if (chain.length > 64) return { reason: `cycle: ${name}` };
         name = base;
@@ -72,13 +74,16 @@ export function truthOf(p: Prop, f: ClaimFacts): Truth {
       const in_ = f.fields.filter((x) => x.file === p.file);
       if (in_.length === 0) return notRead(p.file);
       const at = in_.find((x) => x.path === p.pointer);
-      if (at === undefined) return { value: false, detail: `${p.file} has no value at ${p.pointer}` };
+      // No fact at the pointer says nothing: a file may be read in part, as package.json is (A-108).
+      if (at === undefined) return { reason: `not-read: ${p.file} ${p.pointer}` };
       return { value: at.value === p.value, detail: `${p.file} holds ${JSON.stringify(at.value)} at ${p.pointer}` };
     }
     case "count": {
       const in_ = f.fields.filter((x) => x.file === p.file);
       if (in_.length === 0) return notRead(p.file);
       const prefix = `${p.pointer}/`;
+      // A container is known from its leaves, or from its own fact when it is empty (A-108).
+      if (!in_.some((x) => x.path === p.pointer || x.path.startsWith(prefix))) return { reason: `not-read: ${p.file} ${p.pointer}` };
       const except = new Set(p.except ?? []);
       const keys = [...new Set(in_.filter((x) => x.path.startsWith(prefix)).map((x) => unescape(x.path.slice(prefix.length).split("/")[0]!)))].filter((k) => !except.has(k)).sort(compareCodePoints);
       return { value: keys.length === p.n, detail: `${p.file} has ${keys.length} entries at ${p.pointer}${except.size > 0 ? ` less ${[...except].join(", ")}` : ""}` };
@@ -118,6 +123,8 @@ export function evaluateClaim(c: Claim, f: ClaimFacts): ClaimResult {
 function subjectOf(p: Prop): string {
   if (p.k === "field") return JSON.stringify(["field", p.file, p.pointer]);
   if (p.k === "count") return JSON.stringify(["count", p.file, p.pointer, [...(p.except ?? [])].sort(compareCodePoints)]);
+  // Equality is symmetric: the operands are ordered so that either way round names the same subject.
+  if (p.k === "same") return JSON.stringify(["same", ...[p.a, p.b].map((c) => `${c.module}#${c.name}`).sort(compareCodePoints)]);
   return JSON.stringify(p);
 }
 

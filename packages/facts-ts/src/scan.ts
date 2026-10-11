@@ -169,6 +169,8 @@ export function fieldsOf(json: unknown, only: readonly string[] | null = FIELDS)
   const esc = (k: string) => k.replace(/~/g, "~0").replace(/\//g, "~1");
   const walk = (v: unknown, path: string) => {
     if (v === null || typeof v !== "object") out.push({ path, value: String(v) });
+    // An empty object or array is a leaf of its own, so its key still counts in its parent.
+    else if (Object.keys(v).length === 0) out.push({ path, value: Array.isArray(v) ? "[]" : "{}" });
     else for (const [k, x] of Object.entries(v as Record<string, unknown>)) walk(x, `${path}/${esc(k)}`);
   };
   if (only === null) walk(json, "");

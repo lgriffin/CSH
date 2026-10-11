@@ -68,4 +68,24 @@ describe("structural claims", () => {
     expect(claimConflict(inh, claim({ k: "inherits", cls: "A", base: "C" }, false))).toBeUndefined();
     expect(describeClaim(claim({ k: "file", path: "x" }, false))).toBe("not: x exists");
   });
+
+  it("say unknown, not false, where a fact could be missing because it was not read", () => {
+    const pkg: ClaimFacts = { ...facts, fields: [{ file: "package.json", path: "/name", value: "p", at: "package.json" }, { file: "x.json", path: "/a/empty", value: "{}", at: "x.json" }, { file: "x.json", path: "/a/b", value: "1", at: "x.json" }] };
+    expect(truthOf({ k: "field", file: "package.json", pointer: "/private", value: "true" }, pkg)).toEqual({ reason: "not-read: package.json /private" });
+    expect(truthOf({ k: "count", file: "package.json", pointer: "/exports", n: 0 }, pkg)).toEqual({ reason: "not-read: package.json /exports" });
+    expect(truthOf({ k: "count", file: "x.json", pointer: "/a", n: 2 }, pkg)).toMatchObject({ value: true });
+    expect(truthOf({ k: "count", file: "x.json", pointer: "/a/empty", n: 0 }, pkg)).toMatchObject({ value: true });
+  });
+
+  it("follow no class whose name is declared twice, or whose base is qualified", () => {
+    const dup: ClaimFacts = { ...facts, declares: [...facts.declares, { module: "src/other.ts", symbol: "NetError", declares: "class", base: "LibError", at: "src/other.ts:1" }, { module: "src/q.ts", symbol: "Q", declares: "class", base: "ns.LibError", at: "src/q.ts:1" }] };
+    expect(truthOf({ k: "inherits", cls: "OpenError", base: "LibError" }, dup)).toEqual({ reason: "ambiguous-class: NetError is declared 2 times" });
+    expect(truthOf({ k: "inherits", cls: "Q", base: "Error" }, dup)).toEqual({ reason: "qualified-base: Q extends ns.LibError" });
+  });
+
+  it("find equality claims in conflict whichever way round their constants are written", () => {
+    const a = { module: "src/c.ts", name: "DATE" };
+    const b = { module: "src/d.ts", name: "DATE" };
+    expect(claimConflict(claim({ k: "same", a, b }), claim({ k: "same", a: b, b: a }, false))).toBeDefined();
+  });
 });

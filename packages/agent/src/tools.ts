@@ -220,7 +220,10 @@ async function callKnownTool(name: ToolName, args: Record<string, unknown>, c: T
       if (claimName === undefined || intent === undefined || args.claim === undefined) return fail(name, "missing-argument", "propose_claim needs a name, an intent and a claim");
       const e = await evaluate(p, c);
       if (!e.ok) return fail(name, "evaluation-failed", e.message);
-      if (!e.model.intents.some((i) => i.name === intent)) return fail(name, "unknown-intent", `the specification declares no intent ${intent}; it declares ${e.model.intents.map((i) => i.name).join(", ")}`);
+      const target = e.model.intents.find((i) => i.name === intent);
+      if (target === undefined) return fail(name, "unknown-intent", `the specification declares no intent ${intent}; it declares ${e.model.intents.map((i) => i.name).join(", ")}`);
+      // A name the intent already holds would make every later emission fail with claims-duplicate.
+      if ([...target.obligations, ...target.examples, ...target.assumptions].some((o) => o.name === claimName)) return fail(name, "claim-refused", `${intent} already holds ${claimName}`);
       const proposal = { name: claimName, intent, claim: args.claim, ...(args.cites !== undefined ? { cites: args.cites } : {}), ...(str("why") !== undefined ? { why: str("why") } : {}) } as Parameters<typeof proposeClaim>[1];
       const r = proposeClaim(p.root, proposal);
       return r.ok ? ok(name, { proposed: `${e.model.system}/${intent}/${claimName}`, file: r.path, authority: "candidate" }) : fail(name, "claim-refused", r.problem);

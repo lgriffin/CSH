@@ -2,8 +2,8 @@
 // that an agent can propose one without editing the specification. Each joins an intent of the emitted model as an
 // architecture obligation, candidate like any other fragment: a proposal is never a decision, and whoever commits the
 // file is its author.
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, lstatSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { type Claim, compareCodePoints, isArchRule, type Module } from "@csh/kernel";
 import type { ComponentProblem } from "./manifest.ts";
 
@@ -52,6 +52,7 @@ export function readClaims(root: string): { claims: ProposedClaim[]; problems: C
   } catch (err) {
     return { claims: [], problems: [{ code: "claims-malformed", detail: `${CLAIMS_PATH}: ${(err as Error).message}` }] };
   }
+  if (typeof v !== "object" || v === null || Array.isArray(v)) return { claims: [], problems: [{ code: "claims-malformed", detail: `${CLAIMS_PATH} needs schema ${CLAIMS_SCHEMA} and a claims list` }] };
   const o = v as Partial<ClaimsFile>;
   if (o.schema !== CLAIMS_SCHEMA || !Array.isArray(o.claims)) return { claims: [], problems: [{ code: "claims-malformed", detail: `${CLAIMS_PATH} needs schema ${CLAIMS_SCHEMA} and a claims list` }] };
   const problems = o.claims.flatMap((c) => {
@@ -88,7 +89,12 @@ export function proposeClaim(root: string, c: ProposedClaim): { ok: true; path: 
   const current = readClaims(root);
   if (current.problems.length > 0) return { ok: false, problem: current.problems.map((p) => p.detail).join("; ") };
   if (current.claims.some((x) => x.intent === c.intent && x.name === c.name)) return { ok: false, problem: `${CLAIMS_PATH} already proposes ${c.intent}/${c.name}` };
+  // The file is written only inside the component: a link at csh/ or at the file could point anywhere.
+  for (const p of [dirname(CLAIMS_PATH), CLAIMS_PATH]) {
+    const at = join(root, p);
+    if (lstatSync(at, { throwIfNoEntry: false })?.isSymbolicLink() === true) return { ok: false, problem: `${p} is a symbolic link; claims are written only inside the component` };
+  }
   const file: ClaimsFile = { schema: CLAIMS_SCHEMA, claims: [...current.claims, c] };
-  writeFileSync(join(root, CLAIMS_PATH), `${JSON.stringify(file, null, 2)}\n`);
+  writeFileSync(join(root, CLAIMS_PATH), `${JSON.stringify(file, null, 2)}\n`, { flag: "w" });
   return { ok: true, path: CLAIMS_PATH };
 }

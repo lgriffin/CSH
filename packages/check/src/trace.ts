@@ -42,13 +42,16 @@ export function trace(input: TraceInput): TraceResult {
   const facts = input.facts ?? [];
   const modules = new Set(facts.flatMap((f) => (f.kind === "module" ? [f.name] : [])));
   const named = new Set(facts.flatMap((f) => (f.kind === "declare" || f.kind === "export" ? [`${f.module}#${f.symbol}`] : [])));
+  // A module that re-exports with * may supply any name, and the re-export is not followed (A-106).
+  const starred = new Set(facts.flatMap((f) => (f.kind === "export" && f.symbol === "*" ? [f.module] : [])));
   const scripts = facts.filter((f) => f.kind === "field" && f.file === "package.json");
   const resolve = (source: string, e: ItemEdge): string | undefined | null => {
     if (e.to.startsWith("text:")) return null;
     // A symbol resolves when its module was read and declares or exports it; a module not read cannot be checked.
     if (e.to.startsWith("symbol:")) {
       const ref = e.to.slice(7);
-      return !modules.has(ref.split("#")[0]!) ? null : named.has(ref) ? "file" : undefined;
+      const m = ref.split("#")[0]!;
+      return !modules.has(m) ? null : named.has(ref) ? "file" : starred.has(m) ? null : undefined;
     }
     if (e.to.startsWith("script:")) {
       const name = e.to.slice(7).replace(/~/g, "~0").replace(/\//g, "~1");
