@@ -1,11 +1,11 @@
 // A subject profile (Ingesting a codebase, stage 21): a component with no specification, evaluating a repository it
 // does not hold from outside, at a pinned commit, without writing to it.
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { fetchSubject, loadProject, runAt, runComponent, subjectCheckout } from "../src/index.ts";
+import { componentStatus, fetchSubject, loadProject, runAt, runComponent, subjectCheckout } from "../src/index.ts";
 
 const REPO = resolve(import.meta.dirname, "../../..");
 let base: string;
@@ -66,6 +66,9 @@ describe("a subject profile", () => {
     const r = await runComponent({ root: profile, solver: z3 });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.message).toMatch(/subject-missing/);
+    const status = await componentStatus(loadProject(profile, profile), z3);
+    expect(status.ok).toBe(false);
+    if (!status.ok) expect(status.message).toMatch(/subject-missing/);
   });
 
   it("fetches the subject at its pinned commit, once", () => {
@@ -103,6 +106,26 @@ describe("a subject profile", () => {
     } finally {
       git(checkout, "checkout", "--", ".");
     }
+    // An ignored file in a source directory would be read by the run without changing its snapshot.
+    writeFileSync(join(checkout, ".git", "info", "exclude"), "*.local\n");
+    writeFileSync(join(checkout, "docs", "extra.local"), "| REQ-8 | Ignored. |\n");
+    try {
+      const ignored = await runComponent({ root: profile, solver: z3 });
+      expect(ignored.ok).toBe(false);
+      if (!ignored.ok) expect(ignored.message).toMatch(/subject-dirty/);
+      // A dirty checkout is never replaced by a fetch: it is reported, and left as it is.
+      const f = fetchSubject(loadProject(profile, profile));
+      expect(f.ok).toBe(false);
+      expect(existsSync(join(checkout, "docs", "extra.local"))).toBe(true);
+    } finally {
+      rmSync(join(checkout, "docs", "extra.local"));
+    }
+  });
+
+  it("gives the status of a fetched subject, reading its sources from the checkout", async () => {
+    const status = await componentStatus(loadProject(profile, profile), z3);
+    if (!status.ok) throw new Error(status.message);
+    expect(status.status.component).toBe("Subject");
   });
 
   it("runs the profile as it stood at a past commit, reading the subject fetched under the component root", async () => {

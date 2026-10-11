@@ -223,7 +223,8 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
     // reporter's default for a harness, or its own), or by the configuration of a project with no manifest. A source
     // with no named file never inherits another practice's outcomes (#22).
     const execAt = own !== undefined ? own.executions : source.kind === "Witnesses" ? opts.executions : undefined;
-    const exec = execAt === undefined ? undefined : filesAt(opts.root, execAt);
+    // An executions file is the component's, never the subject's: it is read from the component root.
+    const exec = execAt === undefined ? undefined : filesAt(opts.codeRoot ?? opts.root, execAt);
     const execFiles = (exec?.files ?? []).map((f) => {
       const bytes = new Uint8Array(readFileSync(f.abs));
       return { path: f.path, digest: digestOf(bytes), bytes };

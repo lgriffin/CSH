@@ -329,7 +329,7 @@ export async function csh(argv: string[], io: Io): Promise<number> {
         err: io.err,
         ci: process.env.CI === "true",
         cwd: io.cwd,
-        runOptions: async () => ({ root: p.root, solver, ...(a.options.budget !== undefined ? { budgetMs: Number(a.options.budget) } : {}), ...(a.flags.has("no-cache") ? { noCache: true } : {}), harnessOutput: (x: string) => io.err(x) }),
+        runOptions: async () => ({ root: p.root, solver, ...(subject !== undefined ? { subject } : {}), ...(a.options.budget !== undefined ? { budgetMs: Number(a.options.budget) } : {}), ...(a.flags.has("no-cache") ? { noCache: true } : {}), harnessOutput: (x: string) => io.err(x) }),
       });
     }
     case "a3": {
@@ -337,7 +337,7 @@ export async function csh(argv: string[], io: Io): Promise<number> {
       return a3Command(p, a, {
         out: io.out,
         err: io.err,
-        runOptions: async () => ({ root: p.root, solver, ...(a.options.budget !== undefined ? { budgetMs: Number(a.options.budget) } : {}), ...(a.flags.has("no-cache") ? { noCache: true } : {}), harnessOutput: (x: string) => io.err(x) }),
+        runOptions: async () => ({ root: p.root, solver, ...(subject !== undefined ? { subject } : {}), ...(a.options.budget !== undefined ? { budgetMs: Number(a.options.budget) } : {}), ...(a.flags.has("no-cache") ? { noCache: true } : {}), harnessOutput: (x: string) => io.err(x) }),
       });
     }
     default:
