@@ -37,7 +37,8 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
   const dates = new Map<string, string>();
   for (const l of (run(root, ["log", "--format=%H %cI", "HEAD"]) ?? "").split("\n")) {
     const [h, d] = l.split(" ");
-    if (h !== undefined && d !== undefined) dates.set(h, d);
+    // In UTC, one way: git versions write a zero offset as +00:00 or as Z.
+    if (h !== undefined && d !== undefined && !Number.isNaN(Date.parse(d))) dates.set(h, new Date(d).toISOString().replace(/\.\d{3}Z$/, "Z"));
   }
   const dated = (commit: string | undefined): Dated | undefined => {
     const date = commit === undefined ? undefined : dates.get(commit);

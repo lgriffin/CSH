@@ -119,14 +119,14 @@ const gapsOf = (r: Report, kind: string) => r.gapView.gaps.filter((g) => g.kind 
 describe("the history source", () => {
   it("dates lines, finds when a line was first written, and lists the commits that changed a file since", () => {
     const h = gitHistory(subject, { implementation: ["src"], since: "previous-tag" });
-    expect(h.lineCommit("docs/charter.md", 7)).toEqual({ commit: commits.c1, date: "2026-01-01T00:00:00+00:00" });
+    expect(h.lineCommit("docs/charter.md", 7)).toEqual({ commit: commits.c1, date: "2026-01-01T00:00:00Z" });
     expect(h.lineOrigin("docs/charter.md", 15)?.commit).toBe(commits.c1);
     expect(h.changedSince(commits.c1!, "src/util.ts").map((d) => d.commit)).toEqual([commits.c4, commits.c2]);
     expect(h.changedSince(commits.c4!, "src/util.ts")).toEqual([]);
     expect(h.introduced("package.json", ">=22.0.0")?.commit).toBe(commits.c3);
     expect(h.lineCommit("docs/nothing.md", 1)).toBeUndefined();
     // Since v1.0.0: c2 changes src with no test and no Refs:, and an agent co-authored it; c3 has Refs:, c4 a test.
-    expect(h.untraced()).toEqual([{ commit: commits.c2, date: "2026-02-01T00:00:00+00:00", files: 1, agent: true }]);
+    expect(h.untraced()).toEqual([{ commit: commits.c2, date: "2026-02-01T00:00:00Z", files: 1, agent: true }]);
   });
 
   it("reads implementation paths as the manifest writes them, from a root below the top level, and dates no line of an edited file", () => {
