@@ -9,7 +9,7 @@ import { digestOf, fragmentsOf, type Module, stableJson } from "@csh/kernel";
 import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons } from "@csh/ledger";
 import { printFragment } from "@csh/print";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { componentQueue, componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderQueue, renderStatus, ledgerOf, loadProject, MODEL_PATH, type Project, REPORT_PATH, runAt, runComponent, type RunResult, specOf, storedRuns } from "@csh/run";
+import { componentQueue, componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderQueue, renderStatus, ledgerOf, loadProject, MODEL_PATH, type Project, REPORT_PATH, runAt, runComponent, type RunResult, fetchSubject, specPathOf, storedRuns } from "@csh/run";
 import { type Args, parseArgs } from "./args.ts";
 import { init } from "./init.ts";
 import { a3Command, a3Fragment } from "./a3.ts";
@@ -61,7 +61,10 @@ const USAGE = `csh: the Composable Specification Harness
   csh gate --verify <decision.json>
                                   Recompute the decision; refuse one made for any other snapshot or that differs.
 
-Options common to all: --root <dir> (default: the git repository or the current directory).
+  csh subject fetch               Fetch the subject the manifest names, at its pinned commit, under .csh-cache/subjects/.
+
+Options common to all: --root <dir> (default: the git repository or the current directory); --subject <dir> (a
+checkout of the subject to read instead of the fetched one).
 `;
 
 interface Io {
@@ -156,7 +159,7 @@ async function decide(kind: DecisionKind, p: Project, a: Args, io: Io): Promise<
   const res = await runCheck(p, { ...a, positional: [] }, io);
   if (res === undefined) return 1;
   const { report, model } = res;
-  const spec = specOf(p, undefined);
+  const spec = specPathOf(p);
   const ledger = await ledgerOf(p, spec);
   const solo = ledger === undefined || persons(ledger.maintainers).length <= 1;
   let fragmentName = target;
@@ -224,7 +227,7 @@ async function decideA3(kind: DecisionKind, p: Project, slug: string, actor: str
   }
   const fragment = a3Fragment(name, slug);
   const digest = digestOf(read.bytes);
-  const ledger = await ledgerOf(p, specOf(p, undefined));
+  const ledger = await ledgerOf(p, specPathOf(p));
   const solo = ledger === undefined || persons(ledger.maintainers).length <= 1;
   io.out(`${kind} ${fragment}\n  digest ${digest}\n  the judgments in ${a3Dir(p.root, slug).slice(p.root.length + 1)}/judgments.json: ${read.judgments.title || "(untitled)"}\n  Approving them makes the sheet's root causes and countermeasures approved; any edit returns them to candidate.\n`);
   const written = appendDecision(join(p.root, LEDGER_PATH), { kind, fragment, digest, rationale, actor, selfApproved: kind === "approve" && solo });
@@ -244,8 +247,22 @@ export async function csh(argv: string[], io: Io): Promise<number> {
     return cmd === undefined ? 2 : 0;
   }
   if (cmd === "init") return init(io.cwd, a.options.root, io);
-  const p = loadProject(io.cwd, a.options.root);
+  const subject = a.options.subject !== undefined ? resolve(io.cwd, a.options.subject) : undefined;
+  const p = loadProject(io.cwd, a.options.root, subject !== undefined ? { subject } : {});
   switch (cmd) {
+    case "subject": {
+      if (a.positional[0] !== "fetch") {
+        io.err("csh subject fetch is the one subject command\n");
+        return 2;
+      }
+      const r = fetchSubject(p);
+      if (!r.ok) {
+        io.err(`csh subject fetch: ${r.message}\n`);
+        return 1;
+      }
+      io.out(`${r.fetched ? "fetched" : "already fetched"} ${p.component!.manifest.subject!.repo} at ${p.component!.manifest.subject!.commit} into ${relative(io.cwd, r.dir)}\n`);
+      return 0;
+    }
     case "run":
       return run(p, a, io);
     case "check": {
@@ -380,7 +397,7 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
     io.err("--mode is advisory or enforcing\n");
     return 2;
   }
-  const o = { root: p.root, solver, ...(mode !== undefined ? { mode } : {}), ...(a.options.budget !== undefined ? { budgetMs: Number(a.options.budget) } : {}), ...(a.flags.has("no-cache") ? { noCache: true } : {}), harnessOutput: (s: string) => io.err(s) };
+  const o = { root: p.root, solver, ...(mode !== undefined ? { mode } : {}), ...(a.options.budget !== undefined ? { budgetMs: Number(a.options.budget) } : {}), ...(a.flags.has("no-cache") ? { noCache: true } : {}), harnessOutput: (s: string) => io.err(s), ...(a.options.subject !== undefined ? { subject: resolve(io.cwd, a.options.subject) } : {}) };
   const r: RunResult = a.options.at !== undefined ? await runAt({ ...o, commit: a.options.at }) : await runComponent(o);
   if (!r.ok) {
     io.err(`csh run: ${r.code}: ${r.message}\n`);
@@ -388,10 +405,13 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
   }
   const { record, report, decision } = r;
   const lines = [`run ${record.component} at ${record.snapshot.commit}`];
+  if (record.snapshot.subject !== undefined) lines.push(`  subject ${record.snapshot.subject.repo} at ${record.snapshot.subject.commit}`);
   for (const h of record.harnesses) lines.push(`  harness ${h.practice}: ${h.argv.join(" ")}  exit ${h.exitCode ?? h.error ?? "none"}, ${h.witnesses} witnesses, ${h.executions} executions (not sandboxed)`);
   if (record.harnesses.length === 0) lines.push("  no practice has a harness");
   const conflicts = countOf(report, ["state-conflict", "joint-conflict", "example-conflict", "arch-conflict", "vacuous"]);
   lines.push(`  findings ${report.findings.length} (${plural(conflicts, "conflict")}, ${plural(countOf(report, ["example-divergence"]), "divergence")}, ${report.findings.filter((f) => f.crossSource).length} cross-source); gaps ${report.gapView.gaps.length}; not comparable ${report.notComparable.length}; errors ${report.errors.length}`);
+  const sev = (x: string) => report.diagnostics.filter((d) => d.severity === x).length;
+  lines.push(`  items ${report.items.length}; unliftable ${report.unliftable.length}; adapter diagnostics ${report.diagnostics.length} (${plural(sev("error"), "error")}, ${plural(sev("warning"), "warning")})`);
   const v = (x: string) => (report.assessments ?? []).filter((y) => y.verdict === x).length;
   lines.push(`  obligations ${(report.assessments ?? []).length}: conflicting ${v("conflicting")}, violated ${v("violated")}, satisfied ${v("satisfied")}, unknown ${v("unknown")}`);
   lines.push(`  gate ${decision.overall} (${decision.mode})`);

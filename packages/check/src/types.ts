@@ -162,6 +162,8 @@ export interface Report {
    * Present when the project has a component manifest.
    */
   component?: { name: string; digest: string; sources: Record<string, string> };
+  /** The repository evaluated from outside, at its pinned commit, when the component names one (stage 21). */
+  subject?: { repo: string; commit: string };
   /** Extension: composition results, present from stage 8. */
   composition?: { uses: { pack: string; version: string; digest: string }[]; inherited: string[]; relaxed: { obligation: string; owner: string; reason: string }[]; refinements: { obligation: string; pack: string; result: string }[] };
 }

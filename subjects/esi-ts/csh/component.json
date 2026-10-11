@@ -1,0 +1,15 @@
+{
+  "schema": "csh-component/v2",
+  "name": "ESI.ts",
+  "subject": {
+    "repo": "https://github.com/lgriffin/ESI.ts",
+    "commit": "2a2da8a626821bef77ad8726da2c8018e2961236"
+  },
+  "implementation": ["src"],
+  "sources": [
+    { "name": "Charter", "kind": "Requirements", "at": "guides/CHARTER.md" }
+  ],
+  "practices": [
+    { "id": "charter", "name": "Charter", "kind": "requirements", "sources": ["Charter"], "author": "Maintainer", "unit": "the requirement" }
+  ]
+}

@@ -11,7 +11,7 @@ import { type AuthorityInfo, type LedgerState, MAINTAINERS_PATH, resolveAuthorit
 import type { SolverPort } from "@csh/solver";
 import { emitProject, emissionProblem } from "./evaluate.ts";
 import { sourceSettings } from "./pipeline.ts";
-import { ledgerOf, type Project, snapshotOf, specOf } from "./project.ts";
+import { ledgerOf, type Project, snapshotOf, specPathOf } from "./project.ts";
 import { GATE_PATH } from "./run.ts";
 import { runSources } from "./sources.ts";
 
@@ -109,7 +109,7 @@ export async function componentStatus(p: Project, solver: SolverPort): Promise<S
   const refused = emissionProblem(emission);
   if (refused !== undefined || !emission.emitted.ok) return { ok: false, message: refused ?? "emission failed" };
   const { module, digest } = emission.emitted;
-  const ledger: LedgerState | undefined = await ledgerOf(p, specOf(p, undefined));
+  const ledger: LedgerState | undefined = await ledgerOf(p, specPathOf(p));
   // The items the sources identify, so that an approval whose cited sentence changed counts as candidate, as in a run.
   const perSource = sourceSettings(p.component);
   const runs = await runSources(module, { root: p.root, ...(perSource !== undefined ? { perSource } : {}) });

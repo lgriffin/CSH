@@ -24,6 +24,8 @@ export function readConfig(dir: string): FixtureConfig {
 
 export interface PipelineOptions {
   root: string;
+  /** Where sources are read from when not the root: a subject's checkout (Ingesting a codebase, stage 21). */
+  sourceRoot?: string;
   solver: SolverPort;
   config?: FixtureConfig;
   /** A stand-in for the ledger, used by fixtures before stage 7. */
@@ -68,7 +70,7 @@ export async function emitSpec(spec: string, opts: PipelineOptions): Promise<Emi
   if (opts.lock !== undefined) emitOpts.lock = opts.lock;
   const emitted = await emit(resolve(spec), emitOpts);
   if (!emitted.ok || opts.component === undefined) return { emitted };
-  const errors = checkAgainstModule(opts.component.manifest, emitted.module, opts.root).errors;
+  const errors = checkAgainstModule(opts.component.manifest, emitted.module, opts.sourceRoot ?? opts.root).errors;
   return errors.length > 0 ? { emitted, componentErrors: errors } : { emitted };
 }
 
@@ -116,7 +118,7 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
     return opts.authority?.({ name, digest: f?.digest ?? "", kind: "binding", cites: [] }).authority ?? "candidate";
   };
   const perSource = sourceSettings(opts.component);
-  const runs = await runSources(module, { root: opts.root, config: adapterConfig, isolated: opts.isolatedAdapters ?? true, bindingAuthority, ...(opts.adapters !== undefined ? { adapters: opts.adapters } : {}), ...(perSource !== undefined ? { perSource } : {}), ...(opts.executions !== undefined ? { executions: opts.executions } : {}) });
+  const runs = await runSources(module, { root: opts.sourceRoot ?? opts.root, codeRoot: opts.root, config: adapterConfig, isolated: opts.isolatedAdapters ?? true, bindingAuthority, ...(opts.adapters !== undefined ? { adapters: opts.adapters } : {}), ...(perSource !== undefined ? { perSource } : {}), ...(opts.executions !== undefined ? { executions: opts.executions } : {}) });
   const items = new Map<string, string>();
   for (const r of runs) for (const it of r.output.items ?? []) items.set(`${r.source}/${it.id}`, it.textDigest);
   const resolver: AuthorityResolver | undefined = state !== undefined ? (f) => resolveAuthority(state, f, items) : opts.authority;

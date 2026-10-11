@@ -21,7 +21,8 @@ export interface Unavailable {
 
 /** What the diff needs of a component manifest, structurally (csh/component.json). */
 export interface ManifestView {
-  spec: string;
+  /** Absent for a component with no specification (csh-component/v2). */
+  spec?: string;
   implementation: string[];
   practices: { id: string; kind: string; sources: string[]; adapter?: string; steps?: string; harness?: { run: string[]; witnesses: string; executions?: string } }[];
 }
@@ -127,16 +128,17 @@ function observe(d: RunDiff, ctx: DiffContext): void {
   const m = ctx.manifest;
   if (changes === undefined || m === undefined) return;
   // The specification is its own file and the modules beside it that it can import; other files in its directory are not.
-  const spec = norm(m.spec);
-  const specDir = spec.includes("/") ? spec.slice(0, spec.lastIndexOf("/")) : "";
-  const specModule = (c: string) => /\.(csl\.)?[cm]?[jt]s$/.test(c) && (specDir === "" ? !c.includes("/") : c.startsWith(`${specDir}/`) && !c.slice(specDir.length + 1).includes("/"));
-  const specTouched = changes.some((c) => c === spec || specModule(c));
+  const spec = m.spec === undefined ? undefined : norm(m.spec);
+  const specDir = spec === undefined ? "" : spec.includes("/") ? spec.slice(0, spec.lastIndexOf("/")) : "";
+  const specModule = (c: string) => spec !== undefined && /\.(csl\.)?[cm]?[jt]s$/.test(c) && (specDir === "" ? !c.includes("/") : c.startsWith(`${specDir}/`) && !c.slice(specDir.length + 1).includes("/"));
+  const specTouched = spec !== undefined && changes.some((c) => c === spec || specModule(c));
   const implTouched = changes.some((c) => m.implementation.some((i) => under(c, i)));
   const evidenceChanged = m.practices.filter((p) => EVIDENCE_KINDS.has(p.kind) && d.inputs.some((i) => i.practice === p.id && i.changed)).map((p) => p.id);
   const testsChanged = m.practices.filter((p) => p.kind === "tests" || p.kind === "scenarios").some((p) => evidenceChanged.includes(p.id));
   if (specTouched && evidenceChanged.length > 0) d.observations.push({ k: "rule-and-evidence-moved-together", practices: sorted(evidenceChanged) });
   if (implTouched && testsChanged) d.observations.push({ k: "implementation-and-tests-changed-together" });
-  if (!specTouched) d.observations.push({ k: "spec-untouched" });
+  // With no specification there is nothing a change could have left untouched.
+  if (!specTouched && spec !== undefined) d.observations.push({ k: "spec-untouched" });
 }
 
 /** What a change did, from the base's run to the head's. A side that could not be had is never shown as no change. */
