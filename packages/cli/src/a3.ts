@@ -8,7 +8,7 @@ import { A3_DIR, a3Dir, type Authority, buildA3, type Judgments, readJudgments, 
 import type { Mode } from "@csh/gate";
 import { digestOf, stableJson } from "@csh/kernel";
 import { authoredByOf, resolveAuthority } from "@csh/ledger";
-import { fileProvenance, ledgerOf, type Project, type RunOptions, runAt, RUNS_DIR, specPathOf } from "@csh/run";
+import { fetchSubject, fileProvenance, ledgerOf, type Project, type RunOptions, runAt, runComponent, RUNS_DIR, specPathOf, subjectCheckout } from "@csh/run";
 import type { Args } from "./args.ts";
 
 export interface A3Io {
@@ -51,11 +51,13 @@ function storedRun(p: Project, commit: string, mode: Mode | undefined): string |
     const file = join(dir, "run.json");
     if (!existsSync(file) || !STAGE_FILES.every((f) => existsSync(join(dir, f)))) continue;
     // A stored run that cannot be read is skipped, never fatal: another can be copied, or the commit run again.
-    let rec: { snapshot?: { commit?: string } };
+    let rec: { snapshot?: { commit?: string; subject?: { commit?: string } } };
     let gate: { mode?: string };
     try {
       rec = JSON.parse(readFileSync(file, "utf8"));
       if (rec.snapshot?.commit !== commit) continue;
+      // A run of another subject commit (csh history) is not the run of this one.
+      if (p.subject !== undefined && rec.snapshot.subject?.commit !== p.subject.commit) continue;
       gate = JSON.parse(readFileSync(join(dir, "gate.json"), "utf8"));
     } catch {
       continue;
@@ -272,7 +274,9 @@ async function verify(p: Project, slug: string, io: A3Io): Promise<number> {
       bad++;
       continue;
     }
-    const r = await runAt({ ...(await io.runOptions()), root: p.root, commit: rec.run.snapshot.commit, mode: rec.gate.mode as Mode });
+    // A stage of a subject commit other than the pinned one (csh history) is run again at that commit.
+    const then = rec.run.snapshot.subject?.commit;
+    const r = await runAt({ ...(await io.runOptions()), root: p.root, commit: rec.run.snapshot.commit, mode: rec.gate.mode as Mode, ...(then !== undefined && then !== p.component?.manifest.subject?.commit ? { subjectCommit: then } : {}) });
     if (!r.ok) {
       io.out(`  stage-unverifiable ${s.id}: ${r.code}: ${r.message}\n`);
       bad++;
@@ -289,4 +293,89 @@ async function verify(p: Project, slug: string, io: A3Io): Promise<number> {
     } else io.out(`  verified ${s.id}: a fresh run at ${rec.run.snapshot.commit.slice(0, 12)} gives the same snapshot, report and gate decision\n`);
   }
   return bad === 0 ? 0 : 1;
+}
+
+/** A stage id for a tag: lower case, with every run of other characters a hyphen (v9.0.0 is v9-0-0). */
+export const stageIdOf = (tag: string) => tag.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+/**
+ * csh history <slug> [--from <tag>] [--to <tag>] [--match <glob>] (Ingesting a codebase, stage 25): run the component
+ * at the subject's release tags, oldest first, and record each run as a stage of an A3, opening it when needed. Each
+ * tag's checkout is fetched beside the pinned one. Reading is static, so a release needs nothing installed.
+ */
+export async function historyCommand(p: Project, a: Args, io: A3Io): Promise<number> {
+  const slug = a.positional.shift();
+  const usage = "usage: csh history <slug> [--from <tag>] [--to <tag>] [--match <glob>] [--mode advisory|enforcing]\n";
+  if (slug === undefined || !SLUG.test(slug)) {
+    io.err(usage);
+    return 2;
+  }
+  const subject = p.component?.manifest.subject;
+  if (p.component === undefined || subject === undefined) {
+    io.err("csh history: reads a subject's releases, and csh/component.json names no subject\n");
+    return 1;
+  }
+  const mode = a.options.mode as Mode | undefined;
+  if (mode !== undefined && !MODES.includes(mode)) {
+    io.err("--mode is advisory or enforcing\n");
+    return 2;
+  }
+  const pinned = fetchSubject(p);
+  if (!pinned.ok) {
+    io.err(`csh history: ${pinned.message}\n`);
+    return 1;
+  }
+  const inSubject = (...args: string[]) => execFileSync("git", args, { cwd: subjectCheckout(p.root, subject.commit), encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  if ([a.options.from, a.options.to, a.options.match].some((x) => x?.startsWith("-") === true)) {
+    io.err(usage);
+    return 2;
+  }
+  const range = [...(a.options.to !== undefined ? [`--merged=${a.options.to}`] : []), ...(a.options.from !== undefined ? [`--contains=${a.options.from}`] : [])];
+  let tags: string[];
+  try {
+    tags = inSubject("tag", "--list", a.options.match ?? "v*", ...range, "--sort=v:refname").split("\n").filter((t) => t !== "");
+  } catch {
+    io.err(`csh history: ${[a.options.from, a.options.to].filter((x) => x !== undefined).join(" or ")} is not a tag or commit of the subject\n`);
+    return 1;
+  }
+  if (tags.length === 0) {
+    io.err("csh history: no tag of the subject is in that range\n");
+    return 1;
+  }
+  const ids = tags.map(stageIdOf);
+  const clash = ids.find((id, i) => !SLUG.test(id) || ids.indexOf(id) !== i);
+  if (clash !== undefined) {
+    io.err(`csh history: the tags give the stage id ${JSON.stringify(clash)} twice, or one that is not lower case letters, digits and hyphens\n`);
+    return 1;
+  }
+  const base = await io.runOptions();
+  const { subject: _checkout, ...runOptions } = base;
+  for (const [n, tag] of tags.entries()) {
+    const commit = inSubject("rev-parse", "--verify", `${tag}^{commit}`);
+    const fetched = fetchSubject(p, commit);
+    if (!fetched.ok) {
+      io.err(`csh history: ${tag}: ${fetched.message}\n`);
+      return 1;
+    }
+    const r = await runComponent({ ...runOptions, root: p.root, subjectCommit: commit, reportFiles: false, ...(mode !== undefined ? { mode } : {}) });
+    if (!r.ok) {
+      io.err(`csh history: ${tag}: ${r.code}: ${r.message}\n`);
+      return 1;
+    }
+    const id = ids[n]!;
+    const to = stageDir(p.root, slug, id);
+    mkdirSync(to, { recursive: true });
+    for (const f of STAGE_FILES) copyFileSync(join(r.dir, f), join(to, f));
+    const read = readJudgments(p.root, slug);
+    if (read === undefined) writeJudgments(p, slug, { ...skeleton(id, p.component.manifest.practices), stages: [{ id, name: tag, what: "" }] });
+    else if (read.problems.length > 0) {
+      io.err(`csh history: the judgments for ${slug} cannot be used:\n${read.problems.map((x) => `  ${x}`).join("\n")}\n`);
+      return 1;
+    } else if (!read.judgments.stages.some((s) => s.id === id)) {
+      read.judgments.stages.push({ id, name: tag, what: "" });
+      writeJudgments(p, slug, read.judgments);
+    }
+    io.out(`stage ${id}: ${tag} (${commit.slice(0, 12)}), ${r.report.findings.length} findings and ${r.report.gapView.gaps.length} gaps\n`);
+  }
+  return build(p, slug, false, io);
 }

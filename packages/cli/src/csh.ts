@@ -12,7 +12,7 @@ import { createZ3Solver, type SolverPort } from "@csh/solver";
 import { componentQueue, componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderQueue, renderStatus, ledgerOf, loadProject, MODEL_PATH, type Project, REPORT_PATH, runAt, runComponent, type RunResult, fetchSubject, specPathOf, storedRuns } from "@csh/run";
 import { type Args, parseArgs } from "./args.ts";
 import { init } from "./init.ts";
-import { a3Command, a3Fragment } from "./a3.ts";
+import { a3Command, a3Fragment, historyCommand } from "./a3.ts";
 import { diffCommand } from "./diff.ts";
 
 const USAGE = `csh: the Composable Specification Harness
@@ -58,6 +58,11 @@ const USAGE = `csh: the Composable Specification Harness
   csh a3 build <slug> [--check]   Build a3.json, a3.md and a3.html from the stage records and judgments; with
                                   --check, fail when the committed ones differ.
   csh a3 verify <slug>            Re-run every stage at its commit and report any that differs.
+  csh history <slug> [--from <tag>] [--to <tag>] [--match <glob>]
+                                  Run a subject at each release tag in the range (tags matching v* by default),
+                                  oldest first, and record each run as a stage of the A3 <slug>, opening it if needed.
+  csh subject fetch [--at <tag|commit>]
+                                  Clone the subject and check out its pinned commit, or another commit beside it.
   csh gate --verify <decision.json>
                                   Recompute the decision; refuse one made for any other snapshot or that differs.
 
@@ -255,12 +260,27 @@ export async function csh(argv: string[], io: Io): Promise<number> {
         io.err("csh subject fetch is the one subject command\n");
         return 2;
       }
-      const r = fetchSubject(p);
+      let r = fetchSubject(p);
+      let commit = p.component?.manifest.subject?.commit;
+      // Another commit is named by a tag or commit of the subject, resolved in the pinned checkout.
+      if (r.ok && a.options.at !== undefined) {
+        if (a.options.at.startsWith("-")) {
+          io.err(`csh subject fetch: ${a.options.at} is not a tag or commit of the subject\n`);
+          return 1;
+        }
+        try {
+          commit = execFileSync("git", ["rev-parse", "--verify", `${a.options.at}^{commit}`], { cwd: r.dir, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+        } catch {
+          io.err(`csh subject fetch: ${a.options.at} is not a tag or commit of the subject\n`);
+          return 1;
+        }
+        r = fetchSubject(p, commit);
+      }
       if (!r.ok) {
         io.err(`csh subject fetch: ${r.message}\n`);
         return 1;
       }
-      io.out(`${r.fetched ? "fetched" : "already fetched"} ${p.component!.manifest.subject!.repo} at ${p.component!.manifest.subject!.commit} into ${relative(io.cwd, r.dir)}\n`);
+      io.out(`${r.fetched ? "fetched" : "already fetched"} ${p.component!.manifest.subject!.repo} at ${commit} into ${relative(io.cwd, r.dir)}\n`);
       return 0;
     }
     case "run":
@@ -332,9 +352,10 @@ export async function csh(argv: string[], io: Io): Promise<number> {
         runOptions: async () => ({ root: p.root, solver, ...(subject !== undefined ? { subject } : {}), ...(a.options.budget !== undefined ? { budgetMs: Number(a.options.budget) } : {}), ...(a.flags.has("no-cache") ? { noCache: true } : {}), harnessOutput: (x: string) => io.err(x) }),
       });
     }
-    case "a3": {
+    case "a3":
+    case "history": {
       const solver = await (io.solver ?? defaultSolver)();
-      return a3Command(p, a, {
+      return (cmd === "history" ? historyCommand : a3Command)(p, a, {
         out: io.out,
         err: io.err,
         runOptions: async () => ({ root: p.root, solver, ...(subject !== undefined ? { subject } : {}), ...(a.options.budget !== undefined ? { budgetMs: Number(a.options.budget) } : {}), ...(a.flags.has("no-cache") ? { noCache: true } : {}), harnessOutput: (x: string) => io.err(x) }),

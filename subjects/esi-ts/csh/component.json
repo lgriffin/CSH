@@ -53,6 +53,9 @@
       ]
     }
   ],
+  "history": {
+    "since": "previous-tag"
+  },
   "practices": [
     {
       "id": "charter",

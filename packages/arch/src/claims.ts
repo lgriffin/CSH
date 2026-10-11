@@ -15,9 +15,19 @@ export interface ClaimFacts {
   files?: Set<string>;
 }
 
-export type ClaimResult = { result: "holds"; detail: string } | { result: "refuted"; detail: string } | { result: "unknown"; reason: string };
+/**
+ * Where in the code a result was decided: a file, or a file and line, and for a manifest field the value it holds
+ * (stage 25). History dates it, so that prose older than the code it contradicts can be told from prose that was wrong
+ * when written.
+ */
+export interface ClaimEvidence {
+  at: string;
+  text?: string;
+}
 
-type Truth = { value: boolean; detail: string } | { reason: string };
+export type ClaimResult = { result: "holds"; detail: string; evidence?: ClaimEvidence[] } | { result: "refuted"; detail: string; evidence?: ClaimEvidence[] } | { result: "unknown"; reason: string };
+
+type Truth = { value: boolean; detail: string; evidence?: ClaimEvidence[] } | { reason: string };
 
 /** Classes no source declares that end a chain of bases: they extend nothing a claim could name. */
 const BUILT_IN_BASES = new Set(["Error", "TypeError", "RangeError", "SyntaxError", "ReferenceError", "AggregateError", "Object", "Array", "Map", "Set", "Promise", "EventTarget"]);
@@ -37,12 +47,12 @@ export function truthOf(p: Prop, f: ClaimFacts): Truth {
     case "declares": {
       if (!f.modules.has(p.module)) return notRead(p.module);
       const d = f.declares.find((x) => x.module === p.module && x.symbol === p.symbol);
-      return { value: d !== undefined, detail: d !== undefined ? `${d.at}: ${p.module} declares ${p.symbol}` : `${p.module} declares no ${p.symbol}` };
+      return d !== undefined ? { value: true, detail: `${d.at}: ${p.module} declares ${p.symbol}`, evidence: [{ at: d.at }] } : { value: false, detail: `${p.module} declares no ${p.symbol}` };
     }
     case "exports": {
       if (!f.modules.has(p.module)) return notRead(p.module);
       const e = f.exports.find((x) => x.module === p.module && x.symbol === p.symbol);
-      if (e !== undefined) return { value: true, detail: `${e.at}: ${p.module} exports ${p.symbol}` };
+      if (e !== undefined) return { value: true, detail: `${e.at}: ${p.module} exports ${p.symbol}`, evidence: [{ at: e.at }] };
       if (f.exports.some((x) => x.module === p.module && x.symbol === "*")) return { reason: `star-export: ${p.module} re-exports with *, which is not followed` };
       return { value: false, detail: `${p.module} exports no ${p.symbol}` };
     }
@@ -50,22 +60,24 @@ export function truthOf(p: Prop, f: ClaimFacts): Truth {
       const classes = new Map<string, { base?: string; at: string }[]>();
       for (const d of f.declares.filter((x) => x.declares === "class")) classes.set(d.symbol, [...(classes.get(d.symbol) ?? []), { ...(d.base !== undefined ? { base: d.base } : {}), at: d.at }]);
       const chain: string[] = [];
+      const seen: string[] = [];
       let name = p.cls;
       for (;;) {
         const found = classes.get(name);
         if (found === undefined) {
           if (name === p.cls) return { reason: `no-class: ${p.cls}` };
-          if (BUILT_IN_BASES.has(name)) return { value: false, detail: `${chain.join(" -> ")} ends at ${name}` };
+          if (BUILT_IN_BASES.has(name)) return { value: false, detail: `${chain.join(" -> ")} ends at ${name}`, evidence: seen.map((at) => ({ at })) };
           return { reason: `base-not-read: ${name}` };
         }
         // Declarations are matched by name, not by binding: a name declared twice could be either class.
         if (found.length > 1) return { reason: `ambiguous-class: ${name} is declared ${found.length} times` };
         chain.push(`${name} (${found[0]!.at})`);
+        seen.push(found[0]!.at);
         const base = found[0]!.base;
-        if (base === undefined) return { value: false, detail: `${chain.join(" -> ")} extends nothing` };
+        if (base === undefined) return { value: false, detail: `${chain.join(" -> ")} extends nothing`, evidence: seen.map((at) => ({ at })) };
         // A qualified or computed base names a class through a binding that is not followed.
         if (!/^[A-Za-z_$][\w$]*$/.test(base)) return { reason: `qualified-base: ${name} extends ${base}` };
-        if (base === p.base) return { value: true, detail: `${chain.join(" -> ")} -> ${base}` };
+        if (base === p.base) return { value: true, detail: `${chain.join(" -> ")} -> ${base}`, evidence: seen.map((at) => ({ at })) };
         if (chain.length > 64) return { reason: `cycle: ${name}` };
         name = base;
       }
@@ -76,7 +88,7 @@ export function truthOf(p: Prop, f: ClaimFacts): Truth {
       const at = in_.find((x) => x.path === p.pointer);
       // No fact at the pointer says nothing: a file may be read in part, as package.json is (A-108).
       if (at === undefined) return { reason: `not-read: ${p.file} ${p.pointer}` };
-      return { value: at.value === p.value, detail: `${p.file} holds ${JSON.stringify(at.value)} at ${p.pointer}` };
+      return { value: at.value === p.value, detail: `${p.file} holds ${JSON.stringify(at.value)} at ${p.pointer}`, evidence: [{ at: p.file, text: at.value }] };
     }
     case "count": {
       const in_ = f.fields.filter((x) => x.file === p.file);
@@ -105,7 +117,7 @@ export function truthOf(p: Prop, f: ClaimFacts): Truth {
       const b = valueOf(p.b);
       if ("reason" in a) return a;
       if ("reason" in b) return b;
-      return { value: a.value === b.value, detail: `${a.at}: ${p.a.name} is ${JSON.stringify(a.value)}; ${b.at}: ${p.b.name} is ${JSON.stringify(b.value)}` };
+      return { value: a.value === b.value, detail: `${a.at}: ${p.a.name} is ${JSON.stringify(a.value)}; ${b.at}: ${p.b.name} is ${JSON.stringify(b.value)}`, evidence: [{ at: a.at }, { at: b.at }] };
     }
     case "atom":
       return { reason: `no fact decides ${p.name}` };
@@ -116,7 +128,8 @@ export function truthOf(p: Prop, f: ClaimFacts): Truth {
 export function evaluateClaim(c: Claim, f: ClaimFacts): ClaimResult {
   const t = truthOf(c.p, f);
   if ("reason" in t) return { result: "unknown", reason: t.reason };
-  return t.value === c.holds ? { result: "holds", detail: t.detail } : { result: "refuted", detail: t.detail };
+  const evidence = t.evidence !== undefined ? { evidence: t.evidence } : {};
+  return t.value === c.holds ? { result: "holds", detail: t.detail, ...evidence } : { result: "refuted", detail: t.detail, ...evidence };
 }
 
 /** What a proposition is about, without the value it asserts: two claims about the same thing share it. */

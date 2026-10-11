@@ -173,4 +173,28 @@ export interface Report {
   composition?: { uses: { pack: string; version: string; digest: string }[]; inherited: string[]; relaxed: { obligation: string; owner: string; reason: string }[]; refinements: { obligation: string; pack: string; result: string }[] };
 }
 
+/** A commit and its committer date (ISO 8601). */
+export interface Dated {
+  commit: string;
+  date: string;
+}
+
+/**
+ * What the repository's history says (Ingesting a codebase, stage 25): read from git by @csh/run, at the commit under
+ * evaluation. Paths are relative to the root sources are read from. Every answer is undefined, or empty, when history
+ * cannot tell: a line not committed yet, a path git does not know.
+ */
+export interface HistoryPort {
+  /** The commit that last changed a line, as blame tells it. */
+  lineCommit(path: string, line: number): Dated | undefined;
+  /** The oldest commit in the line's own history, as `git log -L` follows it: when the sentence was first written. */
+  lineOrigin(path: string, line: number): Dated | undefined;
+  /** The commits after `commit`, up to the one evaluated, that changed `path`, newest first. */
+  changedSince(commit: string, path: string): Dated[];
+  /** The newest commit that changed how often `text` occurs in `path`: for a value present now, the one that wrote it. */
+  introduced(path: string, text: string): Dated | undefined;
+  /** Commits since the configured start that change implementation paths with no test and no `Refs:` trailer. */
+  untraced(): { commit: string; date: string; files: number; agent: boolean }[];
+}
+
 export const TOOL_VERSION = "0.1.0";

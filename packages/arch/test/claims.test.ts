@@ -51,8 +51,9 @@ describe("structural claims", () => {
     expect(evaluateClaim(claim({ k: "exports", module: "src/index.ts", symbol: "OpenError" }, false), facts)).toMatchObject({ result: "refuted", detail: "src/index.ts:1: src/index.ts exports OpenError" });
     expect(evaluateClaim(claim({ k: "count", file: "package.json", pointer: "/exports", n: 2, except: ["./package.json"] }), facts)).toMatchObject({ result: "holds" });
     expect(evaluateClaim(claim({ k: "count", file: "package.json", pointer: "/exports", n: 1, except: ["./package.json"] }), facts)).toMatchObject({ result: "refuted", detail: "package.json has 2 entries at /exports less ./package.json" });
-    expect(evaluateClaim(claim({ k: "field", file: "m.json", pointer: "/suites", value: "192" }), facts)).toMatchObject({ result: "refuted", detail: 'm.json holds "223" at /suites' });
-    expect(evaluateClaim(claim({ k: "same", a: { module: "src/c.ts", name: "DATE" }, b: { module: "src/d.ts", name: "DATE" } }), facts)).toMatchObject({ result: "refuted" });
+    // The evidence names where the result was decided, for history to date (stage 25): a field by its value.
+    expect(evaluateClaim(claim({ k: "field", file: "m.json", pointer: "/suites", value: "192" }), facts)).toMatchObject({ result: "refuted", detail: 'm.json holds "223" at /suites', evidence: [{ at: "m.json", text: "223" }] });
+    expect(evaluateClaim(claim({ k: "same", a: { module: "src/c.ts", name: "DATE" }, b: { module: "src/d.ts", name: "DATE" } }), facts)).toMatchObject({ result: "refuted", evidence: [{ at: expect.stringMatching(/^src\/c\.ts:\d+$/) }, { at: expect.stringMatching(/^src\/d\.ts:\d+$/) }] });
     expect(evaluateClaim(claim({ k: "script", name: "gen:types" }), facts)).toMatchObject({ result: "holds" });
     expect(evaluateClaim(claim({ k: "file", path: ".github/CODEOWNERS" }, false), facts)).toMatchObject({ result: "refuted" });
   });

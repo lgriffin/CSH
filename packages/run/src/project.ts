@@ -71,6 +71,8 @@ export interface LoadOptions {
   subject?: string;
   /** The component root whose SUBJECTS_DIR holds fetched checkouts, when not the root: a run at a past commit's. */
   subjectsRoot?: string;
+  /** A commit of the subject other than the pinned one, such as a release tag's (csh history, stage 25). */
+  subjectCommit?: string;
 }
 
 export const CONFIG_PATH = "csh/config.json";
@@ -123,11 +125,12 @@ export function loadProject(cwd: string, rootOverride?: string, o: LoadOptions =
   }
   const subject = p.component?.manifest.subject;
   if (subject !== undefined) {
-    const dir = resolve(cwd, o.subject ?? subjectCheckout(o.subjectsRoot ?? root, subject.commit));
-    const found = checkoutProblem(dir, subject.commit);
+    const commit = o.subjectCommit ?? subject.commit;
+    const dir = resolve(cwd, o.subject ?? subjectCheckout(o.subjectsRoot ?? root, commit));
+    const found = checkoutProblem(dir, commit);
     if (found !== undefined) p.componentProblems.push(found);
     else {
-      p.subject = { repo: subject.repo, commit: subject.commit, root: dir, vcs: gitVcs(dir) };
+      p.subject = { repo: subject.repo, commit, root: dir, vcs: gitVcs(dir) };
       p.sourceRoot = dir;
     }
   } else if (o.subject !== undefined) {
@@ -157,31 +160,36 @@ export function subjectCheckout(root: string, commit: string): string {
 }
 
 /**
- * Fetch the subject a manifest names into SUBJECTS_DIR, with its whole history, and check out its pinned commit. A
- * checkout already there at that commit and clean is kept. The subject's repository is only read.
+ * Fetch the subject a manifest names into SUBJECTS_DIR, with its whole history, and check out its pinned commit, or
+ * `commit` when given (a full commit of the subject). A checkout already there at that commit and clean is kept. The
+ * subject's repository is only read. Another commit is cloned from the pinned checkout when there is one, so that a
+ * release's checkout needs no network and shares its objects.
  */
-export function fetchSubject(p: Project): { ok: true; dir: string; fetched: boolean } | { ok: false; message: string } {
+export function fetchSubject(p: Project, at?: string): { ok: true; dir: string; fetched: boolean } | { ok: false; message: string } {
   const subject = p.component?.manifest.subject;
   if (subject === undefined) return { ok: false, message: `${COMPONENT_PATH} names no subject` };
-  const dir = subjectCheckout(p.root, subject.commit);
-  const problem = checkoutProblem(dir, subject.commit);
+  const commit = at ?? subject.commit;
+  if (!/^[0-9a-f]{40}$/.test(commit)) return { ok: false, message: `${commit} is not a full commit` };
+  const dir = subjectCheckout(p.root, commit);
+  const problem = checkoutProblem(dir, commit);
   if (problem === undefined) return { ok: true, dir, fetched: false };
   // A checkout with changes in it is never replaced: those changes may be someone's work.
   if (problem.code === "subject-dirty") return { ok: false, message: `${problem.detail}; remove it or clean it, then fetch again` };
   // A repository named by a path is a local clone, relative to the component root.
-  const repo = /^[a-z][a-z0-9+.-]*:/i.test(subject.repo) || subject.repo.startsWith("/") ? subject.repo : resolve(p.root, subject.repo);
+  const pinned = subjectCheckout(p.root, subject.commit);
+  const repo = commit !== subject.commit && checkoutProblem(pinned, subject.commit) === undefined ? pinned : /^[a-z][a-z0-9+.-]*:/i.test(subject.repo) || subject.repo.startsWith("/") ? subject.repo : resolve(p.root, subject.repo);
   // Cloned beside the checkout and checked first, so a failed fetch leaves whatever was there as it was.
   const fresh = `${dir}.fetching-${process.pid}`;
   try {
     rmSync(fresh, { recursive: true, force: true });
     mkdirSync(dirname(dir), { recursive: true });
     execFileSync("git", ["clone", "--quiet", "--no-checkout", repo, fresh], { stdio: ["ignore", "ignore", "pipe"] });
-    execFileSync("git", ["-c", "advice.detachedHead=false", "checkout", "--quiet", "--detach", subject.commit], { cwd: fresh, stdio: ["ignore", "ignore", "pipe"] });
+    execFileSync("git", ["-c", "advice.detachedHead=false", "checkout", "--quiet", "--detach", commit], { cwd: fresh, stdio: ["ignore", "ignore", "pipe"] });
   } catch (err) {
     rmSync(fresh, { recursive: true, force: true });
-    return { ok: false, message: `could not fetch ${subject.repo} at ${subject.commit.slice(0, 12)}: ${String((err as { stderr?: Buffer }).stderr ?? (err as Error).message).trim()}` };
+    return { ok: false, message: `could not fetch ${subject.repo} at ${commit.slice(0, 12)}: ${String((err as { stderr?: Buffer }).stderr ?? (err as Error).message).trim()}` };
   }
-  const left = checkoutProblem(fresh, subject.commit);
+  const left = checkoutProblem(fresh, commit);
   if (left !== undefined) {
     rmSync(fresh, { recursive: true, force: true });
     return { ok: false, message: left.detail };
@@ -203,7 +211,7 @@ function checkoutProblem(dir: string, commit: string): ComponentProblem | undefi
   } catch {
     return { code: "subject-missing", detail: `${dir} is not a git checkout` };
   }
-  if (head !== commit) return { code: "subject-commit-differs", detail: `the checkout at ${dir} is at ${head.slice(0, 12)}; the profile is pinned to ${commit.slice(0, 12)}` };
+  if (head !== commit) return { code: "subject-commit-differs", detail: `the checkout at ${dir} is at ${head.slice(0, 12)}; the run reads ${commit.slice(0, 12)}` };
   // Ignored files count: a source directory is read whole, so an ignored file in it would enter the run unseen.
   if (git(dir, "status", "--porcelain", "--ignored").trim() !== "") return { code: "subject-dirty", detail: `the checkout at ${dir} has uncommitted or ignored files; a subject is read as its commit holds it` };
   return undefined;

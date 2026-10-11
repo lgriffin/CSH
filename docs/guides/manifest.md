@@ -117,3 +117,25 @@ Proposed claims sit beside the manifest in `csh/claims.json`:
 
 The rules themselves are in the specification, written with `modules(...)` ([the architecture rules
 guide](architecture-rules.md#modules-of-a-codebase-stage-23)).
+
+## History (stage 25)
+
+`history` asks for the repository's history to be read, in the checkout the sources are read from
+([11](../spec/11-ingesting-a-codebase.md), stage 25). Without it no history is read.
+
+```json
+{ "history": { "since": "previous-tag" } }
+```
+
+| Field | Meaning |
+| --- | --- |
+| `history` | Read git history. Prose that names a file changed since the line was last edited is `stale-prose`, and so is a refuted claim whose sentence is older than the code that refutes it ([A-111](../../ASSUMPTIONS.md)). A requirement whose status is `Enforced` while no mechanism it names resolves is `status-unsupported` ([A-112](../../ASSUMPTIONS.md)) |
+| `history.since` | A tag or commit, or `previous-tag` for the newest tag before the commit evaluated. Each later commit that changes an `implementation` path with no test and no `Refs:` trailer is an `untraced-change`, marked when an agent co-authored it ([A-113](../../ASSUMPTIONS.md)). A start that names nothing is the warning `history-since-unknown` |
+
+A backticked bare file name, such as `security.test.ts`, names the one tracked file with that name
+([A-110](../../ASSUMPTIONS.md)). Only commit hashes, dates and counts from history enter a report.
+
+`csh history <slug> --from <tag> --to <tag>` runs a subject at each release tag in the range and records each run as a
+stage of the A3 `<slug>`, opening it when needed ([A-114](../../ASSUMPTIONS.md)). Each tag's checkout is cloned beside
+the pinned one; `csh subject fetch --at <tag>` makes one by hand. `csh a3 verify <slug>` runs each stage again at its
+own tag.

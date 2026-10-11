@@ -52,5 +52,7 @@ export default system("EsiTs", (s) => {
     // Row 11: the security guide says CODEOWNERS is in place; an open issue still asks for it.
     i.claim("CodeownersInPlace", fileExists(".github/CODEOWNERS"), { at: "guides/SECURITY.md:132", cites: Doc("guides/SECURITY.md") });
     i.claim("CodeownersStillToAdd", fileExists(".github/CODEOWNERS"), { holds: false, at: ".beads/issues.jsonl:40", cites: [{ source: Beads, id: "esi-wze" }] });
+    // Row 6: the charter's transport row gives the Node floor; package.json's engines field holds it (stage 25).
+    i.claim("NodeFloorIs18", field("package.json", "/engines/node", ">=18.0.0"), { at: "guides/CHARTER.md:146", cites: [{ source: Charter, id: "guides/CHARTER.md" }] });
   });
 });
