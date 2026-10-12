@@ -120,48 +120,29 @@ export function declarations(text: string): { line: number; describe: boolean; m
 }
 
 /** A Cucumber step definition: Given, When, Then, And, But, Step or defineStep, called with a string or a regular expression. */
-
 const STEP = /(?<![.\w$])(Given|When|Then|And|But|Step|defineStep)\s*\(/g;
 
-
-
 /**
-
  * Each step definition of a file (Cucumber-js style): its line and its literal text. A regular expression is a step
-
  * whose text is not kept: the lexer blanks its content, so it cites nothing.
-
  */
-
 export function stepDefinitions(text: string): { line: number; title: string }[] {
-
   const { code, strings } = lex(text);
-
   const out: { line: number; title: string }[] = [];
-
   for (const m of code.matchAll(STEP)) {
-
     const at = skipSpace(code, m.index + m[0].length);
-
     const title = strings.get(at) ?? (code[at] === "/" ? "" : undefined);
-
     if (title === undefined) continue;
-
     out.push({ line: code.slice(0, at).split("\n").length, title });
-
   }
-
   return out;
-
 }
-
-
 
 export function run(input: AdapterInput): AdapterOutput {
   const pattern = input.config?.citePattern ?? idPatternOf(input);
   const id = new RegExp(`\\b(?:${pattern})\\b`, "g");
   // In a Python, Java, Go or Rust test's name, an underscore stands for a hyphen (test_REQ_12 cites REQ-12), but only
-  // when the identifier pattern cannot hold an underscore itself; otherwise the name is read as written (A-1xx-tests).
+  // when the identifier pattern cannot hold an underscore itself; otherwise the name is read as written (A-128).
   const hyphenate = underscoreFree(pattern);
   const items: SourceItem[] = [];
   const edges: ItemEdge[] = [];

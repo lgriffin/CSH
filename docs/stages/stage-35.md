@@ -10,7 +10,7 @@ repository yet has a test source in these languages, so no subject has been read
 ## Built
 
 - `adapter-items`: `tests-other.ts`, read by the test-file adapter for `.py`, `.java`, `.go` and `.rs` files. Every
-  other file is read as before, and the TypeScript tests pass unchanged ([A-1xx-tests](../../ASSUMPTIONS.md)).
+  other file is read as before, and the TypeScript tests pass unchanged ([A-128](../../ASSUMPTIONS.md)).
     - A lexer per language that blanks comments and string contents and keeps both by offset: Python's `#` comments and
       triple-quoted strings, Java's text blocks and character literals, Go's backticked raw strings, Rust's nested
       block comments, raw strings (`r#"..."#`) and character literals told from lifetimes. No parser is added.
