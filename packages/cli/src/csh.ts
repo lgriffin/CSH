@@ -389,7 +389,13 @@ export async function csh(argv: string[], io: Io): Promise<number> {
       const report = stored === undefined ? readReport(p, a) : (JSON.parse(readFileSync(stored.report, "utf8")) as Report);
       const f = report.findings.find((x) => x.id === id || (id !== undefined && x.id.startsWith(id)));
       if (f === undefined) {
-        io.err(`no finding ${id ?? ""} in the report\n`);
+        // An overview entry names a signal, which is not always a finding: a violated rule, a gap. Say what it is.
+        const entry = id === undefined ? undefined : overviewOf(report).entries.find((e) => e.signal === id || e.anchor === id || (e.signal !== undefined && e.signal.startsWith(id)));
+        if (entry !== undefined) {
+          io.out(renderEntry(entry));
+          return 0;
+        }
+        io.err(`no finding or overview entry ${id ?? ""} in the report\n`);
         return 2;
       }
       const model = JSON.parse(readFileSync(stored?.model ?? join(p.root, MODEL_PATH), "utf8")) as Module;
@@ -513,6 +519,17 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
   lines.push(`  findings ${report.findings.length} (${plural(conflicts, "conflict")}, ${plural(countOf(report, ["example-divergence"]), "divergence")}, ${report.findings.filter((f) => f.crossSource).length} cross-source); gaps ${report.gapView.gaps.length}; not comparable ${report.notComparable.length}; errors ${report.errors.length}`);
   const sev = (x: string) => report.diagnostics.filter((d) => d.severity === x).length;
   lines.push(`  items ${report.items.length}; unliftable ${report.unliftable.length}; adapter diagnostics ${report.diagnostics.length} (${plural(sev("error"), "error")}, ${plural(sev("warning"), "warning")})`);
+  // What the counts are made of: errors and warnings by code with an example, never only a number to go and dig for.
+  const kinds = new Map<string, { n: number; at: string }>();
+  for (const d of report.diagnostics) {
+    if (d.severity === "info") continue;
+    const k = `${d.severity} ${d.code}`;
+    kinds.set(k, { n: (kinds.get(k)?.n ?? 0) + 1, at: kinds.get(k)?.at ?? d.span ?? d.message });
+  }
+  const shown = [...kinds].sort((x, y) => (x[0].startsWith("error") ? 0 : 1) - (y[0].startsWith("error") ? 0 : 1) || y[1].n - x[1].n).slice(0, 5);
+  for (const [k, { n, at }] of shown) lines.push(`    ${n} ${k}, e.g. ${at}`);
+  if (kinds.size > shown.length) lines.push(`    and ${kinds.size - shown.length} more kinds: csh check lists them`);
+  for (const e of report.errors.slice(0, 5)) lines.push(`    ${e.severity} ${e.code}: ${e.detail}`);
   const v = (x: string) => (report.assessments ?? []).filter((y) => y.verdict === x).length;
   lines.push(`  obligations ${(report.assessments ?? []).length}: conflicting ${v("conflicting")}, violated ${v("violated")}, satisfied ${v("satisfied")}, unknown ${v("unknown")}`);
   lines.push(`  gate ${decision.overall} (${decision.mode})`);
