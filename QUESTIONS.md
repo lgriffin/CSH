@@ -330,4 +330,4 @@ Raised in stage 45, from the owner's Java and Python runs (B2, B3). An external 
 - **Documentation only.** Matching stays literal; the guide says externals are recorded as packages, and the overview
   shows `target-selects-nothing` on the rule.
 
-Provisional, recorded as A-171 and A-172.
+Decided on 12 October 2026: a package covers its members. Recorded as A-171 and A-172.
