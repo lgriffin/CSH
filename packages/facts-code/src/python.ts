@@ -5,9 +5,10 @@
 // Facts: one module per file; one dependency per imported module, resolved against the source roots (the repository
 // root, `src`, and the parent of every top-level package) or relative to the importing file's package, else named as
 // an external top-level package, or `python:<name>` for the standard library; one declaration per top-level class,
-// function, assignment and type alias, with a class's first base and a literal's value; the exports `__all__` names,
-// else every public top-level name; and the `project` and `build-system` tables of each `pyproject.toml`. An import
-// that cannot be resolved or a computed one is a skipped fact, never dropped.
+// function, assignment and type alias, and per class nested in a class body under its dotted name (`Outer.Inner`),
+// with a class's first base and a literal's value; the exports `__all__` names, else every public top-level name; and
+// the `project` and `build-system` tables of each `pyproject.toml`. An import that cannot be resolved or a computed
+// one is a skipped fact, never dropped.
 import { posix } from "node:path";
 import { compareCodePoints } from "@csh/kernel";
 import type { Diagnostic, Fact } from "@csh/witness";
@@ -118,7 +119,7 @@ function targetNames(n: Node): string[] {
 const isTypeChecking = (n: Node | null) => n !== null && (n.text === "TYPE_CHECKING" || n.text === "typing.TYPE_CHECKING");
 const isFinal = (t: Node | null) => t !== null && /^(typing\.)?Final(\[[\s\S]*\])?$/.test(t.text);
 
-/** The declarations of one top-level statement. */
+/** The declarations of one top-level statement, or of a class body's class. */
 function declarationsOf(n: Node): PyDeclaration[] {
   const line = lineOf(n);
   if (n.type === "decorated_definition") {
@@ -129,7 +130,15 @@ function declarationsOf(n: Node): PyDeclaration[] {
     const name = n.childForFieldName("name")?.text;
     const sup = n.childForFieldName("superclasses");
     const first = sup === null ? undefined : named(sup).find((c) => !["keyword_argument", "list_splat", "dictionary_splat"].includes(c.type));
-    return name === undefined ? [] : [{ symbol: name, declares: "class", line, ...(first !== undefined ? { base: first.text } : {}) }];
+    if (name === undefined) return [];
+    // A class defined directly in the body is declared under its dotted name, at any depth (A-170); one inside a
+    // method is not a member of the class.
+    const body = n.childForFieldName("body");
+    const nested = (body === null ? [] : named(body))
+      .filter((c) => c.type === "class_definition" || (c.type === "decorated_definition" && c.childForFieldName("definition")?.type === "class_definition"))
+      .flatMap(declarationsOf)
+      .map((d) => ({ ...d, symbol: `${name}.${d.symbol}` }));
+    return [{ symbol: name, declares: "class", line, ...(first !== undefined ? { base: first.text } : {}) }, ...nested];
   }
   if (n.type === "function_definition") {
     const name = n.childForFieldName("name")?.text;
@@ -329,7 +338,7 @@ export const python: LanguageReader = {
       // At the line that computes it: a file-level skipped fact would say the module was not read.
       if (r.all !== undefined && !Array.isArray(r.all)) facts.push({ ...base, kind: "skipped", at: `${f.path}:${r.all.computed}`, from: f.path, reason: "computed __all__" });
       else {
-        const names = r.all ?? r.declarations.map((d) => d.symbol).filter((s) => !s.startsWith("_"));
+        const names = r.all ?? r.declarations.map((d) => d.symbol).filter((s) => !s.startsWith("_") && !s.includes("."));
         for (const symbol of [...new Set(names)]) facts.push({ ...base, kind: "export", at: f.path, module: f.path, symbol, typeOnly: false });
         // A package that re-exports with * exports names this reader does not follow, unless __all__ lists them.
         if (r.all === undefined && /(^|\/)__init__\.pyi?$/.test(f.path)) {

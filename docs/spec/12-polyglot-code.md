@@ -28,8 +28,8 @@ the files the source names.
 
 | Language | Module | Dependencies resolve against | Declares | Exports | Manifests |
 | --- | --- | --- | --- | --- | --- |
-| Python | each `.py` and `.pyi` file | source roots (the root, `src`, and the parent of every top-level package); relative imports | classes with their first base, functions, constants | `__all__`, else every public top-level name | `pyproject.toml` |
-| Java | each `.java` file | fully qualified names across source roots, from each file's `package` | classes with their superclass, interfaces, enums, records, annotations, `static final` literals | public top-level types | `pom.xml` |
+| Python | each `.py` and `.pyi` file | source roots (the root, `src`, and the parent of every top-level package); relative imports | classes with their first base, functions, constants; classes nested in a class as `Outer.Inner` ([14](14-from-the-java-and-python-runs.md)) | `__all__`, else every public top-level name | `pyproject.toml` |
+| Java | each `.java` file | fully qualified names across source roots, from each file's `package` | classes with their superclass, interfaces, enums, records, annotations, `static final` literals; nested types as `Outer.Inner` ([14](14-from-the-java-and-python-runs.md)) | public top-level types | `pom.xml` |
 | Go | each `.go` file | `go.mod`'s module path; a local import is the package directory | types, structs, interfaces, functions, methods, constants | capitalised names | `go.mod` |
 | Rust | each `.rs` file | `mod` declarations and `crate::`, `self::` and `super::` paths; workspace crates | structs, enums, traits, functions, constants, statics, modules, macros | `pub` items and `pub use` | `Cargo.toml` |
 

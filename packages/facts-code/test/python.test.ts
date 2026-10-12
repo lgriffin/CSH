@@ -200,6 +200,17 @@ describe("python exports", () => {
     expect(facts.filter((f) => f.kind === "export").every((f) => f.kind === "export" && f.typeOnly === false && f.at === f.module)).toBe(true);
   });
 
+  it("declares a class nested in a class body under its dotted name, and exports only top-level names (A-170)", async () => {
+    const facts = await read({ "m.py": "class Updater(Base):\n    class Signals(QObject):\n        @dataclass\n        class Payload: pass\n    def run(self):\n        class Local: pass\ndef make():\n    class Inner: pass\n" });
+    expect(decls(facts)).toEqual([
+      ["Updater", "class", "Base", null],
+      ["Updater.Signals", "class", "QObject", null],
+      ["Updater.Signals.Payload", "class", null, null],
+      ["make", "function", null, null],
+    ]);
+    expect(exps(facts)).toEqual(["Updater", "make"]);
+  });
+
   it("exports every public top-level name when there is no __all__", async () => {
     const facts = await read({ "m.py": "import os\nclass A: pass\ndef _private(): pass\n_HIDDEN = 1\nVISIBLE = 2\nVISIBLE = 3\n" });
     expect(exps(facts)).toEqual(["A", "VISIBLE"]);

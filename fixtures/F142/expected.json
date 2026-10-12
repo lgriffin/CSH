@@ -1,0 +1,16 @@
+{
+  "fixture": "F142",
+  "section": "From the Java and Python runs, sections 1 and 2; A-130, A-170, A-171, A-172",
+  "stage": 45,
+  "expect": {
+    "run": {
+      "assessments": [
+        { "fragment": "Updater/Layering/CoreUsesNoQt", "verdict": "violated", "reasonsInclude": ["app/core/updater.py:1", "PySide6"] },
+        { "fragment": "Updater/Layering/CoreUsesNoWidgets", "verdict": "unknown", "reasonsInclude": ["finer-than-facts", "PySide6.QtWidgets", "app/core/updater.py:1"] },
+        { "fragment": "Updater/Types/DeclaresSignals", "verdict": "satisfied" },
+        { "fragment": "Updater/Types/DeclaresProbe", "verdict": "violated" },
+        { "fragment": "Updater/Types/DeclaresUpdaterProbe", "verdict": "violated" }
+      ]
+    }
+  }
+}

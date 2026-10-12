@@ -149,9 +149,18 @@ i.architecture("NoCycleBetweenPackages", acyclic(modules("packages/**"), { group
 | `acyclic(sel, { group })` | Modules are grouped by the directory the glob matches (`packages/a`), and only a cycle between groups counts |
 
 A `forbid` whose target selects nothing the facts know holds, with the reason `target-selects-nothing`, so a mistyped
-path shows in the assessment. `package.json`'s `packageManager`, `dependencies`, `devDependencies` and `workspaces`
+path shows in the assessment, and as its own converged kind in `csh overview`
+([14](../spec/14-from-the-java-and-python-runs.md), section 3). `package.json`'s `packageManager`, `dependencies`, `devDependencies` and `workspaces`
 are fields a claim can name, such as `field("package.json", "/packageManager", "pnpm@10.28.0")`
 ([13](../spec/13-from-real-runs.md), section 2).
+
+An external dependency is named as its ecosystem names it: a Java package (`java.sql`), a Python top-level package
+(`PySide6`), a Go import path, a Rust crate. A glob ending in `.*` or `.**` also selects the name before it, so
+`modules("java.sql.*")` selects an import of `java.sql.SQLException` and `modules("PySide6.*")` one of
+`PySide6.QtCore`. A glob that names part of what the facts record whole, such as `java.sql.Connection` or
+`PySide6.QtWidgets`, cannot be decided: a rule over it is unknown with the reason `finer-than-facts` when a module it
+selects depends on that package. A nested type is declared under its dotted name, so a claim names it
+`declares("Runner.java", "Runner.Callback")` ([14](../spec/14-from-the-java-and-python-runs.md), sections 1 and 2).
 
 ## Limits
 

@@ -121,7 +121,11 @@ export function overviewOf(report: Report, manifest?: PracticeMap): Overview {
   // Obligations: satisfied converge; unknown ones are indeterminate (a violated one is already a signal above).
   for (const a of report.assessments ?? []) {
     const practice = practiceOf[a.source] ?? "specification";
-    if (a.verdict === "satisfied") entries.push({ outcome: "converged", kind: "satisfied", practice, subject: a.fragment, next: "The evidence bears the obligation out", anchor: anchorOf("satisfied", a.fragment) });
+    // A forbid that holds only because its target selects nothing is a kind of its own, so the overview's counts show
+    // it: a mistyped target and a package that is legitimately absent read the same (A-173).
+    const vacuous = a.reasons.filter((r) => r.startsWith("target-selects-nothing:"));
+    if (a.verdict === "satisfied" && vacuous.length > 0) entries.push({ outcome: "converged", kind: "target-selects-nothing", practice, subject: a.fragment, detail: vacuous.join("; "), next: "Holds because nothing its target names is there: check that the target is spelt as the facts name it", anchor: anchorOf("target-selects-nothing", a.fragment) });
+    else if (a.verdict === "satisfied") entries.push({ outcome: "converged", kind: "satisfied", practice, subject: a.fragment, next: "The evidence bears the obligation out", anchor: anchorOf("satisfied", a.fragment) });
     else if (a.verdict === "unknown") entries.push({ outcome: "indeterminate", kind: "unknown-obligation", practice, subject: a.fragment, ...(a.reasons.length > 0 ? { detail: a.reasons.join("; ") } : {}), next: "Supply the evidence its reasons name, or approve what it waits on", anchor: anchorOf("unknown-obligation", a.fragment) });
   }
   // Test results (stage 26): a cited item whose every run test passed converges; a test file that ran nothing it

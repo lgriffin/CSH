@@ -1,0 +1,19 @@
+{
+  "fixture": "F140",
+  "section": "From the Java and Python runs, section 1; A-127, A-170",
+  "stage": 45,
+  "expect": {
+    "run": {
+      "assessments": [
+        { "fragment": "Jobs/Types/DeclaresCallback", "verdict": "satisfied" },
+        { "fragment": "Jobs/Types/DeclaresCallbackKind", "verdict": "satisfied" },
+        { "fragment": "Jobs/Types/DeclaresLimits", "verdict": "satisfied" },
+        { "fragment": "Jobs/Types/DeclaresLimit", "verdict": "satisfied" },
+        { "fragment": "Jobs/Types/DeclaresAttempt", "verdict": "violated" },
+        { "fragment": "Jobs/Types/DeclaresRunnerAttempt", "verdict": "violated" },
+        { "fragment": "Jobs/Api/ExportsRunner", "verdict": "satisfied" },
+        { "fragment": "Jobs/Api/CallbackIsNotExported", "verdict": "satisfied" }
+      ]
+    }
+  }
+}

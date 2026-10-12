@@ -54,8 +54,47 @@ export function unknownContainers(rule: ArchRule, d: ArchDiagram | undefined): s
 export function selects(sel: ArchSel, pkgName: string, d: ArchDiagram | undefined): boolean {
   if (sel.k === "any") return true;
   if (sel.k === "package") return sameName(sel.name, pkgName);
-  if (sel.k === "modules") return matchesGlobs(pkgName, sel.globs, sel.except);
+  if (sel.k === "modules") return matchesGlobs(pkgName, sel.globs, sel.except) || coversMembers(pkgName, sel.globs, sel.except ?? []);
   return containersOf(d, pkgName).includes(sel.id);
+}
+
+/**
+ * A dotted name covers its members: `java.sql.*` and `java.sql.**` select the dependency `java.sql`, which is all the
+ * facts know of an import of `java.sql.SQLException` (A-171). A path, which holds a `/`, is never a member of another.
+ */
+function coversMembers(name: string, globs: readonly string[], except: readonly string[]): boolean {
+  if (name.includes("/")) return false;
+  const covering = (g: string) => g === `${name}.*` || g === `${name}.**`;
+  return globs.some(covering) && !except.some((g) => covering(g) || globRegExp(g).test(name));
+}
+
+/** A dependency target that is no module read: a package or library, named as its ecosystem names it. */
+function isExternal(facts: ArchFacts, name: string): boolean {
+  return facts.modules !== undefined && !facts.modules.includes(name) && !(facts.unread ?? []).includes(name);
+}
+
+/** The reason a rule is unknown for globs finer than the facts: each name, its globs and its first dependencies. */
+function finerReason(deps: ArchDependency[], globsOf: (x: ArchDependency) => string[]): string {
+  const names = [...new Set(deps.map((x) => x.to))].sort(compareCodePoints);
+  return names
+    .map((n) => {
+      const on = deps.filter((x) => x.to === n);
+      const at = on.slice(0, 3).map((x) => x.at).join(", ") + (on.length > 3 ? ` and ${on.length - 3} more` : "");
+      return `finer-than-facts: modules(${[...new Set(globsOf(on[0]!))].join(", ")}) names part of ${n}, which the facts record whole (${at})`;
+    })
+    .join("; ");
+}
+
+/** The literal text of a glob before its first wildcard. */
+const headOf = (glob: string): string => glob.split(/[*?]/, 1)[0]!;
+
+/**
+ * The selector's globs that name part of the external name `name` (A-172): their text before the first wildcard
+ * starts with `name.`, so a dependency the facts record as `name` whole may or may not be on that part.
+ */
+function finerGlobs(sel: ArchSel, name: string): string[] {
+  if (sel.k !== "modules" || name.includes("/")) return [];
+  return sel.globs.filter((g) => headOf(g).startsWith(`${name}.`));
 }
 
 /** Whether a selector selects a name written in the diagram, inside element `elementId`. */
@@ -286,7 +325,11 @@ export function evaluateRule(rule: ArchRule, facts: ArchFacts, d: ArchDiagram | 
   } else if (rule.k === "forbid") {
     by = counted(rule.from, facts.depends).filter((x) => x.from !== x.to && selects(rule.from, x.from, d) && selects(rule.to, x.to, d));
   } else if (rule.k === "only") {
-    by = counted(rule.from, facts.depends).filter((x) => selects(rule.from, x.from, d) && !selects(rule.from, x.to, d) && !rule.to.some((t) => selects(t, x.to, d)));
+    const offending = counted(rule.from, facts.depends).filter((x) => selects(rule.from, x.from, d) && !selects(rule.from, x.to, d) && !rule.to.some((t) => selects(t, x.to, d)));
+    // An offending dependency on an external name that an allowed glob names part of may be on the allowed part.
+    const finer = offending.filter((x) => isExternal(facts, x.to) && rule.to.some((t) => finerGlobs(t, x.to).length > 0));
+    by = offending.filter((x) => !finer.includes(x));
+    if (by.length === 0 && finer.length > 0) return { result: "unknown", reason: finerReason(finer, (x) => rule.to.flatMap((t) => finerGlobs(t, x.to))) };
   } else if (rule.k === "acyclic") {
     const cycles = cyclesOf(rule.within, rule.group, counted(rule.within, facts.depends), d);
     if (cycles.length > 0) return { result: "violated", by: cycles.flat(), chains: cycles };
@@ -303,6 +346,12 @@ export function evaluateRule(rule: ArchRule, facts: ArchFacts, d: ArchDiagram | 
   if (rule.k === "forbid" || rule.k === "only") {
     const unread = [...new Set([...(facts.unread ?? []).filter((m) => selects(rule.from, m, d)), ...unreadReached])].sort(compareCodePoints);
     if (unread.length > 0) return notRead(unread);
+  }
+  // A forbidden target that names part of an external name a selected module depends on: the facts record the name
+  // whole, so whether the code uses that part is not known (A-172).
+  if (rule.k === "forbid") {
+    const finer = counted(rule.from, facts.depends).filter((x) => x.from !== x.to && selects(rule.from, x.from, d) && isExternal(facts, x.to) && finerGlobs(rule.to, x.to).length > 0);
+    if (finer.length > 0) return { result: "unknown", reason: finerReason(finer, (x) => finerGlobs(rule.to, x.to)) };
   }
   // A forbidden target that selects nothing the facts know: nothing can depend on it, so the rule holds, and says so,
   // since a mistyped path and a package that is legitimately absent read the same.

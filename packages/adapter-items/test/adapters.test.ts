@@ -233,10 +233,11 @@ describe("test results (stage 26)", () => {
       { file: "tests/a.test.ts", outcome: "skipped", cites: [], span: "results/jest.json#testResults[0].assertionResults[2]" },
     ]);
     expect(out.items!.find((i) => i.id === "tests/a.test.ts")!.attrs).toEqual({ tests: "2", passed: "1", failed: "1", errored: "0", skipped: "1" });
-    // Runner file names are never repeated: the files outside the source are counted, and the unrun file is too.
+    // Runner file names are never repeated: the files outside the source are counted. The source's own test files
+    // with no result are named (A-174).
     expect(out.diagnostics.map((d) => [d.code, d.message])).toEqual([
       ["results-unmatched", "2 results in 2 files name no test file of the source"],
-      ["results-missing", "1 test files declare tests and have no result: their outcomes are unknown"],
+      ["results-missing", "1 test files declare tests and have no result: their outcomes are unknown (tests/b.test.ts)"],
     ]);
   });
 

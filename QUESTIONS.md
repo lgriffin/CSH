@@ -306,3 +306,28 @@ Raised in stage 36. Each profile takes one reading where its subject's documents
   source reads as citable items; whether doc comments should become citable is open.
 
 Acknowledged on 12 October 2026: the profiles keep these readings.
+
+## Q-40 How does a claim name a nested type?
+
+Raised in stage 45, from the owner's Java run (B1). A nested interface `StreamingCallback` inside `ClaudeCliService`
+was not declared at all; nested types are now declared ([14](docs/spec/14-from-the-java-and-python-runs.md), section 1).
+
+- **By its dotted name from the top-level type, `ClaudeCliService.StreamingCallback` (chosen).** Unique within a file,
+  Java's own source name for it, and the form Go methods and Java constants are already declared in.
+- **By its simple name, `StreamingCallback`.** As documents usually say it; two nested types of one name in one file
+  would collide.
+
+Provisional, recorded as A-170.
+
+## Q-41 Does `java.sql.*` select the dependency `java.sql`?
+
+Raised in stage 45, from the owner's Java and Python runs (B2, B3). An external dependency is named by its package
+(`java.sql`, `PySide6`), so a rule forbidding `java.sql.*` or `PySide6.*` selected nothing and held.
+
+- **A package covers its members (chosen).** A glob ending in `.*` or `.**` also selects the dotted name before it; a
+  glob naming something under a recorded name is indeterminate ([14](docs/spec/14-from-the-java-and-python-runs.md),
+  section 2).
+- **Documentation only.** Matching stays literal; the guide says externals are recorded as packages, and the overview
+  shows `target-selects-nothing` on the rule.
+
+Provisional, recorded as A-171 and A-172.
