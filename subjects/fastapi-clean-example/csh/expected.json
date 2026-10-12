@@ -1,0 +1,62 @@
+{
+  "schema": "csh-expected/v1",
+  "rows": [
+    {
+      "row": 1,
+      "title": "The domain imports no outer layer",
+      "expect": [{ "outcome": "converged", "kind": "satisfied", "subject": "FastapiCleanExample/Layering/DomainImportsNoOuterLayer" }]
+    },
+    {
+      "row": 2,
+      "title": "The application imports no outer layer",
+      "expect": [{ "outcome": "converged", "kind": "satisfied", "subject": "FastapiCleanExample/Layering/ApplicationImportsNoOuterLayer" }]
+    },
+    {
+      "row": 3,
+      "title": "Infrastructure imports neither presentation nor composition, but for the one import the contract ignores",
+      "expect": [
+        { "outcome": "converged", "kind": "satisfied", "subject": "FastapiCleanExample/Layering/InfrastructureImportsNoOuterLayer" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "FastapiCleanExample/Layering/AlembicEnvImportsOnlyTheSettings" }
+      ]
+    },
+    {
+      "row": 4,
+      "title": "Presentation imports no composition module",
+      "expect": [{ "outcome": "converged", "kind": "satisfied", "subject": "FastapiCleanExample/Layering/PresentationImportsNoComposition" }]
+    },
+    {
+      "row": 5,
+      "title": "The core binds to no framework or out-of-process client",
+      "expect": [{ "outcome": "converged", "kind": "satisfied", "subject": "FastapiCleanExample/Layering/CoreImportsNoFrameworkOrDriver" }],
+      "unknown": [
+        { "what": "libraries that bind the core to implementation details beyond those named", "reason": "the README names a class of libraries, not a list; the rule names the frameworks and drivers its Technology Stack lists, and a library outside that list is not judged" }
+      ]
+    },
+    {
+      "row": 6,
+      "title": "Interactors and query services do not call each other",
+      "expect": [{ "outcome": "converged", "kind": "satisfied", "subject": "FastapiCleanExample/Layering/InteractorsDoNotCallEachOther" }],
+      "unknown": [{ "what": "a call through an injected object", "reason": "facts hold imports, not calls, so an interactor handed another by injection is not seen" }]
+    },
+    {
+      "row": 7,
+      "title": "The username-taken exception is a domain exception",
+      "expect": [
+        { "outcome": "converged", "kind": "satisfied", "subject": "FastapiCleanExample/ProseAboutCode/UsernameTakenIsDeclaredInTheDomain" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "FastapiCleanExample/ProseAboutCode/UsernameTakenIsAnException" }
+      ]
+    },
+    {
+      "row": 8,
+      "title": "The files the README's structure tree names exist",
+      "expect": [
+        { "outcome": "converged", "kind": "satisfied", "subject": "FastapiCleanExample/ProseAboutCode/EntityBaseExists" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "FastapiCleanExample/ProseAboutCode/ValueObjectBaseExists" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "FastapiCleanExample/ProseAboutCode/CreateUserInteractorExists" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "FastapiCleanExample/ProseAboutCode/ListUsersQueryServiceExists" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "FastapiCleanExample/ProseAboutCode/AppFactoryExists" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "FastapiCleanExample/ProseAboutCode/EntryPointExists" }
+      ]
+    }
+  ]
+}

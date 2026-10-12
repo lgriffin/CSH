@@ -37,6 +37,7 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 33: A Go reader](stage-33.md)
 - [Stage 34: A Rust reader](stage-34.md)
 - [Stage 35: Test inventory for pytest, JUnit, Go and Rust](stage-35.md)
+- [Stage 36: Polyglot profiles](stage-36.md)
 
 Stages 10 to 16 build the anchor design ([09](../spec/09-anchor-harness-a3.md)): a component to anchor on, harnesses,
 runs and the A3. Their fixtures, F80 to F96, were written before any of their code, and the fixture runner reports
