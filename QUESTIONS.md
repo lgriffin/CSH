@@ -278,7 +278,7 @@ Raised in stage 36. A subject's documents state its layering, and its code may n
 - **Expect each document's statement as satisfied.** CI then fails whenever CSH correctly reports the disagreement.
 - **Expect nothing for such a rule.** It is listed as unknown, and a regression in it goes unseen.
 
-Taken provisionally as A-135.
+Decided on 12 October 2026: the chosen option. Recorded as A-135.
 
 ## Q-27 May a profile's expected results leave out counts?
 
@@ -288,7 +288,7 @@ be derived from documents before a run (brief, rule 4).
 - **Rows only (chosen).** Every expectation comes from the documents; drift in what is not expected goes unseen.
 - **Counts recorded after the first run, labelled as a snapshot.** Catches drift, but they are output, not expectations.
 
-Taken provisionally as A-135.
+Decided on 12 October 2026: rows only. Recorded as A-135.
 
 ## Q-28 What the stage 36 subjects' documents mean
 
@@ -305,4 +305,4 @@ Raised in stage 36. Each profile takes one reading where its subject's documents
   name a declaration's kind, so this stays unknown. Its design is stated in `///` doc comments, which no `Documents`
   source reads as citable items; whether doc comments should become citable is open.
 
-The profiles keep these readings until the owner decides.
+Acknowledged on 12 October 2026: the profiles keep these readings.
