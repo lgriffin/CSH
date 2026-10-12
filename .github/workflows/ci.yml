@@ -56,8 +56,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
-      # Two workers: with more, the runner is loaded enough by the fixtures' subprocesses that vitest's own worker
-      # messages time out after every test has passed.
+      # Two workers keep the runner light enough that vitest's own worker messages arrive in time; the starter fixture
+      # also awaits its subprocesses rather than blocking its worker for minutes.
       - run: pnpm test --maxWorkers=2
 
   # The gate of a component of the harness itself (Next layers, section 3.2): csh status, then, once the component has a

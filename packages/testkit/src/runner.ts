@@ -1,7 +1,7 @@
 // The golden-fixture runner: each fixture's expected.json is an accepting or rejecting test
 // (Semantic contract, section 7). It drives the real pipeline and compares observed with
 // expected, collecting every mismatch rather than stopping at the first.
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync, type SpawnOptions } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
@@ -15,7 +15,6 @@ import type { SolverPort } from "@csh/solver";
 import { createTestRepo, gpgAvailable, type TestRepo } from "./git.ts";
 import { checkModule, componentQueue, componentStatus, coverageOfSources, emitProject, evaluateProject, evaluateSpec, type FixtureConfig, loadProject, proposeProfile, readConfig, readStoredRun, selectFiles, specPathOf } from "@csh/run";
 import { verifyCounterexample, verifyNoOutcome } from "./verify.ts";
-import { packWorkspace } from "./pack.ts";
 import { type ComponentProblem, parseComponent, validateManifest } from "@csh/component";
 import { type DiffContext, diffRuns, type ManifestView, renderDiff, type RunSide, type Unavailable } from "@csh/review";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -133,7 +132,7 @@ export class FixtureRunner {
       else if (e.run !== undefined) await this.project(dir, e.run, failures);
       else if (e.init !== undefined) await this.init(dir, e.init, failures);
       else if (e.starter !== undefined) {
-        const skipped = this.starter(e.starter, failures);
+        const skipped = await this.starter(e.starter, failures);
         if (skipped !== undefined) res.skipped = skipped;
       }
       else if (e.git === true) await this.git(dir, e, failures);
@@ -388,13 +387,20 @@ export class FixtureRunner {
    * from this workspace, and run csh run with the installed command. Packages outside the workspace (TypeScript, Z3,
    * Node's types) come from the npm registry, as a user's install would.
    */
-  private starter(x: { run: "completed" }, failures: string[]): string | undefined {
+  private async starter(x: { run: "completed" }, failures: string[]): Promise<string | undefined> {
     const repo = resolve(this.o.fixturesDir, "..");
     const work = mkdtempSync(join(tmpdir(), "csh-starter-"));
     try {
       const packs = join(work, "packs");
       const project = join(work, "starter");
-      const tarballs = packWorkspace(packs, repo);
+      // Packing, installing and running take minutes on a slow machine. Each runs in a subprocess awaited, never
+      // synchronously, so the test worker stays responsive to its runner meanwhile.
+      const packed = await spawnAsync(process.execPath, [join(repo, "packages", "testkit", "src", "pack.ts"), packs], { cwd: repo, env: process.env });
+      if (packed.status !== 0) {
+        failures.push(`packing the workspace failed (${packed.status}): ${packed.stderr.slice(0, 2000)}`);
+        return;
+      }
+      const tarballs = packed.stdout.split("\n").filter((l) => l.trim() !== "").map((l) => resolve(repo, l.trim()));
       cpSync(join(repo, "examples", "starter"), project, { recursive: true, filter: (p) => !/[\\/](node_modules|reports|\.csh-cache)$/.test(p) });
       const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith("CSH_")));
       // On Windows npm and the installed csh are .cmd shims, which only a shell runs. The command itself stays unquoted
@@ -402,16 +408,16 @@ export class FixtureRunner {
       const win = process.platform === "win32";
       const q = (a: string) => (/[\s"]/.test(a) ? `"${a}"` : a);
       const sh = (cmd: string, args: string[]) =>
-        win ? spawnSync([q(cmd), ...args.map((a) => `"${a}"`)].join(" "), { cwd: project, encoding: "utf8", env, shell: true }) : spawnSync(cmd, args, { cwd: project, encoding: "utf8", env });
-      const npm = sh("npm", ["install", "--save-dev", "--no-audit", "--no-fund", ...tarballs]);
+        win ? spawnAsync([q(cmd), ...args.map((a) => `"${a}"`)].join(" "), [], { cwd: project, env, shell: true }) : spawnAsync(cmd, args, { cwd: project, env });
+      const npm = await sh("npm", ["install", "--save-dev", "--no-audit", "--no-fund", ...tarballs]);
       if (npm.status !== 0) {
         // Offline, the registry packages cannot be installed. Like a missing gpg, that skips the fixture only when the
         // environment says it may (A-51); otherwise it fails.
         if (process.env["CSH_ALLOW_OFFLINE_SKIP"] === "1") return `npm install could not complete (${npm.status}); CSH_ALLOW_OFFLINE_SKIP is set`;
-        failures.push(`npm install failed (${npm.status}): ${(npm.stderr ?? String(npm.error)).slice(0, 2000)}`);
+        failures.push(`npm install failed (${npm.status}): ${npm.stderr.slice(0, 2000)}`);
         return;
       }
-      const run = sh(join(project, "node_modules", ".bin", "csh"), ["run"]);
+      const run = await sh(join(project, "node_modules", ".bin", "csh"), ["run"]);
       // Completed means more than an exit of 0, which advisory mode gives whatever the tests did: one stored run whose
       // every harness exited 0 and recorded witnesses.
       const runs = join(project, ".csh-cache", "runs");
@@ -1059,4 +1065,17 @@ export function summarise(results: FixtureResult[]): string {
 
 export function relativeTo(root: string, p: string): string {
   return relative(root, p);
+}
+
+/** A subprocess awaited: its exit status and output; a process that cannot start gives status null and its error. */
+function spawnAsync(cmd: string, args: string[], opts: SpawnOptions): Promise<{ status: number | null; stdout: string; stderr: string }> {
+  return new Promise((done) => {
+    const child = spawn(cmd, args, { ...opts, stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    child.stdout?.on("data", (d: Buffer) => (stdout += d.toString()));
+    child.stderr?.on("data", (d: Buffer) => (stderr += d.toString()));
+    child.on("error", (e) => done({ status: null, stdout, stderr: `${stderr}${String(e)}` }));
+    child.on("close", (status) => done({ status, stdout, stderr }));
+  });
 }
