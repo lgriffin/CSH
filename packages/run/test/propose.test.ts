@@ -54,10 +54,47 @@ describe("proposeProfile", () => {
     expect(r.manifest.practices.find((p) => p.id === "docs")?.settings).toBeUndefined();
   });
 
-  it("orders identifier families by mentions and keeps at most eight", () => {
-    const text = ["AA", "BB", "DD", "EE", "FF", "GG", "HH", "II", "JJ"].map((p, i) => `${`${p}-1 ${p}-2 `.repeat(i + 1)}`).join("\n");
+  it("orders identifier families by mentions, naming up to eight", () => {
+    const text = ["AA", "BB", "DD", "EE", "FF", "GG", "HH", "II"].map((p, i) => `${`${p}-1 ${p}-2 `.repeat(i + 1)}`).join("\n");
     const r = propose(checkout({ "docs/x.md": `${text}\n` }));
-    expect(r.manifest.practices.find((p) => p.id === "docs")?.settings?.idPattern).toBe("(?:JJ|II|HH|GG|FF|EE|DD|BB)-[0-9]+");
+    expect(r.manifest.practices.find((p) => p.id === "docs")?.settings?.idPattern).toBe("(?:II|HH|GG|FF|EE|DD|BB|AA)-[0-9]+");
+  });
+
+  it("past eight families, names every prefix in the pattern and the first eight in the guess (stage 46)", () => {
+    const prefixes = ["AUTH", "PERF", "SEC", "DATA", "UX", "OPS", "API", "LOG", "CFG", "NET"];
+    const text = prefixes.map((p) => `${p}-001 ${p}-002`).join("\n");
+    const r = propose(checkout({ "docs/x.md": `${text}\n` }));
+    const idPattern = r.manifest.practices.find((p) => p.id === "docs")?.settings?.idPattern as string;
+    for (const p of prefixes) expect(idPattern).toContain(p);
+    const re = new RegExp(`^${idPattern}$`);
+    expect(re.test("NET-001")).toBe(true);
+    expect(re.test("UTF-8")).toBe(false);
+    expect(re.test("RFC-2119")).toBe(false);
+    expect(r.guesses.join("\n")).toMatch(/and 2 more prefixes in the Markdown/);
+  });
+
+  it("proposes nothing under a committed Python virtual environment (stage 46)", () => {
+    const dir = checkout({
+      "app/main.py": "x = 1\n",
+      "tests/test_main.py": "def test_x():\n    pass\n",
+      ".venv/lib/python3.12/site-packages/pkg/__init__.py": "y = 2\n",
+      ".venv/lib/python3.12/site-packages/pkg/test_pkg.py": "def test_y():\n    pass\n",
+    });
+    const r = propose(dir);
+    expect(reads(dir, r, "Code")).toEqual(["app/main.py"]);
+    expect(reads(dir, r, "Tests")).toEqual(["tests/test_main.py"]);
+  });
+
+  it("takes no step definition or test under a fixtures directory or a dot-directory (stage 46)", () => {
+    const dir = checkout({
+      "features/a.feature": "Feature: A\n  Scenario: S\n    Given a\n",
+      "features/steps/a.steps.js": "Given('a', () => {});\n",
+      "tests/suite-health/fixtures/b.steps.js": "Given('b', () => {});\n",
+      ".claude/skills/x/c.test.js": "test('c', () => {});\n",
+      "src/d.test.js": "test('d', () => {});\n",
+    });
+    const r = propose(dir);
+    expect(reads(dir, r, "Tests")).toEqual(["features/steps/a.steps.js", "src/d.test.js"]);
   });
 
   it("leaves tests and colocated tests out of Code, and names jest's results", () => {

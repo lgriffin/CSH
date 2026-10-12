@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { a3Dir, readJudgments } from "@csh/a3";
-import { checkExpected, claimSpans, DIVERGENCE_READINGS, type Finding, overviewOf, parseExpected, renderExpect, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report, type SentenceAt } from "@csh/check";
+import { checkExpected, claimSpans, lineHolding, DIVERGENCE_READINGS, type Finding, overviewOf, parseExpected, renderExpect, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report, type SentenceAt } from "@csh/check";
 import { exitCode, formatDecision as formatGate, type GateDecision, type Mode } from "@csh/gate";
 import { digestOf, fragmentsOf, textDigestOf, type Module, stableJson } from "@csh/kernel";
 import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons } from "@csh/ledger";
@@ -518,15 +518,17 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 /** The sentence on a line of the source tree, for a claim's span (From real runs, stage 43); undefined outside it. */
 function sentenceAt(p: Project): SentenceAt {
-  return (span) => {
+  return (span, values = []) => {
     const m = /^(.*):(\d+)$/.exec(span);
     if (m === null) return undefined;
     const file = resolve(p.sourceRoot, m[1]!);
     if (!file.startsWith(resolve(p.sourceRoot)) || !existsSync(file)) return undefined;
     try {
-      const line = readFileSync(file, "utf8").split(/\r?\n/)[Number(m[2]) - 1]?.trim();
+      const lines = readFileSync(file, "utf8").split(/\r?\n/);
+      const at = lineHolding(lines, Number(m[2]) - 1, values);
+      const line = lines[at]?.trim();
       if (line === undefined || line === "") return undefined;
-      return line.length > 200 ? `${line.slice(0, 197)}...` : line;
+      return { at: `${m[1]}:${at + 1}`, text: line.length > 200 ? `${line.slice(0, 197)}...` : line };
     } catch {
       return undefined;
     }
@@ -575,16 +577,16 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
   const said = sentenceAt(p);
   for (const f of claims.slice(0, 5)) {
     lines.push(`  ${f.kind}: ${f.reason ?? f.query}`);
-    for (const span of claimSpans(f)) {
-      const sentence = said(span);
-      if (sentence !== undefined) lines.push(`    ${span} says: "${sentence}"`);
+    for (const { span, values } of claimSpans(f)) {
+      const sentence = said(span, values);
+      if (sentence !== undefined) lines.push(`    ${sentence.at} says: "${sentence.text}"`);
     }
   }
   if (claims.length > 5) lines.push(`  and ${claims.length - 5} more claim findings: csh check lists them`);
   // What the profile leaves unread, said on every run of the current snapshot (From real runs, section 1.4).
   // Only sources the manifest declares are counted: a specification that declares its own would read as nothing read.
   const c = a.options.at === undefined && (p.component?.manifest.sources ?? []).length > 0 ? coverageOf(p) : undefined;
-  if (c !== undefined) lines.push(c.read === c.tracked ? `  coverage: all ${c.tracked} tracked files read` : `  coverage: ${c.read} of ${c.tracked} tracked files read; csh coverage lists the rest`);
+  if (c !== undefined) lines.push(c.read === c.tracked ? `  coverage: all ${c.tracked} tracked files read` : `  coverage: ${c.read} of ${c.tracked} tracked files read; not read: ${c.unread.slice(0, 3).map((u) => `${u.files} ${u.ext}`).join(", ")}${c.unread.length > 3 ? ", …" : ""}; csh coverage lists the rest`);
   const v = (x: string) => (report.assessments ?? []).filter((y) => y.verdict === x).length;
   lines.push(`  obligations ${(report.assessments ?? []).length}: conflicting ${v("conflicting")}, violated ${v("violated")}, satisfied ${v("satisfied")}, unknown ${v("unknown")}`);
   lines.push(`  gate ${decision.overall} (${decision.mode})`);

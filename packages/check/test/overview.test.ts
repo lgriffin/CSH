@@ -1,6 +1,6 @@
 // The overview says why: a violated rule lists the edges that break it, not only its authority.
 import { describe, expect, it } from "vitest";
-import { overviewOf, type Report } from "../src/index.ts";
+import { GAP_NEXT, INDETERMINATE_NEXT, overviewOf, type Report } from "../src/index.ts";
 
 const report = (assessments: unknown[]): Report =>
   ({ findings: [], assessments, notComparable: [], errors: [], gapView: { sources: [], rows: [], gaps: [] }, items: [], outcomes: [], diagnostics: [], unliftable: [], edges: [], component: { sources: {} } }) as unknown as Report;
@@ -18,6 +18,12 @@ describe("overview detail", () => {
     const e = overviewOf(report([violated(many)])).entries.find((x) => x.kind === "violated")!;
     expect(e.detail!.split("; ")).toHaveLength(7);
     expect(e.detail).toMatch(/and 3 more$/);
+  });
+
+  it("places every step-matching signal with what would close or decide it (stage 46)", () => {
+    expect(GAP_NEXT["undefined-step"]).toMatch(/step definition/);
+    expect(GAP_NEXT["unused-step-definition"]).toMatch(/scenario/);
+    expect(INDETERMINATE_NEXT["steps-undecided"]).toMatch(/by hand/);
   });
 
   it("gives a forbid that holds only because its target selects nothing a kind of its own (A-173)", () => {

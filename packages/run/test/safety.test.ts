@@ -1,4 +1,5 @@
 // Process and safety (From real runs, stage 44): warnings about where a profile's subject is.
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { githubSlug, isPathRepo, type Exec, localPathWarning, subjectWarnings } from "../src/safety.ts";
 import type { Project } from "../src/project.ts";
@@ -36,5 +37,19 @@ describe("subject warnings", () => {
     expect(subjectWarnings(project("https://github.com/a/b"), exec(false, "INTERNAL"))[0]).toMatch(/is internal/);
     expect(subjectWarnings(project("https://github.com/a/b"), exec(false, "PUBLIC"))).toEqual([]);
     expect(subjectWarnings(project("https://github.com/a/b"), exec(false))).toEqual([]);
+  });
+
+  it("asks a local-path subject's checkout for its origin, and warns when that repository is private (stage 46)", () => {
+    const calls: string[][] = [];
+    const fake: Exec = (cmd, args, cwd) => {
+      calls.push([cmd, ...args, cwd ?? ""]);
+      if (cmd === "git" && args[0] === "remote") return "git@github.com:a/secret.git\n";
+      if (cmd === "gh") return args[2] === "a/secret" ? "PRIVATE\n" : undefined;
+      return undefined;
+    };
+    expect(subjectWarnings(project("../subject"), fake)).toEqual([
+      "the subject a/secret is private: a profile for it should not be committed to a public repository; keep it out of git with .git/info/exclude (docs/guides/manifest.md)",
+    ]);
+    expect(calls).toContainEqual(["git", "remote", "get-url", "origin", resolve("/r", "../subject")]);
   });
 });

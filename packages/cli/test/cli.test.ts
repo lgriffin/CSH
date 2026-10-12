@@ -177,7 +177,7 @@ describe("csh init and csh run", () => {
       expect(await csh(["subject", "fetch", "--root", root], fetched.io)).toBe(0);
       const r = io(root);
       expect(await csh(["run", "--root", root], r.io)).toBe(0);
-      expect(r.o.out).toMatch(/\n  coverage: 11 of 15 tracked files read; csh coverage lists the rest\n/);
+      expect(r.o.out).toMatch(/\n  coverage: 11 of 15 tracked files read; not read: \d+ \.\w+[^;]*; csh coverage lists the rest\n/);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

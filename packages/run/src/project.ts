@@ -206,8 +206,29 @@ export function fetchSubject(p: Project, at?: string): { ok: true; dir: string; 
     return { ok: false, message: left.detail };
   }
   rmSync(dir, { recursive: true, force: true });
-  renameSync(fresh, dir);
+  const moved = renameRetrying(fresh, dir);
+  if (moved !== undefined) {
+    rmSync(fresh, { recursive: true, force: true });
+    return { ok: false, message: `could not move the fetched checkout into ${dir}: ${moved}; csh subject fetch again` };
+  }
   return { ok: true, dir, fetched: true };
+}
+
+/**
+ * Rename, tried again for a few seconds while Windows says the files are busy: a virus scanner holds a newly written
+ * executable open for a moment (From real runs, stage 46). Undefined when it moved; else why not.
+ */
+export function renameRetrying(from: string, to: string, attempts = 10, waitMs = 300, rename: (a: string, b: string) => void = renameSync): string | undefined {
+  for (let i = 1; ; i++) {
+    try {
+      rename(from, to);
+      return undefined;
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      if (i >= attempts || (code !== "EPERM" && code !== "EBUSY" && code !== "EACCES")) return (err as Error).message;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, waitMs);
+    }
+  }
 }
 
 /** A worktree of the checkout `from` at `dir`, detached at `commit`, checked clean; false when one cannot be made. */

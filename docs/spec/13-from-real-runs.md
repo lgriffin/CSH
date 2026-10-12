@@ -31,8 +31,8 @@ with what it was read from, and nothing is written over an existing `csh/compone
 - **Identifier pattern.** In the Markdown and Gherkin files, every token `[A-Z]{2,5}-[0-9]+` is counted by its prefix.
   A prefix is an identifier family when it names at least two different identifiers and is not a well-known external
   one (`UTF`, `SHA`, `ISO`, `RFC`, `CVE`, `AES`, `RSA`, `TLS`, `SSL`, `HTTP`, `ES`, `ECMA`, `PEP`, `JSR`, `GPL`, `LGPL`,
-  `AGPL`, `MIT`, `BSD`, `CC`). The pattern is `(?:A|B|...)-[0-9]+` over the families, most frequent first, at most
-  eight. With no family, no pattern is proposed and each adapter keeps its default.
+  `AGPL`, `MIT`, `BSD`, `CC`). The pattern is `(?:A|B|...)-[0-9]+` over the families, most frequent first, every
+  family named; the printed guess lists the first eight. With no family, no pattern is proposed and each adapter keeps its default.
 - **Requirements.** A Markdown file with a heading that begins with an identifier is a requirements document. They
   form a `Requirements` source of kind `Documents`, read by `@csh/adapter-items/markdown`, in a practice of kind
   `requirements`.
@@ -198,3 +198,26 @@ Each is a warning: nothing is refused, since the profile is its owner's to keep 
 - When `subject.repo` names a path (no URL scheme and not `user@host:path`) and `csh/component.json` is tracked in the
   component's repository, `csh subject fetch` and `csh run` warn that the profile works only on this machine.
 - The manifest guide documents keeping a local profile out of git with `.git/info/exclude`.
+
+## 8. The second round (stage 46)
+
+Leigh re-ran the six repositories on Windows after stages 38 to 44. These are the problems that still showed:
+
+- `csh init --subject`, and every run of a subject, walks only directories that hold a tracked file. Before this, a
+  working checkout's `node_modules` was walked in full, which on the three largest repositories never finished, and a
+  link that loops there crashed the walk.
+- A claim's sentence is the line that holds what the claim states. When the span names the first line of a table or
+  list, the line shown is the first one below it, before a blank line, that holds one of the claim's numbers or
+  versions, matched whole. The line's own `path:line` is printed.
+- The run's coverage line names the three largest unread kinds.
+- A subject named by a local path is asked for its checkout's `origin`. A GitHub origin is checked for visibility like
+  a URL subject.
+- `undefined-step` and `unused-step-definition` are gaps, each with what would close it. `steps-undecided` is
+  indeterminate and says to check it by hand.
+- `csh init --subject` names every identifier prefix in the pattern, however many; a shape such as
+  `[A-Z]{2,4}-[0-9]{3}` would also match `UTF-8` and `RFC-2119`. The guess lists the first eight. It takes no test or step definition under a `fixtures` directory or a
+  dot-directory.
+- `csh init --subject` proposes nothing under `.venv`, `venv`, `site-packages` or `__pycache__`, even when they are
+  tracked.
+- `csh subject fetch` retries the final move of a fresh checkout for a few seconds while Windows reports the files
+  busy. If the move still fails, the fetch fails with that reason and leaves nothing half-moved.
