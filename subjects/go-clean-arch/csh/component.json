@@ -14,8 +14,7 @@
       "kind": "Documents",
       "at": ".",
       "include": [
-        "README.md",
-        "internal/README.md"
+        "**/*.md"
       ]
     },
     {
