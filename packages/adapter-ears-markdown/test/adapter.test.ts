@@ -67,3 +67,35 @@ describe("EARS Markdown adapter", () => {
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
   });
 });
+
+describe("what the audit of a real specification set showed", () => {
+  const spec = [
+    "# 011 Ingest core",
+    "",
+    "- **ING-013 is new**: the work area that replaces the renaming prep.",
+    "- **DSC-015 is new**: the cockpit surfaces unreadable files.",
+    "",
+    "| ID | Pattern | Requirement |",
+    "|----|---------|-------------|",
+    "| ING-013 | Event | When the user prepares a target, the system shall build folders in its own work area. |",
+    "| DSC-015 | Ubiquitous | The cockpit shall list unreadable files. |",
+    "",
+  ].join("\n");
+
+  it("reads the sentence of a table that has a pattern column, not the column", () => {
+    const out = run(input({ "r.md": spec }, { idPattern: "[A-Z]{2,4}-[0-9]{3}" }));
+    expect((out.items ?? []).map((i) => [i.id, i.pattern])).toEqual([["ING-013", "event-driven"], ["DSC-015", "ubiquitous"]]);
+    expect((out.items ?? [])[0]!.text).toMatch(/^When the user prepares/);
+  });
+
+  it("lets a table row define an identifier that list items only mention, with no duplicate", () => {
+    const out = run(input({ "r.md": spec }));
+    expect(out.diagnostics).toEqual([]);
+    expect((out.items ?? []).map((i) => i.span)).toEqual(["r.md:8", "r.md:9"]);
+  });
+
+  it("still reports two table rows that define one identifier", () => {
+    const out = run(input({ "r.md": "| A-1 | The system shall a. |\n| A-1 | The system shall b. |\n" }));
+    expect(out.diagnostics.map((d) => d.code)).toEqual(["duplicate-id"]);
+  });
+});
