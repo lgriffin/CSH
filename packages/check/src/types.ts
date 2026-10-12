@@ -206,6 +206,8 @@ export interface HistoryPort {
   /** The newest commit that changed how often `text` occurs in `path`: for a value present now, the one that wrote it. */
   introduced(path: string, text: string): Dated | undefined;
   /** Commits since the configured start that change implementation paths with no test and no `Refs:` trailer. */
+  /** Whether a document records a moment, and so is not described stale by a later change to a file it names. */
+  frozen?(path: string): boolean;
   untraced(): { commit: string; date: string; files: number; agent: boolean }[];
 }
 

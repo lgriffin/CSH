@@ -1,0 +1,130 @@
+{
+  "schema": "csh-component/v2",
+  "name": "TutorsMonoRepo",
+  "subject": {
+    "repo": "D:/code/tutors-mono-repo",
+    "commit": "ee66461cfe8e2ccbfc400a0682082295d79cb81c"
+  },
+  "implementation": [
+    "apps",
+    "packages"
+  ],
+  "sources": [
+    {
+      "name": "Specs",
+      "kind": "Documents",
+      "at": "guides/specifications",
+      "include": [
+        "**/*.md"
+      ]
+    },
+    {
+      "name": "Guides",
+      "kind": "Documents",
+      "at": "guides",
+      "include": [
+        "*.md",
+        "testing/**/*.md",
+        "evolution/**/*.md"
+      ]
+    },
+    {
+      "name": "Architecture",
+      "kind": "Documents",
+      "at": "ARCHITECTURE.md"
+    },
+    {
+      "name": "Features",
+      "kind": "Features",
+      "at": "tests/bdd/features"
+    },
+    {
+      "name": "Tests",
+      "kind": "TestFiles",
+      "at": "tests",
+      "include": [
+        "**/*.test.ts"
+      ],
+      "exclude": [
+        "**/fixtures/**"
+      ]
+    },
+    {
+      "name": "Code",
+      "kind": "Code",
+      "at": ".",
+      "include": [
+        "apps/**/*.ts",
+        "apps/**/*.svelte",
+        "packages/**/*.ts",
+        "packages/**/*.svelte",
+        "**/package.json"
+      ],
+      "exclude": [
+        "**/node_modules/**"
+      ]
+    }
+  ],
+  "practices": [
+    {
+      "id": "specs",
+      "name": "Specifications",
+      "kind": "documents",
+      "sources": [
+        "Specs"
+      ],
+      "author": "Maintainer",
+      "unit": "the specification",
+      "settings": {
+        "headings": "references"
+      }
+    },
+    {
+      "id": "guides",
+      "name": "Guides",
+      "kind": "documents",
+      "sources": [
+        "Guides",
+        "Architecture"
+      ],
+      "author": "Maintainer",
+      "unit": "the guide",
+      "settings": {
+        "headings": "references"
+      }
+    },
+    {
+      "id": "bdd",
+      "name": "BDD",
+      "kind": "scenarios",
+      "sources": [
+        "Features"
+      ],
+      "author": "Maintainer",
+      "unit": "the rule",
+      "settings": {
+        "idTag": "rule-([0-9]+)"
+      }
+    },
+    {
+      "id": "tdd",
+      "name": "Tests",
+      "kind": "tests",
+      "sources": [
+        "Tests"
+      ],
+      "author": "Maintainer",
+      "unit": "the test file"
+    },
+    {
+      "id": "code",
+      "name": "Code facts",
+      "kind": "facts",
+      "sources": [
+        "Code"
+      ],
+      "author": "facts-ts",
+      "unit": "the module"
+    }
+  ]
+}

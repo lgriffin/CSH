@@ -23,6 +23,8 @@ export function run(input: AdapterInput): AdapterOutput {
   const edges: ItemEdge[] = [];
   const diagnostics: Diagnostic[] = [];
   const tagCites = input.config?.tagCites !== undefined ? new RegExp(`^@${input.config.tagCites}$`) : undefined;
+  // A tag that is the rule's own identifier (`idTag`, first group): the rule keeps it as its id, and it cites nothing.
+  const idTag = input.config?.idTag !== undefined ? new RegExp(`^@${input.config.idTag}$`) : undefined;
   for (const file of sortedFiles(input)) {
     if (!file.path.endsWith(".feature")) continue;
     const taken = new Set<string>();
@@ -37,7 +39,7 @@ export function run(input: AdapterInput): AdapterOutput {
         it.attrs = { tags: tags.join(" ") };
         if (tagCites !== undefined) for (const t of tags) {
           const m = tagCites.exec(t);
-          if (m !== null) edges.push({ from: id, rel: "cites", to: m[1] ?? m[0].slice(1), span });
+          if (m !== null && !(idTag?.test(t) === true)) edges.push({ from: id, rel: "cites", to: m[1] ?? m[0].slice(1), span });
         }
       }
       items.push(it);
@@ -68,7 +70,8 @@ export function run(input: AdapterInput): AdapterOutput {
         else feature = item("feature", file.path, title, span);
         rule = undefined;
       } else if (kw === "Rule") {
-        const id = unique(`${file.path}#${slug(title)}`, taken);
+        const named = idTag === undefined ? undefined : tags.map((t) => idTag.exec(t)).find((m) => m !== null);
+        const id = named !== undefined && named !== null && !taken.has(named[1] ?? named[0].slice(1)) ? (taken.add(named[1] ?? named[0].slice(1)), named[1] ?? named[0].slice(1)) : unique(`${file.path}#${slug(title)}`, taken);
         rule = item("rule", id, title, span);
         const pattern = classify(title);
         rule.pattern = pattern ?? "none";

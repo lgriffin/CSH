@@ -175,7 +175,7 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   const wanted = opts.component?.manifest.history;
   const historyRoot = resolve(opts.sourceRoot ?? opts.root);
   const historyCache = opts.cacheDir === undefined ? undefined : join(opts.cacheDir, "history", `${digestOf(new TextEncoder().encode(historyRoot)).slice(-16)}.json`);
-  const history = wanted !== undefined ? gitHistory(historyRoot, { implementation: opts.component!.manifest.implementation, ...(wanted.since !== undefined ? { since: wanted.since } : {}), ...(historyCache !== undefined ? { cache: historyCache, tool: toolCodeDigest() } : {}) }) : undefined;
+  const history = wanted !== undefined ? gitHistory(historyRoot, { implementation: opts.component!.manifest.implementation, ...(wanted.since !== undefined ? { since: wanted.since } : {}), ...(wanted.frozen !== undefined ? { frozen: wanted.frozen } : {}), ...(wanted.tests !== undefined ? { tests: wanted.tests } : {}), ...(historyCache !== undefined ? { cache: historyCache, tool: toolCodeDigest() } : {}) }) : undefined;
   if (history !== undefined) checkOpts.history = history;
   const checked = await check(checkOpts);
   history?.save();

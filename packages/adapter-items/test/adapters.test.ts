@@ -388,3 +388,31 @@ describe("the structured trace adapter (stage 28)", () => {
     expect(yaml(input({ "m.yaml": "other: []\n" }, undefined, "Traces")).diagnostics.map((d) => d.code)).toEqual(["no-items"]);
   });
 });
+
+describe("what the audit of other repositories showed", () => {
+  it("does not read a placeholder, a CIDR block or an API group as a repository path", () => {
+    for (const t of ["release/vX.Y.Z", "hotfix/vX.Y.Z", "10.0.0.0/9", "coordination.k8s.io/v1", "scripts/<name>.ts", "src/*/index.ts"]) expect(pathToken(t), t).toBeUndefined();
+    expect(pathToken("src/core/util/error.ts")).toBe("src/core/util/error.ts");
+    expect(pathToken("packages/v2/api")).toBe("packages/v2/api");
+  });
+
+  it("does not read the name of an algorithm or an encoding as an identifier", () => {
+    const out = markdown(input({ "g.md": "# Guide\n\nUses `SHA-256` and UTF-8, and cites ARCH-01.\n\n**Implements:** ARCH-01\n" }));
+    const cited = (out.edges ?? []).map((e) => e.to);
+    expect(cited).toContain("ARCH-01");
+    expect(cited.filter((t) => /^(SHA|UTF)-/.test(t))).toEqual([]);
+  });
+
+  it("takes a rule's own tag as its id when idTag is set, and does not cite it", () => {
+    const feature = ["Feature: F", "", "  @rule-0007 @sec-P1", "  Rule: The system shall log", "    Scenario: s", "      Given x", ""].join("\n");
+    const out = gherkin(input({ "a.feature": feature }, { idTag: "rule-([0-9]+)", tagCites: "sec-(P[0-9]+)" }, "Features"));
+    const rule = (out.items ?? []).find((i) => i.kind === "rule")!;
+    expect(rule.id).toBe("0007");
+    expect((out.items ?? []).find((i) => i.kind === "scenario")!.id).toBe("0007/s");
+    expect((out.edges ?? []).filter((e) => e.rel === "cites").map((e) => e.to)).toEqual(["P1"]);
+  });
+
+  it("says when an issue file holds no lines", () => {
+    expect(jsonl(input({ "issues.jsonl": "" }, undefined, "Issues")).diagnostics.map((d) => [d.code, d.span])).toEqual([["no-items", "issues.jsonl"]]);
+  });
+});
