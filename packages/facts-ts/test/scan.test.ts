@@ -163,3 +163,38 @@ describe("declarations and data files (stage 24)", () => {
     ]);
   });
 });
+
+describe("what the audit of other repositories showed", () => {
+  it("reads the script of a Svelte component at its own lines, and a component as a module", () => {
+    const svelte = ["<h1>Hi</h1>", "<script lang=\"ts\">", "  import { a } from \"./a.ts\";", "  import B from \"./B.svelte\";", "</script>", "<B />", ""].join("\n");
+    const out = run(input({ "src/C.svelte": svelte, "src/a.ts": "export const a = 1;\n", "src/B.svelte": "<p/>\n" }));
+    const shown = (out.facts ?? []).map(show);
+    expect(shown).toContain("module src/C.svelte");
+    expect(shown).toContain("src/C.svelte:3 src/C.svelte -> src/a.ts");
+    expect(shown).toContain("src/C.svelte:4 src/C.svelte -> src/B.svelte");
+  });
+
+  it("does not report SvelteKit's generated ./$types as unresolved", () => {
+    const out = run(input({ "src/routes/+page.ts": "import type { PageLoad } from \"./$types\";\nexport const load: PageLoad = () => ({});\n" }));
+    expect((out.facts ?? []).map(show).filter((x) => x.startsWith("skipped") || x.includes("$types"))).toEqual([]);
+  });
+
+  it("resolves a workspace package to its module when the source holds two or more packages", () => {
+    const files = {
+      "packages/core/package.json": JSON.stringify({ name: "@w/core", main: "dist/index.js" }),
+      "packages/core/src/index.ts": "export const x = 1;\n",
+      "packages/core/src/util.ts": "export const u = 1;\n",
+      "packages/web/package.json": JSON.stringify({ name: "@w/web" }),
+      "packages/web/src/app.ts": "import { x } from \"@w/core\";\nimport { u } from \"@w/core/util\";\nimport z from \"zod\";\n",
+    };
+    const shown = (run(input(files)).facts ?? []).map(show);
+    expect(shown).toContain("packages/web/src/app.ts:1 packages/web/src/app.ts -> packages/core/src/index.ts");
+    expect(shown).toContain("packages/web/src/app.ts:2 packages/web/src/app.ts -> packages/core/src/util.ts");
+    expect(shown).toContain("packages/web/src/app.ts:3 packages/web/src/app.ts -> zod");
+  });
+
+  it("leaves a package's own name alone when the source is not a workspace", () => {
+    const files = { "package.json": JSON.stringify({ name: "solo" }), "src/index.ts": "export {};\n", "src/b.ts": "import \"solo\";\n" };
+    expect((run(input(files)).facts ?? []).map(show)).toContain("src/b.ts:1 src/b.ts -> solo");
+  });
+});

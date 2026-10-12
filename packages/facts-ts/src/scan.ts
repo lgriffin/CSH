@@ -16,7 +16,7 @@ import type { Adapter, AdapterInput, AdapterOutput, Diagnostic, Fact } from "@cs
 
 export const TOOL = { id: "facts-ts", version: "0.1.0" } as const;
 export const SCHEMA = "csh-facts/v2";
-const CODE = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/;
+const CODE = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|svelte)$/;
 const BUILTIN = new Set(builtinModules);
 /** The package.json fields read as facts: what the package is called, its version, its entry points and its floor. */
 const FIELDS = ["name", "version", "type", "main", "types", "engines", "exports", "bin", "scripts"];
@@ -46,10 +46,63 @@ export function resolveRelative(fromFile: string, specifier: string, files: Set<
     base,
     ...(ext === "m" ? [`${stem}.mts`] : ext === "c" ? [`${stem}.cts`] : [`${stem}.ts`, `${stem}.tsx`]),
     ...(ext === "m" ? [`${stem}.d.mts`] : ext === "c" ? [`${stem}.d.cts`] : [`${stem}.d.ts`]),
-    ...["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "d.ts", "d.mts", "d.cts"].map((e) => `${base}.${e}`),
-    ...["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "d.ts", "d.mts", "d.cts"].map((e) => `${base}/index.${e}`),
+    ...["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "svelte", "d.ts", "d.mts", "d.cts"].map((e) => `${base}.${e}`),
+    ...["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "svelte", "d.ts", "d.mts", "d.cts"].map((e) => `${base}/index.${e}`),
   ];
   return candidates.find((c) => files.has(c));
+}
+
+/**
+ * The script of a Svelte component, kept at its own lines: every character outside a `<script>` element becomes a space
+ * (a newline stays), so a line number in the result is a line number in the component. The markup holds no imports.
+ */
+export function svelteScript(text: string): string {
+  const keep = new Array<boolean>(text.length).fill(false);
+  for (const m of text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)) {
+    const start = m.index + m[0].indexOf(">") + 1;
+    for (let i = start; i < start + m[1]!.length; i++) keep[i] = true;
+  }
+  return [...text].map((c, i) => (keep[i] === true || c === "\n" || c === "\r" ? c : " ")).join("");
+}
+
+/**
+ * The workspace packages the source's package.json files name, by package name to the directory that holds it. With
+ * fewer than two there is no workspace, and a package's own name is left as a package. The sets are derived from the
+ * files read, so the facts of a commit still depend on its source files alone.
+ */
+export function workspacePackages(files: readonly { path: string; bytes: Uint8Array }[]): Map<string, { dir: string; entries: string[] }> {
+  const found = new Map<string, { dir: string; entries: string[] }>();
+  for (const f of files) {
+    if (posix.basename(f.path) !== "package.json" || f.path.includes("node_modules/")) continue;
+    try {
+      const j = JSON.parse(new TextDecoder().decode(f.bytes)) as Record<string, unknown>;
+      if (typeof j.name !== "string") continue;
+      const dir = posix.dirname(f.path) === "." ? "" : posix.dirname(f.path);
+      const entries: string[] = [];
+      const ex = j.exports;
+      const dot = typeof ex === "string" ? ex : typeof ex === "object" && ex !== null ? (ex as Record<string, unknown>)["."] : undefined;
+      for (const c of [typeof dot === "string" ? dot : typeof dot === "object" && dot !== null ? Object.values(dot as Record<string, unknown>).find((v) => typeof v === "string") : undefined, j.types, j.module, j.main]) if (typeof c === "string") entries.push(c);
+      found.set(j.name, { dir, entries });
+    } catch {
+      // A malformed package.json is reported where its fields are read.
+    }
+  }
+  return found.size >= 2 ? found : new Map();
+}
+
+/** The module a bare specifier of a workspace package lands on: its entry point, or the subpath under its src or root. */
+export function resolveWorkspace(specifier: string, packages: Map<string, { dir: string; entries: string[] }>, files: Set<string>): string | undefined {
+  const name = packageOf(specifier);
+  const pkg = packages.get(name);
+  if (pkg === undefined) return undefined;
+  const sub = specifier.slice(name.length).replace(/^\//, "");
+  const at = (rel: string) => (pkg.dir === "" ? rel : `${pkg.dir}/${rel}`);
+  const tries = sub !== "" ? [sub, `src/${sub}`] : [...pkg.entries.map((e) => e.replace(/^\.\//, "").replace(/^(dist|lib|build)\//, "src/")), "src/index", "index"];
+  for (const t of tries) {
+    const found = resolveRelative("/", `./${at(t)}`.replace(/^\.\/\//, "./"), new Set([...files].map((f) => `/${f}`)));
+    if (found !== undefined) return found.slice(1);
+  }
+  return undefined;
 }
 
 interface Reference {
@@ -188,6 +241,7 @@ export function run(input: AdapterInput): AdapterOutput {
   const diagnostics: Diagnostic[] = [];
   const files = [...input.files].sort((a, b) => compareCodePoints(a.path, b.path));
   const code = new Set(files.filter((f) => CODE.test(f.path)).map((f) => f.path));
+  const workspace = workspacePackages(files);
   if (input.config?.commit === undefined) diagnostics.push({ code: "no-commit", severity: "warning", message: "the harness gave no commit, so these facts are never current" });
   for (const f of files) {
     const text = new TextDecoder().decode(f.bytes);
@@ -202,14 +256,20 @@ export function run(input: AdapterInput): AdapterOutput {
     }
     if (!code.has(f.path)) continue;
     facts.push({ ...base, kind: "module", at: f.path, name: f.path });
-    const r = readFile(f.path, text);
+    // A Svelte component is read as the TypeScript of its script elements, at the lines they have in the component.
+    const r = f.path.endsWith(".svelte") ? readFile(`${f.path}.ts`, svelteScript(text)) : readFile(f.path, text);
     for (const ref of r.refs) {
       const at = `${f.path}:${ref.line}`;
+      // SvelteKit's generated types (./$types) are no file of the repository: not a dependency, and not unresolved.
+      if (/^\.\/\$[\w-]+$/.test(ref.specifier)) continue;
       if (ref.specifier.startsWith(".")) {
         const to = resolveRelative(f.path, ref.specifier, code);
         if (to === undefined) facts.push({ ...base, kind: "skipped", at, from: f.path, reason: `unresolved ${ref.specifier}` });
         else if (to !== f.path) facts.push({ ...base, kind: "depends", at, from: f.path, to, via: "import", typeOnly: ref.typeOnly });
-      } else facts.push({ ...base, kind: "depends", at, from: f.path, to: packageOf(ref.specifier), via: "import", typeOnly: ref.typeOnly });
+      } else {
+        const local = workspace.size > 0 ? resolveWorkspace(ref.specifier, workspace, code) : undefined;
+        facts.push({ ...base, kind: "depends", at, from: f.path, to: local !== undefined && local !== f.path ? local : packageOf(ref.specifier), via: "import", typeOnly: ref.typeOnly });
+      }
     }
     for (const line of r.computed) facts.push({ ...base, kind: "skipped", at: `${f.path}:${line}`, from: f.path, reason: "computed specifier" });
     for (const d of r.declarations) facts.push({ ...base, kind: "declare", at: `${f.path}:${d.line}`, module: f.path, symbol: d.symbol, declares: d.declares, ...(d.base !== undefined ? { base: d.base } : {}), ...(d.value !== undefined ? { value: d.value } : {}) });
