@@ -72,6 +72,7 @@ function run(root: string, args: string[]): string | undefined {
 
 /** The history of the repository at `root`, read lazily and kept for the life of the port. */
 export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sinceProblem?: string; save(): void } {
+  const existedCache = new Map<string, boolean>();
   const testGlobs = (o.tests ?? []).map(globPattern);
   const frozenGlobs = (o.frozen ?? []).map(globPattern);
   const dates = new Map<string, string>();
@@ -182,6 +183,10 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
         dirty = true;
       }
       return introduced.get(key);
+    },
+    existed(path) {
+      if (!existedCache.has(path)) existedCache.set(path, (run(root, ["log", "--all", "--format=%H", "-1", "--", path]) ?? "").trim() !== "");
+      return existedCache.get(path)!;
     },
     frozen: (path: string) => frozenGlobs.some((g) => g.test(path)),
     untraced() {

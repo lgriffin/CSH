@@ -113,7 +113,9 @@ export function trace(input: TraceInput): TraceResult {
     if (r !== undefined && r !== null && r !== "file") row.target = r;
     if (r === undefined && e.rel !== "mentions") {
       row.dangling = true;
-      dangling.set(from, [...(dangling.get(from) ?? []), `${e.span} ${e.rel} ${/^(file|symbol|script):/.test(e.to) ? e.to.slice(e.to.indexOf(":") + 1) : e.to}`]);
+      // With history, a file that does not exist now is told apart: deleted since it was written, or never tracked at all.
+      const gone = h?.existed !== undefined && e.to.startsWith("file:") ? (h.existed(e.to.slice(5).replace(/\/$/, "")) ? " (deleted)" : " (never tracked)") : "";
+      dangling.set(from, [...(dangling.get(from) ?? []), `${e.span} ${e.rel} ${/^(file|symbol|script):/.test(e.to) ? e.to.slice(e.to.indexOf(":") + 1) : e.to}${gone}`]);
     }
     out.push(row);
     if (e.rel === "verified-by") verifiedBy.add(from);
