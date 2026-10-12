@@ -45,6 +45,15 @@ describe("module selectors (stage 23)", () => {
     expect(evaluateRule(only, { packages: [], depends: [dep("src/sde/a.ts", "src/sde/b.ts"), dep("src/sde/a.ts", "node:fs"), dep("src/sde/a.ts", "zod")] }, undefined).result).toBe("holds");
     expect(evaluateRule(only, { packages: [], depends: [dep("src/sde/a.ts", "src/core/x.ts")] }, undefined).result).toBe("violated");
   });
+
+  it("a file the rule selects but no reader read leaves a rule unknown, never satisfied (stage 29)", () => {
+    const rule: ArchRule = { k: "forbid", from: { k: "modules", globs: ["app/domain/**"] }, to: { k: "modules", globs: ["app/adapters/**"] } };
+    const unread = ["app/domain/model.kt", "lib/other.kt"];
+    expect(evaluateRule(rule, { packages: [], depends: [], unread }, undefined)).toEqual({ result: "unknown", reason: "not-read: app/domain/model.kt" });
+    // What was read can still violate it, and an unread file the rule does not select changes nothing.
+    expect(evaluateRule(rule, { packages: [], depends: [dep("app/domain/a.ts", "app/adapters/b.ts")], unread }, undefined).result).toBe("violated");
+    expect(evaluateRule({ ...rule, from: { k: "modules", globs: ["src/**"] } }, { packages: [], depends: [], unread }, undefined).result).toBe("holds");
+  });
 });
 
 describe("rules against facts", () => {

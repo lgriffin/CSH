@@ -15,16 +15,29 @@ export interface XmlElement {
 
 const ENTITIES: Record<string, string> = { lt: "<", gt: ">", amp: "&", quot: '"', apos: "'" };
 
+class Malformed extends Error {}
+
 function decodeEntities(s: string): string {
   return s.replace(/&(#x[0-9a-fA-F]+|#[0-9]+|[a-zA-Z]+);/g, (whole, e: string) => {
-    if (e.startsWith("#x")) return String.fromCodePoint(Number.parseInt(e.slice(2), 16));
-    if (e.startsWith("#")) return String.fromCodePoint(Number.parseInt(e.slice(1), 10));
-    return ENTITIES[e] ?? whole;
+    if (!e.startsWith("#")) return ENTITIES[e] ?? whole;
+    const code = e.startsWith("#x") ? Number.parseInt(e.slice(2), 16) : Number.parseInt(e.slice(1), 10);
+    if (!(code <= 0x10ffff)) throw new Malformed(`character reference ${whole} is out of range`);
+    return String.fromCodePoint(code);
   });
 }
 
 /** The root element of a document, or the first problem. */
 export function parseXml(text: string): { root?: XmlElement; problems: { line: number; message: string }[] } {
+  const at = { line: 1 };
+  try {
+    return read(text, at);
+  } catch (err) {
+    if (err instanceof Malformed) return { problems: [{ line: at.line, message: err.message }] };
+    throw err;
+  }
+}
+
+function read(text: string, at: { line: number }): { root?: XmlElement; problems: { line: number; message: string }[] } {
   let i = 0;
   let line = 1;
   const stack: XmlElement[] = [];
@@ -32,6 +45,7 @@ export function parseXml(text: string): { root?: XmlElement; problems: { line: n
   const advance = (to: number) => {
     for (let k = i; k < to; k++) if (text.charCodeAt(k) === 10) line++;
     i = to;
+    at.line = line;
   };
   const fail = (message: string) => ({ problems: [{ line, message }] });
   const skipTo = (marker: string): boolean => {
@@ -75,10 +89,14 @@ export function parseXml(text: string): { root?: XmlElement; problems: { line: n
       if (open === undefined || open.name !== m[1]) return fail(`end tag ${m[1]} does not close ${open?.name ?? "anything"}`);
       advance(i + m[0].length);
     } else {
-      const m = /^<([^\s/>]+)((?:\s+[^\s=/>]+\s*=\s*(?:"[^"]*"|'[^']*'))*)\s*(\/?)>/.exec(text.slice(i));
+      // An attribute value holds no raw "<" (XML 1.0, AttValue).
+      const m = /^<([^\s/>]+)((?:\s+[^\s=/>]+\s*=\s*(?:"[^"<]*"|'[^'<]*'))*)\s*(\/?)>/.exec(text.slice(i));
       if (m === null) return fail("malformed start tag");
       const el: XmlElement = { name: m[1]!, attributes: {}, children: [], text: "", line };
-      for (const a of m[2]!.matchAll(/([^\s=/>]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)) el.attributes[a[1]!] = decodeEntities(a[2] ?? a[3] ?? "");
+      for (const a of m[2]!.matchAll(/([^\s=/>]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)) {
+        if (Object.hasOwn(el.attributes, a[1]!)) return fail(`attribute ${a[1]} is repeated`);
+        el.attributes[a[1]!] = decodeEntities(a[2] ?? a[3] ?? "");
+      }
       if (stack.length > 0) stack[stack.length - 1]!.children.push(el);
       else if (root !== undefined) return fail("a second root element");
       else root = el;

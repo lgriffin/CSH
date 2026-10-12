@@ -34,7 +34,7 @@ export function validateFact(v: unknown): string | undefined {
   if (o.kind === "skipped") return str(o.from) && str(o.reason) ? undefined : "a skipped fact needs from and reason";
   if (o.kind === "module" || o.kind === "export" || o.kind === "field" || o.kind === "declare") {
     if (o.schema !== FACTS_SCHEMA_V2) return `a ${o.kind} fact needs ${FACTS_SCHEMA_V2}`;
-    if (o.kind === "module") return str(o.name) && (o.language === undefined || str(o.language)) ? undefined : "a module fact has no name";
+    if (o.kind === "module") return !str(o.name) ? "a module fact has no name" : o.language !== undefined && !str(o.language) ? "a module fact's language is not a name" : undefined;
     if (o.kind === "export") return str(o.module) && str(o.symbol) && typeof o.typeOnly === "boolean" && (o.from === undefined || str(o.from)) ? undefined : "an export fact needs module, symbol and typeOnly";
     if (o.kind === "declare") {
       return str(o.module) && str(o.symbol) && (DECLARATION_KINDS as readonly string[]).includes(o.declares as string) && (o.base === undefined || str(o.base)) && (o.value === undefined || typeof o.value === "string") ? undefined : "a declare fact needs module, symbol and what it declares";

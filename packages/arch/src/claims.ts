@@ -13,6 +13,8 @@ export interface ClaimFacts {
   fields: { file: string; path: string; value: string; at: string }[];
   /** The files the repository tracks; undefined when not known. */
   files?: Set<string>;
+  /** The language of each module read in a language other than TypeScript or JavaScript (stage 29). */
+  languages?: Map<string, string>;
 }
 
 /**
@@ -30,14 +32,49 @@ export type ClaimResult = { result: "holds"; detail: string; evidence?: ClaimEvi
 type Truth = { value: boolean; detail: string; evidence?: ClaimEvidence[] } | { reason: string };
 
 /**
- * Classes no source declares that end a chain of bases: they extend nothing a claim could name. JavaScript's, then
- * Python's and Java's roots and common exceptions (stage 29).
+ * Classes no source declares, by language, each with the built-in class it extends (null for a root). A chain that
+ * reaches one goes on through its built-in ancestors and ends at the root: they extend nothing else a claim could name.
+ * A name is built in only for the language of the class that extends it, so a TypeScript class extending an imported
+ * `Exception` is not taken for Python's (stage 29).
  */
-const BUILT_IN_BASES = new Set([
-  ...["Error", "TypeError", "RangeError", "SyntaxError", "ReferenceError", "AggregateError", "Object", "Array", "Map", "Set", "Promise", "EventTarget"],
-  ...["object", "Exception", "BaseException", "ValueError", "KeyError", "IndexError", "LookupError", "RuntimeError", "OSError", "IOError", "AttributeError", "NotImplementedError", "ArithmeticError", "dict", "list", "tuple", "str", "int", "set"],
-  ...["Throwable", "RuntimeException", "IllegalArgumentException", "IllegalStateException", "UnsupportedOperationException", "IOException", "Enum", "Record"],
-]);
+const BUILT_IN_BASES: Record<string, Record<string, string | null>> = {
+  javascript: { Object: null, Error: "Object", TypeError: "Error", RangeError: "Error", SyntaxError: "Error", ReferenceError: "Error", AggregateError: "Error", Array: "Object", Map: "Object", Set: "Object", Promise: "Object", EventTarget: "Object" },
+  python: {
+    object: null,
+    BaseException: "object",
+    Exception: "BaseException",
+    ArithmeticError: "Exception",
+    AttributeError: "Exception",
+    LookupError: "Exception",
+    KeyError: "LookupError",
+    IndexError: "LookupError",
+    OSError: "Exception",
+    IOError: "OSError",
+    RuntimeError: "Exception",
+    NotImplementedError: "RuntimeError",
+    TypeError: "Exception",
+    ValueError: "Exception",
+    dict: "object",
+    list: "object",
+    tuple: "object",
+    set: "object",
+    str: "object",
+    int: "object",
+  },
+  java: {
+    Object: null,
+    Throwable: "Object",
+    Exception: "Throwable",
+    Error: "Throwable",
+    RuntimeException: "Exception",
+    IllegalArgumentException: "RuntimeException",
+    IllegalStateException: "RuntimeException",
+    UnsupportedOperationException: "RuntimeException",
+    IOException: "Exception",
+    Enum: "Object",
+    Record: "Object",
+  },
+};
 
 const unescape = (s: string) => s.replace(/~1/g, "/").replace(/~0/g, "~");
 const esc = (s: string) => s.replace(/~/g, "~0").replace(/\//g, "~1");
@@ -64,22 +101,31 @@ export function truthOf(p: Prop, f: ClaimFacts): Truth {
       return { value: false, detail: `${p.module} exports no ${p.symbol}` };
     }
     case "inherits": {
-      const classes = new Map<string, { base?: string; at: string }[]>();
-      for (const d of f.declares.filter((x) => x.declares === "class")) classes.set(d.symbol, [...(classes.get(d.symbol) ?? []), { ...(d.base !== undefined ? { base: d.base } : {}), at: d.at }]);
+      const classes = new Map<string, { base?: string; at: string; module: string }[]>();
+      for (const d of f.declares.filter((x) => x.declares === "class")) classes.set(d.symbol, [...(classes.get(d.symbol) ?? []), { ...(d.base !== undefined ? { base: d.base } : {}), at: d.at, module: d.module }]);
       const chain: string[] = [];
       const seen: string[] = [];
       let name = p.cls;
+      let language = "javascript";
       for (;;) {
         const found = classes.get(name);
         if (found === undefined) {
           if (name === p.cls) return { reason: `no-class: ${p.cls}` };
-          if (BUILT_IN_BASES.has(name)) return { value: false, detail: `${chain.join(" -> ")} ends at ${name}`, evidence: seen.map((at) => ({ at })) };
-          return { reason: `base-not-read: ${name}` };
+          const builtIns = BUILT_IN_BASES[language] ?? {};
+          if (!Object.hasOwn(builtIns, name)) return { reason: `base-not-read: ${name}` };
+          const evidence = seen.map((at) => ({ at }));
+          const ancestors: string[] = [];
+          for (let b: string | null = name; b !== null; b = builtIns[b] ?? null) {
+            ancestors.push(b);
+            if (b === p.base) return { value: true, detail: [...chain, ...ancestors].join(" -> "), evidence };
+          }
+          return { value: false, detail: `${chain.join(" -> ")} ends at ${ancestors.join(" -> ")}`, evidence };
         }
         // Declarations are matched by name, not by binding: a name declared twice could be either class.
         if (found.length > 1) return { reason: `ambiguous-class: ${name} is declared ${found.length} times` };
         chain.push(`${name} (${found[0]!.at})`);
         seen.push(found[0]!.at);
+        language = f.languages?.get(found[0]!.module) ?? "javascript";
         const base = found[0]!.base;
         if (base === undefined) return { value: false, detail: `${chain.join(" -> ")} extends nothing`, evidence: seen.map((at) => ({ at })) };
         // A qualified or computed base names a class through a binding that is not followed.

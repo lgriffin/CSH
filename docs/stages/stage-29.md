@@ -14,9 +14,16 @@ and the profiles run in CI unchanged.
 - The tree-sitter grammars for Python, Java, Go and Rust, as WebAssembly, loaded inside the adapter sandbox.
 - `witness` and `facts`: `DECLARATION_KINDS` adds `struct`, `trait`, `record`, `annotation`, `method`, `static`,
   `module` and `macro`; a module fact may name its `language`.
-- `arch`: Python's and Java's root classes and common exceptions end an `inherits` chain.
+- `arch` and `check`: a rule over a file no reader read is unknown, not satisfied; built-in classes are known per language with their ancestors, for `inherits`.
+- `witness`: `parseXml`, a small XML reader for JUnit reports and `pom.xml`. `facts-code`: `tomlFields` for TOML manifests.
 - `adapter-items`: prose naming a `.py`, `.java`, `.go` or `.rs` file, or a `.toml` file by its bare name, is a
   mention of it.
+
+## What review revealed
+
+- A skipped file was left out of the dependency graph, so a rule over a polyglot source could hold against a graph that missed it. A file-level skipped fact now makes such a rule unknown.
+- One name set of built-in bases for every language took a TypeScript class extending an imported `Exception` for Python's, and stopped a Python chain at `ValueError` short of `Exception`.
+- Trees live on the WebAssembly heap, so a tree is now read in a callback and freed when it returns (`parseWith`).
 
 ## What proved wrong or costly in the documents
 

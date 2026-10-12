@@ -39,6 +39,25 @@ describe("structural claims", () => {
     expect(truthOf({ k: "inherits", cls: "Ghost", base: "Error" }, facts)).toEqual({ reason: "no-class: Ghost" });
   });
 
+  it("follow a chain through the built-in classes of the language that extends them (stage 29)", () => {
+    const decl = (module: string, symbol: string, base: string) => ({ module, symbol, declares: "class", base, at: `${module}:1` });
+    const poly: ClaimFacts = {
+      modules: new Set(["app/errors.py", "src/Err.java", "src/err.ts"]),
+      declares: [decl("app/errors.py", "BadInput", "ValueError"), decl("src/Err.java", "Boom", "RuntimeException"), decl("src/err.ts", "Wrapped", "Exception")],
+      exports: [],
+      fields: [],
+      languages: new Map([
+        ["app/errors.py", "python"],
+        ["src/Err.java", "java"],
+      ]),
+    };
+    expect(truthOf({ k: "inherits", cls: "BadInput", base: "Exception" }, poly)).toMatchObject({ value: true, detail: "BadInput (app/errors.py:1) -> ValueError -> Exception" });
+    expect(truthOf({ k: "inherits", cls: "BadInput", base: "LookupError" }, poly)).toMatchObject({ value: false, detail: expect.stringContaining("ends at ValueError -> Exception -> BaseException -> object") });
+    expect(truthOf({ k: "inherits", cls: "Boom", base: "Throwable" }, poly)).toMatchObject({ value: true });
+    // A TypeScript class extending a name that is built in only to Python or Java extends an unread class.
+    expect(truthOf({ k: "inherits", cls: "Wrapped", base: "Error" }, poly)).toEqual({ reason: "base-not-read: Exception" });
+  });
+
   it("leave a claim unknown when the fact that would decide it was not read", () => {
     expect(evaluateClaim(claim({ k: "exports", module: "src/other.ts", symbol: "x" }, false), facts)).toEqual({ result: "unknown", reason: "not-read: src/other.ts" });
     expect(evaluateClaim(claim({ k: "exports", module: "src/star.ts", symbol: "x" }, false), facts)).toMatchObject({ result: "unknown", reason: expect.stringContaining("star-export") });

@@ -1,6 +1,9 @@
 // The tree-sitter grammars, loaded as WebAssembly (stage 29). A grammar is loaded once per process, on first use, from
 // the package that ships it, so the adapter sandbox needs read access to installed packages and nothing else. Parsing
 // is pure: no grammar reads a file, the clock or the network.
+//
+// Trees live on the WebAssembly heap and are not garbage collected, so a tree is read inside a callback and freed when
+// it returns: a node must not outlive the callback. One parser per language is kept for the life of the process.
 import { createRequire } from "node:module";
 import { Language, Parser, type Node } from "web-tree-sitter";
 
@@ -12,28 +15,37 @@ export type GrammarLanguage = keyof typeof GRAMMARS;
 
 const require = createRequire(import.meta.url);
 let ready: Promise<void> | undefined;
-const languages = new Map<GrammarLanguage, Promise<Language>>();
+const parsers = new Map<GrammarLanguage, Promise<Parser>>();
 
-/** A parser for one language, its grammar loaded. */
-export async function parserFor(language: GrammarLanguage): Promise<Parser> {
-  ready ??= Parser.init();
-  await ready;
-  let lang = languages.get(language);
-  if (lang === undefined) {
-    const pkg = GRAMMARS[language];
-    lang = Language.load(require.resolve(`${pkg}/${pkg}.wasm`));
-    languages.set(language, lang);
+async function parserFor(language: GrammarLanguage): Promise<Parser> {
+  let p = parsers.get(language);
+  if (p === undefined) {
+    p = (async () => {
+      ready ??= Parser.init();
+      await ready;
+      const pkg = GRAMMARS[language];
+      const parser = new Parser();
+      parser.setLanguage(await Language.load(require.resolve(`${pkg}/${pkg}.wasm`)));
+      return parser;
+    })();
+    parsers.set(language, p);
   }
-  const parser = new Parser();
-  parser.setLanguage(await lang);
-  return parser;
+  return p;
 }
 
-/** The tree of one file: its root node, and the 1-based line a node starts on. */
-export async function parse(language: GrammarLanguage, text: string): Promise<Node> {
+/**
+ * Parse one file and read its tree. `read` runs synchronously on the root node and returns plain data; the tree is
+ * freed when it returns, so no node may be kept.
+ */
+export async function parseWith<T>(language: GrammarLanguage, text: string, read: (root: Node) => T): Promise<T> {
   const tree = (await parserFor(language)).parse(text);
   if (tree === null) throw new Error(`the ${language} parser returned no tree`);
-  return tree.rootNode;
+  try {
+    return read(tree.rootNode);
+  } finally {
+    tree.delete();
+  }
 }
 
+/** The 1-based line a node starts on. */
 export const lineOf = (n: Node): number => n.startPosition.row + 1;

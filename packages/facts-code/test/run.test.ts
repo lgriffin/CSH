@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { run as runTs } from "@csh/facts-ts";
 import type { AdapterInput } from "@csh/witness";
-import { GRAMMARS, languageOf, parse, run, type LanguageReader } from "../src/index.ts";
+import { GRAMMARS, languageOf, parseWith, run, type LanguageReader } from "../src/index.ts";
 
 const enc = (s: string) => new TextEncoder().encode(s);
 const input = (files: Record<string, string>): AdapterInput => ({
@@ -59,8 +59,6 @@ describe("run", () => {
 describe("grammars", () => {
   it.each(Object.keys(GRAMMARS) as (keyof typeof GRAMMARS)[])("%s parses", async (language) => {
     const text = { python: "import os\n", java: "class A {}\n", go: "package a\n", rust: "fn main() {}\n" }[language];
-    const root = await parse(language, text);
-    expect(root.hasError).toBe(false);
-    expect(root.namedChildCount).toBe(1);
+    expect(await parseWith(language, text, (root) => [root.hasError, root.namedChildCount])).toEqual([false, 1]);
   });
 });

@@ -14,7 +14,7 @@ It belongs to the "Adapters" container, shown in the [containers diagram](../../
 - `run(input, readers?)`: the facts of the input's files, at the commit `input.config.commit` names.
 - `LanguageReader`, `READERS`: the contract of a language's reader (its language, the manifests it reads, and `read(files, ctx)`), and the readers registered.
 - `languageOf(path)`: the language of a source file by its extension, or undefined for TypeScript, JavaScript and files that are not code.
-- `parse(language, text)`, `parserFor(language)`, `GRAMMARS`: the tree-sitter grammars, loaded once per process as WebAssembly.
+- `parseWith(language, text, read)`, `lineOf(node)`, `GRAMMARS`: the tree-sitter grammars, loaded once per process as WebAssembly. A tree is read inside `read` and freed when it returns, since trees live on the WebAssembly heap.
 
 ## Depends on and used by
 

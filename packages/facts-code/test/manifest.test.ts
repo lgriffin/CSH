@@ -18,6 +18,10 @@ describe("tomlFields", () => {
     expect(tomlFields(f, ctx, tool, ["project"]).facts).toHaveLength(4);
   });
 
+  it("writes no fact for an empty manifest", () => {
+    expect(tomlFields(file("pyproject.toml", "# nothing\n"), ctx, tool)).toEqual({ facts: [], diagnostics: [] });
+  });
+
   it("reports a malformed manifest", () => {
     const out = tomlFields(file("Cargo.toml", "[package\n"), ctx, tool);
     expect(out.facts).toEqual([]);

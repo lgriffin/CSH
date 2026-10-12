@@ -11,7 +11,8 @@ export function tomlFields(f: InputFile, ctx: FactContext, tool: { id: string; v
     const value = parseToml(new TextDecoder().decode(f.bytes));
     // Dates are TOML values JSON has not: written as the text TOML gave them.
     const plain = JSON.parse(JSON.stringify(value)) as unknown;
-    return { facts: fieldsOf(plain, only).map((x) => ({ ...ctx.base(tool), kind: "field" as const, at: f.path, file: f.path, path: x.path, value: x.value })), diagnostics: [] };
+    // An empty manifest is one leaf at the root, with no pointer: it says nothing, and is no fact.
+    return { facts: fieldsOf(plain, only).filter((x) => x.path !== "").map((x) => ({ ...ctx.base(tool), kind: "field" as const, at: f.path, file: f.path, path: x.path, value: x.value })), diagnostics: [] };
   } catch (err) {
     return { facts: [], diagnostics: [{ code: "malformed-manifest", severity: "warning", message: (err as Error).message, span: f.path }] };
   }

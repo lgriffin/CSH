@@ -28,6 +28,10 @@ describe("parseXml", () => {
     ["", "no root element"],
     ["x<a/>", "text outside the root element"],
     ["<a><!-- x</a>", "unterminated comment"],
+    ['<a x="1<2"/>', "malformed start tag"],
+    ['<a x="1" x="2"/>', "attribute x is repeated"],
+    ["<a>\n&#x110000;</a>", "character reference &#x110000; is out of range"],
+    ['<a x="&#9999999999;"/>', "character reference &#9999999999; is out of range"],
   ])("reports %j", (text, message) => {
     expect(parseXml(text).problems[0]!.message).toBe(message);
   });
