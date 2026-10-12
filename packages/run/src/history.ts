@@ -258,7 +258,10 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
     },
     existed(path) {
       if (!everHeld.has(path)) {
-        everHeld.set(path, (run(root, ["log", "--all", "--format=%H", "-1", "--", path]) ?? "").trim() !== "");
+        // Asked of the commit's own history, never of whatever branches the checkout happens to hold, so a clone and a
+        // worktree of the same commit agree (stage 41). --full-history keeps a branch that added and removed the path
+        // before it merged, which git's default simplification would skip.
+        everHeld.set(path, (run(root, ["log", "--full-history", "--format=%H", "-1", "HEAD", "--", path]) ?? "").trim() !== "");
         dirty = true;
       }
       return everHeld.get(path)!;

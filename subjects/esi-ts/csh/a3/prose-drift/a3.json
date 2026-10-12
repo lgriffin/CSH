@@ -1677,7 +1677,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:128 mentions-file scripts/seed-sde-test-db.ts (never tracked); guides/QUALITY-GATES.md:129 mentions-file examples/sde-cross-reference.ts (never tracked); guides/QUALITY-GATES.md:192 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:281 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:564 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:627 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:128 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:129 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:192 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:281 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:564 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:627 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -1709,7 +1709,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:583 mentions-file etc/doc-metrics.json (deleted); guides/CHARTER.md:586 verified-by scripts/doc-metrics.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:583 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:586 verified-by scripts/doc-metrics.ts (never tracked)",
           "fragments": [],
           "id": "519d3889a4b0a253",
           "kind": "dangling-reference",
@@ -1725,7 +1725,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:418 mentions-file src/require.cts (never tracked); guides/TESTING.md:418 mentions-file src/import.mts (never tracked); guides/TESTING.md:562 mentions-file src/core/clock.ts (deleted); guides/TESTING.md:711 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:721 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
+          "detail": "names what does not exist: guides/TESTING.md:418 mentions-file src/require.cts (never tracked); guides/TESTING.md:418 mentions-file src/import.mts (never tracked); guides/TESTING.md:562 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:711 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:721 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
           "fragments": [],
           "id": "6e0d19aa07c134b3",
           "kind": "dangling-reference",
@@ -1757,7 +1757,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:491 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:724 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (deleted); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:491 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:724 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -2967,7 +2967,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (never tracked); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (never tracked); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -2999,7 +2999,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:583 mentions-file etc/doc-metrics.json (deleted); guides/CHARTER.md:586 verified-by scripts/doc-metrics.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:583 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:586 verified-by scripts/doc-metrics.ts (never tracked)",
           "fragments": [],
           "id": "519d3889a4b0a253",
           "kind": "dangling-reference",
@@ -3015,7 +3015,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (deleted); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
+          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
           "fragments": [],
           "id": "6e0d19aa07c134b3",
           "kind": "dangling-reference",
@@ -3047,7 +3047,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:491 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:724 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (deleted); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:491 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:724 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -4221,7 +4221,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (never tracked); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (never tracked); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -4253,7 +4253,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:583 mentions-file etc/doc-metrics.json (deleted); guides/CHARTER.md:586 verified-by scripts/doc-metrics.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:583 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:586 verified-by scripts/doc-metrics.ts (never tracked)",
           "fragments": [],
           "id": "519d3889a4b0a253",
           "kind": "dangling-reference",
@@ -4269,7 +4269,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (deleted); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
+          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
           "fragments": [],
           "id": "6e0d19aa07c134b3",
           "kind": "dangling-reference",
@@ -4301,7 +4301,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:491 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:724 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (deleted); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:491 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:724 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -5463,7 +5463,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (never tracked); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (never tracked); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -5495,7 +5495,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:583 mentions-file etc/doc-metrics.json (deleted); guides/CHARTER.md:586 verified-by scripts/doc-metrics.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:583 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:586 verified-by scripts/doc-metrics.ts (never tracked)",
           "fragments": [],
           "id": "519d3889a4b0a253",
           "kind": "dangling-reference",
@@ -5511,7 +5511,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (deleted); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
+          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
           "fragments": [],
           "id": "6e0d19aa07c134b3",
           "kind": "dangling-reference",
@@ -5543,7 +5543,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:491 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:724 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (deleted); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:491 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:724 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -6705,7 +6705,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (never tracked); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (never tracked); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -6737,7 +6737,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:583 mentions-file etc/doc-metrics.json (deleted); guides/CHARTER.md:586 verified-by scripts/doc-metrics.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:583 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:586 verified-by scripts/doc-metrics.ts (never tracked)",
           "fragments": [],
           "id": "519d3889a4b0a253",
           "kind": "dangling-reference",
@@ -6753,7 +6753,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (deleted); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
+          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
           "fragments": [],
           "id": "6e0d19aa07c134b3",
           "kind": "dangling-reference",
@@ -6785,7 +6785,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:491 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:724 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (deleted); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:491 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:724 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -7975,7 +7975,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (never tracked); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (never tracked); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -8007,7 +8007,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:583 mentions-file etc/doc-metrics.json (deleted); guides/CHARTER.md:586 verified-by scripts/doc-metrics.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:583 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:586 verified-by scripts/doc-metrics.ts (never tracked)",
           "fragments": [],
           "id": "519d3889a4b0a253",
           "kind": "dangling-reference",
@@ -8023,7 +8023,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (deleted); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
+          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
           "fragments": [],
           "id": "6e0d19aa07c134b3",
           "kind": "dangling-reference",
@@ -8055,7 +8055,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:491 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:724 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (deleted); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:491 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:724 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -9233,7 +9233,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (never tracked); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (never tracked); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -9265,7 +9265,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:583 mentions-file etc/doc-metrics.json (deleted); guides/CHARTER.md:586 verified-by scripts/doc-metrics.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:583 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:586 verified-by scripts/doc-metrics.ts (never tracked)",
           "fragments": [],
           "id": "519d3889a4b0a253",
           "kind": "dangling-reference",
@@ -9281,7 +9281,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (deleted); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
+          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
           "fragments": [],
           "id": "6e0d19aa07c134b3",
           "kind": "dangling-reference",
@@ -9313,7 +9313,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:491 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:724 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (deleted); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:491 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:724 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -10439,7 +10439,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:164 mentions-file scripts/seed-sde-test-db.ts (never tracked); guides/QUALITY-GATES.md:164 mentions-file examples/sde-cross-reference.ts (never tracked); guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:827 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:164 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:164 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:827 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -12249,7 +12249,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:164 mentions-file scripts/seed-sde-test-db.ts (never tracked); guides/QUALITY-GATES.md:164 mentions-file examples/sde-cross-reference.ts (never tracked); guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:827 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:164 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:164 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:827 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -14019,7 +14019,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:164 mentions-file scripts/seed-sde-test-db.ts (never tracked); guides/QUALITY-GATES.md:164 mentions-file examples/sde-cross-reference.ts (never tracked); guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:827 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:164 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:164 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:827 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -15789,7 +15789,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:164 mentions-file scripts/seed-sde-test-db.ts (never tracked); guides/QUALITY-GATES.md:164 mentions-file examples/sde-cross-reference.ts (never tracked); guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:827 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:164 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:164 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:827 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",

@@ -36,6 +36,36 @@ describe("history existed", () => {
   });
 });
 
+describe("history existed, whatever the checkout holds (stage 41)", () => {
+  it("counts a path a merged branch added and removed, and not one only another branch holds", () => {
+    const dir = mkdtempSync(join(tmpdir(), "csh-existed-"));
+    const git = (...a: string[]) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", ...a], { cwd: dir, stdio: "ignore" });
+    try {
+      git("init", "-q", "-b", "main");
+      writeFileSync(join(dir, "a.txt"), "a");
+      git("add", "."); git("commit", "-qm", "base");
+      git("checkout", "-qb", "side");
+      writeFileSync(join(dir, "tmp.txt"), "x");
+      git("add", "."); git("commit", "-qm", "add tmp");
+      git("rm", "-q", "tmp.txt"); git("commit", "-qm", "rm tmp");
+      git("checkout", "-q", "main");
+      writeFileSync(join(dir, "b.txt"), "b");
+      git("add", "."); git("commit", "-qm", "b");
+      git("merge", "-q", "--no-ff", "-m", "merge side", "side");
+      git("branch", "-qD", "side");
+      git("checkout", "-qb", "other");
+      writeFileSync(join(dir, "elsewhere.txt"), "e");
+      git("add", "."); git("commit", "-qm", "elsewhere");
+      git("checkout", "-q", "main");
+      const h = gitHistory(dir, { implementation: ["."] });
+      expect(h.existed?.("tmp.txt")).toBe(true);
+      expect(h.existed?.("elsewhere.txt")).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
 describe("history prefetch", () => {
   it("answers as one-by-one asks do, whether or not the answers were fetched first", async () => {
     const dir = mkdtempSync(join(tmpdir(), "csh-prefetch-"));

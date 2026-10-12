@@ -20,6 +20,12 @@ warm run fell from 4.5 s and 152 git calls to 2.0 s and 14. Unit tests in `packa
   the file system, so an ignored file would enter the run with the commit's snapshot. Dropping the walk alone would
   have lost it. Filtering what sources read through `git ls-files` keeps the property for the files that matter, at
   the cost of one `ls-files` the run already made.
+- The ESI.ts profile job showed that whether a missing file was `deleted` or `never tracked` depended on the
+  checkout: `git log --all` read whatever branches the checkout held, and a worktree of the pinned clone held more
+  than a clone of it did. It is now asked of the evaluated commit's own history with `--full-history`, which also keeps
+  a branch that added and removed a file before it merged. Seven findings in the committed ESI.ts prose-drift sheet
+  changed wording as a result (the files were added and removed before v9.4.0, or added after the release read); no
+  finding, judgment or `judgmentsDigest` changed.
 - Warm runs were slow because the cache kept blame but not `rev-list` per file: 111 of 152 calls on a warm run.
 
 ## Not done
