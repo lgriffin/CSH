@@ -4,11 +4,14 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "dependencies": {
     "@csh/facts-ts": "workspace:*",
     "@csh/kernel": "workspace:*",
     "@csh/witness": "workspace:*",
+    "smol-toml": "1.8.0",
     "tree-sitter-go": "0.25.0",
     "tree-sitter-java": "0.23.5",
     "tree-sitter-python": "0.25.0",

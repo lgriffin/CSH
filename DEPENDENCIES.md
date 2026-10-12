@@ -15,6 +15,7 @@ each `package.json`, and `pnpm-lock.yaml` pins the full tree. The kernel has no 
 | [tree-sitter-java](https://www.npmjs.com/package/tree-sitter-java) | 0.23.5 | `@csh/facts-code` | The Java grammar, as WebAssembly. |
 | [tree-sitter-go](https://www.npmjs.com/package/tree-sitter-go) | 0.25.0 | `@csh/facts-code` | The Go grammar, as WebAssembly. |
 | [tree-sitter-rust](https://www.npmjs.com/package/tree-sitter-rust) | 0.24.0 | `@csh/facts-code` | The Rust grammar, as WebAssembly. |
+| [smol-toml](https://www.npmjs.com/package/smol-toml) | 1.8.0 | `@csh/facts-code` | Reads TOML manifests (`pyproject.toml`, `Cargo.toml`) into fields; no dependencies of its own. |
 
 ## Development
 
