@@ -45,6 +45,7 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 42: Traceability past the file](stage-42.md)
 - [Stage 43: Clearer output](stage-43.md)
 - [Stage 44: Process and safety](stage-44.md)
+- [Stage 45: From the Java and Python runs](stage-45.md)
 - [Stage 46: The second round of real runs](stage-46.md)
 
 Stages 10 to 16 build the anchor design ([09](../spec/09-anchor-harness-a3.md)): a component to anchor on, harnesses,

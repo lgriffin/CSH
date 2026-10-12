@@ -1,5 +1,5 @@
 // The Java reader (stage 32): fully qualified names resolved across the modules of a Maven build, the declarations and
-// exports of top-level types, static final literals, and pom.xml fields.
+// exports of types (nested ones declared, never exported), static final literals, and pom.xml fields.
 import { describe, expect, it } from "vitest";
 import type { AdapterInput, Fact } from "@csh/witness";
 import { javaReader, literalValue, packageOfName, parseWith, run, stripType } from "../src/index.ts";
@@ -125,7 +125,7 @@ describe("the Java reader", () => {
     expect(out.diagnostics).toEqual([]);
   });
 
-  it("declares top-level types with their bases, and static final literals", async () => {
+  it("declares types with their bases, a nested one by its dotted name, and static final literals", async () => {
     const out = await run(input(MAVEN));
     const declared = out.facts!.flatMap((f) => (f.kind === "declare" ? [[f.at.slice(f.at.lastIndexOf("/") + 1), f.symbol, f.declares, f.base ?? null, f.value ?? null]] : []));
     expect(declared).toEqual([
@@ -139,6 +139,7 @@ describe("the Java reader", () => {
       ["Order.java:12", "Order.RATE", "const", null, "-2.5"],
       ["Order.java:12", "Order.OTHER", "const", null, "16"],
       ["Order.java:13", "Order.ON", "const", null, "true"],
+      ["Order.java:17", "Order.Line", "class", null, null],
       ["Order.java:20", "Helper", "class", null, null],
       ["Shape.java:2", "Shape", "interface", "java.io.Serializable", null],
       ["Shape.java:3", "Shape.SIDES", "const", null, "4"],
@@ -149,6 +150,40 @@ describe("the Java reader", () => {
     ]);
     const exported = out.facts!.flatMap((f) => (f.kind === "export" ? [`${f.module.slice(f.module.lastIndexOf("/") + 1)} ${f.symbol}`] : []));
     expect(exported).toEqual(["Service.java Service", "Base.java Base", "Order.java Order", "Shape.java Shape"]);
+  });
+
+  it("declares nested types under their dotted names, and exports only top-level ones (A-170)", async () => {
+    const src = `package demo;
+public class Runner {
+  public interface Callback extends java.util.EventListener {
+    enum Kind { A, B; static final int N = 2; }
+    void done();
+  }
+  static final class Limits { static final int LIMIT = 3; }
+  void run() {
+    class Local {}
+    Object o = new Object() { class InAnonymous {} };
+  }
+}
+`;
+    const out = await run(input({ "src/main/java/demo/Runner.java": src, "src/main/java/demo/Use.java": "package demo.use;\nimport demo.Runner.Callback;\npublic class Use {}\n" }));
+    const declared = out.facts!.flatMap((f) => (f.kind === "declare" && f.module.endsWith("Runner.java") ? [[f.at.slice(f.at.lastIndexOf(":") + 1), f.symbol, f.declares, f.base ?? null, f.value ?? null]] : []));
+    expect(declared).toEqual([
+      ["2", "Runner", "class", null, null],
+      ["3", "Runner.Callback", "interface", "java.util.EventListener", null],
+      ["4", "Runner.Callback.Kind", "enum", null, null],
+      ["4", "Runner.Callback.Kind.N", "const", null, "2"],
+      ["7", "Runner.Limits", "class", null, null],
+      ["7", "Runner.Limits.LIMIT", "const", null, "3"],
+    ]);
+    expect(out.facts!.flatMap((f) => (f.kind === "export" ? [f.symbol] : []))).toEqual(["Runner", "Use"]);
+    // An import of a nested type lands on the file that declares it.
+    expect(deps(out.facts!)).toEqual([["src/main/java/demo/Use.java:2", "src/main/java/demo/Runner.java"]]);
+  });
+
+  it("marks a dependency on a package that was not read as a dotted namespace, and one on a file read not (A-171)", async () => {
+    const out = await run(input({ "src/A.java": "package p;\nimport java.sql.SQLException;\nimport q.B;\nclass A {}\n", "src/B.java": "package q;\npublic class B {}\n" }));
+    expect(out.facts!.flatMap((f) => (f.kind === "depends" ? [[f.to, f.namespace ?? null]] : []))).toEqual([["java.sql", "dotted"], ["src/B.java", null]]);
   });
 
   it("follows a chain of bases to a Java exception, as an inherits claim does", async () => {

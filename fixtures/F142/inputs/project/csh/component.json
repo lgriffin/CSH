@@ -1,0 +1,13 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Updater",
+  "spec": "csh/spec.csl.ts",
+  "implementation": ["app"],
+  "sources": [
+    { "name": "Code", "kind": "Code", "at": ".", "include": ["app/**/*.py"] }
+  ],
+  "practices": [
+    { "id": "rules", "name": "Rules", "kind": "requirements", "sources": ["Rules"] },
+    { "id": "code", "name": "Code facts", "kind": "facts", "sources": ["Code"] }
+  ]
+}

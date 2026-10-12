@@ -8,7 +8,7 @@
 // conventions (tests-other.ts, stage 35), and their results join by path as these do, or, when the runner names a Java
 // class, a Go package or a Rust test binary instead of a file, by what the source's files declare (tests-join.ts).
 import { posix } from "node:path";
-import { digestOf } from "@csh/kernel";
+import { compareCodePoints, digestOf } from "@csh/kernel";
 import { type Adapter, type AdapterInput, type AdapterOutput, type Diagnostic, type ItemEdge, parseTestResults, type SourceItem, type TestOutcome, type TestResult } from "@csh/witness";
 import { decode, idPatternOf, sortedFiles } from "./common.ts";
 import { joiner, type Join } from "./tests-join.ts";
@@ -386,17 +386,23 @@ function joinResults(input: AdapterInput, items: SourceItem[], id: RegExp, diagn
   const sum = (m: Map<string, number>) => [...m.values()].reduce((a, b) => a + b, 0);
   const twice = ambiguous.size > 0 ? `; ${sum(ambiguous)} results in ${ambiguous.size} of them name a class, package or test that more than one test file declares, and are not joined` : "";
   if (unmatched.size > 0) diagnostics.push({ code: "results-unmatched", severity: "info", message: `${sum(unmatched)} results in ${unmatched.size} files name no test file of the source${twice}` });
-  let unrun = 0;
+  const unrun: string[] = [];
   for (const it of items) {
     const c = counts.get(it.id);
     if (c === undefined) {
-      if ((input.executions ?? []).length > 0 && it.attrs?.tests !== "0") unrun++;
+      if ((input.executions ?? []).length > 0 && it.attrs?.tests !== "0") unrun.push(it.id);
       continue;
     }
     // The runner's counts, zeros too, replace what the declarations said: `skipped` is then what the runner skipped.
     it.attrs = { ...(it.attrs ?? {}), ...Object.fromEntries(Object.entries(c).map(([k, n]) => [k, String(n)])) };
   }
-  if (unrun > 0) diagnostics.push({ code: "results-missing", severity: "info", message: `${unrun} test files declare tests and have no result: their outcomes are unknown` });
+  // The files are named, the first ten in code-point order, so the reader can tell a join that failed from a file
+  // that was left out of the run (A-174).
+  if (unrun.length > 0) {
+    const named = [...unrun].sort(compareCodePoints);
+    const list = named.slice(0, 10).join(", ") + (named.length > 10 ? ` and ${named.length - 10} more` : "");
+    diagnostics.push({ code: "results-missing", severity: "info", message: `${unrun.length} test files declare tests and have no result: their outcomes are unknown (${list})` });
+  }
   return results;
 }
 
