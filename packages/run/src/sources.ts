@@ -1,5 +1,6 @@
 // Running sources through adapters (Evidence tab, section 4). The harness reads the
 // files; the adapter sees only their bytes, the vocabulary and the bindings.
+import { unknownSettings } from "./settings.ts";
 import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
@@ -373,6 +374,12 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
       output = { diagnostics: [{ code: "adapter-failed", severity: "error", message: (err as Error).message }] };
     }
     if (output.claims !== undefined) output.claims.source = source.name;
+    // A setting the adapter does not read changes nothing, which looks like one that worked.
+    if (spec !== undefined) {
+      for (const u of unknownSettings(spec, Object.keys(own?.settings ?? {}))) {
+        output.diagnostics.push({ code: "unknown-setting", severity: "warning", message: `${spec} reads no setting ${u.name}${u.hint !== undefined ? `; did you mean ${u.hint}?` : ""}`, span: source.name });
+      }
+    }
     const made: SourceRun = { ...base, adapter: spec, files: [...input.files, ...execFiles].map(({ path, digest }) => ({ path, digest })), output };
     runs.push(made);
     // An adapter that failed or timed out is asked again next time.
