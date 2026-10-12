@@ -232,9 +232,10 @@ async function build(p: Project, slug: string, check: boolean, io: A3Io, lead = 
     return 1;
   }
   const dir = a3Dir(p.root, slug);
-  const rel = dir.slice(p.root.length + 1);
+  const rel = dir.slice(p.root.length + 1).replace(/\\/g, "/");
   if (check) {
-    const stale = Object.entries(r.files).filter(([f, text]) => !existsSync(join(dir, f)) || readFileSync(join(dir, f), "utf8") !== text).map(([f]) => f);
+    // A checkout that writes CRLF (Git for Windows) holds the same sheet (stage 41).
+    const stale = Object.entries(r.files).filter(([f, text]) => !existsSync(join(dir, f)) || readFileSync(join(dir, f), "utf8").replace(/\r\n/g, "\n") !== text).map(([f]) => f);
     if (stale.length > 0) {
       io.err(`csh a3: ${stale.map((f) => `${rel}/${f}`).join(", ")} differ${stale.length === 1 ? "s" : ""} from the built sheet; run csh a3 build ${slug}\n`);
       return 1;

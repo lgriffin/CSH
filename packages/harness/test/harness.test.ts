@@ -3,6 +3,7 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { parseExecutions, parseWitnesses } from "@csh/witness";
 import { executionOf, fileSlug, nameTracker, probe, testIdentity, witnessId } from "../src/index.ts";
@@ -19,8 +20,9 @@ const read = (f: string) => parseWitnesses(readFileSync(f, "utf8")).witnesses.ma
 
 describe("testIdentity", () => {
   it("joins the file, relative to the harness directory, and the full name", () => {
-    expect(testIdentity("/p/test/a.test.ts", "group > inner", "/p")).toBe("test/a.test.ts::group > inner");
-    expect(testIdentity("file:///p/test/a.test.ts", "adds", "/p")).toBe("test/a.test.ts::adds");
+    const p = resolve("/p");
+    expect(testIdentity(join(p, "test", "a.test.ts"), "group > inner", p)).toBe("test/a.test.ts::group > inner");
+    expect(testIdentity(pathToFileURL(join(p, "test", "a.test.ts")).href, "adds", p)).toBe("test/a.test.ts::adds");
     expect(testIdentity(undefined, "adds")).toBe("adds");
   });
 });

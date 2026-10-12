@@ -4,6 +4,7 @@
 // repository's keys, commits or csh/maintainers.json.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import type { Identity, Maintainers, Role } from "@csh/ledger";
 
@@ -34,7 +35,8 @@ export function createTestRepo(parent: string, identities: string[]): TestRepo {
   mkdirSync(parent, { recursive: true });
   const dir = mkdtempSync(join(parent, "repo-"));
   // gpg's agent socket path must be short, so the keyring goes under the system temp directory.
-  const gnupg = mkdtempSync("/tmp/csh-gnupg-");
+  // On Windows there is no /tmp, and no socket path limit to keep under.
+  const gnupg = mkdtempSync(process.platform === "win32" ? join(tmpdir(), "csh-gnupg-") : "/tmp/csh-gnupg-");
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     GNUPGHOME: gnupg,
