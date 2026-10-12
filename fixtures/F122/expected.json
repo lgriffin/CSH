@@ -1,0 +1,18 @@
+{
+  "fixture": "F122",
+  "section": "Polyglot code, sections 1 and 5; A-127",
+  "stage": 29,
+  "expect": {
+    "run": {
+      "assessments": [
+        { "fragment": "Shop/Layering/CoreIgnoresWeb", "verdict": "unknown", "reasonsInclude": ["not-read", "src/core/engine.kt"] },
+        { "fragment": "Shop/Layering/LegacyIgnoresWeb", "verdict": "violated", "reasonsInclude": ["src/legacy/export.ts:1", "src/web/server.ts"] },
+        { "fragment": "Shop/Layering/WebIgnoresLegacy", "verdict": "satisfied" }
+      ],
+      "skipped": [
+        { "at": "src/core/engine.kt", "reasonIncludes": "no reader for" },
+        { "at": "src/legacy/report.c", "reasonIncludes": "no reader for" }
+      ]
+    }
+  }
+}

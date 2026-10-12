@@ -1,0 +1,18 @@
+{
+  "fixture": "F120",
+  "section": "Polyglot code, sections 1 and 3; A-127, A-132",
+  "stage": 33,
+  "expect": {
+    "run": {
+      "assessments": [
+        { "fragment": "Shop/Layering/DomainIgnoresAdapters", "verdict": "violated", "reasonsInclude": ["domain/order.go:6", "adapters/sqlstore/store.go"] },
+        { "fragment": "Shop/Layering/PortsIgnoreAdapters", "verdict": "satisfied" },
+        { "fragment": "Shop/Layering/PortsSeeOnlyTheDomain", "verdict": "satisfied" },
+        { "fragment": "Shop/Domain/OrderHasTotal", "verdict": "satisfied" }
+      ],
+      "skipped": [
+        { "at": "adapters/sqlstore/store.go:6" }
+      ]
+    }
+  }
+}

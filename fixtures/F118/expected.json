@@ -1,0 +1,19 @@
+{
+  "fixture": "F118",
+  "section": "Polyglot code, sections 1 and 3; A-104, A-127, A-130",
+  "stage": 31,
+  "expect": {
+    "run": {
+      "assessments": [
+        { "fragment": "Shop/Layering/DomainIgnoresAdapters", "verdict": "violated", "reasonsInclude": ["src/shop/domain/order.py:2", "src/shop/adapters/sql_repository.py"] },
+        { "fragment": "Shop/Layering/PortsIgnoreAdapters", "verdict": "satisfied" },
+        { "fragment": "Shop/Layering/PortsSeeOnlyTheDomain", "verdict": "satisfied" },
+        { "fragment": "Shop/Errors/OrderNotFoundIsAnException", "verdict": "satisfied" },
+        { "fragment": "Shop/Errors/OrderRecordIsABaseModel", "verdict": "unknown" }
+      ],
+      "skipped": [
+        { "at": "src/shop/adapters/sql_repository.py:4" }
+      ]
+    }
+  }
+}

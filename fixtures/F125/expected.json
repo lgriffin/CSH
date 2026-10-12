@@ -1,0 +1,40 @@
+{
+  "fixture": "F125",
+  "section": "Polyglot code, section 4; A-98, A-128",
+  "stage": 35,
+  "expect": {
+    "run": {
+      "items": [
+        { "source": "Tests", "id": "tests/test_cart.py", "kind": "test-file", "attrs": { "tests": "3" } },
+        { "source": "Tests", "id": "src/test/java/com/acme/shop/CartTest.java", "kind": "test-file", "attrs": { "tests": "3" } },
+        { "source": "Tests", "id": "cart/cart_test.go", "kind": "test-file", "attrs": { "tests": "4" } },
+        { "source": "Tests", "id": "cart/helpers.go", "kind": "test-file", "attrs": { "tests": "0" } },
+        { "source": "Tests", "id": "tests/cart.rs", "kind": "test-file", "attrs": { "tests": "3" } }
+      ],
+      "edges": [
+        { "source": "Tests", "from": "tests/test_cart.py", "rel": "cites", "to": "REQ-1" },
+        { "source": "Tests", "from": "tests/test_cart.py", "rel": "cites", "to": "REQ-2" },
+        { "source": "Tests", "from": "tests/test_cart.py", "rel": "cites", "to": "REQ-3" },
+        { "source": "Tests", "from": "src/test/java/com/acme/shop/CartTest.java", "rel": "cites", "to": "REQ-1" },
+        { "source": "Tests", "from": "src/test/java/com/acme/shop/CartTest.java", "rel": "cites", "to": "REQ-2" },
+        { "source": "Tests", "from": "src/test/java/com/acme/shop/CartTest.java", "rel": "cites", "to": "REQ-4" },
+        { "source": "Tests", "from": "cart/cart_test.go", "rel": "cites", "to": "REQ-1" },
+        { "source": "Tests", "from": "cart/cart_test.go", "rel": "cites", "to": "REQ-2" },
+        { "source": "Tests", "from": "cart/cart_test.go", "rel": "cites", "to": "REQ-5" },
+        { "source": "Tests", "from": "tests/cart.rs", "rel": "cites", "to": "REQ-1" },
+        { "source": "Tests", "from": "tests/cart.rs", "rel": "cites", "to": "REQ-2" },
+        { "source": "Tests", "from": "tests/cart.rs", "rel": "cites", "to": "REQ-3" }
+      ],
+      "edgesAbsent": [
+        { "source": "Tests", "from": "tests/test_cart.py", "to": "REQ-7" },
+        { "source": "Tests", "from": "tests/test_cart.py", "to": "REQ-8" },
+        { "source": "Tests", "from": "tests/test_cart.py", "to": "REQ-9" },
+        { "source": "Tests", "from": "src/test/java/com/acme/shop/CartTest.java", "to": "REQ-9" },
+        { "source": "Tests", "from": "cart/cart_test.go", "to": "REQ-7" },
+        { "source": "Tests", "from": "cart/cart_test.go", "to": "REQ-9" },
+        { "source": "Tests", "from": "cart/helpers.go", "to": "REQ-6" },
+        { "source": "Tests", "from": "tests/cart.rs", "to": "REQ-9" }
+      ]
+    }
+  }
+}

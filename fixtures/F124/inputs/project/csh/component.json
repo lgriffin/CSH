@@ -1,0 +1,15 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Shop",
+  "implementation": ["src/main", "domain"],
+  "sources": [
+    { "name": "Reqs", "kind": "Requirements", "at": "docs/requirements.md" },
+    { "name": "JavaTests", "kind": "TestFiles", "at": ".", "include": ["src/test/java/**/*.java"] },
+    { "name": "GoTests", "kind": "TestFiles", "at": ".", "include": ["**/*_test.go"] }
+  ],
+  "practices": [
+    { "id": "reqs", "name": "Requirements", "kind": "requirements", "sources": ["Reqs"] },
+    { "id": "junit", "name": "JUnit", "kind": "tests", "sources": ["JavaTests"], "settings": { "idPattern": "REQ-[0-9]+" }, "executions": "results/TEST-com.acme.shop.OrderTest.xml" },
+    { "id": "gotest", "name": "go test", "kind": "tests", "sources": ["GoTests"], "settings": { "idPattern": "REQ-[0-9]+" }, "executions": "results/go-test.json" }
+  ]
+}

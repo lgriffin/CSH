@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="1" skipped="1" tests="4" time="0.087" timestamp="2026-10-12T09:14:03.511829+00:00" hostname="ci-runner-7"><testcase classname="tests.test_orders" name="test_REQ_1_total_sums_lines" time="0.001" /><testcase classname="tests.test_orders" name="test_REQ_2_rejects_negative_lines" time="0.002"><failure message="Failed: DID NOT RAISE &lt;class 'ValueError'&gt;">def test_REQ_2_rejects_negative_lines():
+&gt;       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE &lt;class 'ValueError'&gt;
+
+tests/test_orders.py:11: Failed</failure></testcase><testcase classname="tests.test_orders.TestRefunds" name="test_REQ_3_full_refund" time="0.000"><skipped type="pytest.skip" message="refunds are not built yet">tests/test_orders.py:16: refunds are not built yet</skipped></testcase><testcase classname="tests.test_orders" name="test_REQ_4_saves_the_order" time="0.001"><error message="failed on setup with &quot;ConnectionError: no database&quot;">@pytest.fixture
+    def database():
+&gt;       raise ConnectionError("no database")
+E       ConnectionError: no database
+
+tests/test_orders.py:23: ConnectionError</error></testcase></testsuite></testsuites>

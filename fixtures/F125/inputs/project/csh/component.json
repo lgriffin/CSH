@@ -1,0 +1,13 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Shop",
+  "implementation": ["src/main", "cart"],
+  "sources": [
+    { "name": "Reqs", "kind": "Requirements", "at": "docs/requirements.md" },
+    { "name": "Tests", "kind": "TestFiles", "at": ".", "include": ["tests/**/*.py", "tests/**/*.rs", "src/test/java/**/*.java", "cart/**/*.go"] }
+  ],
+  "practices": [
+    { "id": "reqs", "name": "Requirements", "kind": "requirements", "sources": ["Reqs"] },
+    { "id": "tests", "name": "Tests", "kind": "tests", "sources": ["Tests"], "settings": { "idPattern": "REQ-[0-9]+" } }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Shop",
+  "implementation": ["src"],
+  "sources": [
+    { "name": "Reqs", "kind": "Requirements", "at": "docs/requirements.md" },
+    { "name": "PyTests", "kind": "TestFiles", "at": ".", "include": ["tests/**/*.py"] }
+  ],
+  "practices": [
+    { "id": "reqs", "name": "Requirements", "kind": "requirements", "sources": ["Reqs"] },
+    { "id": "pytest", "name": "pytest", "kind": "tests", "sources": ["PyTests"], "settings": { "idPattern": "REQ-[0-9]+" }, "executions": "results/pytest.xml" }
+  ]
+}

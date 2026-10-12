@@ -1,0 +1,24 @@
+{
+  "fixture": "F124",
+  "section": "Polyglot code, section 4; A-115, A-129",
+  "stage": 30,
+  "expect": {
+    "run": {
+      "diagnostics": [
+        { "source": "JavaTests", "code": "results-unmatched" },
+        { "source": "GoTests", "code": "results-unmatched" },
+        { "source": "GoTests", "spanEndsWith": "go-test.json:1" }
+      ],
+      "outcomesAbsent": [
+        "JavaTests/src/test/java/com/acme/shop/OrderTest.java",
+        "GoTests/domain/order_test.go",
+        "Reqs/REQ-1",
+        "Reqs/REQ-2",
+        "Reqs/REQ-3"
+      ],
+      "gapsAbsent": [
+        { "kind": "failing-test" }
+      ]
+    }
+  }
+}

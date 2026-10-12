@@ -1,0 +1,13 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Shop",
+  "spec": "csh/spec.csl.ts",
+  "implementation": ["src"],
+  "sources": [
+    { "name": "Code", "kind": "Code", "at": ".", "include": ["src/**/*.java", "pom.xml"] }
+  ],
+  "practices": [
+    { "id": "rules", "name": "Rules", "kind": "requirements", "sources": ["Rules"] },
+    { "id": "code", "name": "Code facts", "kind": "facts", "sources": ["Code"] }
+  ]
+}
