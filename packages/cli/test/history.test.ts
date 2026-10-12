@@ -342,5 +342,9 @@ describe("csh results import (stage 28)", () => {
     expect(written).not.toContain("secret");
     expect(await csh(["results", "import", "nope", report], io(dir).io)).toBe(1);
     expect(await csh(["results", "import"], io(dir).io)).toBe(2);
+    // A run says why no harness ran: the practice reads its results from that file (stage 54).
+    const ran = io(dir);
+    await csh(["run"], ran.io);
+    expect(ran.o.out, ran.o.err).toContain("  no practice has a harness: no test runs here; 1 practice reads results from a file");
   });
 });

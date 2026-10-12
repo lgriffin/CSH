@@ -25,10 +25,11 @@ const READINGS = [
 /**
  * The line a claim was read from, given the span the claim names and the values it states (From real runs, stage 43):
  * the line at the span, or, when the span opens a block (a table, a list) and the values are on a later line of it,
- * that line. `at` is where the returned text is; `stated` is false when the claim has values and no line of the block
+ * that line. `at` is where the returned text is; `elsewhere` lists the other lines of the file stating a version the
+ * claim states, when its block does not (stage 54); `stated` is false when the claim has values and no line of the block
  * states one (stage 53), so the line shown is only where the claim is pinned.
  */
-export type SentenceAt = (span: string, values?: string[]) => { at: string; text: string; stated?: boolean } | undefined;
+export type SentenceAt = (span: string, values?: string[]) => { at: string; text: string; stated?: boolean; elsewhere?: number[] } | undefined;
 
 /**
  * The numbers and versions a claim's description states as its value: 5, 22.12, 1.35.0. A number inside what the claim
@@ -75,11 +76,11 @@ const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "e
  * A value as a line may state it (stage 53): the digits whole (5 is not in 15 or 1.5); a version without its trailing
  * zeros (18.0.0 as 18.0 or 18); or, from two to twenty, the word. "one" is too common a word to mean 1.
  */
-const statedAs = (v: string): RegExp => {
+const statedAs = (v: string, dotted = false): RegExp => {
   const forms = [v];
   for (let f = v; /\.0$/.test(f); ) forms.push((f = f.slice(0, -2)));
-  const digits = forms.map((f) => `(?<![\\d.])${f.replace(/\./g, "\\.")}(?!\\d|\\.\\d)`);
-  const word = /^\d+$/.test(v) && Number(v) >= 2 ? WORDS[Number(v)] : undefined;
+  const digits = forms.filter((f) => !dotted || f.includes(".")).map((f) => `(?<![\\d.])${f.replace(/\./g, "\\.")}(?!\\d|\\.\\d)`);
+  const word = !dotted && /^\d+$/.test(v) && Number(v) >= 2 ? WORDS[Number(v)] : undefined;
   return new RegExp([...digits, ...(word !== undefined ? [`\\b${word}\\b`] : [])].join("|"), "i");
 };
 
@@ -89,11 +90,21 @@ const statedAs = (v: string): RegExp => {
  * no line of the block states one. A value is matched whole: 5 is not found in 15 or in 1.5; 13 is found in thirteen.
  */
 export function lineStating(lines: readonly string[], from: number, values: readonly string[]): number | undefined {
-  const res = values.map(statedAs);
+  const res = values.map((v) => statedAs(v));
   const holds = (l: string) => res.some((r) => r.test(l));
   if (holds(lines[from] ?? "")) return from;
   for (let i = from + 1; i < Math.min(lines.length, from + 40) && lines[i]!.trim() !== ""; i++) if (holds(lines[i]!)) return i;
   return undefined;
+}
+
+/**
+ * The lines of a file stating one of a claim's versions (values with a dot, such as 1.35.0), for a block that states
+ * none (stage 54). A bare number such as 5 is too common to look for across a file.
+ */
+export function linesStatingVersion(lines: readonly string[], values: readonly string[]): number[] {
+  // Across a file only a form with a dot counts: 1.0.0 as 1.0, never as the 1 of a numbered heading.
+  const res = values.filter((v) => v.includes(".")).map((v) => statedAs(v, true));
+  return res.length === 0 ? [] : lines.flatMap((l, i) => (res.some((r) => r.test(l)) ? [i] : []));
 }
 
 /** The line to show for a claim: the line stating its values, else the span's own line. */
@@ -113,7 +124,10 @@ export function claimEvidence(f: Finding, sentenceAt: SentenceAt): { reason: str
     const said = sentenceAt(span, values);
     if (said === undefined) continue;
     if (said.at !== span) moved.set(clause, { span, at: said.at });
-    lines.push(said.stated === false ? `${said.at} (no line from here to the next blank line states ${values.join(" or ")}): "${said.text}"` : `${said.at} says: "${said.text}"`);
+    const file = said.at.replace(/:\d+$/, "");
+    const also = (said.elsewhere ?? []).slice(0, 3).map((i) => `${file}:${i + 1}`);
+    const where = also.length === 0 ? "" : `; ${also.join(", ")}${(said.elsewhere ?? []).length > 3 ? ", …" : ""} ${also.length === 1 ? "does" : "do"}`;
+    lines.push(said.stated === false ? `${said.at} (no line from here to the next blank line states ${values.join(" or ")}${where}): "${said.text}"` : `${said.at} says: "${said.text}"`);
   }
   if (moved.size === 0) return { reason, lines };
   // Each span is replaced where its own clause begins, never by searching the reason for it.

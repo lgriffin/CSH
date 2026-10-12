@@ -248,3 +248,21 @@ Two findings need no change to CSH:
 - `no practice has a harness` is the run saying that no practice of the profile declares a `harness` command. The
   tests practices read `executions` from a results file instead, so no test runs during `csh run`.
 
+## 10. The fourth round (stage 54)
+
+Leigh's re-check of stage 53 on Windows passed. What it still found:
+
+- `pnpm test` exited 1 with every test passed: a worker missed the runner's 60 second reply limit while the machine had
+  every core busy. On Windows the suite now runs on two workers, as the Windows CI job already did.
+- A version claim whose span's block does not state the version, and whose file does on another line, says which line
+  does: `(no line from here to the next blank line states 1.35.0; docs/contract.md:3 does)`. Only values with a dot are
+  looked for across the file; a bare number such as 5 is too common.
+- `csh subject fetch` says nothing about a private subject when git ignores `csh/component.json`, as
+  `.git/info/exclude` does, since the profile then cannot be committed by accident. It still records the visibility.
+- When no practice has a harness and some read their results from a file, the run says so:
+  `no practice has a harness: no test runs here; 2 practices read results from a file`.
+
+One finding needs no change to CSH: a count claim (five JSR packages, seven directories) points at the heading or
+header row of the list it counts. No line of the list states the count, so the span is the right anchor, and the line
+shown says that no line states the number.
+
