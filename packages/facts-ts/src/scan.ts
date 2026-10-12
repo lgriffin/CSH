@@ -12,7 +12,7 @@ import { builtinModules } from "node:module";
 import { posix } from "node:path";
 import ts from "typescript";
 import { compareCodePoints } from "@csh/kernel";
-import type { Adapter, AdapterInput, AdapterOutput, Diagnostic, Fact } from "@csh/witness";
+import { parseYaml, type Adapter, type AdapterInput, type AdapterOutput, type Diagnostic, type Fact } from "@csh/witness";
 
 export const TOOL = { id: "facts-ts", version: "0.1.0" } as const;
 export const SCHEMA = "csh-facts/v2";
@@ -252,6 +252,13 @@ export function run(input: AdapterInput): AdapterOutput {
       } catch (err) {
         diagnostics.push({ code: "malformed-manifest", severity: "warning", message: (err as Error).message, span: f.path });
       }
+      continue;
+    }
+    // YAML is read like JSON: every scalar by pointer, so a count of entries in a list can be claimed.
+    if (/\.ya?ml$/.test(f.path)) {
+      const y = parseYaml(text);
+      if (y.problems.length > 0) diagnostics.push({ code: "malformed-manifest", severity: "warning", message: y.problems[0]!.message, span: `${f.path}:${y.problems[0]!.line}` });
+      else for (const x of fieldsOf(y.value, null)) facts.push({ ...base, kind: "field", at: f.path, file: f.path, path: x.path, value: x.value });
       continue;
     }
     if (!code.has(f.path)) continue;

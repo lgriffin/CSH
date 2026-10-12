@@ -144,6 +144,7 @@ export function run(input: AdapterInput): AdapterOutput {
   // style: "cucumber" reads step definitions too: they are not tests, so they are counted as steps, and a file of
   // steps alone declares no test but is not an empty one. Identifiers in a step's text cite, as in a test title.
   const cucumber = input.config?.style === "cucumber";
+  const citeBodies = input.config?.citeBodies === "true";
   for (const file of sortedFiles(input)) {
     const text = decode(file.bytes);
     let steps = 0;
@@ -157,6 +158,17 @@ export function run(input: AdapterInput): AdapterOutput {
         if (cited.has(c[0])) continue;
         cited.add(c[0]);
         edges.push({ from: file.path, rel: "cites", to: c[0], span: `${file.path}:${d.line}` });
+      }
+    }
+    // citeBodies: an identifier in any string literal of the file cites, not only one in a title (a test that loops over a
+    // list of mutants or rules names each in data). Comments still cite nothing.
+    if (citeBodies) {
+      for (const [at, value] of lex(text).strings) {
+        for (const c of value.matchAll(id)) {
+          if (cited.has(c[0])) continue;
+          cited.add(c[0]);
+          edges.push({ from: file.path, rel: "cites", to: c[0], span: `${file.path}:${text.slice(0, at).split("\n").length}` });
+        }
       }
     }
     if (cucumber) {

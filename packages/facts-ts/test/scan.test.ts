@@ -198,3 +198,12 @@ describe("what the audit of other repositories showed", () => {
     expect((run(input(files)).facts ?? []).map(show)).toContain("src/b.ts:1 src/b.ts -> solo");
   });
 });
+
+describe("YAML files", () => {
+  it("are read as fields by pointer, so the entries of a list can be counted", () => {
+    const out = run(input({ "m/mutants.yaml": "mutants:\n  - id: a\n  - id: b\n" }));
+    const shown = (out.facts ?? []).map(show);
+    expect(shown).toContain("field /mutants/0/id = a");
+    expect(shown).toContain("field /mutants/1/id = b");
+  });
+});
