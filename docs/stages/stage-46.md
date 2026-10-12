@@ -1,30 +1,19 @@
-# Stage 46: Rungs
+# Stage 46: The Assertion Ladder, by name
 
-**Exit:** F140. Every told rule of a report has the highest rung its evidence establishes, the overview and `csh ladder`
-show it, and a profile's expected results can hold it ([14](../spec/14-assertion-ladder.md), sections 3 and 6).
+**Exit:** the word *ladder* means one thing in CSH, [the Assertion Ladder](https://github.com/lgriffin/AI-Reference-Projects/tree/master/paper),
+and the documents say how it sits beside the outcome ([15](../spec/15-assertion-ladder.md), sections 1 and 2).
 
 **Status:** exit reached.
 
 ## Built
 
-- `check` (`ladder`): `rungsOf` over the items, what trace says checks each one (`TraceResult.checks`: test files,
-  scenarios, rules and "Verified by"), the examples, and the assessed fragments with their authority. `Report.rungs`.
-- `check` (`overview`): `ladder`, `rungs` and `rung` on entries; one line of text after the counts, and a tile per
-  rung and a badge per entry in the HTML sheet.
-- `check` (`expect`): `rungs` in `csh-expected/v1`, compared like any other expectation.
-- `cli`: `csh ladder [--run] [--json]`.
-- `testkit`: `rungs` and `ladder` in a `run` fixture's expectation, and `authority.approve` to approve fragments in
-  the stand-in. `BUILT_THROUGH_STAGE` is 48.
-- [A-160](../../ASSUMPTIONS.md) and [A-161](../../ASSUMPTIONS.md).
-
-## What the fixture revealed
-
-- A candidate rule that cites a requirement used to look like enforcement. F140's `R-A-5` is cited only by a candidate
-  rule and stays L2, still the gap `unverified`; that is the line between CSH's reading of a repository and the
-  repository's own assertion, and it is the whole reason a profile's rules never raise a rung ([Q-40](../../QUESTIONS.md)).
-- On the lockout walkthrough's approved stage, `csh ladder` puts LCK-004 and LCK-005 at L2 (uncited) and three
-  sentences at L4. The two gaps were already reported; the rung says the same thing from the other side.
+- [Spec 15](../spec/15-assertion-ladder.md): the rung as a second axis beside converged, gap and indeterminate, which it
+  never moves, and what counts towards a rung: only what stops a wrong change in the repository itself.
+- The root README's seven-step "ladder" (inventory to A3) is renamed **adoption steps**, and a new section,
+  "The Assertion Ladder", says what CSH reads at each rung. The starter's README and `DEPENDENCIES.md` follow.
+- [docs/guides/ladder.md](../guides/ladder.md): how to move a rule up a rung, one rung at a time.
 
 ## Not done
 
-- L4 for a test whose failure message names the rule cannot be read statically ([Q-41](../../QUESTIONS.md)).
+- Spec 09, section 10.2, and spec 11 keep the word "ladder" as written: they are exports of decided documents, and
+  spec 15 says to read it there as "adoption steps".

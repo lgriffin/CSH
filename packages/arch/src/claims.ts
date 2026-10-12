@@ -188,7 +188,7 @@ export function truthOf(p: Prop, f: ClaimFacts): Truth {
   }
 }
 
-/** What checks a mapping is complete, by the language of the module that holds it (The Assertion Ladder, stage 47). */
+/** What checks a mapping is complete, by the language of the module that holds it (The Assertion Ladder, stage 48). */
 const COMPILERS: Record<string, string> = { javascript: "tsc", java: "javac", rust: "rustc" };
 /** Languages whose compiler checks no mapping for completeness, with why: the claim is unknown, never refuted. */
 const NO_PREVENTION: Record<string, string> = { python: "no-compiler: python checks no mapping for completeness when it runs", go: "no-closed-types: go has no closed type to map completely" };

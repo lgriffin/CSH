@@ -24,7 +24,7 @@ export interface ExpectedRow {
 export interface Expected {
   schema: "csh-expected/v1";
   counts?: Partial<Record<Outcome, number>>;
-  /** Each told rule's expected rung on the Assertion Ladder (stage 46), by Source/id. */
+  /** Each told rule's expected rung on the Assertion Ladder (stage 47), by Source/id. */
   rungs?: Record<string, string>;
   rows: ExpectedRow[];
 }

@@ -1,0 +1,18 @@
+{
+  "fixture": "F154",
+  "section": "The Assertion Ladder, section 4",
+  "stage": 48,
+  "expect": {
+    "run": {
+      "assessments": [
+        { "fragment": "Mixed/Prevented/PythonStatusIsTotal", "verdict": "unknown", "reasonsInclude": ["no-compiler: python"] },
+        { "fragment": "Mixed/Prevented/GoStatusIsTotal", "verdict": "unknown", "reasonsInclude": ["no-closed-types: go"] }
+      ],
+      "rungs": [
+        { "item": "Reqs/R-Y-1", "rung": "L3", "byIncludes": ["tests/test_errors.py"] },
+        { "item": "Reqs/R-G-1", "rung": "L2" }
+      ],
+      "gaps": [{ "kind": "unverified", "subject": "Reqs/R-G-1" }]
+    }
+  }
+}

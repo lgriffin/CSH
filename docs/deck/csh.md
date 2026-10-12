@@ -26,7 +26,7 @@ style: |
 A static analysis tool for what a codebase *says* about itself:
 what converges, what is a gap, and what cannot be decided.
 
-<span class="small">github.com/lgriffin/CSH · with the Assertion Ladder, stages 45 to 50</span>
+<span class="small">github.com/lgriffin/CSH · with the Assertion Ladder, stages 46 to 51</span>
 
 ---
 
@@ -285,4 +285,4 @@ Stop where the value stops. Each step stands alone.
 
 **CSH reads what a codebase already asserts, tells you where it converges, where it has gaps, and what it cannot decide, and now how strongly each rule is held.**
 
-<span class="small">Spec: docs/spec · Guides: docs/guides · Ladder: docs/spec/14-assertion-ladder.md</span>
+<span class="small">Spec: docs/spec · Guides: docs/guides · Ladder: docs/spec/15-assertion-ladder.md</span>

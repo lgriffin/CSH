@@ -40,10 +40,10 @@ export interface JavaDeclaration {
   value?: string;
   /** For a type: whether it is declared `public`. */
   public?: boolean;
-  /** For an enum or a sealed type, its members by simple name, in source order (stage 47). */
+  /** For an enum or a sealed type, its members by simple name, in source order (stage 48). */
   members?: string[];
   /**
-   * For a top-level type, each `switch` in it that Java checks for completeness (stage 47): its case labels, and the
+   * For a top-level type, each `switch` in it that Java checks for completeness (stage 48): its case labels, and the
    * simple name of its selector's declared type when the selector is a parameter, local or field declared with one.
    */
   switches?: { labels: string[]; selector?: string }[];
@@ -149,7 +149,7 @@ function constantsOf(type: Node, name: string): JavaDeclaration[] {
 }
 
 /**
- * The members of a closed type (stage 47): an enum's constants; a sealed type's `permits` list, else the types nested in
+ * The members of a closed type (stage 48): an enum's constants; a sealed type's `permits` list, else the types nested in
  * it that extend or implement it. Undefined for any other type.
  */
 function membersOf(n: Node, declares: string, name: string): string[] | undefined {
@@ -170,7 +170,7 @@ function membersOf(n: Node, declares: string, name: string): string[] | undefine
 const STATEMENT = new Set(["block", "constructor_body", "switch_block_statement_group", "labeled_statement", "if_statement", "while_statement", "for_statement", "enhanced_for_statement", "do_statement", "expression_statement", "program"]);
 
 /**
- * The labels of each `switch` in a type that Java checks for completeness (stage 47): one used as an expression, or one
+ * The labels of each `switch` in a type that Java checks for completeness (stage 48): one used as an expression, or one
  * with a pattern label. A switch with a `default` label is never complete over a type, since a new member falls into it.
  */
 function switchesIn(n: Node): { labels: string[]; selector?: string }[] {
@@ -339,7 +339,7 @@ export async function readJavaFiles(input: readonly InputFile[], ctx: FactContex
     return undefined;
   };
   // The closed types read, by simple name; a switch is complete over the one whose members its labels name exactly
-  // (stage 47). Its selector's declared type, when read, decides which; without one, two closed types with the same
+  // (stage 48). Its selector's declared type, when read, decides which; without one, two closed types with the same
   // members leave the switch unattributed rather than credit a type it may not switch over.
   const closed = new Map<string, Set<string>[]>();
   for (const j of read.values()) for (const d of j.declarations) if (d.members !== undefined) closed.set(d.symbol, [...(closed.get(d.symbol) ?? []), new Set(d.members)]);

@@ -22,7 +22,7 @@ export interface TraceResult {
   gaps: Gap[];
   edges: NonNullable<Report["edges"]>;
   /**
-   * For each item, the mechanisms an edge says check it (The Assertion Ladder, stage 46): a test file or a scenario that
+   * For each item, the mechanisms an edge says check it (The Assertion Ladder, stage 47): a test file or a scenario that
    * cites it, a scenario that sits under it, and what its "Verified by" names when that resolves.
    */
   checks: Map<string, string[]>;
@@ -139,7 +139,7 @@ export function trace(input: TraceInput): TraceResult {
       supported.add(from);
       check(from, `verified by ${r === "file" ? e.to.replace(/^(file|symbol|script):/, "") : r}`);
     }
-    // What checks an item, for its rung: a citation or a scenario under it, from a test file or a scenario (stage 46).
+    // What checks an item, for its rung: a citation or a scenario under it, from a test file or a scenario (stage 47).
     // A Gherkin rule or feature that cites an item states it again; only its scenarios check anything.
     if ((e.rel === "cites" || e.rel === "exemplifies") && typeof r === "string" && r !== "file") {
       const kind = byQualified.get(from)?.kind;

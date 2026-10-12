@@ -144,7 +144,7 @@ countermeasures, and the solver decides which rules hold. Nothing a run finds is
 
 [The Assertion Ladder](https://github.com/lgriffin/AI-Reference-Projects/tree/master/paper) grades how strongly a
 repository asserts each rule, from L0 Implied to L5 Prevented. CSH reports it as a second axis beside the outcome
-([14](docs/spec/14-assertion-ladder.md)): every told rule (a requirement, a Gherkin rule, an EARS sentence) gets the
+([15](docs/spec/15-assertion-ladder.md)): every told rule (a requirement, a Gherkin rule, an EARS sentence) gets the
 highest rung its evidence establishes, and the outcome stays converged, gap or indeterminate.
 
 | Rung | The rule is | CSH sees it when |
@@ -328,9 +328,9 @@ Its security model is read as a structured trace, its test results are committed
 ## Status of the build
 
 Stages 1 to 20 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 106 golden
-fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F125, F130 to F132, F140 to F145), as do
+fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F125, F130 to F132, F150 to F155), as do
 the unit, property and fault-injection tests; F118 to F125 cover [polyglot code](docs/spec/12-polyglot-code.md),
-stages 29 to 35, and F130 onwards [what real runs asked for](docs/spec/13-from-real-runs.md), stages 38 to 44, and F140 onwards [the Assertion Ladder](docs/spec/14-assertion-ladder.md), stages 45 to 50. The composition fixtures
+stages 29 to 35, and F130 onwards [what real runs asked for](docs/spec/13-from-real-runs.md), stages 38 to 44, and F150 onwards [the Assertion Ladder](docs/spec/15-assertion-ladder.md), stages 46 to 51. The composition fixtures
 F70 to F78 were written by the implementer and accepted by the owner. [docs/stages](docs/stages) records what each
 stage built and what its fixtures revealed.
 

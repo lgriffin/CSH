@@ -1,4 +1,4 @@
-// The TypeScript receiver of the Assertion Ladder paper, taskboard, read as a subject (The Assertion Ladder, stage 49).
+// The TypeScript receiver of the Assertion Ladder paper, taskboard, read as a subject (The Assertion Ladder, stage 50).
 // Its AGENTS.md states where each kind of code belongs and what each layer may import ("Where things go",
 // typescript/AGENTS.md:19-29); each rule below states one row of that table. Its REQUIREMENTS.md states R-ERR-1
 // (typescript/REQUIREMENTS.md:19), and its AGENTS.md says a new error needs a member of `ErrorCode`, after which "the

@@ -1,20 +1,31 @@
-# Stage 50: Diagrams and the deck
+# Stage 50: The taskboard profiles
 
-**Exit:** the C4 diagrams show what the code holds after stage 49, and a Marp deck says what CSH is, how it works, how
-it is designed and what it reports ([14](../spec/14-assertion-ladder.md), section 9).
+**Exit:** the paper's three receivers, `taskboard` in TypeScript, Java and Python, are profiles with expected results
+written before the first run, and CI runs each ([15](../spec/15-assertion-ladder.md), section 7).
 
-**Status:** exit reached.
+**Status:** exit reached. At commit `ce2767c` of AI-Reference-Projects, `csh expect` finds every expectation of all
+three met, rungs included.
+
+| Profile | Obligations | Converged | Gap | Indeterminate | L3 | L5 |
+| --- | --- | --- | --- | --- | --- | --- |
+| [taskboard-typescript](../../subjects/taskboard-typescript) | 8 | 8 | 0 | 0 | 9 | 1 (`R-ERR-1`) |
+| [taskboard-java](../../subjects/taskboard-java) | 8 | 8 | 0 | 0 | 9 | 1 (`R-ERR-1`) |
+| [taskboard-python](../../subjects/taskboard-python) | 8 | 7 | 0 | 1 (the `total` claim) | 10 | 0 |
 
 ## Built
 
-- `docs/architecture`: the component diagrams of the check engine, the architecture rules, the facts, the command line
-  and the run redrawn, and the container descriptions of the check engine and the architecture rules updated; SVGs
-  re-rendered with `@mermaid-js/mermaid-cli` 11. They had last changed at stage 29, so they now also show what stages
-  22 to 44 added: trace, test results, the overview, expected results, the TypeScript and tree-sitter readers,
-  structural claims, coverage, the proposal and the queue.
-- [docs/deck/csh.md](../deck/csh.md): 22 slides in [Marp](https://marp.app), with two simplified diagrams beside it.
-  Render with `npx @marp-team/marp-cli docs/deck/csh.md --allow-local-files --pdf`.
+- Three profiles, each with a `csh-component/v2` manifest (Requirements, Instructions, Tests, Code), seven layering
+  rules from the "Where things go" table of the receiver's `AGENTS.md`, and the claim `Prevented/ErrorStatusIsTotal`
+  citing `R-ERR-1`. A README per subject.
+- CI: the three join the `polyglot` matrix as `Subject (taskboard-<language>)`.
+- [A-169](../../ASSUMPTIONS.md).
 
-## Not done
+## What the subjects revealed
 
-- No package was added, so the container diagram, which the `Workspace` component checks, gains no container.
+- The first runs put `R-LIST-1` in Java at L2: the contract class `TaskRepositoryContract.java` that cites it was left
+  out by a `*Test.java` include. The profile now reads `src/test/java/**/*.java`. The expectation was right; the
+  profile's reading was wrong.
+- A rule that cites `AGENTS.md` must name it as the item id, `java/AGENTS.md`, a path from the repository root; a
+  path from the source's directory is a dangling citation.
+- The receivers agree with the paper: every rule has a check, so every rule is at least L3, and only the compiled
+  languages reach L5 for V6.

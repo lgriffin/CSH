@@ -23,14 +23,14 @@ export interface OverviewEntry {
   signal?: string;
   /** The entry's anchor in a sheet: the signal id, or a digest of its kind and subject. */
   anchor: string;
-  /** When the subject is a told rule, its rung on the Assertion Ladder (stage 46): a second axis, never an outcome. */
+  /** When the subject is a told rule, its rung on the Assertion Ladder (stage 47): a second axis, never an outcome. */
   rung?: Rung;
 }
 
 export interface Overview {
   schema: "csh-overview/v1";
   counts: Record<Outcome, number>;
-  /** How many told rules sit at each rung of the Assertion Ladder (stage 46); absent when the run read none. */
+  /** How many told rules sit at each rung of the Assertion Ladder (stage 47); absent when the run read none. */
   ladder?: Record<Rung, number>;
   /** Each told rule's rung, weakest first. */
   rungs?: { item: string; rung: Rung }[];

@@ -1,24 +1,33 @@
-# Stage 48: Told
+# Stage 48: Prevention
 
-**Exit:** F145. `csh init --subject` proposes the files an agent reads every session as their own practice, and
-counts two-part identifiers such as `R-FLOW-1` as one family ([14](../spec/14-assertion-ladder.md), section 5).
+**Exit:** F151 to F154. The structural claim `total(module, symbol, over)` holds, is refuted or is unknown from facts
+alone, in every language CSH reads ([15](../spec/15-assertion-ladder.md), section 4).
 
 **Status:** exit reached.
 
+| Language | Fixture | Closed type | Complete mapping | Result |
+| --- | --- | --- | --- | --- |
+| TypeScript | F151 | literal union, `enum` | `Record<K, V>`, `Readonly<...>`, `satisfies` | holds or refuted |
+| Java | F152 | `enum`, `sealed` type | a `switch` with no `default` | holds or refuted |
+| Rust | F153 | `enum` | a `match` with no catch-all | holds or refuted |
+| Python, Go | F154 | none | none | unknown, with the reason |
+
 ## Built
 
-- `component`: the practice kind `instructions`.
-- `run` (`propose`): `INSTRUCTION_FILES` (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md`)
-  as the source `Instructions`; two-part identifiers counted first, with the family `X-[A-Z]+`; requirement documents
-  found by headings and table rows; instruction files kept out of the other documents.
-- [A-167](../../ASSUMPTIONS.md) and [A-168](../../ASSUMPTIONS.md).
+- `kernel`: the prop `total`; `csl`: `total(...)`.
+- `witness` and `facts`: optional `members` and `total` on a `declare` fact, so `csh-facts/v2` keeps its shape.
+- `facts-ts`, `facts-code` (Java and Rust): both fields, read from the syntax tree; nothing is compiled.
+- `arch`: `total` judged by lookup, with the compiler named in the detail.
+- [A-162](../../ASSUMPTIONS.md) to [A-166](../../ASSUMPTIONS.md).
 
-## What the fixture revealed
+## What the fixtures revealed
 
-- Before this stage, the proposal on AI-Reference-Projects guessed the family `FLOW-` from `R-FLOW-1`, and read
-  `AGENTS.md` as one more document. It now guesses `(?:R-[A-Z]+)-[0-9]+`, six instruction files and three
-  requirement documents, which is what the paper's receivers hold.
+- Cross-language compliance needed one rule stated three ways, and the fixtures were written first for each: what
+  makes a mapping complete in TypeScript is its type, in Java and Rust it is the absence of a fallback arm. A `default`
+  or `_` arm is the one thing that turns a held claim into a refuted one, and each fixture has that case.
+- Python and Go are not refuted, which would say the code is wrong; they are unknown, which says the language has no
+  such compiler. Python's taskboard receiver catches the same mistake with an architecture rule instead.
 
 ## Not done
 
-- Paths that a document in a subdirectory writes relative to its own directory ([Q-45](../../QUESTIONS.md)).
+- TypeScript exhaustive `switch` through `never`, and type checkers for Python ([Q-46](../../QUESTIONS.md)).

@@ -2,7 +2,7 @@
 
 [The Assertion Ladder](https://github.com/lgriffin/AI-Reference-Projects/tree/master/paper) grades how strongly a
 repository asserts each of its rules. CSH reports the rung of every told rule beside the outcome its results land in
-([14](../spec/14-assertion-ladder.md)). The paper's advice is to place each rule on a rung on purpose: high enough to
+([15](../spec/15-assertion-ladder.md)). The paper's advice is to place each rule on a rung on purpose: high enough to
 cover what breaking it would cost, and no higher. This guide says what CSH reads at each rung, and so what to add to move
 a rule up.
 

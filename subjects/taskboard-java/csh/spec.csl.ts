@@ -1,4 +1,4 @@
-// The Java receiver of the Assertion Ladder paper, taskboard, read as a subject (The Assertion Ladder, stage 49). Its
+// The Java receiver of the Assertion Ladder paper, taskboard, read as a subject (The Assertion Ladder, stage 50). Its
 // AGENTS.md states which package each kind of code belongs in and what each may depend on ("Where things go",
 // java/AGENTS.md:15-27); each rule below states one row of that table. Its REQUIREMENTS.md states R-ERR-1
 // (java/REQUIREMENTS.md:19), and its AGENTS.md says a new exception is a nested class of the sealed DomainException, after

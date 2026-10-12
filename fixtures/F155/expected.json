@@ -1,0 +1,32 @@
+{
+  "fixture": "F155",
+  "section": "The Assertion Ladder, section 5",
+  "stage": 49,
+  "expect": {
+    "init": {
+      "sources": {
+        "Requirements": { "kind": "Documents", "files": ["REQUIREMENTS.md"] },
+        "Instructions": { "kind": "Documents", "files": [".github/copilot-instructions.md", "AGENTS.md", "CLAUDE.md", "service/AGENTS.md"] },
+        "Documents": { "kind": "Documents", "files": ["README.md", "docs/guide.md"] },
+        "Tests": { "kind": "TestFiles", "files": ["tests/task.test.ts"] },
+        "Code": { "kind": "Code", "files": ["package.json", "src/domain/task.ts"] }
+      },
+      "practices": [
+        { "sources": ["Requirements"], "kind": "requirements", "adapter": "@csh/adapter-items/markdown", "settings": { "idPattern": "(?:R-[A-Z]+)-[0-9]+" } },
+        { "sources": ["Instructions"], "kind": "instructions", "settings": { "idPattern": "(?:R-[A-Z]+)-[0-9]+" } },
+        { "sources": ["Documents"], "kind": "documents", "settings": { "idPattern": "(?:R-[A-Z]+)-[0-9]+" } },
+        { "sources": ["Tests"], "kind": "tests", "settings": { "idPattern": "(?:R-[A-Z]+)-[0-9]+" }, "executions": "csh/results.json" },
+        { "sources": ["Code"], "kind": "facts" }
+      ],
+      "guessesInclude": ["(?:R-[A-Z]+)-[0-9]+", "AGENTS.md"],
+      "guessesExclude": ["FLOW (", "WIP ("],
+      "run": {
+        "items": [
+          { "source": "Requirements", "id": "R-FLOW-1" },
+          { "source": "Requirements", "id": "R-WIP-1" }
+        ],
+        "edges": [{ "source": "Tests", "from": "tests/task.test.ts", "rel": "cites", "to": "R-FLOW-1" }]
+      }
+    }
+  }
+}

@@ -16,7 +16,7 @@ It belongs to the "Adapters" container, shown in the [containers diagram](../../
 - `resolveRelative(from, specifier, files)`, `packageOf(specifier)`: how a specifier is resolved, and the package a bare one names.
 - `fieldsOf(json, only)`: the scalar leaves of a JSON value by JSON pointer: of `package.json` only the fields that say what the package is, and of any other JSON file (with `only` null) every leaf. Lockfiles are never read ([A-108](../../ASSUMPTIONS.md)).
 
-- `declare` facts carry `members` for a closed type (a union of string or number literal types, or an `enum`) and `total` for a `const` annotated `Record<K, V>`, `Readonly<Record<K, V>>` or `satisfies Record<K, V>` (stage 47): the closed types the compiler makes it map completely. Neither field is written when it would be empty.
+- `declare` facts carry `members` for a closed type (a union of string or number literal types, or an `enum`) and `total` for a `const` annotated `Record<K, V>`, `Readonly<Record<K, V>>` or `satisfies Record<K, V>` (stage 48): the closed types the compiler makes it map completely. Neither field is written when it would be empty.
 ## Depends on and used by
 
 - Depends on: `typescript` (the parser alone), `@csh/kernel` (ordering) and `@csh/witness` (the fact and adapter types).

@@ -307,9 +307,9 @@ Raised in stage 36. Each profile takes one reading where its subject's documents
 
 Acknowledged on 12 October 2026: the profiles keep these readings.
 
-## Q-40 Should a subject profile's rules count towards a rung?
+## Q-42 Should a subject profile's rules count towards a rung?
 
-Raised in stage 46 ([14](docs/spec/14-assertion-ladder.md), section 1). A profile states a subject's documents as rules
+Raised in stage 47 ([15](docs/spec/15-assertion-ladder.md), section 1). A profile states a subject's documents as rules
 CSH judges, but nothing in the subject runs them.
 
 - **Never (chosen).** A rung counts only what stops a wrong change in the repository itself; CSH's reading of a subject
@@ -319,9 +319,9 @@ CSH judges, but nothing in the subject runs them.
 
 Open. Recorded as A-160.
 
-## Q-41 Can CSH tell that a subject's own check explains its failure?
+## Q-43 Can CSH tell that a subject's own check explains its failure?
 
-Raised in stage 46. L4 needs a failure that names the rule, the offender and the fix. CSH reads tests without running
+Raised in stage 47. L4 needs a failure that names the rule, the offender and the fix. CSH reads tests without running
 them, so it cannot read what a failing test prints. A test's title names the rule (the receivers' titles open with the
 requirement's identifier) but not the offender or the fix.
 
@@ -332,9 +332,9 @@ requirement's identifier) but not the offender or the fix.
 
 Open. Recorded as A-160.
 
-## Q-42 Fading: should prose that repeats a checked rule be a gap?
+## Q-44 Fading: should prose that repeats a checked rule be a gap?
 
-Raised in stage 46. The paper removes a rule from the prose once a check covers it. Telling whether a sentence restates
+Raised in stage 47. The paper removes a rule from the prose once a check covers it. Telling whether a sentence restates
 a rule needs its meaning, which CSH does not read; an identifier in the sentence only says the sentence refers to it.
 
 - **Not reported (chosen).**
@@ -343,9 +343,9 @@ a rule needs its meaning, which CSH does not read; an identifier in the sentence
 
 Open.
 
-## Q-43 Should CSH read the paper's violation seeding results?
+## Q-45 Should CSH read the paper's violation seeding results?
 
-Raised in stage 46. The paper benchmarks a repository by planting canonical mistakes and running its gate. CSH reads and
+Raised in stage 47. The paper benchmarks a repository by planting canonical mistakes and running its gate. CSH reads and
 never runs, so it cannot seed; it could read a seeding run's results (the receivers' `evaluation/results.json`) as
 evidence of which mechanism caught each mistake, as it reads test results.
 
@@ -354,9 +354,9 @@ evidence of which mechanism caught each mistake, as it reads test results.
 
 Open.
 
-## Q-44 Prevention CSH does not read
+## Q-46 Prevention CSH does not read
 
-Raised in stage 47. TypeScript can prevent an unmapped member with an exhaustive `switch` that assigns to `never`;
+Raised in stage 48. TypeScript can prevent an unmapped member with an exhaustive `switch` that assigns to `never`;
 Python can with `assert_never` under a type checker; Go linters can demand a complete `switch`. None is read: the first
 needs control flow, the others a tool's configuration and verdict.
 
@@ -366,9 +366,9 @@ needs control flow, the others a tool's configuration and verdict.
 
 Open. Recorded as A-162 and A-165.
 
-## Q-45 Paths in a document of a subdirectory
+## Q-47 Paths in a document of a subdirectory
 
-Raised in stage 49. The taskboard receivers each sit in a directory of one repository, and their `AGENTS.md` names
+Raised in stage 50. The taskboard receivers each sit in a directory of one repository, and their `AGENTS.md` names
 `src/domain/` meaning `typescript/src/domain/`. Paths are resolved from the repository root, so these are not checked
 (neither resolved nor dangling).
 

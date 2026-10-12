@@ -1,0 +1,30 @@
+{
+  "fixture": "F152",
+  "section": "The Assertion Ladder, section 4",
+  "stage": 48,
+  "expect": {
+    "run": {
+      "assessments": [
+        { "fragment": "Shop/Prevented/HandlerIsTotal", "verdict": "satisfied", "reasonsInclude": ["ShopException"] },
+        { "fragment": "Shop/Prevented/AreasIsTotal", "verdict": "satisfied" },
+        { "fragment": "Shop/Prevented/LabelsIsTotal", "verdict": "satisfied" },
+        { "fragment": "Shop/Prevented/FallbackIsTotal", "verdict": "violated" },
+        { "fragment": "Shop/Prevented/LegacyIsTotal", "verdict": "violated" }
+      ],
+      "facts": [
+        { "module": "src/main/java/com/example/shop/ShopException.java", "symbol": "ShopException", "members": ["NotFound", "Conflict"] },
+        { "module": "src/main/java/com/example/shop/Shape.java", "symbol": "Shape", "members": ["Circle", "Square"] },
+        { "module": "src/main/java/com/example/shop/Status.java", "symbol": "Status", "members": ["OPEN", "CLOSED"] },
+        { "module": "src/main/java/com/example/shop/Handler.java", "symbol": "Handler", "total": ["ShopException"] },
+        { "module": "src/main/java/com/example/shop/Areas.java", "symbol": "Areas", "total": ["Shape"] },
+        { "module": "src/main/java/com/example/shop/Labels.java", "symbol": "Labels", "total": ["Status"] },
+        { "module": "src/main/java/com/example/shop/Fallback.java", "symbol": "Fallback", "total": null },
+        { "module": "src/main/java/com/example/shop/Legacy.java", "symbol": "Legacy", "total": null },
+        { "module": "src/main/java/com/example/shop/Phase.java", "symbol": "Phase", "members": ["OPEN", "CLOSED"] },
+        { "module": "src/main/java/com/example/shop/Phases.java", "symbol": "Phases", "total": ["Phase"] },
+        { "module": "src/main/java/com/example/shop/Either.java", "symbol": "Either", "total": null }
+      ],
+      "rungs": [{ "item": "Reqs/R-J-1", "rung": "L5", "byIncludes": ["Handler", "ShopException"] }]
+    }
+  }
+}

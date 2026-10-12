@@ -25,7 +25,7 @@ const CODE_EXT = ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "svelte"
 const JS_EXT = ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs"];
 const ROOT_MANIFESTS = ["package.json", "pyproject.toml", "pom.xml", "go.mod", "Cargo.toml"];
 const TEST_DIRS = ["test", "tests", "__tests__"];
-/** The files an agent's tooling loads at the start of every session, by name, anywhere in the tree (stage 48). */
+/** The files an agent's tooling loads at the start of every session, by name, anywhere in the tree (stage 49). */
 export const INSTRUCTION_FILES = ["AGENTS.md", "CLAUDE.md", "GEMINI.md"];
 
 const segments = (p: string) => p.split("/");
@@ -80,7 +80,7 @@ function globsFor(intended: string[], universe: string[], include?: string[], ex
 /**
  * The identifier families of the documents: prefix, how many different identifiers, how many mentions. A two-part
  * identifier such as `R-FLOW-1` is counted first, in the family `R-[A-Z]+`, and blanked, so that `FLOW-1` inside it is
- * not counted again (The Assertion Ladder, stage 48).
+ * not counted again (The Assertion Ladder, stage 49).
  */
 function families(texts: string[]): { prefix: string; ids: number; mentions: number }[] {
   const by = new Map<string, { ids: Set<string>; mentions: number; head: string }>();
@@ -165,7 +165,7 @@ export function proposeProfile(dir: string): Proposal | { error: string } {
     practices.push({ ...p, sources: [s.name] });
   };
 
-  // Instructions: the files an agent reads at the start of every session (The Assertion Ladder, stage 48).
+  // Instructions: the files an agent reads at the start of every session (The Assertion Ladder, stage 49).
   const instructions = markdown.filter((p) => INSTRUCTION_FILES.includes(posix.basename(p)) || p === ".github/copilot-instructions.md");
   if (instructions.length > 0) {
     add({ name: "Instructions", kind: "Documents", at: ".", include: [...instructions] }, { id: "instructions", name: "Instructions", kind: "instructions", unit: "the instruction file", settings: { ...idSettings } });

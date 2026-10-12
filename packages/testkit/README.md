@@ -23,7 +23,7 @@ The test kit is development tooling and is not part of any runtime container. It
 - `packWorkspace(outDir)`, `packedPackages()`, and the script `src/pack.ts <out-dir>`: compile every package except this one to JavaScript with declarations, and pack each into a tarball with `npm pack`, its workspace dependencies replaced by versions ([A-40](../../ASSUMPTIONS.md)).
 - `commandBlocks(markdown)`, `runtimeContainers()`, `declaredContainers(readme)`, `reaches(dir, container)`, and the script `src/triangle.ts readme`, which runs every `sh` block of the root README in order (09, section 11.1).
 
-- A `run` fixture's expectation may hold `facts` (`members` and `total` of named declarations, `null` for absent), `rungs` (each rule's rung, and mechanisms it must include) and `ladder` (the counts), and its project may be given `authority.approve`, the fragments the stand-in approves (stages 46 and 47).
+- A `run` fixture's expectation may hold `facts` (`members` and `total` of named declarations, `null` for absent), `rungs` (each rule's rung, and mechanisms it must include) and `ladder` (the counts), and its project may be given `authority.approve`, the fragments the stand-in approves (stages 47 and 48).
 ## Depends on and used by
 
 - Depends on: every runtime workspace package: `@csh/kernel`, `csl`, `@csh/emit`, `@csh/print`, `@csh/solver`, `@csh/check`, `@csh/witness`, `@csh/adapter-witness-files`, `@csh/adapter-ears-markdown`, `@csh/ledger`, `@csh/gate`, `@csh/component`, `@csh/run` and `@csh/a3`. External: `typescript` for packing, `npm` to pack and to install the starter (F96), `git` and `gpg` for the ledger fixtures; Vitest and fast-check in its tests.
