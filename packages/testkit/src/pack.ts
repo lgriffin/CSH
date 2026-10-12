@@ -87,7 +87,9 @@ function stagePackage(repo: string, dir: string, compiledDir: string, versions: 
   const { devDependencies: _dev, ...rest } = pkg;
   const packed: PackageJson = { ...rest, exports: exportsOut as never, dependencies: deps, files: ["dist", ...(existsSync(join(src, "bin")) ? ["bin"] : []), "README.md"] };
   writeFileSync(join(out, "package.json"), `${JSON.stringify(packed, null, 2)}\n`);
-  const name = execFileSync("npm", ["pack", "--silent", "--pack-destination", stage], { cwd: out, encoding: "utf8" }).trim().split("\n").pop()!;
+  // npm is a .cmd script on Windows, which Node runs only through a shell.
+  const win = process.platform === "win32";
+  const name = execFileSync("npm", ["pack", "--silent", "--pack-destination", win ? `"${stage}"` : stage], { cwd: out, encoding: "utf8", shell: win }).trim().split("\n").pop()!;
   return join(stage, name);
 }
 

@@ -2,14 +2,14 @@
 // signed by a test-only key, the enforcing CI gate job allows the approved state and blocks the regression commit. The
 // real repository's gate stays as it is: no key, maintainers file or ledger is created there (rule 19, A-78).
 import { spawn } from "node:child_process";
-import { copyFileSync, cpSync, existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createZ3Solver } from "@csh/solver";
 import { fragmentsOf } from "@csh/kernel";
 import { type Decision, formatDecision, LEDGER_PATH, MAINTAINERS_PATH } from "@csh/ledger";
 import { evaluateProject, loadProject } from "@csh/run";
-import { createTestRepo, gpgAvailable, type TestRepo } from "../src/git.ts";
+import { createTestRepo, gpgAvailable, gpgHomeDir, gpgHomeEnv, type TestRepo } from "../src/git.ts";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const gateDir = join(repoRoot, "packages", "gate");
@@ -21,7 +21,7 @@ let runnerHome: string;
 
 /** The job as a CI runner runs it: a keyring holding no key at all, the root pinned outside the repository. */
 async function runJob(env: Record<string, string> = {}): Promise<{ status: number | null; out: string; decision: { overall: string; obligations: { fragment: string; disposition: string }[] } | undefined }> {
-  const child = spawn("bash", [job, repo.dir], { env: { ...process.env, GNUPGHOME: runnerHome, GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1", CSH_ROOT_COMMIT: rootCommit, ...env } });
+  const child = spawn("bash", [job, repo.dir], { env: { ...process.env, GNUPGHOME: gpgHomeEnv(runnerHome), GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1", CSH_ROOT_COMMIT: rootCommit, ...env } });
   let out = "";
   child.stdout.on("data", (d: Buffer) => (out += d.toString()));
   child.stderr.on("data", (d: Buffer) => (out += d.toString()));
@@ -34,7 +34,7 @@ async function runJob(env: Record<string, string> = {}): Promise<{ status: numbe
 describe.skipIf(!gpgAvailable())("the CI gate job on a scratch copy of the gate component", () => {
   beforeAll(async () => {
     repo = createTestRepo(join(repoRoot, ".csh-cache", "gate-job"), ["Owner"]);
-    runnerHome = mkdtempSync("/tmp/csh-runner-gnupg-");
+    runnerHome = gpgHomeDir("csh-runner-gnupg-");
     cpSync(gateDir, repo.dir, { recursive: true, filter: (p) => !/[\\/](node_modules|reports|\.csh-cache|regression|a3)$/.test(p) });
     // The component resolves its packages from the workspace's installation, as a run at a past commit does (A-50).
     symlinkSync(join(gateDir, "node_modules"), join(repo.dir, "node_modules"), "dir");
