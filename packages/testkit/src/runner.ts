@@ -397,10 +397,12 @@ export class FixtureRunner {
       const tarballs = packWorkspace(packs, repo);
       cpSync(join(repo, "examples", "starter"), project, { recursive: true, filter: (p) => !/[\\/](node_modules|reports|\.csh-cache)$/.test(p) });
       const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith("CSH_")));
-      // On Windows npm and the installed csh are .cmd shims, which only a shell runs.
+      // On Windows npm and the installed csh are .cmd shims, which only a shell runs. The command itself stays unquoted
+      // when it can: a quoted name found on PATH gives the shim the wrong %~dp0, and npm.cmd then looks for itself here.
       const win = process.platform === "win32";
+      const q = (a: string) => (/[\s"]/.test(a) ? `"${a}"` : a);
       const sh = (cmd: string, args: string[]) =>
-        win ? spawnSync([cmd, ...args].map((a) => `"${a}"`).join(" "), { cwd: project, encoding: "utf8", env, shell: true }) : spawnSync(cmd, args, { cwd: project, encoding: "utf8", env });
+        win ? spawnSync([q(cmd), ...args.map((a) => `"${a}"`)].join(" "), { cwd: project, encoding: "utf8", env, shell: true }) : spawnSync(cmd, args, { cwd: project, encoding: "utf8", env });
       const npm = sh("npm", ["install", "--save-dev", "--no-audit", "--no-fund", ...tarballs]);
       if (npm.status !== 0) {
         // Offline, the registry packages cannot be installed. Like a missing gpg, that skips the fixture only when the
