@@ -135,7 +135,8 @@ CSH copies none of the subject's text; each rule cites the file and line it read
 
 ## 8. Not decided by CSH
 
-Each is a question, not a guess: [QUESTIONS.md](../../QUESTIONS.md), Q-42 to Q-47.
+Each was a question, not a guess: [QUESTIONS.md](../../QUESTIONS.md), Q-42 to Q-47. The owner decided all six on 12 October
+2026 as built: none of them is read or counted.
 
 - Whether a subject's own check *explains* its failure (L4 for a test): the failure text is not read statically.
 - Fading: whether prose restates a rule a check already enforces cannot be told from text without reading meaning.

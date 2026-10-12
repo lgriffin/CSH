@@ -342,7 +342,7 @@ CSH judges, but nothing in the subject runs them.
 - **Count a holding profile rule as L3.** The ladder would then report what CSH checks rather than what the repository
   does, and a subject would climb by being profiled.
 
-Open. Recorded as A-160.
+Decided by Leigh on 12 October 2026: never. Recorded as A-160.
 
 ## Q-43 Can CSH tell that a subject's own check explains its failure?
 
@@ -355,7 +355,7 @@ requirement's identifier) but not the offender or the fix.
   language, and count a message that names a remedy. A heuristic over meaning.
 - **Read failure messages from test results** (JUnit XML, vitest JSON) when a run failed. Only seen when a test fails.
 
-Open. Recorded as A-160.
+Decided by Leigh on 12 October 2026: not established; L4 comes only from an approved CSH obligation. Recorded as A-160.
 
 ## Q-44 Fading: should prose that repeats a checked rule be a gap?
 
@@ -366,7 +366,7 @@ a rule needs its meaning, which CSH does not read; an identifier in the sentence
 - **Report an instruction-file line that cites an identifier at L3 or above** as a suggestion to fade. It would also
   flag sentences that only point to the rule.
 
-Open.
+Decided by Leigh on 12 October 2026: not reported.
 
 ## Q-45 Should CSH read the paper's violation seeding results?
 
@@ -377,7 +377,7 @@ evidence of which mechanism caught each mistake, as it reads test results.
 - **Not read (chosen).** No format is shared yet.
 - **Read them**, as converged where the mechanism that caught a seed matches the rung CSH finds, a gap where it does not.
 
-Open.
+Decided by Leigh on 12 October 2026: not read.
 
 ## Q-46 Prevention CSH does not read
 
@@ -389,7 +389,7 @@ needs control flow, the others a tool's configuration and verdict.
   unknown (Python, Go).
 - **Read each one**, at the cost of a reader per form.
 
-Open. Recorded as A-162 and A-165.
+Decided by Leigh on 12 October 2026: not read. Recorded as A-162 and A-165.
 
 ## Q-47 Paths in a document of a subdirectory
 
@@ -401,4 +401,4 @@ Raised in stage 50. The taskboard receivers each sit in a directory of one repos
 - **Resolve a path against the document's own directory as well**, so a receiver's instructions are checked against its
   own tree. Could resolve a path the author did not mean.
 
-Open.
+Decided by Leigh on 12 October 2026: leave them unchecked.
