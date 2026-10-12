@@ -21,7 +21,7 @@ name and counted by the tests adapter as `results-unmatched`, never dropped and 
     cited. `failure` is failed, `error` errored, `skipped` skipped (pytest's xfail too), anything else passed; a
     failure wins over an error. `at` is the test case's line. Malformed XML and a test case with no name are problems
     with their line.
-  - **`go test -json`**, recognised by a first non-empty line that is an object with string `Action` and `Package`.
+  - **`go test -json`**, recognised by the first line that opens an object, when it has string `Action` and `Package` (so a leading `go: downloading` line is a problem at its line, not a different format; F124 found this).
     Each `pass`, `fail` or `skip` of a test is a result under its package's import path, with its full name, subtests
     included (`TestAdd/CART-1`). A package that failed with no test failing in it (a build failure, an exit from
     `TestMain`) is one errored result with an empty name. Output and other events are read past, as are the
@@ -58,3 +58,9 @@ name and counted by the tests adapter as `results-unmatched`, never dropped and 
 ## Effort
 
 About 140 lines of source and 260 lines of tests. Effort was not timed.
+
+## What the fixtures revealed
+
+F123 and F124 were written from the documents after this stage was built. F124 found that a `go test -json` report
+opening with a line that is not JSON was read as execution lines, every line a problem; the format is now recognised
+by the first line that opens an object.
