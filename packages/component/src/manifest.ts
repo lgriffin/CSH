@@ -97,7 +97,7 @@ export interface ComponentManifest {
    * Version 2: read the repository's history (stage 25). Without it no history is read. `since` is the tag or commit
    * after which a commit with no test and no reference is an untraced-change; without it none is reported.
    */
-  history?: { since?: string };
+  history?: { since?: string; frozen?: string[]; tests?: string[] };
   /** Paths whose change makes a witness stale. */
   implementation: string[];
   practices: Practice[];
@@ -146,6 +146,11 @@ export function validateManifest(v: unknown): ComponentProblem[] {
     const h = v.history;
     // A revision is passed to git as an argument: one that could read as an option is refused.
     if (!isRecord(h) || (h.since !== undefined && (typeof h.since !== "string" || !/^[\w][\w.\/-]*$/.test(h.since)))) bad("malformed-manifest", "history must be an object whose since, when given, names a tag or commit");
+    // frozen: documents that record a moment (release notes, decisions); tests: paths that hold tests beside the usual ones.
+    for (const k of ["frozen", "tests"] as const) {
+      const g = isRecord(h) ? h[k] : undefined;
+      if (g !== undefined && (!Array.isArray(g) || g.some((x) => typeof x !== "string" || x === ""))) bad("malformed-manifest", `history.${k} must be a list of path globs`);
+    }
   }
   if (v2 && v.sources !== undefined) {
     if (!Array.isArray(v.sources)) bad("malformed-manifest", "sources must be a list");

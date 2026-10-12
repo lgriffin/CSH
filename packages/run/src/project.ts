@@ -185,8 +185,9 @@ export function fetchSubject(p: Project, at?: string): { ok: true; dir: string; 
   try {
     rmSync(fresh, { recursive: true, force: true });
     mkdirSync(dirname(dir), { recursive: true });
-    execFileSync("git", ["clone", "--quiet", "--no-checkout", repo, fresh], { stdio: ["ignore", "ignore", "pipe"] });
-    execFileSync("git", ["-c", "advice.detachedHead=false", "checkout", "--quiet", "--detach", commit], { cwd: fresh, stdio: ["ignore", "ignore", "pipe"] });
+    // core.longpaths: a subject on Windows may hold paths past MAX_PATH, and a checkout that silently drops them reads as "dirty".
+    execFileSync("git", ["-c", "core.longpaths=true", "clone", "--quiet", "--no-checkout", repo, fresh], { stdio: ["ignore", "ignore", "pipe"] });
+    execFileSync("git", ["-c", "core.longpaths=true", "-c", "advice.detachedHead=false", "checkout", "--quiet", "--detach", commit], { cwd: fresh, stdio: ["ignore", "ignore", "pipe"] });
   } catch (err) {
     rmSync(fresh, { recursive: true, force: true });
     return { ok: false, message: `could not fetch ${subject.repo} at ${commit.slice(0, 12)}: ${String((err as { stderr?: Buffer }).stderr ?? (err as Error).message).trim()}` };

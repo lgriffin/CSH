@@ -13,6 +13,10 @@ export interface HistoryOptions {
    * before the commit evaluated, so that a run at each release lists the changes made for that release.
    */
   since?: string;
+  /** Globs of documents that record a moment: release notes, decisions. Prose in them is never stale-prose. */
+  frozen?: string[];
+  /** Globs of paths that hold tests beside the usual conventions (a feature directory, a step directory). */
+  tests?: string[];
   /** Paths whose change is a change to the implementation: a path, or a directory and everything under it. */
   implementation: string[];
   /**
@@ -40,6 +44,21 @@ export const PREVIOUS_TAG = "previous-tag";
 /** A test file, by the conventions of JavaScript and TypeScript test runners (A-112). */
 export const TEST_FILE = /(^|\/)(test|tests|__tests__)\/|\.(test|spec)\.[cm]?[jt]sx?$/;
 
+/** A path glob as a pattern: `**` crosses directories, `*` does not, and a glob with no wildcard names a directory or a file. */
+export function globPattern(glob: string): RegExp {
+  let body = "";
+  for (let k = 0; k < glob.length; k++) {
+    const c = glob[k]!;
+    if (c === "*" && glob[k + 1] === "*") {
+      body += "(?:.*/)?";
+      k += glob[k + 2] === "/" ? 2 : 1;
+    } else if (c === "*") body += "[^/]*";
+    else if (c === "?") body += "[^/]";
+    else body += ".+^${}()|[]\\".includes(c) ? `\\${c}` : c;
+  }
+  return new RegExp(`^${body}(?:/.*)?$`);
+}
+
 /** A Co-Authored-By trailer that names an agent (A-113). */
 const AGENT_AUTHOR = /\bClaude\b|noreply@anthropic\.com/i;
 
@@ -53,6 +72,8 @@ function run(root: string, args: string[]): string | undefined {
 
 /** The history of the repository at `root`, read lazily and kept for the life of the port. */
 export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sinceProblem?: string; save(): void } {
+  const testGlobs = (o.tests ?? []).map(globPattern);
+  const frozenGlobs = (o.frozen ?? []).map(globPattern);
   const dates = new Map<string, string>();
   for (const l of (run(root, ["log", "--format=%H %cI", "HEAD"]) ?? "").split("\n")) {
     const [h, d] = l.split(" ");
@@ -162,6 +183,7 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
       }
       return introduced.get(key);
     },
+    frozen: (path: string) => frozenGlobs.some((g) => g.test(path)),
     untraced() {
       if (untraced !== undefined) return untraced;
       untraced = [];
@@ -172,7 +194,7 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
         const [hash, refs, session, coAuthors, names] = rec.split("\x1f");
         const files = (names ?? "").split("\n").filter((x) => x !== "");
         const changed = files.filter(impl).length;
-        if (hash === undefined || changed === 0 || files.some((f) => TEST_FILE.test(f)) || (refs ?? "").trim() !== "") continue;
+        if (hash === undefined || changed === 0 || files.some((f) => TEST_FILE.test(f) || testGlobs.some((g) => g.test(f))) || (refs ?? "").trim() !== "") continue;
         const d = dated(hash);
         if (d === undefined) continue;
         untraced.push({ ...d, files: changed, agent: (session ?? "").trim() !== "" || AGENT_AUTHOR.test(coAuthors ?? "") });

@@ -24,6 +24,7 @@ export function run(input: AdapterInput): AdapterOutput {
   const seen = new Set<string>();
   for (const file of sortedFiles(input)) {
     if (!/\.(jsonl|ndjson)$/.test(file.path)) continue;
+    const before = items.length + diagnostics.length;
     decode(file.bytes).split(/\r?\n/).forEach((line, i) => {
       if (line.trim() === "") return;
       const span = `${file.path}:${i + 1}`;
@@ -50,6 +51,8 @@ export function run(input: AdapterInput): AdapterOutput {
       const prose = ["title", "description", "notes", "close_reason"].map((k) => (typeof v[k] === "string" ? (v[k] as string) : "")).join("\n");
       for (const to of new Set([...prose.matchAll(id)].map((m) => m[0]))) edges.push({ from: v.id, rel: "mentions", to, span });
     });
+    // A declared source that reads as nothing is said so: an empty issue list is not a clean one.
+    if (items.length + diagnostics.length === before) diagnostics.push({ code: "no-items", severity: "warning", message: `${file.path} holds no lines`, span: file.path });
   }
   return { items, edges, diagnostics };
 }

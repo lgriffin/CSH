@@ -1,0 +1,77 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Hermes",
+  "subject": {
+    "repo": "D:/code/hermes",
+    "commit": "cebab9d74048b17b21ef6d481d6f6bf63d507a18"
+  },
+  "implementation": [
+    "packages"
+  ],
+  "sources": [
+    {
+      "name": "Docs",
+      "kind": "Documents",
+      "at": "docs",
+      "include": ["**/*.md"]
+    },
+    {
+      "name": "Features",
+      "kind": "Features",
+      "at": "features"
+    },
+    {
+      "name": "Steps",
+      "kind": "TestFiles",
+      "at": "features/step_definitions",
+      "include": ["**/*.ts"]
+    },
+    {
+      "name": "Code",
+      "kind": "Code",
+      "at": ".",
+      "include": ["packages/*/src/**/*.ts", "packages/*/package.json"]
+    }
+  ],
+  "spec": "csh/spec.csl.ts",
+  "history": {
+    "since": "previous-tag",
+    "frozen": ["docs/decisions"],
+    "tests": ["features"]
+  },
+  "practices": [
+    {
+      "id": "docs",
+      "name": "Docs",
+      "kind": "documents",
+      "sources": ["Docs"],
+      "author": "Maintainer",
+      "unit": "the document",
+      "settings": { "headings": "references" }
+    },
+    {
+      "id": "bdd",
+      "name": "BDD",
+      "kind": "scenarios",
+      "sources": ["Features"],
+      "author": "Maintainer",
+      "unit": "the rule"
+    },
+    {
+      "id": "tdd",
+      "name": "Steps",
+      "kind": "tests",
+      "sources": ["Steps"],
+      "author": "Maintainer",
+      "unit": "the step definition file"
+    },
+    {
+      "id": "code",
+      "name": "Code facts",
+      "kind": "facts",
+      "sources": ["Code"],
+      "author": "facts-ts",
+      "unit": "the module"
+    }
+  ]
+}

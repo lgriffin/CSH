@@ -1,0 +1,22 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Iomha",
+  "subject": {
+    "repo": "https://github.com/PoolPooer/iomha.git",
+    "commit": "fea6ca9a6ce689d03944f61325e6b06e39529ae5"
+  },
+  "implementation": ["packages"],
+  "sources": [
+    { "name": "Docs", "kind": "Documents", "at": "docs", "include": ["**/*.md"] },
+    { "name": "Features", "kind": "Features", "at": "features", "include": ["*.feature"] },
+    { "name": "Tests", "kind": "TestFiles", "at": ".", "include": ["packages/*/test/**/*.test.ts", "tests/**/*.test.ts"], "exclude": ["**/fixtures/**"] },
+    { "name": "Code", "kind": "Code", "at": ".", "include": ["packages/*/src/**/*.ts", "packages/*/src/**/*.tsx", "package.json"] }
+  ],
+  "history": { "since": "previous-tag", "frozen": ["docs/adr"], "tests": ["features"] },
+  "practices": [
+    { "id": "docs", "name": "Documents", "kind": "documents", "sources": ["Docs"], "author": "Maintainer", "unit": "the document", "settings": { "headings": "references" } },
+    { "id": "bdd", "name": "BDD", "kind": "scenarios", "sources": ["Features"], "author": "Maintainer", "unit": "the rule" },
+    { "id": "tdd", "name": "TDD", "kind": "tests", "sources": ["Tests"], "author": "Maintainer", "unit": "the test file" },
+    { "id": "code", "name": "Code facts", "kind": "facts", "sources": ["Code"], "author": "facts-ts", "unit": "the module" }
+  ]
+}
