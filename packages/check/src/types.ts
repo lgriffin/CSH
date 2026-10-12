@@ -172,6 +172,11 @@ export interface Report {
    * Source/id, and `dangling` when it names nothing. Present when some source produced an edge.
    */
   edges?: { source: string; from: string; rel: string; to: string; span: string; target?: string; dangling?: true }[];
+  /**
+   * Extension: the rung of each told rule on the Assertion Ladder (The Assertion Ladder, stage 46), with the mechanisms
+   * that establish it. Present when the run read a told rule; never entering a verdict or an outcome.
+   */
+  rungs?: { item: string; rung: "L2" | "L3" | "L4" | "L5"; by: { rung: "L2" | "L3" | "L4" | "L5"; mechanism: string }[] }[];
   /** Extension: invalid ledger entries, present from stage 7. */
   ledger?: { head: number; invalid: { seq: number; reason: string; commit?: string }[] };
   /**

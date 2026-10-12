@@ -197,6 +197,52 @@ export interface Declaration {
   line: number;
   base?: string;
   value?: string;
+  /** A closed type's members (stage 47). */
+  members?: string[];
+  /** The closed types a constant maps completely, by name as written (stage 47). */
+  total?: string[];
+}
+
+/**
+ * The members of a closed type alias: a union (or a single member) of string or number literal types, such as
+ * `"a" | "b"`; undefined for any other type, since `"a" | string` admits values no mapping can list (stage 47).
+ */
+function literalMembers(t: ts.TypeNode): string[] | undefined {
+  if (ts.isParenthesizedTypeNode(t)) return literalMembers(t.type);
+  const parts = ts.isUnionTypeNode(t) ? t.types : [t];
+  const out: string[] = [];
+  for (const p of parts) {
+    if (!ts.isLiteralTypeNode(p)) return undefined;
+    const l = p.literal;
+    if (ts.isStringLiteral(l) || ts.isNoSubstitutionTemplateLiteral(l)) out.push(l.text);
+    else if (ts.isNumericLiteral(l)) out.push(String(Number(l.text)));
+    else if (ts.isPrefixUnaryExpression(l) && l.operator === ts.SyntaxKind.MinusToken && ts.isNumericLiteral(l.operand)) out.push(String(-Number(l.operand.text)));
+    else return undefined;
+  }
+  return out;
+}
+
+/**
+ * The key type `Record<K, V>` names, when `K` is a plain name: also inside `Readonly<...>`. `Partial<Record<K, V>>`
+ * lets a key be left out, so it names none, and `Record<string, V>` names no closed type (stage 47).
+ */
+function recordKey(t: ts.TypeNode | undefined): string | undefined {
+  if (t === undefined || !ts.isTypeReferenceNode(t) || !ts.isIdentifier(t.typeName)) return undefined;
+  const name = t.typeName.text;
+  const args = t.typeArguments ?? [];
+  if (name === "Readonly" && args.length === 1) return recordKey(args[0]);
+  if (name !== "Record" || args.length !== 2) return undefined;
+  const k = args[0]!;
+  return ts.isTypeReferenceNode(k) && ts.isIdentifier(k.typeName) && (k.typeArguments ?? []).length === 0 ? k.typeName.text : undefined;
+}
+
+/** The closed type a constant maps completely: its annotation, else a `satisfies` on its initialiser (stage 47). */
+function totalOver(d: ts.VariableDeclaration): string | undefined {
+  const annotated = recordKey(d.type);
+  if (annotated !== undefined) return annotated;
+  let e = d.initializer;
+  while (e !== undefined && (ts.isParenthesizedExpression(e) || ts.isAsExpression(e))) e = e.expression;
+  return e !== undefined && ts.isSatisfiesExpression(e) ? recordKey(e.type) : undefined;
 }
 
 /** A literal's value as text: a string, a number, a boolean, or one of these with `as const`. */
@@ -227,11 +273,14 @@ function declarationsOf(sf: ts.SourceFile): Declaration[] {
       const declares = flags & ts.NodeFlags.Const ? "const" : flags & ts.NodeFlags.Let ? "let" : "var";
       for (const d of n.declarationList.declarations) {
         const value = declares === "const" && ts.isIdentifier(d.name) ? literalValue(d.initializer) : undefined;
-        for (const symbol of bindingNames(d.name)) out.push({ symbol, declares, line, ...(value !== undefined ? { value } : {}) });
+        const over = declares === "const" && ts.isIdentifier(d.name) ? totalOver(d) : undefined;
+        for (const symbol of bindingNames(d.name)) out.push({ symbol, declares, line, ...(value !== undefined ? { value } : {}), ...(over !== undefined ? { total: [over] } : {}) });
       }
     } else if (ts.isInterfaceDeclaration(n)) out.push({ symbol: n.name.text, declares: "interface", line });
-    else if (ts.isTypeAliasDeclaration(n)) out.push({ symbol: n.name.text, declares: "type", line });
-    else if (ts.isEnumDeclaration(n)) out.push({ symbol: n.name.text, declares: "enum", line });
+    else if (ts.isTypeAliasDeclaration(n)) {
+      const members = (n.typeParameters ?? []).length === 0 ? literalMembers(n.type) : undefined;
+      out.push({ symbol: n.name.text, declares: "type", line, ...(members !== undefined ? { members } : {}) });
+    } else if (ts.isEnumDeclaration(n)) out.push({ symbol: n.name.text, declares: "enum", line, members: n.members.map((m) => m.name.getText(sf).replace(/^["']|["']$/g, "")) });
     else if (ts.isModuleDeclaration(n) && ts.isIdentifier(n.name)) out.push({ symbol: n.name.text, declares: "namespace", line });
   }
   return out;
@@ -361,7 +410,7 @@ export function run(input: AdapterInput): AdapterOutput {
       }
     }
     for (const line of r.computed) facts.push({ ...base, kind: "skipped", at: `${f.path}:${line}`, from: f.path, reason: "computed specifier" });
-    for (const d of r.declarations) facts.push({ ...base, kind: "declare", at: `${f.path}:${d.line}`, module: f.path, symbol: d.symbol, declares: d.declares, ...(d.base !== undefined ? { base: d.base } : {}), ...(d.value !== undefined ? { value: d.value } : {}) });
+    for (const d of r.declarations) facts.push({ ...base, kind: "declare", at: `${f.path}:${d.line}`, module: f.path, symbol: d.symbol, declares: d.declares, ...(d.base !== undefined ? { base: d.base } : {}), ...(d.value !== undefined ? { value: d.value } : {}), ...(d.members !== undefined ? { members: d.members } : {}), ...(d.total !== undefined ? { total: d.total } : {}) });
     for (const e of r.exports) facts.push({ ...base, kind: "export", at: f.path, module: f.path, symbol: e.symbol, ...(e.from !== undefined ? { from: e.from } : {}), typeOnly: e.typeOnly });
   }
   return { facts, diagnostics };

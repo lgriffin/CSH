@@ -37,11 +37,16 @@ export function validateFact(v: unknown): string | undefined {
     if (o.kind === "module") return !str(o.name) ? "a module fact has no name" : o.language !== undefined && !str(o.language) ? "a module fact's language is not a name" : undefined;
     if (o.kind === "export") return str(o.module) && str(o.symbol) && typeof o.typeOnly === "boolean" && (o.from === undefined || str(o.from)) ? undefined : "an export fact needs module, symbol and typeOnly";
     if (o.kind === "declare") {
-      return str(o.module) && str(o.symbol) && (DECLARATION_KINDS as readonly string[]).includes(o.declares as string) && (o.base === undefined || str(o.base)) && (o.value === undefined || typeof o.value === "string") ? undefined : "a declare fact needs module, symbol and what it declares";
+      return str(o.module) && str(o.symbol) && (DECLARATION_KINDS as readonly string[]).includes(o.declares as string) && (o.base === undefined || str(o.base)) && (o.value === undefined || typeof o.value === "string") && names(o.members) && names(o.total) ? undefined : "a declare fact needs module, symbol and what it declares; members and total, when given, are lists of names";
     }
     return str(o.file) && str(o.path) && typeof o.value === "string" ? undefined : "a field fact needs file, path and value";
   }
   return `unknown kind ${JSON.stringify(o.kind)}`;
+}
+
+/** An optional list of names: absent, or an array of non-empty strings (stage 47). */
+function names(x: unknown): boolean {
+  return x === undefined || (Array.isArray(x) && x.every((n) => typeof n === "string" && n !== ""));
 }
 
 /** Parse a facts file. A malformed line is reported, never dropped silently. */

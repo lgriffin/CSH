@@ -5,7 +5,7 @@ import { spawn, spawnSync, type SpawnOptions } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
-import { type Assessment, type AuthorityResolver, cachingSolver, makeRefiner, type Finding, MemoryEvidenceStore, type Report, SolverCache } from "@csh/check";
+import { type Assessment, type AuthorityResolver, cachingSolver, makeRefiner, type Finding, MemoryEvidenceStore, overviewOf, type Report, SolverCache } from "@csh/check";
 import { emit, type Lock, readLock, typeCheck } from "@csh/emit";
 import { acceptDecision, gate, type Snapshot, type Waiver } from "@csh/gate";
 import { digestJson, digestOf, type Fragment, fragmentsOf, type Module, stableJson, textDigestOf } from "@csh/kernel";
@@ -38,7 +38,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 44;
+export const BUILT_THROUGH_STAGE = 48;
 
 const AGENT_BIN = resolve(import.meta.dirname, "../../agent/bin/csh-agent.js");
 
@@ -798,7 +798,10 @@ export class FixtureRunner {
       const spec = specPathOf(p);
       // A component with no specification is the model its manifest declares, as evaluateProject makes it.
       const emission = spec === undefined ? await emitProject(p, { solver: this.o.solver }) : undefined;
-      const r = await evaluateSpec(spec ?? p.root, { root: p.root, sourceRoot: p.sourceRoot, solver: this.o.solver, config: {}, snapshot: { commit: p.commit, ledgerHead: "0" }, ...(p.component !== undefined ? { component: p.component } : {}) }, emission);
+      // A stand-in for the ledger, named in the expected result: these fragments are approved, every other is a candidate.
+      const approve = new Set<string>((x.authority?.approve ?? []) as string[]);
+      const authority: AuthorityResolver | undefined = x.authority === undefined ? undefined : (f) => ({ authority: approve.has(f.name) ? "approved" : "candidate" });
+      const r = await evaluateSpec(spec ?? p.root, { root: p.root, sourceRoot: p.sourceRoot, solver: this.o.solver, config: {}, snapshot: { commit: p.commit, ledgerHead: "0" }, ...(p.component !== undefined ? { component: p.component } : {}), ...(authority !== undefined ? { authority } : {}) }, emission);
       if (!r.emitted.ok) {
         failures.push(`emission failed: ${JSON.stringify(r.emitted.errors)}`);
         return;
@@ -809,6 +812,36 @@ export class FixtureRunner {
       }
       const report = r.checked!.report;
       if (x.assessments !== undefined) this.assessmentsExpect(report.assessments ?? [], x.assessments, failures);
+      // Declarations and what each says of closed types (The Assertion Ladder, stage 47): null means the field is absent.
+      const declared = (r.runs ?? []).flatMap((s) => (s.output.facts ?? []).flatMap((f) => (f.kind === "declare" ? [f] : [])));
+      for (const want of x.facts ?? []) {
+        const got = declared.find((f) => f.module === want.module && f.symbol === want.symbol);
+        if (got === undefined) {
+          failures.push(`no declaration of ${want.symbol} in ${want.module}; it declares ${declared.filter((f) => f.module === want.module).map((f) => f.symbol).join(", ") || "nothing"}`);
+          continue;
+        }
+        for (const k of ["members", "total"] as const) {
+          if (!(k in want)) continue;
+          const w = want[k] === null ? undefined : JSON.stringify(want[k]);
+          const g = got[k] === undefined ? undefined : JSON.stringify(got[k]);
+          if (w !== g) failures.push(`${want.module} ${want.symbol}: ${k} ${g ?? "(absent)"}, expected ${w ?? "(absent)"}`);
+        }
+      }
+      // Rungs on the Assertion Ladder (stage 46), and the overview's count at each rung.
+      const rungs = report.rungs ?? [];
+      for (const want of x.rungs ?? []) {
+        const got = rungs.find((y) => y.item === want.item);
+        if (got === undefined) failures.push(`no rung for ${want.item}; rungs for ${rungs.map((y) => y.item).join(", ") || "nothing"}`);
+        else {
+          if (got.rung !== want.rung) failures.push(`${want.item} is at ${got.rung}, expected ${want.rung}; by ${JSON.stringify(got.by)}`);
+          const said = got.by.map((b) => b.mechanism).join("\n");
+          for (const s of (want.byIncludes ?? []) as string[]) if (!said.includes(s)) failures.push(`${want.item}: no mechanism mentions ${s}; by ${JSON.stringify(got.by)}`);
+        }
+      }
+      if (x.ladder !== undefined) {
+        const o = overviewOf(report);
+        if (JSON.stringify(o.ladder) !== JSON.stringify(x.ladder)) failures.push(`ladder ${JSON.stringify(o.ladder)}, expected ${JSON.stringify(x.ladder)}`);
+      }
       const skipped = (r.runs ?? []).flatMap((s) => (s.output.facts ?? []).flatMap((f) => (f.kind === "skipped" ? [f] : [])));
       for (const s of x.skipped ?? []) {
         if (!skipped.some((f) => f.at === s.at && (s.reasonIncludes === undefined || f.reason.includes(s.reasonIncludes)))) failures.push(`skipped fact at ${s.at} ${s.reasonIncludes ?? ""} not read; got ${skipped.map((f) => `${f.at} (${f.reason})`).join("; ") || "none"}`);

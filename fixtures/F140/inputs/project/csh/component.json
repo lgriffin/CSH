@@ -1,0 +1,17 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Ladder",
+  "spec": "csh/spec.csl.ts",
+  "implementation": ["src"],
+  "sources": [
+    { "name": "Reqs", "kind": "Documents", "at": "docs/requirements.md" },
+    { "name": "Tests", "kind": "TestFiles", "at": ".", "include": ["tests/**/*.ts"] },
+    { "name": "Code", "kind": "Code", "at": ".", "include": ["src/**/*.ts", "tests/**/*.ts"] }
+  ],
+  "practices": [
+    { "id": "reqs", "name": "Requirements", "kind": "requirements", "sources": ["Reqs"], "adapter": "@csh/adapter-items/markdown", "settings": { "idPattern": "R-[A-Z]+-[0-9]+" } },
+    { "id": "ears", "name": "EARS", "kind": "requirements", "sources": ["Ears"] },
+    { "id": "tests", "name": "Tests", "kind": "tests", "sources": ["Tests"], "settings": { "idPattern": "R-[A-Z]+-[0-9]+" } },
+    { "id": "code", "name": "Code facts", "kind": "facts", "sources": ["Code"] }
+  ]
+}

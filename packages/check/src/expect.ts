@@ -24,6 +24,8 @@ export interface ExpectedRow {
 export interface Expected {
   schema: "csh-expected/v1";
   counts?: Partial<Record<Outcome, number>>;
+  /** Each told rule's expected rung on the Assertion Ladder (stage 46), by Source/id. */
+  rungs?: Record<string, string>;
   rows: ExpectedRow[];
 }
 
@@ -65,6 +67,7 @@ export function parseExpected(text: string): { expected?: Expected; problems: st
         if (!isObj(x) || typeof x.outcome !== "string" || typeof x.kind !== "string" || typeof x.subject !== "string") problems.push(`rows[${i}].expect[${j}] needs an outcome, a kind and a subject`);
       });
   });
+  if (v.rungs !== undefined && (!isObj(v.rungs) || Object.values(v.rungs).some((r) => typeof r !== "string" || !/^L[2-5]$/.test(r)))) problems.push("rungs maps each told rule to L2, L3, L4 or L5");
   return problems.length > 0 ? { problems } : { expected: v as unknown as Expected, problems };
 }
 
@@ -84,6 +87,11 @@ export function checkExpected(overview: Overview, expected: Expected): ExpectRes
   }
   for (const [o, n] of Object.entries(expected.counts ?? {}) as [Outcome, number][]) {
     if (overview.counts[o] !== n) mismatches.push({ message: `${overview.counts[o]} ${o} entries, expected ${n}` });
+  }
+  const rungs = new Map((overview.rungs ?? []).map((r) => [r.item, r.rung]));
+  for (const [item, want] of Object.entries(expected.rungs ?? {}).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+    const got = rungs.get(item);
+    if (got !== want) mismatches.push({ message: got === undefined ? `${item} is not a told rule of the run, expected at ${want}` : `${item} is at ${got}, expected ${want}` });
   }
   return { rows, mismatches };
 }

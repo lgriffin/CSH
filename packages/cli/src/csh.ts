@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { a3Dir, readJudgments } from "@csh/a3";
-import { checkExpected, claimSpans, DIVERGENCE_READINGS, type Finding, overviewOf, parseExpected, renderExpect, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report, type SentenceAt } from "@csh/check";
+import { checkExpected, claimSpans, DIVERGENCE_READINGS, type Finding, ladderOf, overviewOf, renderLadder, parseExpected, renderExpect, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report, type SentenceAt } from "@csh/check";
 import { exitCode, formatDecision as formatGate, type GateDecision, type Mode } from "@csh/gate";
 import { digestOf, fragmentsOf, textDigestOf, type Module, stableJson } from "@csh/kernel";
 import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons } from "@csh/ledger";
@@ -35,6 +35,10 @@ const USAGE = `csh: the Composable Specification Harness
                                   with what would close each), indeterminate (with what would decide it) and
                                   converged. Prints the counts by practice and kind and writes the sheet to
                                   reports/csh-overview.html, which opens on any signal as #<id>. --signal prints one.
+  csh ladder [--run <dir|commit>] [--json]
+                                  Every told rule on the Assertion Ladder, weakest first: its rung (L2 told, L3
+                                  checked, L4 explained, L5 prevented), the mechanisms that establish it, and the
+                                  outcomes of the overview entries about it. Reads the last report; decides nothing.
   csh explain <finding-id> [--run <dir|commit>]
                                   Print one finding, members rendered through the printer. With --run, from a stored
                                   run (its directory, or a commit whose newest stored run is read) rather than reports/.
@@ -375,6 +379,19 @@ export async function csh(argv: string[], io: Io): Promise<number> {
       const title = `${name} overview${report.subject !== undefined ? ` at ${report.subject.commit.slice(0, 12)}` : report.snapshot !== undefined ? ` at ${report.snapshot.commit.slice(0, 12)}` : ""}`;
       write(join(p.root, a.options.out ?? OVERVIEW_PATH), renderOverviewHtml(o, title));
       io.out(a.flags.has("json") ? stableJson(o) : renderOverview(o));
+      return 0;
+    }
+    case "ladder": {
+      const stored = a.options.run === undefined ? undefined : storedRunFiles(p, a.options.run, false);
+      if (stored !== undefined && "error" in stored) {
+        io.err(`csh ladder: ${stored.error}\n`);
+        return 2;
+      }
+      const report = reportFor(p, a, stored, "ladder", io);
+      if (report === undefined) return 2;
+      const o = overviewOf(report, practiceMap(p));
+      const l = ladderOf(report, o);
+      io.out(a.flags.has("json") ? stableJson(l) : renderLadder(l));
       return 0;
     }
     case "expect": {

@@ -82,7 +82,7 @@ export function evaluateArchitecture(input: { prepared: Prepared; fragments: Fra
   const claimState: ArchRuleOutcome["facts"] = current.length > 0 ? "current" : all.length > 0 ? "stale" : "none";
   const claimFacts: ClaimFacts = {
     modules: new Set(current.flatMap((f) => (f.kind === "module" ? [f.name] : []))),
-    declares: current.flatMap((f) => (f.kind === "declare" ? [{ module: f.module, symbol: f.symbol, declares: f.declares, at: f.at, ...(f.base !== undefined ? { base: f.base } : {}), ...(f.value !== undefined ? { value: f.value } : {}) }] : [])),
+    declares: current.flatMap((f) => (f.kind === "declare" ? [{ module: f.module, symbol: f.symbol, declares: f.declares, at: f.at, ...(f.base !== undefined ? { base: f.base } : {}), ...(f.value !== undefined ? { value: f.value } : {}), ...(f.members !== undefined ? { members: f.members } : {}), ...(f.total !== undefined ? { total: f.total } : {}) }] : [])),
     exports: current.flatMap((f) => (f.kind === "export" ? [{ module: f.module, symbol: f.symbol, at: f.at }] : [])),
     fields: current.flatMap((f) => (f.kind === "field" ? [{ file: f.file, path: f.path, value: f.value, at: f.at }] : [])),
     ...(input.files !== undefined ? { files: new Set(input.files) } : {}),

@@ -1,0 +1,16 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Mixed",
+  "spec": "csh/spec.csl.ts",
+  "implementation": ["app", "api"],
+  "sources": [
+    { "name": "Reqs", "kind": "Documents", "at": "docs/requirements.md" },
+    { "name": "Tests", "kind": "TestFiles", "at": ".", "include": ["tests/**/*.py"] },
+    { "name": "Code", "kind": "Code", "at": ".", "include": ["app/**/*.py", "api/**/*.go", "go.mod"] }
+  ],
+  "practices": [
+    { "id": "reqs", "name": "Requirements", "kind": "requirements", "sources": ["Reqs"], "adapter": "@csh/adapter-items/markdown", "settings": { "idPattern": "R-[A-Z]+-[0-9]+" } },
+    { "id": "tests", "name": "Tests", "kind": "tests", "sources": ["Tests"], "settings": { "idPattern": "R-[A-Z]+-[0-9]+" } },
+    { "id": "code", "name": "Code facts", "kind": "facts", "sources": ["Code"] }
+  ]
+}

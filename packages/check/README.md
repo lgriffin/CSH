@@ -28,6 +28,7 @@ It is the main part of the "Check engine" container, with `@csh/solver`, shown i
 - `signalsOf(report, manifest?)`, `matches(signal, rule)`, `Signal`, `Match`, `PracticeMap`: every item of a report a reader may have to place, with its fragments, sources and practices, and the structured rule that places it.
 - `makeRefiner(solver, budgetMs)`, `Replacement`: the refinement check that `@csh/emit` calls for replaced inherited obligations.
 
+- `rungsOf(input)`, `RungEntry`, `Rung`, `RUNGS`, `RUNG_NAMES`, `isToldRule`, `ladderCounts`, `ladderLine`, `ladderOf(report, overview)`, `renderLadder`, `Ladder` (`csh-ladder/v1`) (stage 46): [the Assertion Ladder](../../docs/spec/14-assertion-ladder.md). `Report.rungs` gives every told rule its rung, L2 to L5, with the mechanisms that establish it; the overview adds `ladder` (counts), `rungs` and `rung` on each entry, one line of text and a tile per rung in the HTML; `Expected.rungs` makes a changed rung a mismatch. `TraceResult.checks` (from trace) records what checks each item, for L3.
 ## Depends on and used by
 
 - Depends on: `@csh/kernel`, `@csh/solver`, `@csh/arch` (architecture rules) and `@csh/witness` (witness and adapter output types, `witnessDigest`). No external packages.
