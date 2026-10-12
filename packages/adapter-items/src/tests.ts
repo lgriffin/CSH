@@ -117,13 +117,36 @@ export function declarations(text: string): { line: number; describe: boolean; m
   return out;
 }
 
+/** A Cucumber step definition: Given, When, Then, And, But, Step or defineStep, called with a string or a regular expression. */
+const STEP = /(?<![.\w$])(Given|When|Then|And|But|Step|defineStep)\s*\(/g;
+
+/**
+ * Each step definition of a file (Cucumber-js style): its line and its literal text. A regular expression is a step
+ * whose text is not kept: the lexer blanks its content, so it cites nothing.
+ */
+export function stepDefinitions(text: string): { line: number; title: string }[] {
+  const { code, strings } = lex(text);
+  const out: { line: number; title: string }[] = [];
+  for (const m of code.matchAll(STEP)) {
+    const at = skipSpace(code, m.index + m[0].length);
+    const title = strings.get(at) ?? (code[at] === "/" ? "" : undefined);
+    if (title === undefined) continue;
+    out.push({ line: code.slice(0, at).split("\n").length, title });
+  }
+  return out;
+}
+
 export function run(input: AdapterInput): AdapterOutput {
   const id = new RegExp(`\\b(?:${input.config?.citePattern ?? idPatternOf(input)})\\b`, "g");
   const items: SourceItem[] = [];
   const edges: ItemEdge[] = [];
   const diagnostics: Diagnostic[] = [];
+  // style: "cucumber" reads step definitions too: they are not tests, so they are counted as steps, and a file of
+  // steps alone declares no test but is not an empty one. Identifiers in a step's text cite, as in a test title.
+  const cucumber = input.config?.style === "cucumber";
   for (const file of sortedFiles(input)) {
     const text = decode(file.bytes);
+    let steps = 0;
     let tests = 0;
     let skipped = 0;
     const cited = new Set<string>();
@@ -136,10 +159,21 @@ export function run(input: AdapterInput): AdapterOutput {
         edges.push({ from: file.path, rel: "cites", to: c[0], span: `${file.path}:${d.line}` });
       }
     }
+    if (cucumber) {
+      for (const d of stepDefinitions(text)) {
+        steps++;
+        for (const c of d.title.matchAll(id)) {
+          if (cited.has(c[0])) continue;
+          cited.add(c[0]);
+          edges.push({ from: file.path, rel: "cites", to: c[0], span: `${file.path}:${d.line}` });
+        }
+      }
+    }
     const attrs: Record<string, string> = { tests: String(tests) };
+    if (steps > 0) attrs.steps = String(steps);
     if (skipped > 0) attrs.skipped = String(skipped);
     items.push({ id: file.path, kind: "test-file", text: file.path, span: `${file.path}:1`, textDigest: digestOf(text), attrs });
-    if (tests === 0) diagnostics.push({ code: "no-tests", severity: "info", message: `${file.path} declares no it or test call with a literal title`, span: file.path });
+    if (tests === 0 && steps === 0) diagnostics.push({ code: "no-tests", severity: "info", message: `${file.path} declares no it or test call with a literal title`, span: file.path });
   }
   if (input.executions === undefined) return { items, edges, diagnostics };
   const results = joinResults(input, items, id, diagnostics);
