@@ -35,6 +35,14 @@ beforeAll(() => {
 afterAll(() => rmSync(proj, { recursive: true, force: true }));
 
 describe("csh", () => {
+  it("overview and explain say that no report exists, and exit 2, before any run has written one", async () => {
+    for (const cmd of [["overview"], ["explain", "x"]]) {
+      const { o, io: x } = io(proj);
+      expect(await csh(cmd, x)).toBe(2);
+      expect(o.err).toBe(`csh ${cmd[0]}: no report at reports/csh-report.json; csh run or csh check writes one, and writes none when it fails\n`);
+    }
+  });
+
   it("check exits 0 and writes the report and the model", async () => {
     const { o, io: x } = io(proj);
     expect(await csh(["check"], x)).toBe(0);
