@@ -2,7 +2,7 @@
   "schema": "csh-component/v2",
   "name": "TutorsReleaseHarness",
   "subject": {
-    "repo": "D:/code/tutors-release-harness",
+    "repo": "https://github.com/tutors-sdk/tutors-release-harness",
     "commit": "195e0d10cccd226f5bafb97898c664b2bf68fbae"
   },
   "implementation": ["src"],

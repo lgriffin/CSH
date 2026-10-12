@@ -2,7 +2,7 @@
   "schema": "csh-component/v2",
   "name": "TutorsMonoRepo",
   "subject": {
-    "repo": "D:/code/tutors-mono-repo",
+    "repo": "https://github.com/tutors-sdk/tutors-mono-repo",
     "commit": "ee66461cfe8e2ccbfc400a0682082295d79cb81c"
   },
   "implementation": [

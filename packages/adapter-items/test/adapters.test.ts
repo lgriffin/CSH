@@ -148,7 +148,7 @@ describe("the Gherkin inventory adapter", () => {
       ["rule", "f/a.feature#landmarks-are-drawn-on-maps"],
       ["scenario", "f/a.feature#landmarks-are-drawn-on-maps/under-no-rule"],
     ]);
-    expect(out.items![0]!.attrs).toEqual({ tags: "@core" });
+    expect((out.items ?? [])[0]!.attrs).toEqual({ tags: "@core" });
     expect(out.items![1]!.pattern).toBe("event-driven");
     expect(out.items![3]!.attrs).toEqual({ outline: "true" });
     expect(out.edges!.filter((e) => e.rel === "exemplifies").map((e) => e.to)).toEqual([out.items![1]!.id, out.items![1]!.id, out.items![4]!.id]);
@@ -192,7 +192,7 @@ describe("the test-file adapter", () => {
       "foo.it('ARCH-09 not a test');",
     ].join("\n");
     const out = tests(input({ "tests/p.test.ts": file }, undefined, "TestFiles"));
-    expect(out.items![0]!.attrs).toEqual({ tests: "2" });
+    expect((out.items ?? [])[0]!.attrs).toEqual({ tests: "2" });
     expect(out.edges!.map((e) => [e.to, e.span])).toEqual([["ARCH-02", "tests/p.test.ts:3"], ["ARCH-03", "tests/p.test.ts:4"], ["ARCH-04", "tests/p.test.ts:7"]]);
   });
 });
@@ -414,5 +414,22 @@ describe("what the audit of other repositories showed", () => {
 
   it("says when an issue file holds no lines", () => {
     expect(jsonl(input({ "issues.jsonl": "" }, undefined, "Issues")).diagnostics.map((d) => [d.code, d.span])).toEqual([["no-items", "issues.jsonl"]]);
+  });
+});
+
+describe("Cucumber step definitions", () => {
+  const steps = ["import { Given, Then } from \"@cucumber/cucumber\";", "Given(\"a user at ARCH-01\", function () {});", "Then(/^the (\d+) rows$/, function () {});", "// Given(\"in a comment\")", ""].join("\n");
+
+  it("are read as steps, not tests, when the style is cucumber", () => {
+    const out = tests(input({ "s.ts": steps }, { style: "cucumber" }, "TestFiles"));
+    expect((out.items ?? [])[0]!.attrs).toMatchObject({ tests: "0", steps: "2" });
+    expect(out.diagnostics).toEqual([]);
+    expect((out.edges ?? []).map((e) => [e.from, e.to])).toEqual([["s.ts", "ARCH-01"]]);
+  });
+
+  it("are not read at all otherwise", () => {
+    const out = tests(input({ "s.ts": steps }, undefined, "TestFiles"));
+    expect((out.items ?? [])[0]!.attrs).toEqual({ tests: "0" });
+    expect(out.diagnostics.map((d) => d.code)).toEqual(["no-tests"]);
   });
 });
