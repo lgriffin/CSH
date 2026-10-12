@@ -1,0 +1,67 @@
+{
+  "schema": "csh-component/v2",
+  "name": "SpringHexagonalPoc",
+  "subject": {
+    "repo": "https://github.com/rbiedrawa/spring-hexagonal-architecture-poc",
+    "commit": "db76d0042699b3b83e0f47782ab7f7a56ee16cee"
+  },
+  "implementation": [
+    "src"
+  ],
+  "sources": [
+    {
+      "name": "Docs",
+      "kind": "Documents",
+      "at": "Readme.md"
+    },
+    {
+      "name": "Tests",
+      "kind": "TestFiles",
+      "at": "src/test/java",
+      "include": [
+        "**/*.java"
+      ]
+    },
+    {
+      "name": "Code",
+      "kind": "Code",
+      "at": ".",
+      "include": [
+        "src/main/java/**/*.java"
+      ]
+    }
+  ],
+  "practices": [
+    {
+      "id": "docs",
+      "name": "Docs",
+      "kind": "documents",
+      "sources": [
+        "Docs"
+      ],
+      "author": "Maintainer",
+      "unit": "the document"
+    },
+    {
+      "id": "tests",
+      "name": "Tests",
+      "kind": "tests",
+      "sources": [
+        "Tests"
+      ],
+      "author": "Maintainer",
+      "unit": "the test file"
+    },
+    {
+      "id": "code",
+      "name": "Code facts",
+      "kind": "facts",
+      "sources": [
+        "Code"
+      ],
+      "author": "facts-code",
+      "unit": "the module"
+    }
+  ],
+  "spec": "csh/spec.csl.ts"
+}

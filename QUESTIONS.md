@@ -267,3 +267,42 @@ Raised in stage 31. `BUILT_IN_BASES` in `packages/arch` lists Python's built-in 
   would be misread.
 
 Taken provisionally as A-130.
+
+## Q-26 How does a profile expect a disagreement between a subject's documents and its code?
+
+Raised in stage 36. A subject's documents state its layering, and its code may not follow them.
+
+- **Expect what CSH should report, decided before the run from the documents and a reading of the code (chosen).** The
+  spring-hexagonal-poc core imports Spring and Lombok though its Readme says it has no external dependencies, so the
+  profile expects that rule `violated`.
+- **Expect each document's statement as satisfied.** CI then fails whenever CSH correctly reports the disagreement.
+- **Expect nothing for such a rule.** It is listed as unknown, and a regression in it goes unseen.
+
+Taken provisionally as A-135.
+
+## Q-27 May a profile's expected results leave out counts?
+
+Raised in stage 36. The ESI.ts profile records the counts of converged, gaps and indeterminate (A-125). A count cannot
+be derived from documents before a run (brief, rule 4).
+
+- **Rows only (chosen).** Every expectation comes from the documents; drift in what is not expected goes unseen.
+- **Counts recorded after the first run, labelled as a snapshot.** Catches drift, but they are output, not expectations.
+
+Taken provisionally as A-135.
+
+## Q-28 What the stage 36 subjects' documents mean
+
+Raised in stage 36. Each profile takes one reading where its subject's documents allow two; each is recorded in
+[docs/stages/stage-36.md](docs/stages/stage-36.md).
+
+- **spring-hexagonal-poc** (Readme.md:42): "business doesn't have any external dependencies" is read strictly, no
+  third-party library (`violated`), not as no adapter (which `BusinessImportsNoAdapter` covers, and holds).
+- **fastapi-clean-example**: the README's dependency rule constrains only the core (README.md:205), while the
+  `pyproject.toml` import-linter contract orders every layer. The profile follows the contract; both hold today.
+- **go-clean-arch**: the README's four layers (models, repository, usecase, delivery) belong to v1; the profile maps them
+  to `domain`, `internal/repository`, `article` and `internal/rest`.
+- **hexarch**: the README calls `Service` a trait; in the code it is a struct implementing `BlogService`. Claims cannot
+  name a declaration's kind, so this stays unknown. Its design is stated in `///` doc comments, which no `Documents`
+  source reads as citable items; whether doc comments should become citable is open.
+
+The profiles keep these readings until the owner decides.

@@ -1,0 +1,46 @@
+{
+  "schema": "csh-expected/v1",
+  "rows": [
+    {
+      "row": 1,
+      "title": "The models import nothing but the standard library",
+      "expect": [{ "outcome": "converged", "kind": "satisfied", "subject": "GoCleanArch/Layering/ModelsKnowNothingOutside" }]
+    },
+    {
+      "row": 2,
+      "title": "The usecase is independent of delivery, the database and frameworks",
+      "expect": [
+        { "outcome": "converged", "kind": "satisfied", "subject": "GoCleanArch/Layering/UsecaseImportsNoOuterLayer" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "GoCleanArch/Layering/UsecaseImportsNoFrameworkOrDatabase" }
+      ],
+      "unknown": [
+        { "what": "whether a logging or concurrency library counts as a framework the usecase must not depend on", "reason": "the README's rule names frameworks, UI and databases, not a list; the rule names the web framework, validator and database packages the code imports, and leaves the rest unjudged" }
+      ]
+    },
+    {
+      "row": 3,
+      "title": "Delivery and repository do not import each other",
+      "expect": [
+        { "outcome": "converged", "kind": "satisfied", "subject": "GoCleanArch/Layering/DeliveryImportsNoRepository" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "GoCleanArch/Layering/RepositoryImportsNoDelivery" }
+      ]
+    },
+    {
+      "row": 4,
+      "title": "Interfaces are declared where they are consumed",
+      "expect": [
+        { "outcome": "converged", "kind": "satisfied", "subject": "GoCleanArch/ProseAboutCode/ServiceDeclaresTheRepositoryInterface" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "GoCleanArch/ProseAboutCode/DeliveryDeclaresTheServiceInterface" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "GoCleanArch/ProseAboutCode/ModelsDeclareNoRepositoryInterface" }
+      ]
+    },
+    {
+      "row": 5,
+      "title": "The files the README's instructions name exist",
+      "expect": [
+        { "outcome": "converged", "kind": "satisfied", "subject": "GoCleanArch/ProseAboutCode/SchemaFileExists" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "GoCleanArch/ProseAboutCode/ExampleEnvExists" }
+      ]
+    }
+  ]
+}

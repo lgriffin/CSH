@@ -1,0 +1,68 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Hexarch",
+  "subject": {
+    "repo": "https://github.com/howtocodeit/hexarch",
+    "commit": "d58a5c648602f941083ca6ca85c79d718092df03"
+  },
+  "implementation": [
+    "src"
+  ],
+  "sources": [
+    {
+      "name": "Docs",
+      "kind": "Documents",
+      "at": "README.md"
+    },
+    {
+      "name": "Tests",
+      "kind": "TestFiles",
+      "at": "src",
+      "include": [
+        "**/*.rs"
+      ]
+    },
+    {
+      "name": "Code",
+      "kind": "Code",
+      "at": ".",
+      "include": [
+        "src/**/*.rs",
+        "Cargo.toml"
+      ]
+    }
+  ],
+  "practices": [
+    {
+      "id": "docs",
+      "name": "Docs",
+      "kind": "documents",
+      "sources": [
+        "Docs"
+      ],
+      "author": "Maintainer",
+      "unit": "the document"
+    },
+    {
+      "id": "tests",
+      "name": "Tests",
+      "kind": "tests",
+      "sources": [
+        "Tests"
+      ],
+      "author": "Maintainer",
+      "unit": "the test file"
+    },
+    {
+      "id": "code",
+      "name": "Code facts",
+      "kind": "facts",
+      "sources": [
+        "Code"
+      ],
+      "author": "facts-code",
+      "unit": "the module"
+    }
+  ],
+  "spec": "csh/spec.csl.ts"
+}
