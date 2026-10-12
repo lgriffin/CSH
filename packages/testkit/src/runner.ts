@@ -13,7 +13,7 @@ import { authorship, formatDecision, gitVcs, LEDGER_PATH, MAINTAINERS_PATH, read
 import { printModule } from "@csh/print";
 import type { SolverPort } from "@csh/solver";
 import { createTestRepo, gpgAvailable, type TestRepo } from "./git.ts";
-import { checkModule, componentQueue, componentStatus, evaluateProject, evaluateSpec, type FixtureConfig, loadProject, readConfig, readStoredRun } from "@csh/run";
+import { checkModule, componentQueue, componentStatus, emitProject, evaluateProject, evaluateSpec, type FixtureConfig, loadProject, readConfig, readStoredRun, specPathOf } from "@csh/run";
 import { verifyCounterexample, verifyNoOutcome } from "./verify.ts";
 import { packWorkspace } from "./pack.ts";
 import { type ComponentProblem, parseComponent } from "@csh/component";
@@ -39,7 +39,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 20;
+export const BUILT_THROUGH_STAGE = 35;
 
 const AGENT_BIN = resolve(import.meta.dirname, "../../agent/bin/csh-agent.js");
 
@@ -60,7 +60,7 @@ export interface RunnerOptions {
 
 const SPEC_PATH = "spec/account.csl.ts";
 
-/** Fixture directories, F01 to F117, in number order. */
+/** Fixture directories, F01 to F125, in number order. */
 export function listFixtures(dir: string): string[] {
   return readdirSync(dir).filter((d) => FIXTURE_ID.test(d)).sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)));
 }
@@ -130,6 +130,7 @@ export class FixtureRunner {
       else if (e.agent !== undefined) await this.agent(dir, e.agent, failures);
       else if (e.diff !== undefined) this.diff(dir, e.diff, failures);
       else if (e.a3 !== undefined) await this.a3(dir, e.a3, failures);
+      else if (e.run !== undefined) await this.project(dir, e.run, failures);
       else if (e.starter !== undefined) {
         const skipped = this.starter(e.starter, failures);
         if (skipped !== undefined) res.skipped = skipped;
@@ -668,6 +669,85 @@ export class FixtureRunner {
       check("edit");
     } finally {
       repo.dispose();
+    }
+  }
+
+  // ---------------------------------------------------------------- a project run end to end (polyglot code)
+
+  /**
+   * The project in inputs/project, committed unsigned to a scratch git repository and evaluated as csh run evaluates a
+   * component: its csh/component.json, its specification when it names one, and every source read by its adapter in
+   * the isolated subprocess at the commit, so that the facts it reads are current (Polyglot code, stages 29 to 35).
+   */
+  private async project(dir: string, x: Exp, failures: string[]): Promise<void> {
+    const work = mkdtempSync(join(this.o.workDir, "project-"));
+    try {
+      copyDir(join(dir, "inputs", "project"), work);
+      const git = (...args: string[]) => {
+        const r = spawnSync("git", args, { cwd: work, encoding: "utf8" });
+        if (r.status !== 0) throw new Error(`git ${args.join(" ")} failed: ${r.stderr}`);
+      };
+      git("init", "-q", "-b", "main");
+      git("add", "-A");
+      git("-c", "user.email=test-only@example.invalid", "-c", "user.name=test-only", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "the project");
+      const p = loadProject(work, work);
+      if (p.componentProblems.length > 0) {
+        failures.push(`the component manifest cannot be used: ${JSON.stringify(p.componentProblems)}`);
+        return;
+      }
+      const spec = specPathOf(p);
+      // A component with no specification is the model its manifest declares, as evaluateProject makes it.
+      const emission = spec === undefined ? await emitProject(p, { solver: this.o.solver }) : undefined;
+      const r = await evaluateSpec(spec ?? p.root, { root: p.root, sourceRoot: p.sourceRoot, solver: this.o.solver, config: {}, snapshot: { commit: p.commit, ledgerHead: "0" }, ...(p.component !== undefined ? { component: p.component } : {}) }, emission);
+      if (!r.emitted.ok) {
+        failures.push(`emission failed: ${JSON.stringify(r.emitted.errors)}`);
+        return;
+      }
+      if (r.componentErrors !== undefined) {
+        failures.push(`the component manifest does not match the specification: ${JSON.stringify(r.componentErrors)}`);
+        return;
+      }
+      const report = r.checked!.report;
+      if (x.assessments !== undefined) this.assessmentsExpect(report.assessments ?? [], x.assessments, failures);
+      const skipped = (r.runs ?? []).flatMap((s) => (s.output.facts ?? []).flatMap((f) => (f.kind === "skipped" ? [f] : [])));
+      for (const s of x.skipped ?? []) {
+        if (!skipped.some((f) => f.at === s.at && (s.reasonIncludes === undefined || f.reason.includes(s.reasonIncludes)))) failures.push(`skipped fact at ${s.at} ${s.reasonIncludes ?? ""} not read; got ${skipped.map((f) => `${f.at} (${f.reason})`).join("; ") || "none"}`);
+      }
+      for (const it of x.items ?? []) {
+        const got = report.items.find((y) => y.source === it.source && y.id === it.id);
+        if (got === undefined) failures.push(`item ${it.source}/${it.id} not reported; got ${report.items.map((y) => `${y.source}/${y.id}`).join(", ")}`);
+        else {
+          if (it.kind !== undefined && got.kind !== it.kind) failures.push(`item ${it.source}/${it.id}: kind ${got.kind}, expected ${it.kind}`);
+          for (const [k, v] of Object.entries((it.attrs ?? {}) as Record<string, string>)) if (got.attrs?.[k] !== v) failures.push(`item ${it.source}/${it.id}: ${k} ${got.attrs?.[k] ?? "(absent)"}, expected ${v}`);
+        }
+      }
+      const edges = report.edges ?? [];
+      const edgeMatch = (w: Exp) => (y: (typeof edges)[number]) => y.source === w.source && y.from === w.from && y.to === w.to && (w.rel === undefined || y.rel === w.rel);
+      const edgeList = (from: string) => edges.filter((y) => y.from === from).map((y) => `${y.rel} ${y.to}`).join(", ") || "none";
+      for (const w of x.edges ?? []) if (!edges.some(edgeMatch(w))) failures.push(`edge ${w.from} ${w.rel ?? "->"} ${w.to} not reported; ${w.from} has ${edgeList(w.from)}`);
+      for (const w of x.edgesAbsent ?? []) if (edges.some(edgeMatch(w))) failures.push(`edge ${w.from} -> ${w.to} should be absent`);
+      const outcomes = report.outcomes ?? [];
+      for (const o of x.outcomes ?? []) {
+        const got = outcomes.find((y) => y.item === o.item);
+        if (got === undefined) failures.push(`no outcome for ${o.item}; got ${outcomes.map((y) => y.item).join(", ") || "none"}`);
+        else for (const k of ["tests", "passed", "failed", "errored", "skipped"] as const) if (o[k] !== undefined && got[k] !== o[k]) failures.push(`outcome ${o.item}: ${k} ${got[k]}, expected ${o[k]}`);
+      }
+      for (const item of x.outcomesAbsent ?? []) if (outcomes.some((y) => y.item === item)) failures.push(`outcome for ${item} should be absent; got ${JSON.stringify(outcomes.find((y) => y.item === item))}`);
+      const gaps = report.gapView.gaps;
+      for (const g of x.gaps ?? []) {
+        const hit = gaps.some((y) => y.kind === g.kind && (g.subject === undefined || y.subject === g.subject) && ((g.detailIncludes ?? []) as string[]).every((d) => (y.detail ?? "").includes(d)));
+        if (!hit) failures.push(`gap ${g.kind} ${g.subject ?? ""} ${(g.detailIncludes ?? []).join(", ")} not found; got ${gaps.map((y) => `${y.kind} ${y.subject} (${y.detail ?? ""})`).join("; ") || "none"}`);
+      }
+      for (const g of x.gapsAbsent ?? []) {
+        const hit = gaps.filter((y) => y.kind === g.kind && (g.subject === undefined || y.subject === g.subject));
+        if (hit.length > 0) failures.push(`gap ${g.kind} ${g.subject ?? ""} should be absent; got ${hit.map((y) => `${y.subject} (${y.detail ?? ""})`).join("; ")}`);
+      }
+      const diagMatch = (d: Exp) => (y: (typeof report.diagnostics)[number]) => (d.source === undefined || y.source === d.source) && (d.code === undefined || y.code === d.code) && (d.spanEndsWith === undefined || (y.span ?? "").endsWith(d.spanEndsWith));
+      const diagList = () => report.diagnostics.map((y) => `${y.source} ${y.code} ${y.span ?? ""}`).join("; ") || "none";
+      for (const d of x.diagnostics ?? []) if (!report.diagnostics.some(diagMatch(d))) failures.push(`diagnostic ${JSON.stringify(d)} not reported; got ${diagList()}`);
+      for (const d of x.diagnosticsAbsent ?? []) if (report.diagnostics.some(diagMatch(d))) failures.push(`diagnostic ${JSON.stringify(d)} should be absent; got ${diagList()}`);
+    } finally {
+      rmSync(work, { recursive: true, force: true });
     }
   }
 

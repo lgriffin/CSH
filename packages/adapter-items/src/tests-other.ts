@@ -136,7 +136,7 @@ export interface Inventory {
 export function inventory(text: string, lang: Language, path = ""): Inventory {
   const lexed = lexOther(text, lang);
   const found =
-    lang === "python" ? python(lexed) : lang === "java" ? java(lexed) : lang === "go" ? (path.endsWith("_test.go") ? go(lexed) : { tests: 0, declared: [], skipped: 0, sources: [] }) : rust(text, lexed);
+    lang === "python" ? python(lexed) : lang === "java" ? java(lexed) : lang === "go" ? (path.endsWith("_test.go") ? go(text, lexed) : { tests: 0, declared: [], skipped: 0, sources: [] }) : rust(text, lexed);
   // Sources in the order they stand in the file, so that edges come out in that order whatever the reader found first.
   const sources = [...found.sources].sort((a, b) => a.at - b.at || compareCodePoints(a.text, b.text));
   return { ...found, sources, strings: lexed.strings };
@@ -415,12 +415,14 @@ function javaTarget(code: string, at: number): { kind: "class"; body: [number, n
 /**
  * `go test`'s conventions, in a `_test.go` file: `func TestXxx(t *testing.T)`, `func FuzzXxx(f *testing.F)` and
  * `func ExampleXxx()` with an `// Output:` comment (an example without one is compiled, not run), where Xxx does not
- * start with a lower-case letter. `TestMain` and benchmarks are not tests. Cites: the function's name, and the literal
- * first argument of each `t.Run` in its body, which names a subtest the runner reports; subtests do not add to the count.
+ * start with a lower-case letter. `TestMain` and benchmarks are not tests. Cites: the function's name, its doc comment
+ * (the run of `//` comment lines immediately above it, as `go doc` reads one), and the literal first argument of each
+ * `t.Run` in its body, which names a subtest the runner reports; subtests do not add to the count.
  */
-function go({ code, strings, comments }: Lexed): Found {
+function go(text: string, { code, strings, comments }: Lexed): Found {
   const sources: CiteSource[] = [];
   const declared: { name: string; at: number }[] = [];
+  const starts = lineStarts(text);
   for (const m of code.matchAll(/(?<![\w.])func\s+((Test|Fuzz|Example)(\w*))\s*\(/g)) {
     const name = m[1]!;
     const kind = m[2]!;
@@ -438,6 +440,13 @@ function go({ code, strings, comments }: Lexed): Found {
     if (kind === "Example" && (params.trim() !== "" || ![...comments].some(([at, c]) => at > body[0] && at < body[1] && /^\/\/\s*(?:Unordered output|Output):/i.test(c)))) continue;
     declared.push({ name, at: m.index + m[0].indexOf(name) });
     sources.push(...nameSources(m.index + m[0].indexOf(name), name, /^(?:Test|Fuzz|Example)_?/));
+    // The doc comment: each line above the func that holds only a // comment, up to a blank line or code.
+    for (let k = lineIndex(starts, m.index) - 1; k >= 0; k--) {
+      const at = skipSpace(text, starts[k]!);
+      const c = comments.get(at);
+      if (c === undefined || !c.startsWith("//") || lineIndex(starts, at) !== k) break;
+      sources.push({ at: at + 2, text: c.slice(2), name: false });
+    }
     // The names a *testing.T goes by in this function, its own and each subtest's.
     const ts = new Set([...code.slice(open, body[1]).matchAll(/(\w+)\s+\*\s*testing\s*\.\s*T\b/g)].map((t) => t[1]!));
     for (const r of code.slice(body[0], body[1]).matchAll(/(?<![\w.])(\w+)\s*\.\s*Run\s*\(/g)) {

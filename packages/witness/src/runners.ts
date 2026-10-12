@@ -15,10 +15,14 @@ export function isJUnitXml(text: string): boolean {
   return /^(?:\s|<\?[\s\S]*?\?>|<!--[\s\S]*?-->|<!DOCTYPE[^>[]*(?:\[[\s\S]*?\])?\s*>)*<testsuites?[\s/>]/.test(text.replace(/^\uFEFF/, ""));
 }
 
-/** True when the first non-empty line is a `go test -json` event: an object with string `Action` and `Package`. */
+/**
+ * True when the first line that opens an object is a `go test -json` event: an object with string `Action` and
+ * `Package`. Lines before it that are not JSON (`go: downloading ...`, written to the same stream) are the report's
+ * problems, not a reason to read it as something else (F124).
+ */
 export function isGoTestJson(text: string): boolean {
-  const first = text.split(/\r?\n/).find((l) => l.trim() !== "");
-  if (first === undefined || !first.trimStart().startsWith("{") || !first.includes('"Action"')) return false;
+  const first = text.split(/\r?\n/).find((l) => l.trimStart().startsWith("{"));
+  if (first === undefined || !first.includes('"Action"')) return false;
   try {
     const v: unknown = JSON.parse(first);
     return isRecord(v) && typeof v.Action === "string" && typeof v.Package === "string";

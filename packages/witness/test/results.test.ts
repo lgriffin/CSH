@@ -202,6 +202,14 @@ describe("go test -json (stage 30)", () => {
     expect(parsed.problems[1]!.message).toBe("not a go test -json event with an Action");
   });
 
+  it("reads the events after a first line that is not JSON, and reports that line (F124)", () => {
+    const text = `go: downloading github.com/lib/pq v1.10.9\n{"Action":"pass","Package":"p","Test":"TestA"}\n`;
+    const parsed = parseTestResults(text);
+    expect(brief(text)).toEqual([["p", "TestA", "passed", "2"]]);
+    expect(parsed.problems.map((p) => p.line)).toEqual([1]);
+    expect(parsed.problems[0]!.message).toMatch(/^not JSON/);
+  });
+
   it("leaves execution lines and JSON reports to their readers", () => {
     expect(brief(`{"schema":"csh-execution/v1","test":"a.ts::R-1 x","outcome":"passed"}\n`)).toEqual([["a.ts", "R-1 x", "passed", "1"]]);
     expect(brief(JSON.stringify({ testResults: [{ name: "a.ts", assertionResults: [{ fullName: "x", status: "passed" }] }] }))).toEqual([["a.ts", "x", "passed", "testResults[0].assertionResults[0]"]]);

@@ -13,7 +13,7 @@ The test kit is development tooling and is not part of any runtime container. It
 - `FixtureRunner`, `RunnerOptions`: runs one fixture by id (`run(id)`), including two-step scenarios and ledger scenarios.
 - `FixtureResult`: id, stage, section, pass, failures, an optional skip reason, `pending` for a fixture whose stage is not built yet, and time taken.
 - `BUILT_THROUGH_STAGE`, `fixtureStage(dir, id)`: the last stage built; a fixture of a later stage is reported as pending, never run and never failed.
-- `listFixtures(dir)`: fixture ids (`F` and two digits) in order.
+- `listFixtures(dir)`: fixture ids (`F` and two or three digits) in order.
 - `summarise(results)`: a text summary of a run.
 - `resolveSpecSource(file)`, `relativeTo(root, p)`: path helpers for fixture specifications.
 - `verifyCounterexample(finding, model, fragments)`: checks a not-preserved or not-met counterexample by exact evaluation, with no solver.
@@ -35,6 +35,7 @@ The test kit is development tooling and is not part of any runtime container. It
 - Each fixture is an accepting or rejecting test of the documents, named by stage and section, so a regression in any earlier stage fails the run (P8).
 - A fixture whose expectation is `a3` is built from `inputs/component.json` and `inputs/csh/a3/<slug>/`: its problems, its stage integrity, and its authority through a real, signed ledger with a test-only key (F91 to F95).
 - A fixture with `inputs/component.json` runs with that manifest, so the component errors and the `unowned-source` gap are compared like any other result.
+- A fixture whose expectation is `run` is the project in `inputs/project`, committed unsigned to a scratch git repository and evaluated as `csh run` evaluates a component: its `csh/component.json`, its specification when it names one, and every source read by its adapter in the isolated subprocess at that commit, so the code facts are current (F118 to F125, polyglot code). It compares `assessments` (verdict and reasons), `skipped` facts (`at`, `reasonIncludes`), `items` (kind and attributes), `edges` and `edgesAbsent`, `outcomes` and `outcomesAbsent`, `gaps` (each `detailIncludes`) and `gapsAbsent`, and `diagnostics` and `diagnosticsAbsent` (`source`, `code`, `spanEndsWith`).
 - Printing then emitting reproduces the digest of every fixture model without packs and of random models, so what a person approves is what was emitted (P1, CSH-017).
 - Signing keys are test-only and live in a temporary keyring that is deleted afterwards; nothing touches the real repository's keys, commits or `csh/maintainers.json` (P6).
 - Before stage 7, fixtures stand in for the ledger with `inputs/authority.json`; from stage 7 on they use a real, signed ledger, so the authority rules are tested against git (P1, CSH-016).
@@ -45,7 +46,7 @@ The fixture runner checks results independently of the code under test ([ADR-26]
 
 ## How it is tested
 
-- `test/fixtures.test.ts`: one test per fixture directory: F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64 and F70 to F78, and F80 to F96 from the anchor design. A fixture of a stage not yet built is listed as skipped. The stage of each comes from its `expected.json`, and the stage to package mapping is in the Implementer's brief, section 7.
+- `test/fixtures.test.ts`: one test per fixture directory: F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64 and F70 to F78, F80 to F96 from the anchor design, F97 to F117 from the next layers, and F118 to F125 from polyglot code. A fixture of a stage not yet built is listed as skipped. The stage of each comes from its `expected.json`, and the stage to package mapping is in the Implementer's brief, section 7.
 - `test/roundtrip.test.ts`: the printer round trip on random models (fast-check) and on every fixture model that emits without packs.
 - F96 copies `examples/starter` to an empty directory outside the repository, installs the tool there from freshly packed tarballs with npm, and runs the installed `csh run`.
 - `test/triangle.test.ts`: every example declares the containers it exercises and its commands reach each one; every runtime container has an example; the root README has its four doors and the command blocks they need. Continuous integration executes those blocks.

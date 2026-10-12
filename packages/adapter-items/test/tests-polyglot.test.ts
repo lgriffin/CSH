@@ -221,6 +221,28 @@ describe("Go test files", () => {
     ]);
   });
 
+  it("cites from the doc comment lines immediately above a test, not past a blank line or code (F125)", () => {
+    const text = [
+      "package cart", // 1
+      "", // 2
+      "// REQ-80 is not a doc comment: a blank line follows.", // 3
+      "", // 4
+      "// TestAdd checks REQ-81:", // 5
+      "//   adding an item puts it in the cart (REQ-82).", // 6
+      "func TestAdd(t *testing.T) {}", // 7
+      "", // 8
+      "var x = 1 // REQ-83 trails code", // 9
+      "func TestB(t *testing.T) {}", // 10
+      "", // 11
+      "// helper names REQ-84, and is no test.", // 12
+      "func helper(t *testing.T) {}", // 13
+    ].join("\n");
+    expect(read("cart/cart_test.go", text).cites.map(([to, span]) => [to, span!.split(":")[1]])).toEqual([
+      ["REQ-81", "5"],
+      ["REQ-82", "6"],
+    ]);
+  });
+
   it("finds no test in a file that is not a _test.go file", () => {
     expect(read("login/login.go", "func TestX(t *testing.T) {}\n")).toMatchObject({ attrs: { tests: "0" }, diagnostics: ["no-tests"] });
   });
