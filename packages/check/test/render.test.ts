@@ -82,6 +82,8 @@ describe("claim spans", () => {
     expect(linesStatingVersion(lines, ["1.35.0"])).toEqual([2]);
     // A bare count is too common to look for across a file.
     expect(linesStatingVersion(["5 things", "5 more"], ["5"])).toEqual([]);
+    // Nor is a version's bare major number: 1.0.0 is not the 1 of a numbered heading, though 1.0 states it.
+    expect(linesStatingVersion(["## 1. Background", "Since 1.0."], ["1.0.0"])).toEqual([1]);
     const at: SentenceAt = () => ({ at: "c.md:5", text: lines[4]!, stated: false, elsewhere: [2] });
     expect(claimEvidence(finding("fact-conflict", "c.md:5: says version of h is 1.35.0; 1.36.0 is read"), at).lines).toEqual([
       'c.md:5 (no line from here to the next blank line states 1.35.0; c.md:3 does): "| Harness version | version in package.json |"',
