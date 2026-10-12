@@ -206,7 +206,7 @@ export interface HistoryPort {
   /** The newest commit that changed how often `text` occurs in `path`: for a value present now, the one that wrote it. */
   introduced(path: string, text: string): Dated | undefined;
   /** Commits since the configured start that change implementation paths with no test and no `Refs:` trailer. */
-  /** Whether any commit of any branch ever held `path`: a name that did not exist now was either deleted or never there. */
+  /** Whether any commit in the history of the commit evaluated ever held `path`: a name that did not exist now was either deleted or never there. */
   existed?(path: string): boolean;
   /** Ask for the history of many files at once, so that the answers are ready when the check asks one by one. */
   prefetch?(want: { files: string[]; documents: string[] }): Promise<void>;

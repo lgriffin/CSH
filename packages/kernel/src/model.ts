@@ -161,8 +161,11 @@ export type ArchSel =
   | { k: "package"; name: string }
   | { k: "container"; id: string }
   | { k: "any" }
-  /** Source files by path, from the repository root: those matching a glob and no exception (stage 23). */
-  | { k: "modules"; globs: string[]; except?: string[] };
+  /**
+   * Source files by path, from the repository root: those matching a glob and no exception (stage 23). With `values`,
+   * a dependency that imports types alone does not count when the selector is a rule's subject (stage 39).
+   */
+  | { k: "modules"; globs: string[]; except?: string[]; values?: true };
 
 /**
  * A proposition about the code that facts can decide (Ingesting a codebase, stage 24). `file`: the repository tracks
@@ -179,6 +182,8 @@ export type Prop =
   | { k: "inherits"; cls: string; base: string }
   | { k: "field"; file: string; pointer: string; value: string }
   | { k: "count"; file: string; pointer: string; n: number; except?: string[] }
+  /** The number of modules read that a modules selector selects (stage 39). */
+  | { k: "count-modules"; globs: string[]; except?: string[]; n: number }
   | { k: "script"; name: string }
   | { k: "same"; a: { module: string; name: string }; b: { module: string; name: string } }
   | { k: "atom"; name: string };
@@ -194,8 +199,11 @@ export interface Claim {
   at?: string;
 }
 
-/** The typed architecture rules (Next layers, section 4.1), and structural claims (stage 24). */
-export type ArchRule = { k: "forbid"; from: ArchSel; to: ArchSel } | { k: "only"; from: ArchSel; to: ArchSel[] } | { k: "closed"; source: string } | Claim;
+/**
+ * The typed architecture rules (Next layers, section 4.1), and structural claims (stage 24). `reaches` follows chains
+ * of dependencies; `acyclic` forbids cycles among the selected modules, or between the groups `group` makes (stage 39).
+ */
+export type ArchRule = { k: "forbid"; from: ArchSel; to: ArchSel; reaches?: true } | { k: "only"; from: ArchSel; to: ArchSel[] } | { k: "closed"; source: string } | { k: "acyclic"; within: ArchSel; group?: string } | Claim;
 
 const nonEmpty = (x: unknown): x is string => typeof x === "string" && x !== "";
 
@@ -206,7 +214,7 @@ export function isArchSel(x: unknown): x is ArchSel {
   if (o.k === "container") return nonEmpty(o.id) && Object.keys(o).length === 2;
   if (o.k === "modules") {
     const globs = (x: unknown) => Array.isArray(x) && x.length > 0 && x.every(nonEmpty);
-    return globs(o.globs) && (o.except === undefined || globs(o.except)) && Object.keys(o).length === (o.except === undefined ? 2 : 3);
+    return globs(o.globs) && (o.except === undefined || globs(o.except)) && (o.values === undefined || o.values === true) && Object.keys(o).every((k) => ["k", "globs", "except", "values"].includes(k));
   }
   return o.k === "any" && Object.keys(o).length === 1;
 }
@@ -228,6 +236,8 @@ export function isProp(x: unknown): x is Prop {
       return nonEmpty(o.file) && typeof o.pointer === "string" && typeof o.value === "string" && keys("file", "pointer", "value");
     case "count":
       return nonEmpty(o.file) && typeof o.pointer === "string" && Number.isInteger(o.n) && (o.n as number) >= 0 && (o.except === undefined || (Array.isArray(o.except) && o.except.every(nonEmpty))) && keys("file", "pointer", "n", "except");
+    case "count-modules":
+      return Array.isArray(o.globs) && o.globs.length > 0 && o.globs.every(nonEmpty) && (o.except === undefined || (Array.isArray(o.except) && o.except.every(nonEmpty))) && Number.isInteger(o.n) && (o.n as number) >= 0 && keys("globs", "except", "n");
     case "script":
       return nonEmpty(o.name) && keys("name");
     case "same":
@@ -241,14 +251,15 @@ export function isProp(x: unknown): x is Prop {
 
 /** A value that claims to be an architecture rule: an object whose k names one of the forms. */
 export function claimsArchRule(x: unknown): boolean {
-  return typeof x === "object" && x !== null && !Array.isArray(x) && ["forbid", "only", "closed", "claim"].includes((x as { k?: unknown }).k as string);
+  return typeof x === "object" && x !== null && !Array.isArray(x) && ["forbid", "only", "closed", "acyclic", "claim"].includes((x as { k?: unknown }).k as string);
 }
 
 export function isArchRule(x: unknown): x is ArchRule {
   if (!claimsArchRule(x)) return false;
   const o = x as Record<string, unknown>;
   if (o.k === "claim") return typeof o.holds === "boolean" && isProp(o.p) && (o.at === undefined || nonEmpty(o.at)) && Object.keys(o).every((k) => ["k", "holds", "p", "at"].includes(k));
-  if (o.k === "forbid") return isArchSel(o.from) && isArchSel(o.to) && Object.keys(o).length === 3;
+  if (o.k === "forbid") return isArchSel(o.from) && isArchSel(o.to) && (o.reaches === undefined || o.reaches === true) && Object.keys(o).every((k) => ["k", "from", "to", "reaches"].includes(k));
+  if (o.k === "acyclic") return isArchSel(o.within) && (o.group === undefined || nonEmpty(o.group)) && Object.keys(o).every((k) => ["k", "within", "group"].includes(k));
   if (o.k === "only") return isArchSel(o.from) && Array.isArray(o.to) && o.to.every(isArchSel) && Object.keys(o).length === 3;
   return nonEmpty(o.source) && Object.keys(o).length === 2;
 }

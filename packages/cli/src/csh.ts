@@ -518,7 +518,7 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
     return 2;
   }
   const o = { root: p.root, solver, ...(mode !== undefined ? { mode } : {}), ...(a.options.budget !== undefined ? { budgetMs: Number(a.options.budget) } : {}), ...(a.flags.has("no-cache") ? { noCache: true } : {}), harnessOutput: (s: string) => io.err(s), ...(a.options.subject !== undefined ? { subject: resolve(io.cwd, a.options.subject) } : {}) };
-  const r: RunResult = a.options.at !== undefined ? await runAt({ ...o, commit: a.options.at }) : await runComponent(o);
+  const r: RunResult = a.options.at !== undefined ? await runAt({ ...o, commit: a.options.at }) : await runComponent({ ...o, project: p });
   if (!r.ok) {
     io.err(`csh run: ${r.code}: ${r.message}\n`);
     return r.code === "dependencies-differ" ? 3 : 1;

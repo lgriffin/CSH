@@ -17,17 +17,29 @@ export function container(id: string): ArchSel {
  * Source files by path from the repository root: every file a glob matches and no exception does, such as
  * modules("src/core/**", { except: ["src/core/ports/**"] }). The facts are a code scanner's, file by file (stage 23).
  */
-export function modules(globs: string | readonly string[], opts: { except?: string | readonly string[] } = {}): ArchSel {
+export function modules(globs: string | readonly string[], opts: { except?: string | readonly string[]; values?: boolean } = {}): ArchSel {
   const list = (x: string | readonly string[]) => (typeof x === "string" ? [x] : [...x]);
-  return opts.except === undefined ? { k: "modules", globs: list(globs) } : { k: "modules", globs: list(globs), except: list(opts.except) };
+  // values: as a rule's subject, only dependencies that import a value count, not those of types alone (stage 39).
+  return { k: "modules", globs: list(globs), ...(opts.except !== undefined ? { except: list(opts.except) } : {}), ...(opts.values === true ? { values: true as const } : {}) };
 }
 
 /** Any package at all. */
 export const anything: ArchSel = { k: "any" };
 
-/** No package selected by `from` depends on a package selected by `to`. */
-export function forbid(from: ArchSel, to: ArchSel): ArchRule {
-  return { k: "forbid", from, to };
+/**
+ * No package selected by `from` depends on a package selected by `to`. With `reaches`, not through any chain of
+ * dependencies either (stage 39).
+ */
+export function forbid(from: ArchSel, to: ArchSel, opts: { reaches?: boolean } = {}): ArchRule {
+  return opts.reaches === true ? { k: "forbid", from, to, reaches: true } : { k: "forbid", from, to };
+}
+
+/**
+ * No cycle of dependencies among the modules `within` selects. With `group`, a glob over directories such as
+ * "packages/*", modules are grouped by the directory it matches and only a cycle between groups counts (stage 39).
+ */
+export function acyclic(within: ArchSel, opts: { group?: string } = {}): ArchRule {
+  return opts.group === undefined ? { k: "acyclic", within } : { k: "acyclic", within, group: opts.group };
 }
 
 /** The packages selected by `from` depend only on those selected by one of `to`, and on each other. */
@@ -67,9 +79,18 @@ export function field(file: string, pointer: string, value: string): Prop {
   return { k: "field", file, pointer, value };
 }
 
-/** The value at the pointer has n entries, less any excepted by key. */
-export function count(file: string, pointer: string, n: number, opts: { except?: readonly string[] } = {}): Prop {
-  return opts.except === undefined ? { k: "count", file, pointer, n } : { k: "count", file, pointer, n, except: [...opts.except] };
+/**
+ * The value at the pointer has n entries, less any excepted by key; or, given a modules selector, the selector selects
+ * n modules read (stage 39), such as count(modules("src/usecases/*.ts"), 10).
+ */
+export function count(file: string, pointer: string, n: number, opts?: { except?: readonly string[] }): Prop;
+export function count(sel: ArchSel, n: number): Prop;
+export function count(a: string | ArchSel, b: string | number, n?: number, opts: { except?: readonly string[] } = {}): Prop {
+  if (typeof a !== "string") {
+    if (a.k !== "modules" || typeof b !== "number") throw new Error("count over a selector takes modules(...) and a number");
+    return { k: "count-modules", globs: [...a.globs], ...(a.except !== undefined ? { except: [...a.except] } : {}), n: b };
+  }
+  return opts.except === undefined ? { k: "count", file: a, pointer: b as string, n: n! } : { k: "count", file: a, pointer: b as string, n: n!, except: [...opts.except] };
 }
 
 /** package.json names this npm script. */

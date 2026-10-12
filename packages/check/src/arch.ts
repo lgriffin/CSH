@@ -87,6 +87,7 @@ export function evaluateArchitecture(input: { prepared: Prepared; fragments: Fra
     fields: current.flatMap((f) => (f.kind === "field" ? [{ file: f.file, path: f.path, value: f.value, at: f.at }] : [])),
     ...(input.files !== undefined ? { files: new Set(input.files) } : {}),
     languages: new Map(current.flatMap((f) => (f.kind === "module" && f.language !== undefined ? [[f.name, f.language] as const] : []))),
+    ...(facts.unread !== undefined ? { unread: facts.unread } : {}),
   };
 
   const out: ArchOutcome = { findings: [], gaps: [], rules: new Map() };

@@ -106,13 +106,20 @@ describe("a subject profile", () => {
     } finally {
       git(checkout, "checkout", "--", ".");
     }
-    // An ignored file in a source directory would be read by the run without changing its snapshot.
+    // An ignored file in a source directory would be read by the run without changing its snapshot. A fetched
+    // checkout is not walked for ignored files on each run (stage 40): such a file is left out and reported instead.
     writeFileSync(join(checkout, ".git", "info", "exclude"), "*.local\n");
     writeFileSync(join(checkout, "docs", "extra.local"), "| REQ-8 | Ignored. |\n");
     try {
-      const ignored = await runComponent({ root: profile, solver: z3 });
-      expect(ignored.ok).toBe(false);
-      if (!ignored.ok) expect(ignored.message).toMatch(/subject-dirty/);
+      const ignored = await runComponent({ root: profile, solver: z3, noCache: true });
+      if (!ignored.ok) throw new Error(ignored.message);
+      if (ignored.ok) {
+        expect(ignored.report.items.some((i) => i.id === "REQ-8")).toBe(false);
+      }
+      // A checkout named by --subject is someone's own, and is asked about ignored files in full.
+      const named = await runComponent({ root: profile, solver: z3, subject: checkout });
+      expect(named.ok).toBe(false);
+      if (!named.ok) expect(named.message).toMatch(/subject-dirty/);
       // A dirty checkout is never replaced by a fetch: it is reported, and left as it is.
       const f = fetchSubject(loadProject(profile, profile));
       expect(f.ok).toBe(false);

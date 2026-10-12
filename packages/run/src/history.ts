@@ -36,6 +36,9 @@ interface Kept {
   origins: Record<string, string | null>;
   since: Record<string, string[]>;
   introduced: Record<string, string | null>;
+  /** The commits that changed each file, and whether a path was ever held by any commit (stage 40). */
+  touching?: Record<string, string[]>;
+  existed?: Record<string, boolean>;
 }
 
 /** The `since` that names the newest tag before the commit evaluated, whatever that commit is. */
@@ -147,7 +150,10 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
   const listOf = (out: string | undefined): string[] => (out ?? "").split("\n").filter((x) => x !== "");
   const commitsTouching = (path: string): string[] => {
     let cs = touching.get(path);
-    if (cs === undefined) touching.set(path, (cs = listOf(run(root, ["rev-list", "HEAD", "--", path]))));
+    if (cs === undefined) {
+      touching.set(path, (cs = listOf(run(root, ["rev-list", "HEAD", "--", path]))));
+      dirty = true;
+    }
     return cs;
   };
   const blames = new Map<string, Map<number, string>>();
@@ -191,6 +197,8 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
         for (const [key, c] of Object.entries(k.origins)) origins.set(key, c === null ? undefined : dated(c));
         for (const [key, cs] of Object.entries(k.since)) since.set(key, cs.flatMap((c) => dated(c) ?? []));
         for (const [key, c] of Object.entries(k.introduced)) introduced.set(key, c === null ? undefined : dated(c));
+        for (const [path, cs] of Object.entries(k.touching ?? {})) touching.set(path, cs);
+        for (const [path, held] of Object.entries(k.existed ?? {})) everHeld.set(path, held);
       }
     } catch {
       // A cache that cannot be read only costs the reads.
@@ -249,15 +257,32 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
       return introduced.get(key);
     },
     existed(path) {
-      if (!everHeld.has(path)) everHeld.set(path, (run(root, ["log", "--all", "--format=%H", "-1", "--", path]) ?? "").trim() !== "");
+      if (!everHeld.has(path)) {
+        // Asked of the commit's own history, never of whatever branches the checkout happens to hold, so a clone and a
+        // worktree of the same commit agree (stage 41). --full-history keeps a branch that added and removed the path
+        // before it merged, which git's default simplification would skip.
+        everHeld.set(path, (run(root, ["log", "--full-history", "--format=%H", "-1", "HEAD", "--", path]) ?? "").trim() !== "");
+        dirty = true;
+      }
       return everHeld.get(path)!;
     },
     async prefetch(want: { files: string[]; documents: string[] }) {
       const tracked = new Set(listOf(await runAsync(root, ["ls-files"])));
-      const files = [...new Set(want.files)].filter((f) => tracked.has(f) && !touching.has(f));
+      // A bare file name resolves to the one tracked file of that name (A-110), so ask for that file now too.
+      const byName = new Map<string, string[]>();
+      for (const t of tracked) {
+        const list = byName.get(posix.basename(t));
+        if (list === undefined) byName.set(posix.basename(t), [t]);
+        else list.push(t);
+      }
+      const resolved = want.files.map((f) => (tracked.has(f) || f.includes("/") || byName.get(f)?.length !== 1 ? f : byName.get(f)![0]!));
+      const files = [...new Set(resolved)].filter((f) => tracked.has(f) && !touching.has(f));
       const documents = [...new Set(want.documents)].filter((d) => tracked.has(d) && !blames.has(d) && !isEdited(d));
       await pool(8, [
-        ...files.map((f) => async () => void touching.set(f, listOf(await runAsync(root, ["rev-list", "HEAD", "--", f])))),
+        ...files.map((f) => async () => {
+          touching.set(f, listOf(await runAsync(root, ["rev-list", "HEAD", "--", f])));
+          dirty = true;
+        }),
         ...documents.map((d) => async () => {
           blames.set(d, parseBlame(await runAsync(root, ["blame", "--line-porcelain", "HEAD", "--", d])));
           dirty = true;
@@ -298,6 +323,8 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
         origins: Object.fromEntries([...origins].filter(([k]) => clean(pathOf(k))).map(([k, d]) => [k, d?.commit ?? null])),
         since: Object.fromEntries([...since].map(([k, ds]) => [k, ds.map((d) => d.commit)])),
         introduced: Object.fromEntries([...introduced].map(([k, d]) => [k, d?.commit ?? null])),
+        touching: Object.fromEntries(touching),
+        existed: Object.fromEntries(everHeld),
       };
       try {
         mkdirSync(dirname(o.cache), { recursive: true });

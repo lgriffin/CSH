@@ -141,7 +141,9 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   };
   const perSource = sourceSettings(opts.component);
   const commit = opts.subjectCommit ?? opts.snapshot?.commit ?? cfg.snapshot?.commit;
-  const runs = await runSources(module, { root: opts.sourceRoot ?? opts.root, codeRoot: opts.root, config: adapterConfig, ...(commit !== undefined ? { commit } : {}), isolated: opts.isolatedAdapters ?? true, bindingAuthority, ...(opts.adapters !== undefined ? { adapters: opts.adapters } : {}), ...(perSource !== undefined ? { perSource } : {}), ...(opts.executions !== undefined ? { executions: opts.executions } : {}), ...(opts.cacheDir !== undefined ? { cache: { dir: opts.cacheDir, ...(opts.sourceRoot !== undefined && opts.subjectCommit !== undefined ? { pinned: opts.subjectCommit } : {}) } } : {}) });
+  // A subject is read as its commit holds it: what git does not track there is never read (stage 40).
+  const tracked = opts.sourceRoot !== undefined && opts.subjectCommit !== undefined ? trackedFiles(opts.sourceRoot) : undefined;
+  const runs = await runSources(module, { ...(tracked !== undefined ? { tracked: new Set(tracked) } : {}), root: opts.sourceRoot ?? opts.root, codeRoot: opts.root, config: adapterConfig, ...(commit !== undefined ? { commit } : {}), isolated: opts.isolatedAdapters ?? true, bindingAuthority, ...(opts.adapters !== undefined ? { adapters: opts.adapters } : {}), ...(perSource !== undefined ? { perSource } : {}), ...(opts.executions !== undefined ? { executions: opts.executions } : {}), ...(opts.cacheDir !== undefined ? { cache: { dir: opts.cacheDir, ...(opts.sourceRoot !== undefined && opts.subjectCommit !== undefined ? { pinned: opts.subjectCommit } : {}) } } : {}) });
   const items = new Map<string, string>();
   for (const r of runs) for (const it of r.output.items ?? []) items.set(`${r.source}/${it.id}`, it.textDigest);
   const resolver: AuthorityResolver | undefined = state !== undefined ? (f) => resolveAuthority(state, f, items) : opts.authority;
@@ -164,7 +166,7 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   // Edges to files, and claims that a file exists, resolve against what the repository tracks; listed only when needed.
   const claimsAFile = module.intents.some((i) => i.obligations.some((o) => o.kind === "architecture" && isArchRule(o.native) && o.native.k === "claim" && o.native.p.k === "file"));
   if (claimsAFile || runs.some((r) => (r.output.edges ?? []).length > 0)) {
-    const files = trackedFiles(opts.sourceRoot ?? opts.root);
+    const files = tracked ?? trackedFiles(opts.sourceRoot ?? opts.root);
     if (files !== undefined) checkOpts.files = files;
   }
   if (opts.component !== undefined) {

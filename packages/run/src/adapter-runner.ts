@@ -75,14 +75,29 @@ function lockDown(): void {
   for (const k of ["log", "info", "warn", "error", "debug", "trace"] as const) console[k] = () => undefined;
 }
 
-process.on("message", async (msg: { adapter: string; input: unknown }) => {
+/** One adapter's output, or why there is none. */
+async function runOne(adapter: string, input: unknown): Promise<{ ok: true; output: unknown } | { ok: false; message: string }> {
   try {
-    // Locked down before the adapter's module is evaluated, so that its top-level code is held to the same rules.
+    const mod = (await import(adapter)) as { adapter?: { run: (i: unknown) => unknown } };
+    if (mod.adapter === undefined || typeof mod.adapter.run !== "function") return { ok: false, message: "the module exports no adapter" };
+    return { ok: true, output: await mod.adapter.run(input) };
+  } catch (err) {
+    return { ok: false, message: String((err as Error)?.message ?? err) };
+  }
+}
+
+// One adapter, or the built-in adapters of one run in turn (From real runs, stage 40): a process each cost more than
+// the reading did. Each job's failure is its own.
+process.on("message", async (msg: { adapter: string; input: unknown } | { jobs: { adapter: string; input: unknown }[] }) => {
+  try {
+    // Locked down before any adapter's module is evaluated, so that its top-level code is held to the same rules.
     lockDown();
-    const mod = (await import(msg.adapter)) as { adapter?: { run: (i: unknown) => unknown } };
-    if (mod.adapter === undefined || typeof mod.adapter.run !== "function") return reply({ ok: false, message: "the module exports no adapter" });
-    const output = await mod.adapter.run(msg.input);
-    reply({ ok: true, output });
+    if ("jobs" in msg) {
+      const results = [];
+      for (const j of msg.jobs) results.push(await runOne(j.adapter, j.input));
+      return reply({ ok: true, results });
+    }
+    reply(await runOne(msg.adapter, msg.input));
   } catch (err) {
     reply({ ok: false, message: String((err as Error)?.message ?? err) });
   }

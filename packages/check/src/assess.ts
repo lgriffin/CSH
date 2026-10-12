@@ -1,6 +1,6 @@
 // Verdict, applicability and methods for every obligation (Semantic contract, section 6).
 import { compareCodePoints, digestJson, type Fragment, type Invariant, type Requirement } from "@csh/kernel";
-import { describeDependency } from "@csh/arch";
+import { describeChain, describeDependency } from "@csh/arch";
 import type { ArchRuleOutcome } from "./arch.ts";
 import { type EvidenceStore, judge, type JudgeContext, termsOfObligation } from "./evidence.ts";
 import type { SourcedWitness } from "./pool.ts";
@@ -189,15 +189,16 @@ function assessArchitecture(a: Assessment, f: Fragment, o: ArchRuleOutcome, conf
   } else if (r?.result === "violated") {
     a.verdict = "violated";
     a.scope = "implementation";
-    a.reasons.push(...r.by.map(describeDependency));
+    a.reasons.push(...(r.chains !== undefined ? r.chains.map(describeChain) : r.by.map(describeDependency)));
   } else if (r?.result === "holds" && f.policy !== undefined && a.methods.every((m) => m.met)) {
     a.verdict = "satisfied";
-    a.reasons.push(...a.methods.map((m) => `${m.method} met`));
+    a.reasons.push(...a.methods.map((m) => `${m.method} met`), ...(r.notes ?? []));
   } else {
     a.verdict = "unknown";
     if (f.policy === undefined) a.reasons.push("no-policy");
     if (o.facts !== "current") a.reasons.push(noFacts);
     if (r?.result === "unknown") a.reasons.push(r.reason);
+    if (r?.result === "holds") a.reasons.push(...(r.notes ?? []));
     if (c?.result === "unknown") a.reasons.push(c.reason);
     for (const m of a.methods.filter((m) => !m.met)) a.reasons.push(`method-missing: ${m.method}`, ...(m.reason !== undefined ? [m.reason] : []));
   }
