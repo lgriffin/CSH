@@ -72,6 +72,7 @@ export function evaluateArchitecture(input: { prepared: Prepared; fragments: Fra
   const factsState: ArchRuleOutcome["facts"] = current.some(graph) ? "current" : all.some(graph) ? "stale" : "none";
   const facts: ArchFacts = {
     packages: current.flatMap((f) => (f.kind === "package" ? [f.name] : [])),
+    modules: current.flatMap((f) => (f.kind === "module" ? [f.name] : [])),
     depends: current.flatMap((f) => (f.kind === "depends" ? [{ from: f.from, to: f.to, at: f.at, typeOnly: f.typeOnly, via: f.via }] : [])),
     // A skipped fact at a file, not a line, is a whole file not read (stage 29).
     unread: current.flatMap((f) => (f.kind === "skipped" && f.at === f.from ? [f.from] : [])).sort(compareCodePoints),
