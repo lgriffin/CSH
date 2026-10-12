@@ -35,3 +35,30 @@ describe("history existed", () => {
     }
   });
 });
+
+describe("history prefetch", () => {
+  it("answers as one-by-one asks do, whether or not the answers were fetched first", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "csh-prefetch-"));
+    const git = (...a: string[]) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", ...a], { cwd: dir, stdio: "ignore" });
+    try {
+      git("init", "-q");
+      writeFileSync(join(dir, "doc.md"), "one\ntwo\n");
+      writeFileSync(join(dir, "code.ts"), "a\n");
+      git("add", "."); git("commit", "-qm", "first");
+      writeFileSync(join(dir, "code.ts"), "b\n");
+      git("add", "."); git("commit", "-qm", "second");
+      writeFileSync(join(dir, "code.ts"), "c\n");
+      git("add", "."); git("commit", "-qm", "third");
+      const plain = gitHistory(dir, { implementation: ["."] });
+      const fetched = gitHistory(dir, { implementation: ["."] });
+      await fetched.prefetch?.({ files: ["code.ts", "missing.ts"], documents: ["doc.md"] });
+      const line = plain.lineCommit("doc.md", 1)!;
+      expect(fetched.lineCommit("doc.md", 1)).toEqual(line);
+      expect(fetched.changedSince(line.commit, "code.ts")).toEqual(plain.changedSince(line.commit, "code.ts"));
+      expect(plain.changedSince(line.commit, "code.ts")).toHaveLength(2);
+      expect(fetched.changedSince(line.commit, "missing.ts")).toEqual([]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});

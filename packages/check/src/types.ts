@@ -208,6 +208,8 @@ export interface HistoryPort {
   /** Commits since the configured start that change implementation paths with no test and no `Refs:` trailer. */
   /** Whether any commit of any branch ever held `path`: a name that did not exist now was either deleted or never there. */
   existed?(path: string): boolean;
+  /** Ask for the history of many files at once, so that the answers are ready when the check asks one by one. */
+  prefetch?(want: { files: string[]; documents: string[] }): Promise<void>;
   /** Whether a document records a moment, and so is not described stale by a later change to a file it names. */
   frozen?(path: string): boolean;
   untraced(): { commit: string; date: string; files: number; agent: boolean }[];

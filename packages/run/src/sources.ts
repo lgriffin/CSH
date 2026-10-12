@@ -136,13 +136,22 @@ function filesAt(root: string, at: string): { files?: { path: string; abs: strin
   if (!existsSync(abs)) return {};
   if (!inside(realRoot, realpathSync(abs))) return { outside: true };
   const out: { path: string; abs: string }[] = [];
-  const walk = (p: string) => {
-    if (!inside(realRoot, realpathSync(p))) return; // a link out of the project is never followed
-    if (statSync(p).isDirectory()) {
-      for (const e of readdirSync(p).sort(compareCodePoints)) walk(join(p, e));
-    } else out.push({ path: relative(root, p).split(sep).join("/"), abs: p });
+  const add = (p: string) => out.push({ path: relative(root, p).split(sep).join("/"), abs: p });
+  // A path that is not a link lies where its directory does, which is inside the root: only a link is resolved (a link out
+  // of the project is never followed). Resolving every file made a tree of thousands cost seconds.
+  const walk = (dir: string) => {
+    for (const e of readdirSync(dir, { withFileTypes: true }).sort((a, b) => compareCodePoints(a.name, b.name))) {
+      const p = join(dir, e.name);
+      if (e.isSymbolicLink()) {
+        if (!inside(realRoot, realpathSync(p))) continue;
+        if (statSync(p).isDirectory()) walk(p);
+        else add(p);
+      } else if (e.isDirectory()) walk(p);
+      else add(p);
+    }
   };
-  walk(abs);
+  if (statSync(abs).isDirectory()) walk(abs);
+  else add(abs);
   return { files: out };
 }
 
