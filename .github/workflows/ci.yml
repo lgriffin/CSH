@@ -151,7 +151,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        subject: [fastapi-clean-example, spring-hexagonal-poc, go-clean-arch, hexarch]
+        subject: [fastapi-clean-example, spring-hexagonal-poc, go-clean-arch, hexarch, taskboard-typescript, taskboard-java, taskboard-python]
     steps:
       - uses: actions/checkout@v4
         with:

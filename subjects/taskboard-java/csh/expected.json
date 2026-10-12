@@ -1,0 +1,105 @@
+{
+  "schema": "csh-expected/v1",
+  "rungs": {
+    "Requirements/R-FLOW-1": "L3",
+    "Requirements/R-FLOW-2": "L3",
+    "Requirements/R-MOVE-1": "L3",
+    "Requirements/R-WIP-1": "L3",
+    "Requirements/R-DONE-1": "L3",
+    "Requirements/R-DONE-2": "L3",
+    "Requirements/R-FIND-1": "L3",
+    "Requirements/R-LIST-1": "L3",
+    "Requirements/R-VAL-1": "L3",
+    "Requirements/R-ERR-1": "L5"
+  },
+  "rows": [
+    {
+      "row": 1,
+      "title": "An unmapped domain error does not compile, so R-ERR-1 is prevented (the paper, V6 caught by the compiler)",
+      "expect": [
+        {
+          "outcome": "converged",
+          "kind": "satisfied",
+          "subject": "TaskboardJava/Prevented/ErrorStatusIsTotal"
+        }
+      ]
+    },
+    {
+      "row": 2,
+      "title": "The domain depends on no other package (AGENTS.md, Where things go)",
+      "expect": [
+        {
+          "outcome": "converged",
+          "kind": "satisfied",
+          "subject": "TaskboardJava/Layering/DomainDependsOnNoOtherPackage"
+        }
+      ]
+    },
+    {
+      "row": 3,
+      "title": "The repository depends only on the domain",
+      "expect": [
+        {
+          "outcome": "converged",
+          "kind": "satisfied",
+          "subject": "TaskboardJava/Layering/RepositoryDependsOnlyOnTheDomain"
+        }
+      ]
+    },
+    {
+      "row": 4,
+      "title": "The service depends on the domain, repository and config only",
+      "expect": [
+        {
+          "outcome": "converged",
+          "kind": "satisfied",
+          "subject": "TaskboardJava/Layering/ServiceDependsOnNoApiOrEvents"
+        }
+      ]
+    },
+    {
+      "row": 5,
+      "title": "Events depend only on the domain",
+      "expect": [
+        {
+          "outcome": "converged",
+          "kind": "satisfied",
+          "subject": "TaskboardJava/Layering/EventsDependOnlyOnTheDomain"
+        }
+      ]
+    },
+    {
+      "row": 6,
+      "title": "The API depends on the domain and service only",
+      "expect": [
+        {
+          "outcome": "converged",
+          "kind": "satisfied",
+          "subject": "TaskboardJava/Layering/ApiDependsOnlyOnDomainAndService"
+        }
+      ]
+    },
+    {
+      "row": 7,
+      "title": "The config depends on no other package",
+      "expect": [
+        {
+          "outcome": "converged",
+          "kind": "satisfied",
+          "subject": "TaskboardJava/Layering/ConfigDependsOnNoPackage"
+        }
+      ]
+    },
+    {
+      "row": 8,
+      "title": "The domain uses the JDK only: no Spring",
+      "expect": [
+        {
+          "outcome": "converged",
+          "kind": "satisfied",
+          "subject": "TaskboardJava/Layering/DomainUsesOnlyTheJdk"
+        }
+      ]
+    }
+  ]
+}
