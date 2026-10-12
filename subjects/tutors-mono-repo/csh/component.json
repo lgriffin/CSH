@@ -34,6 +34,16 @@
       "at": "ARCHITECTURE.md"
     },
     {
+      "name": "Readme",
+      "kind": "Documents",
+      "at": "README.md"
+    },
+    {
+      "name": "Changelog",
+      "kind": "Documents",
+      "at": "CHANGELOG.md"
+    },
+    {
       "name": "Features",
       "kind": "Features",
       "at": "tests/bdd/features"
@@ -43,10 +53,19 @@
       "kind": "TestFiles",
       "at": "tests",
       "include": [
-        "**/*.test.ts"
+        "**/*.test.ts",
+        "**/*.steps.ts"
       ],
       "exclude": [
         "**/fixtures/**"
+      ]
+    },
+    {
+      "name": "E2e",
+      "kind": "TestFiles",
+      "at": "apps",
+      "include": [
+        "**/tests/e2e/**/*.spec.ts"
       ]
     },
     {
@@ -58,13 +77,34 @@
         "apps/**/*.svelte",
         "packages/**/*.ts",
         "packages/**/*.svelte",
-        "**/package.json"
+        "**/package.json",
+        "deno.json"
       ],
       "exclude": [
-        "**/node_modules/**"
+        "**/node_modules/**",
+        "**/.svelte-kit/**",
+        "**/build/**",
+        "**/dist/**",
+        "**/__tests__/**",
+        "**/test/**",
+        "**/tests/**",
+        "**/*.test.ts",
+        "**/*.spec.ts"
       ]
     }
   ],
+  "history": {
+    "since": "previous-tag",
+    "frozen": [
+      "CHANGELOG.md",
+      "guides/evolution/**"
+    ],
+    "tests": [
+      "**/*.feature",
+      "**/*.steps.ts",
+      "**/*.spec.ts"
+    ]
+  },
   "practices": [
     {
       "id": "specs",
@@ -85,7 +125,9 @@
       "kind": "documents",
       "sources": [
         "Guides",
-        "Architecture"
+        "Architecture",
+        "Readme",
+        "Changelog"
       ],
       "author": "Maintainer",
       "unit": "the guide",
@@ -111,10 +153,16 @@
       "name": "Tests",
       "kind": "tests",
       "sources": [
-        "Tests"
+        "Tests",
+        "E2e"
       ],
       "author": "Maintainer",
-      "unit": "the test file"
+      "unit": "the test file",
+      "cites": "Features",
+      "settings": {
+        "citePattern": "(?<=Rule )[0-9]{4}"
+      },
+      "executions": "csh/results.json"
     },
     {
       "id": "code",
@@ -126,5 +174,6 @@
       "author": "facts-ts",
       "unit": "the module"
     }
-  ]
+  ],
+  "spec": "csh/spec.csl.ts"
 }

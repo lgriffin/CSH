@@ -1,0 +1,1332 @@
+{
+  "commit": "ee66461cfe8e2ccbfc400a0682082295d79cb81c",
+  "files": [
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/architecture/dependency-rules.test.ts",
+      "passed": 22,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/architecture/knip-report.test.ts",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/architecture/manifest-parity.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/course/course-json-history.steps.ts",
+      "passed": 42,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/course/course-loading.steps.ts",
+      "passed": 48,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/course/course-navigation.steps.ts",
+      "passed": 32,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/developer/guided-tour.steps.ts",
+      "passed": 40,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/developer/i18n-localisation.steps.ts",
+      "passed": 31,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/developer/release-candidate.steps.ts",
+      "passed": 55,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/developer/release-changelog.steps.ts",
+      "passed": 27,
+      "skipped": 0
+    },
+    {
+      "cited": [
+        {
+          "cites": [
+            "0031"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "0031"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "0031"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "0031"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "0031"
+          ],
+          "outcome": "passed"
+        }
+      ],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/developer/release-claims-lifetime.steps.ts",
+      "passed": 36,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/developer/release-openvex.steps.ts",
+      "passed": 29,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/developer/release-quality.steps.ts",
+      "passed": 42,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/developer/runtime-image.steps.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/developer/shared-types.steps.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/developer/test-quality-ratchets.steps.ts",
+      "passed": 85,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/developer/theme-customisation.steps.ts",
+      "passed": 26,
+      "skipped": 0
+    },
+    {
+      "cited": [
+        {
+          "cites": [
+            "0269"
+          ],
+          "outcome": "passed"
+        }
+      ],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/generator/course-json.steps.ts",
+      "passed": 34,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/instructor/analytics-calendar.steps.ts",
+      "passed": 29,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/instructor/analytics-lab.steps.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/instructor/course-authoring.steps.ts",
+      "passed": 16,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/instructor/student-engagement.steps.ts",
+      "passed": 31,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/instructor/whitelist-management.steps.ts",
+      "passed": 17,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/live/presence-tracking.steps.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/shared/authentication.steps.ts",
+      "passed": 19,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/shared/error-handling.steps.ts",
+      "passed": 36,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/shared/offline-resilience.steps.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/shared/realtime-usage.steps.ts",
+      "passed": 130,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/shared/sign-in-session.steps.ts",
+      "passed": 81,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/shared/theming.steps.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/student/course-discovery.steps.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/student/lab-interaction.steps.ts",
+      "passed": 32,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/student/learning-progress.steps.ts",
+      "passed": 42,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/student/live-presence.steps.ts",
+      "passed": 37,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/student/search-content.steps.ts",
+      "passed": 28,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bdd/steps/time/lab-analytics.steps.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/completeness/completeness.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/conformance/build-identity.test.ts",
+      "passed": 28,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/conformance/deploy-pins.test.ts",
+      "passed": 38,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/conformance/migrations.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/conformance/platform-conformance.test.ts",
+      "passed": 49,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/conformance/promote-image.test.ts",
+      "passed": 39,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/conformance/release-candidate.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/conformance/release-changelog.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/conformance/release-claims-draft.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/conformance/release-claims.test.ts",
+      "passed": 22,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/conformance/release-harness.test.ts",
+      "passed": 30,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 2,
+      "file": "tests/conformance/release-quality.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/conformance/release-report-comment.test.ts",
+      "passed": 37,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/conformance/release-rules.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/conformance/server-smoke.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/contract/course/course-json.contract.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/contract/gen-lib-api.test.ts",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/contract/model-lib-api.test.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/contract/realtime/presence-protocol.contract.test.ts",
+      "passed": 20,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/contract/realtime/whiteboard-protocol.contract.test.ts",
+      "passed": 45,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/contract/supabase/calendar.contract.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/contract/supabase/connect-courses.contract.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/contract/supabase/connect-latest.contract.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/contract/supabase/connect-profiles.contract.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/contract/supabase/connect-users.contract.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/contract/supabase/learning-records.contract.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/contract/time-lib-api.test.ts",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/generator/generator-compare.test.ts",
+      "passed": 17,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/mutation/schema-snapshot.test.ts",
+      "passed": 20,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/observability/observability-contracts.test.ts",
+      "passed": 23,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/performance/bundle-budget.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/performance/lighthouse.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/performance/load-test.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/performance/stats.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/security/security.test.ts",
+      "passed": 19,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/suite-health/ears-audit.test.ts",
+      "passed": 25,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/suite-health/suite-health.test.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/suite-health/test-time-budget.test.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/apps/healthz-live.test.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/community/analytics-service.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/community/catalogue-service.test.ts",
+      "passed": 17,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/community/error-transport.test.ts",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/community/learning-record-increments.test.ts",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/community/live-service.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/community/presence-broadcast.test.ts",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/community/presence-service.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/community/supabase-client.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/connect/all-course-access.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/connect/auth-utils.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/connect/connect-service.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/connect/course-visit-locks.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/connect/local-storage-profile.test.ts",
+      "passed": 21,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/course/course-service-not-found.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/course/live-notebook.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/course/lo-tree-clock.test.ts",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/gen/course-builder-mutations.test.ts",
+      "passed": 16,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/gen/course-builder.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/gen/llms.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/gen/lr-utils-mutations.test.ts",
+      "passed": 37,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/gen/lr-utils.test.ts",
+      "passed": 53,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/gen/netlify.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/gen/parse-course.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/gen/styles.test.ts",
+      "passed": 23,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/gen/template-utils-mutations.test.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/gen/template-utils.test.ts",
+      "passed": 50,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/identity/authjs-adapter.test.ts",
+      "passed": 19,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/markdown/card-summary.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/markdown/katex-rendering.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/markdown/lazy-math.test.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/markdown/markdown-service.test.ts",
+      "passed": 29,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/markdown/marp-renderer.test.ts",
+      "passed": 24,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/composite-lo.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/course-builder.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/course-calendar.test.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/course-utils-mutations.test.ts",
+      "passed": 28,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/course-walls.test.ts",
+      "passed": 15,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/icon-mapping.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/lo-tree-mutations.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/lo-tree.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/lo-types.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/lo-utils-mutations.test.ts",
+      "passed": 48,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/lo-utils-mutations2.test.ts",
+      "passed": 19,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/lo-utils.test.ts",
+      "passed": 27,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/markdown-utils-mutations.test.ts",
+      "passed": 32,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/markdown-utils.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/search-mutations.test.ts",
+      "passed": 65,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/search-mutations2.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/model/search.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/quiz/quiz-content.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/quiz/quiz-parser.test.ts",
+      "passed": 33,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/quiz/quiz-score.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/rbac/lock-matching.test.ts",
+      "passed": 28,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/rbac/lock-tree.integration.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/reader/auth-mode.test.ts",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/reader/copy-code.test.ts",
+      "passed": 1,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/reader/llms-rbac.test.ts",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/reader/resource-search.test.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/support/mock-supabase.test.ts",
+      "passed": 27,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/support/no-network.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/themes/icon-libraries.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/themes/theme-icon-fallback.test.ts",
+      "passed": 1,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/themes/theme-service.test.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/time/aggregation.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/time/base-calendar-model.test.ts",
+      "passed": 20,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/time/base-lab-model-mutations.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/time/base-lab-model.test.ts",
+      "passed": 34,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/time/calendar-mutations.test.ts",
+      "passed": 33,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/time/calendar-utils.test.ts",
+      "passed": 31,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/time/course-time.test.ts",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/time/date-range.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/time/edge-cases.test.ts",
+      "passed": 17,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/time/lab-utils-mutations.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/time/lab-utils.test.ts",
+      "passed": 27,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/time/supabase.test.ts",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/time/time-formatting.test.ts",
+      "passed": 17,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/time/tutors-time-display.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/types/tutors-types.test.ts",
+      "passed": 19,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/utils/a11y.test.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/utils/i18n.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/utils/logger-contract.test.ts",
+      "passed": 16,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/utils/logger-runtime.test.ts",
+      "passed": 21,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/utils/logger.test.ts",
+      "passed": 39,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/utils/metrics.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/utils/request-logger.test.ts",
+      "passed": 25,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/unit/utils/runtime.test.ts",
+      "passed": 18,
+      "skipped": 0
+    }
+  ],
+  "schema": "csh-results/v1"
+}

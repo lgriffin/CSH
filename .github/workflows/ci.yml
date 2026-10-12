@@ -120,3 +120,31 @@ jobs:
       - name: Overview
         if: always()
         run: node packages/cli/bin/csh.js overview --root subjects/esi-ts >> "$GITHUB_STEP_SUMMARY"
+  # The other public profiles: fetch each subject at its pinned commit, run it, and compare with its committed expected
+  # results. A profile that cannot parse its subject, or whose results drift, fails here.
+  subjects:
+    name: Subject (${{ matrix.subject }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        subject: [tutors-mono-repo, tutors-release-harness]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Fetch the subject at the pinned commit
+        run: node packages/cli/bin/csh.js subject fetch --root subjects/${{ matrix.subject }}
+      - name: Run the profile
+        run: node packages/cli/bin/csh.js run --root subjects/${{ matrix.subject }}
+      - name: Compare with the expected results
+        run: node packages/cli/bin/csh.js expect --root subjects/${{ matrix.subject }}
+      - name: Overview
+        if: always()
+        run: node packages/cli/bin/csh.js overview --root subjects/${{ matrix.subject }} >> "$GITHUB_STEP_SUMMARY"
