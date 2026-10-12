@@ -1,6 +1,0 @@
-# Each A3 stage holds a report that quotes tutors-mono-repo; stages stay local and CI rebuilds them (#37).
-csh/a3/*/stages/
-# The releases A3 has no judgments yet; it stays local whole.
-csh/a3/releases/
-# A runner's report names the repository's tests, so it stays local; csh results import reduces it to csh/results.json.
-results/

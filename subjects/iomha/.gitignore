@@ -1,7 +1,0 @@
-# Each A3 stage holds a report that quotes ESI.ts, which is GPL-3.0: stages stay local, and CI rebuilds them (#37).
-# The sheets and judgments hold only identifiers, paths, spans, commits and counts, and are committed (stage 28).
-csh/a3/*/stages/
-# The releases A3 of stage 25 has no judgments yet; it stays local whole.
-csh/a3/releases/
-# A runner's report names ESI.ts's tests, so it stays local; csh results import reduces it to csh/results.json.
-results/
