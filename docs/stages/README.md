@@ -45,6 +45,7 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 42: Traceability past the file](stage-42.md)
 - [Stage 43: Clearer output](stage-43.md)
 - [Stage 44: Process and safety](stage-44.md)
+- [Stage 45: From the Java and Python runs](stage-45.md)
 - [Stage 46: The Assertion Ladder, by name](stage-46.md)
 - [Stage 47: Rungs](stage-47.md)
 - [Stage 48: Prevention](stage-48.md)

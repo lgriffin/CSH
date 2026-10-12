@@ -5,10 +5,10 @@
 //
 // Facts: one module per file; one dependency per import, to the file that declares the imported type, or to every
 // file of a package a wildcard names, or else to the Java package the import names (standard packages as written, so
-// `java.util`); one declaration per top-level type, with the class or interface it extends, and per `static final`
-// field of a top-level type with a literal value; one export per public top-level type; and the fields of a pom.xml
-// that say what the project is, its modules, properties and dependencies. A type referenced from its own package, or
-// by a fully qualified name in code, needs no import and is no dependency here.
+// `java.util`); one declaration per type, with the class or interface it extends, a nested one under its dotted name
+// (`Outer.Inner`, A-170), and per `static final` field of a type with a literal value; one export per public top-level
+// type; and the fields of a pom.xml that say what the project is, its modules, properties and dependencies. A type
+// referenced from its own package, or by a fully qualified name in code, needs no import and is no dependency here.
 import { compareCodePoints } from "@csh/kernel";
 import { parseXml, type Diagnostic, type Fact, type XmlElement } from "@csh/witness";
 import { lineOf, parseWith, type Node } from "./parser.ts";
@@ -47,9 +47,11 @@ export interface JavaDeclaration {
    * simple name of its selector's declared type when the selector is a parameter, local or field declared with one.
    */
   switches?: { labels: string[]; selector?: string }[];
+  /** For a type declared in another type's body: it is declared, never exported. */
+  nested?: boolean;
 }
 
-/** What one Java file says: its package, imports and top-level declarations, and the line of its first syntax error. */
+/** What one Java file says: its package, imports and type declarations, and the line of its first syntax error. */
 export interface JavaFile {
   pkg: string;
   imports: JavaImport[];
@@ -130,11 +132,8 @@ export function literalValue(n: Node | null): string | undefined {
 
 /** The `static final` fields of a type's body with a literal value; in an interface or annotation, every field. */
 function constantsOf(type: Node, name: string): JavaDeclaration[] {
-  const body = type.childForFieldName("body");
-  if (body === null) return [];
-  const members = body.type === "enum_body" ? body.namedChildren.filter((c) => c.type === "enum_body_declarations").flatMap((c) => c.namedChildren) : body.namedChildren;
   const out: JavaDeclaration[] = [];
-  for (const m of members) {
+  for (const m of membersOf(type)) {
     const implicit = m.type === "constant_declaration";
     if (!implicit && m.type !== "field_declaration") continue;
     const mods = modifiersOf(m);
@@ -152,7 +151,7 @@ function constantsOf(type: Node, name: string): JavaDeclaration[] {
  * The members of a closed type (stage 48): an enum's constants; a sealed type's `permits` list, else the types nested in
  * it that extend or implement it. Undefined for any other type.
  */
-function membersOf(n: Node, declares: string, name: string): string[] | undefined {
+function closedMembersOf(n: Node, declares: string, name: string): string[] | undefined {
   const body = n.childForFieldName("body");
   if (declares === "enum") return (body?.namedChildren ?? []).filter((c) => c.type === "enum_constant").flatMap((c) => c.childForFieldName("name")?.text ?? []);
   if (!modifiersOf(n).has("sealed")) return undefined;
@@ -247,22 +246,38 @@ function readTree(root: Node): JavaFile {
     } else if (n.type === "import_declaration") {
       const id = n.namedChildren.find((c) => c.type === "scoped_identifier" || c.type === "identifier");
       if (id !== undefined) imports.push({ name: squash(id.text), isStatic: words(n).has("static"), wildcard: n.namedChildren.some((c) => c.type === "asterisk"), line: lineOf(n) });
-    } else if (Object.hasOwn(TYPES, n.type)) {
-      const id = n.childForFieldName("name");
-      if (id === null) continue;
-      const declares = TYPES[n.type]!;
-      let base: Node | null | undefined;
-      if (declares === "class") base = n.childForFieldName("superclass")?.namedChildren[0];
-      else if (declares === "interface") base = n.namedChildren.find((c) => c.type === "extends_interfaces")?.namedChildren[0]?.namedChildren[0];
-      const stripped = base !== null && base !== undefined ? stripType(base.text) : "";
-      const members = membersOf(n, declares, id.text);
-      const switches = switchesIn(n);
-      declarations.push({ symbol: id.text, declares, line: lineOf(id), ...(stripped !== "" ? { base: stripped } : {}), public: modifiersOf(n).has("public"), ...(members !== undefined ? { members } : {}), ...(switches.length > 0 ? { switches } : {}) });
-      declarations.push(...constantsOf(n, id.text));
-    }
+    } else if (Object.hasOwn(TYPES, n.type)) declareType(n, "", declarations);
   }
   const error = root.hasError ? root.descendantsOfType("ERROR")[0] ?? firstMissing(root) : undefined;
   return { pkg, imports, declarations, ...(error !== undefined ? { syntaxError: lineOf(error) } : {}) };
+}
+
+/**
+ * A type, its constants and, under its dotted name, every type declared in its body at any depth (A-170). A type
+ * inside a method, constructor, initializer or anonymous class is not a member of the body, so it is not declared.
+ */
+function declareType(n: Node, outer: string, out: JavaDeclaration[]): void {
+  const id = n.childForFieldName("name");
+  if (id === null) return;
+  const declares = TYPES[n.type]!;
+  const symbol = outer === "" ? id.text : `${outer}.${id.text}`;
+  let base: Node | null | undefined;
+  if (declares === "class") base = n.childForFieldName("superclass")?.namedChildren[0];
+  else if (declares === "interface") base = n.namedChildren.find((c) => c.type === "extends_interfaces")?.namedChildren[0]?.namedChildren[0];
+  const stripped = base !== null && base !== undefined ? stripType(base.text) : "";
+  const members = closedMembersOf(n, declares, id.text);
+  // A switch belongs to the top-level type that holds it, nested types' included (stage 48).
+  const switches = outer === "" ? switchesIn(n) : [];
+  out.push({ symbol, declares, line: lineOf(id), ...(stripped !== "" ? { base: stripped } : {}), public: modifiersOf(n).has("public"), ...(outer !== "" ? { nested: true } : {}), ...(members !== undefined ? { members } : {}), ...(switches.length > 0 ? { switches } : {}) });
+  out.push(...constantsOf(n, symbol));
+  for (const m of membersOf(n)) if (Object.hasOwn(TYPES, m.type)) declareType(m, symbol, out);
+}
+
+/** The members of a type's body; an enum's are those after its constants. */
+function membersOf(type: Node): Node[] {
+  const body = type.childForFieldName("body");
+  if (body === null) return [];
+  return body.type === "enum_body" ? body.namedChildren.filter((c) => c.type === "enum_body_declarations").flatMap((c) => c.namedChildren) : body.namedChildren;
 }
 
 function firstMissing(n: Node): Node | undefined {
@@ -317,7 +332,7 @@ export async function readJavaFiles(input: readonly InputFile[], ctx: FactContex
   const files = [...input].sort((a, b) => compareCodePoints(a.path, b.path));
   const read = new Map<string, JavaFile>();
   for (const f of files) if (f.path.endsWith(".java")) read.set(f.path, await readJava(new TextDecoder().decode(f.bytes)));
-  // Which files declare each fully qualified top-level type, and which files each package holds.
+  // Which files declare each fully qualified type, nested ones included, and which files each package holds.
   const types = new Map<string, string[]>();
   const packages = new Map<string, string[]>();
   for (const [path, j] of read) {
@@ -364,8 +379,9 @@ export async function readJavaFiles(input: readonly InputFile[], ctx: FactContex
     if (j.syntaxError !== undefined) diagnostics.push({ code: "syntax-error", severity: "warning", message: "the Java parser recovered from a syntax error; facts after it may be missing", span: `${f.path}:${j.syntaxError}` });
     for (const imp of j.imports) {
       const at = `${f.path}:${imp.line}`;
-      const depend = (to: string) => {
-        if (to !== f.path) facts.push({ ...base, kind: "depends", at, from: f.path, to, via: "import", typeOnly: false });
+      // A package that was not read is a dotted namespace: its classes and subpackages are named under it (A-171).
+      const depend = (to: string, external = false) => {
+        if (to !== f.path) facts.push({ ...base, kind: "depends", at, from: f.path, to, via: "import", typeOnly: false, ...(external ? { namespace: "dotted" as const } : {}) });
       };
       // `import a.b.*` names a package, or the member types of a class; a static import names a class's members.
       const onPackage = imp.wildcard && !imp.isStatic ? packages.get(imp.name) : undefined;
@@ -375,7 +391,7 @@ export async function readJavaFiles(input: readonly InputFile[], ctx: FactContex
       }
       const cls = imp.isStatic && !imp.wildcard && imp.name.includes(".") ? imp.name.slice(0, imp.name.lastIndexOf(".")) : imp.name;
       const found = typeOf(cls);
-      if (found === undefined) depend(packageOfName(cls, !(imp.wildcard && !imp.isStatic)));
+      if (found === undefined) depend(packageOfName(cls, !(imp.wildcard && !imp.isStatic)), true);
       else if (found.files.length > 1) facts.push({ ...base, kind: "skipped", at, from: f.path, reason: `ambiguous ${found.fqn}: declared in ${found.files.join(", ")}` });
       else depend(found.files[0]!);
     }
@@ -383,7 +399,7 @@ export async function readJavaFiles(input: readonly InputFile[], ctx: FactContex
       const total = totalOf(d);
       facts.push({ ...base, kind: "declare", at: `${f.path}:${d.line}`, module: f.path, symbol: d.symbol, declares: d.declares, ...(d.base !== undefined ? { base: d.base } : {}), ...(d.value !== undefined ? { value: d.value } : {}), ...(d.members !== undefined ? { members: d.members } : {}), ...(total.length > 0 ? { total } : {}) });
     }
-    for (const d of j.declarations) if (d.public === true) facts.push({ ...base, kind: "export", at: `${f.path}:${d.line}`, module: f.path, symbol: d.symbol, typeOnly: false });
+    for (const d of j.declarations) if (d.public === true && d.nested !== true) facts.push({ ...base, kind: "export", at: `${f.path}:${d.line}`, module: f.path, symbol: d.symbol, typeOnly: false });
   }
   return { facts, diagnostics };
 }

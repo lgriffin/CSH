@@ -148,6 +148,11 @@ export interface DependencyFact extends FactBase {
   via: "import" | "manifest";
   /** An import of types alone: counted as a dependency, and flagged (A-74). */
   typeOnly: boolean;
+  /**
+   * The target is a dotted namespace whose members are named `<to>.<member>`, such as a Java package or a Python
+   * package, so a rule over `<to>.*` selects it (stage 45, A-171). Unset for npm names, where `a.b` is no part of `a`.
+   */
+  namespace?: "dotted";
 }
 
 /** Something the scan saw and could not resolve, such as a dynamic import of a computed specifier. */
