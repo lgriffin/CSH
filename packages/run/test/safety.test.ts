@@ -39,7 +39,7 @@ describe("subject warnings", () => {
     expect(subjectWarnings(project("https://github.com/a/b"), exec(false))).toEqual([]);
   });
 
-  it("asks a local-path subject's checkout for its origin, and warns when that repository is private (stage 45)", () => {
+  it("asks a local-path subject's checkout for its origin, and warns when that repository is private (stage 46)", () => {
     const calls: string[][] = [];
     const fake: Exec = (cmd, args, cwd) => {
       calls.push([cmd, ...args, cwd ?? ""]);

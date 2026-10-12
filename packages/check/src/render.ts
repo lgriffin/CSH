@@ -34,7 +34,7 @@ const valuesIn = (text: string): string[] => [...new Set([...text.matchAll(/\d+(
 
 /**
  * Where a claim finding's sentences are: each `path:line` its reason opens a clause with, and the values the claim at
- * that span states (stage 45), so that the sentence shown is the one holding them.
+ * that span states (stage 46), so that the sentence shown is the one holding them.
  */
 export const claimSpans = (f: Finding): { span: string; values: string[] }[] => {
   if (f.kind !== "fact-conflict" && f.kind !== "claim-conflict") return [];
@@ -52,7 +52,7 @@ export const claimSpans = (f: Finding): { span: string; values: string[] }[] => 
 
 /**
  * The index of the line a claim's values are on: `from`, or, when `from` opens a block (a table, a list) and the values
- * are on a later line of it, that line, before the block ends at a blank line (stage 45). A value is matched whole: 5
+ * are on a later line of it, that line, before the block ends at a blank line (stage 46). A value is matched whole: 5
  * is not found in 15 or in 1.5.
  */
 export function lineHolding(lines: readonly string[], from: number, values: readonly string[]): number {

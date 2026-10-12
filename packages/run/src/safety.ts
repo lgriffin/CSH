@@ -41,7 +41,7 @@ export function subjectWarnings(p: Project, exec: Exec = defaultExec): string[] 
   const local = localPathWarning(p, exec);
   if (local !== undefined) out.push(local);
   const repo = p.component?.manifest.subject?.repo ?? "";
-  // A local path is asked for its own origin: the checkout of a private repository is as private (stage 45).
+  // A local path is asked for its own origin: the checkout of a private repository is as private (stage 46).
   const origin = repo !== "" && isPathRepo(repo) ? exec("git", ["remote", "get-url", "origin"], resolve(p.root, repo))?.trim() : undefined;
   const slug = githubSlug(origin ?? repo);
   const visibility = slug === undefined ? undefined : exec("gh", ["repo", "view", slug, "--json", "visibility", "--jq", ".visibility"])?.trim();

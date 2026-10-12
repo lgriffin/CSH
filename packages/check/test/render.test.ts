@@ -1,4 +1,4 @@
-// Claim findings shown as the sentence that holds the claim (From real runs, stage 45).
+// Claim findings shown as the sentence that holds the claim (From real runs, stage 46).
 import { describe, expect, it } from "vitest";
 import { claimSpans, type Finding, lineHolding } from "../src/index.ts";
 

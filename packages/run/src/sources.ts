@@ -146,7 +146,7 @@ export function trackedDirsOf(tracked: Iterable<string>): Set<string> {
 /**
  * The files under a source's location. With `dirs` (from trackedDirsOf), a directory that holds no tracked file is not
  * entered: a working checkout's node_modules or build output can hold a hundred times the files the commit does
- * (From real runs, stage 45).
+ * (From real runs, stage 46).
  */
 function filesAt(root: string, at: string, dirs?: Set<string>): { files?: { path: string; abs: string }[]; outside?: true } {
   const realRoot = realpathSync(root);

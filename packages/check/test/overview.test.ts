@@ -20,7 +20,7 @@ describe("overview detail", () => {
     expect(e.detail).toMatch(/and 3 more$/);
   });
 
-  it("places every step-matching signal with what would close or decide it (stage 45)", () => {
+  it("places every step-matching signal with what would close or decide it (stage 46)", () => {
     expect(GAP_NEXT["undefined-step"]).toMatch(/step definition/);
     expect(GAP_NEXT["unused-step-definition"]).toMatch(/scenario/);
     expect(INDETERMINATE_NEXT["steps-undecided"]).toMatch(/by hand/);

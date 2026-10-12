@@ -59,7 +59,7 @@ export const GAP_NEXT: Record<string, string> = {
   "unplaced-package": "Place the package in a container of the diagram",
   "unowned-source": "Name the practice that owns the source",
   unliftable: "Rewrite the content in a form its adapter reads, or move it out of the source",
-  // Step matching (From real runs, stage 45): placed, so that each says what would close it.
+  // Step matching (From real runs, stage 46): placed, so that each says what would close it.
   "undefined-step": "Write a step definition that matches the step, or reword the step to match one",
   "unused-step-definition": "Use the definition in a scenario, or remove it",
 };

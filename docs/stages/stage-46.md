@@ -1,4 +1,4 @@
-# Stage 45: The second round of real runs
+# Stage 46: The second round of real runs
 
 **Exit:** the problems Leigh's Windows re-run of the six repositories found are fixed or answered
 ([13](../spec/13-from-real-runs.md), section 8; [issue 66](https://github.com/lgriffin/CSH/issues/66)).
@@ -20,6 +20,8 @@
   - `subjectWarnings` asks a path subject for its origin
   - `idPatternOf`
   - fixtures and dot-directories are not tests
+  - nothing under a virtual environment is proposed
+  - `renameRetrying` moves a fetched checkout into place ([A-162](../../ASSUMPTIONS.md))
 - `check`: `claimSpans` returns each claim's values; `lineHolding` finds the line that holds them
   ([A-161](../../ASSUMPTIONS.md)). The overview places the step signals.
 - `cli`:

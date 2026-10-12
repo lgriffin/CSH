@@ -199,7 +199,7 @@ Each is a warning: nothing is refused, since the profile is its owner's to keep 
   component's repository, `csh subject fetch` and `csh run` warn that the profile works only on this machine.
 - The manifest guide documents keeping a local profile out of git with `.git/info/exclude`.
 
-## 8. The second round (stage 45)
+## 8. The second round (stage 46)
 
 Leigh re-ran the six repositories on Windows after stages 38 to 44. These are the problems that still showed:
 
@@ -217,3 +217,7 @@ Leigh re-ran the six repositories on Windows after stages 38 to 44. These are th
 - `csh init --subject` names up to eight identifier prefixes. With more than eight, it proposes their common shape,
   for example `[A-Z]{2,4}-[0-9]{3}`. It takes no test or step definition under a `fixtures` directory or a
   dot-directory.
+- `csh init --subject` proposes nothing under `.venv`, `venv`, `site-packages` or `__pycache__`, even when they are
+  tracked.
+- `csh subject fetch` retries the final move of a fresh checkout for a few seconds while Windows reports the files
+  busy. If the move still fails, the fetch fails with that reason and leaves nothing half-moved.

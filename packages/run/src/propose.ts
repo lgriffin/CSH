@@ -15,7 +15,8 @@ export interface Proposal {
 }
 
 /** Directories never proposed for any source: installed, built or vendored files. */
-export const NEVER_PROPOSED = ["node_modules", "dist", "build", "out", "coverage", "vendor", "target"];
+// A Python virtual environment is installed code, as node_modules is, even when someone committed it (stage 46).
+export const NEVER_PROPOSED = ["node_modules", "dist", "build", "out", "coverage", "vendor", "target", ".venv", "venv", "site-packages", "__pycache__"];
 const NEVER_GLOBS = NEVER_PROPOSED.map((d) => `**/${d}/**`);
 
 /** Prefixes of identifiers that belong to the world, not to the repository: UTF-8, SHA-256, RFC-9110. */
@@ -95,7 +96,7 @@ function families(texts: string[]): { prefix: string; ids: number; mentions: num
 /**
  * The identifier pattern of the families: each prefix named, or, past eight, their common shape: a repository with a
  * dozen prefixes of the same form (AUTH-001, PERF-002) means them all, and a list of the first eight would miss the
- * rest (From real runs, stage 45).
+ * rest (From real runs, stage 46).
  */
 export function idPatternOf(fams: { prefix: string; widths: number[] }[]): string | undefined {
   if (fams.length === 0) return undefined;

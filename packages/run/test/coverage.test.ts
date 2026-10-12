@@ -26,7 +26,7 @@ describe("coverage", () => {
     expect(renderCoverage(many, "Demo", 5)).toContain("and 10 more kinds");
   });
 
-  it("never enters a directory that holds no tracked file (stage 45)", () => {
+  it("never enters a directory that holds no tracked file (stage 46)", () => {
     const dir = mkdtempSync(join(tmpdir(), "csh-coverage-"));
     try {
       const git = (...a: string[]) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...a], { cwd: dir, stdio: "ignore" });

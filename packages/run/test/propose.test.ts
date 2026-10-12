@@ -60,14 +60,26 @@ describe("proposeProfile", () => {
     expect(r.manifest.practices.find((p) => p.id === "docs")?.settings?.idPattern).toBe("(?:II|HH|GG|FF|EE|DD|BB|AA)-[0-9]+");
   });
 
-  it("past eight families, proposes their common shape rather than the first eight (stage 45)", () => {
+  it("past eight families, proposes their common shape rather than the first eight (stage 46)", () => {
     const text = ["AUTH", "PERF", "SEC", "DATA", "UX", "OPS", "API", "LOG", "CFG", "NET"].map((p) => `${p}-001 ${p}-002`).join("\n");
     const r = propose(checkout({ "docs/x.md": `${text}\n` }));
     expect(r.manifest.practices.find((p) => p.id === "docs")?.settings?.idPattern).toBe("[A-Z]{2,4}-[0-9]{3}");
     expect(r.guesses.join("\n")).toMatch(/and 2 more prefixes of the same form/);
   });
 
-  it("takes no step definition or test under a fixtures directory or a dot-directory (stage 45)", () => {
+  it("proposes nothing under a committed Python virtual environment (stage 46)", () => {
+    const dir = checkout({
+      "app/main.py": "x = 1\n",
+      "tests/test_main.py": "def test_x():\n    pass\n",
+      ".venv/lib/python3.12/site-packages/pkg/__init__.py": "y = 2\n",
+      ".venv/lib/python3.12/site-packages/pkg/test_pkg.py": "def test_y():\n    pass\n",
+    });
+    const r = propose(dir);
+    expect(reads(dir, r, "Code")).toEqual(["app/main.py"]);
+    expect(reads(dir, r, "Tests")).toEqual(["tests/test_main.py"]);
+  });
+
+  it("takes no step definition or test under a fixtures directory or a dot-directory (stage 46)", () => {
     const dir = checkout({
       "features/a.feature": "Feature: A\n  Scenario: S\n    Given a\n",
       "features/steps/a.steps.js": "Given('a', () => {});\n",
