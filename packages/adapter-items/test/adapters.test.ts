@@ -150,7 +150,8 @@ describe("the Gherkin inventory adapter", () => {
     ]);
     expect((out.items ?? [])[0]!.attrs).toEqual({ tags: "@core" });
     expect(out.items![1]!.pattern).toBe("event-driven");
-    expect(out.items![3]!.attrs).toEqual({ outline: "true" });
+    // A scenario keeps its steps, its background's first (stage 42); an outline with no rows has only those.
+    expect(out.items![3]!.attrs).toEqual({ outline: "true", steps: "6\ta provider" });
     expect(out.edges!.filter((e) => e.rel === "exemplifies").map((e) => e.to)).toEqual([out.items![1]!.id, out.items![1]!.id, out.items![4]!.id]);
     expect(out.edges!.filter((e) => e.rel === "cites")).toEqual([{ from: out.items![2]!.id, rel: "cites", to: "P5", span: "f/a.feature:10" }]);
     expect(out.diagnostics.map((d) => [d.code, d.span])).toEqual([["no-pattern", "f/a.feature:18"]]);

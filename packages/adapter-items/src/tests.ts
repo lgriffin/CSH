@@ -7,6 +7,7 @@
 // they are counted, and never decide anything. Python, Java, Go and Rust test files are read by their runners'
 // conventions (tests-other.ts, stage 35), and their results join by path as these do, or, when the runner names a Java
 // class, a Go package or a Rust test binary instead of a file, by what the source's files declare (tests-join.ts).
+import { posix } from "node:path";
 import { digestOf } from "@csh/kernel";
 import { type Adapter, type AdapterInput, type AdapterOutput, type Diagnostic, type ItemEdge, parseTestResults, type SourceItem, type TestOutcome, type TestResult } from "@csh/witness";
 import { decode, idPatternOf, sortedFiles } from "./common.ts";
@@ -98,10 +99,49 @@ function pastClose(code: string, at: number): number {
   return at;
 }
 
-/** Each test declaration of a file: its line, whether it is a describe, its modifiers and its literal title. */
-export function declarations(text: string): { line: number; describe: boolean; modifiers: string; title: string }[] {
+/** The offset of the brace that closes the one at `at`, counting only braces in code; -1 when none does. */
+function closeBrace(code: string, at: number): number {
+  let depth = 0;
+  for (let k = at; k < code.length; k++) {
+    if (code[k] === "{") depth++;
+    else if (code[k] === "}" && --depth === 0) return k;
+  }
+  return -1;
+}
+
+/**
+ * The tags of an options object that follows a title (From real runs, stage 42): Playwright's
+ * `test("title", { tag: "@a" }, ...)` or `{ tag: ["@a", "@b"] }`. `after` is the offset just past the title's closing quote.
+ */
+function tagsAfter(code: string, strings: Map<number, string>, after: number): string[] {
+  let at = skipSpace(code, after);
+  if (code[at] !== ",") return [];
+  at = skipSpace(code, at + 1);
+  if (code[at] !== "{") return [];
+  const end = closeBrace(code, at);
+  if (end < 0) return [];
+  const key = /(?<![\w$])tag\s*:\s*/y;
+  for (let k = at + 1; k < end; k++) {
+    key.lastIndex = k;
+    const m = key.exec(code);
+    if (m === null) continue;
+    const v = k + m[0].length;
+    const one = strings.get(v);
+    if (one !== undefined) return [one];
+    if (code[v] !== "[") return [];
+    const close = code.indexOf("]", v);
+    return [...strings].filter(([o]) => o > v && o < close).sort((a, b) => a[0] - b[0]).map(([, t]) => t);
+  }
+  return [];
+}
+
+/**
+ * Each test declaration of a file: its line, whether it is a describe, its modifiers, its literal title and the tags of
+ * its options. Playwright's `test.describe` is a describe (stage 42).
+ */
+export function declarations(text: string): { line: number; describe: boolean; modifiers: string; title: string; tags: string[] }[] {
   const { code, strings } = lex(text);
-  const out: { line: number; describe: boolean; modifiers: string; title: string }[] = [];
+  const out: { line: number; describe: boolean; modifiers: string; title: string; tags: string[] }[] = [];
   for (const m of code.matchAll(CALL)) {
     let at = m.index + m[0].length;
     // A table first, as each(rows)(title, ...) or each`table`(title, ...): the title is in the call that follows.
@@ -119,28 +159,81 @@ export function declarations(text: string): { line: number; describe: boolean; m
     at = skipSpace(code, at);
     const title = strings.get(at);
     if (title === undefined) continue;
-    out.push({ line: code.slice(0, at).split("\n").length, describe: m[1] === "describe", modifiers: m[2]!, title });
+    out.push({ line: code.slice(0, at).split("\n").length, describe: m[1] === "describe" || /^\.describe\b/.test(m[2]!), modifiers: m[2]!, title, tags: tagsAfter(code, strings, at + title.length + 2) });
   }
   return out;
 }
 
 /** A Cucumber step definition: Given, When, Then, And, But, Step or defineStep, called with a string or a regular expression. */
 const STEP = /(?<![.\w$])(Given|When|Then|And|But|Step|defineStep)\s*\(/g;
+/** jest-cucumber's step functions, read only in a file that loads a feature, where they cannot be anything else (stage 42). */
+const LOWER_STEP = /(?<![.\w$])(Given|When|Then|And|But|Step|defineStep|given|when|then|and|but)\s*\(/g;
+const LOAD = /(?<![.\w$])loadFeature\s*\(/g;
 
 /**
- * Each step definition of a file (Cucumber-js style): its line and its literal text. A regular expression is a step
- * whose text is not kept: the lexer blanks its content, so it cites nothing.
+ * What a step definition matches (stage 42): a Cucumber expression, a regular expression with its flags, or nothing
+ * CSH can read (a template with an interpolation, or a regular expression that does not compile), which could match
+ * any step.
  */
-export function stepDefinitions(text: string): { line: number; title: string }[] {
+export type StepPattern = { k: "expression"; text: string } | { k: "regex"; source: string; flags: string } | { k: "unreadable"; text: string };
+
+/**
+ * Each step definition of a file (Cucumber-js style): its line, its literal text and its pattern. A regular
+ * expression's text is not kept as a title: the lexer blanks its content, so it cites nothing.
+ */
+export function stepDefinitions(text: string): { line: number; title: string; pattern: StepPattern }[] {
   const { code, strings } = lex(text);
-  const out: { line: number; title: string }[] = [];
-  for (const m of code.matchAll(STEP)) {
+  const out: { line: number; title: string; pattern: StepPattern }[] = [];
+  const loads = new RegExp(LOAD.source).test(code);
+  for (const m of code.matchAll(loads ? LOWER_STEP : STEP)) {
     const at = skipSpace(code, m.index + m[0].length);
-    const title = strings.get(at) ?? (code[at] === "/" ? "" : undefined);
-    if (title === undefined) continue;
-    out.push({ line: code.slice(0, at).split("\n").length, title });
+    const line = code.slice(0, at).split("\n").length;
+    const str = strings.get(at);
+    if (str !== undefined) {
+      const pattern: StepPattern = text[at] === "`" && str.includes("${") ? { k: "unreadable", text: str } : { k: "expression", text: str };
+      out.push({ line, title: str, pattern });
+    } else if (code[at] === "/") {
+      // The lexer blanks a regular expression's content, so its closing slash is the next one in code.
+      const close = code.indexOf("/", at + 1);
+      const flags = /^[a-z]*/.exec(code.slice(close + 1))![0];
+      const source = text.slice(at + 1, close);
+      let pattern: StepPattern;
+      try {
+        new RegExp(source, flags.replace(/g/g, ""));
+        pattern = { k: "regex", source, flags: flags.replace(/g/g, "") };
+      } catch {
+        pattern = { k: "unreadable", text: `/${source}/${flags}` };
+      }
+      out.push({ line, title: "", pattern });
+    }
   }
   return out;
+}
+
+/**
+ * The feature each `loadFeature("path")` of a file names (stage 42): from the repository root, or from the file's own
+ * directory when the path climbs out of it with `../`.
+ */
+export function loadedFeatures(path: string, text: string): { line: number; feature: string }[] {
+  const { code, strings } = lex(text);
+  const out: { line: number; feature: string }[] = [];
+  for (const m of code.matchAll(LOAD)) {
+    const at = skipSpace(code, m.index + m[0].length);
+    const raw = strings.get(at);
+    if (raw === undefined) continue;
+    const rel = raw.replace(/\\/g, "/");
+    const dir = path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "";
+    const feature = /^(?:\.\/)*\.\.\//.test(rel) ? posix.normalize(posix.join(dir, rel)) : posix.normalize(rel).replace(/^\.\//, "");
+    out.push({ line: code.slice(0, at).split("\n").length, feature });
+  }
+  return out;
+}
+
+/** A step pattern as an item attribute: one definition per line, `line<TAB>kind<TAB>text` (stage 42). */
+function encodeStep(d: { line: number; pattern: StepPattern }): string {
+  const p = d.pattern;
+  const body = p.k === "regex" ? `${p.flags}/${p.source}` : p.text;
+  return `${d.line}\t${p.k}\t${body.replace(/[\t\n\r]/g, " ")}`;
 }
 
 export function run(input: AdapterInput): AdapterOutput {
@@ -186,10 +279,15 @@ export function run(input: AdapterInput): AdapterOutput {
     for (const d of declarations(text)) {
       if (!d.describe) tests++;
       if (/\.(skip|todo)\b/.test(d.modifiers)) skipped++;
-      for (const c of d.title.matchAll(id)) {
-        if (cited.has(c[0])) continue;
-        cited.add(c[0]);
-        edges.push({ from: file.path, rel: "cites", to: c[0], span: `${file.path}:${d.line}` });
+      // A tag is matched as written and, when that finds nothing, upper-cased: `@rule-0001` cites RULE-0001 (A-152).
+      const tagged = d.tags.flatMap((t) => {
+        const as = [...t.matchAll(id)].map((c) => c[0]);
+        return as.length > 0 ? as : [...t.toUpperCase().matchAll(id)].map((c) => c[0]);
+      });
+      for (const c of [...[...d.title.matchAll(id)].map((x) => x[0]), ...tagged]) {
+        if (cited.has(c)) continue;
+        cited.add(c);
+        edges.push({ from: file.path, rel: "cites", to: c, span: `${file.path}:${d.line}` });
       }
     }
     // citeBodies: an identifier in any string literal of the file cites, not only one in a title (a test that loops over a
@@ -203,9 +301,12 @@ export function run(input: AdapterInput): AdapterOutput {
         }
       }
     }
+    const defs: string[] = [];
     if (cucumber) {
+      for (const f of loadedFeatures(file.path, text)) edges.push({ from: file.path, rel: "loads", to: f.feature, span: `${file.path}:${f.line}` });
       for (const d of stepDefinitions(text)) {
         steps++;
+        defs.push(encodeStep(d));
         for (const c of d.title.matchAll(id)) {
           if (cited.has(c[0])) continue;
           cited.add(c[0]);
@@ -215,6 +316,7 @@ export function run(input: AdapterInput): AdapterOutput {
     }
     const attrs: Record<string, string> = { tests: String(tests) };
     if (steps > 0) attrs.steps = String(steps);
+    if (defs.length > 0) attrs.stepDefinitions = defs.join("\n");
     if (skipped > 0) attrs.skipped = String(skipped);
     items.push({ id: file.path, kind: "test-file", text: file.path, span: `${file.path}:1`, textDigest: digestOf(text), attrs });
     if (tests === 0 && steps === 0) diagnostics.push({ code: "no-tests", severity: "info", message: `${file.path} declares no it or test call with a literal title`, span: file.path });
@@ -229,7 +331,7 @@ export function run(input: AdapterInput): AdapterOutput {
  * (runners write absolute paths, or paths from their own root), so `packages/x/test/a.test.ts` wins over
  * `test/a.test.ts`. Undefined when none matches, or two of the longest length do.
  */
-function fileOf(name: string, paths: string[]): string | undefined {
+export function fileOf(name: string, paths: string[]): string | undefined {
   const n = name.replace(/\\/g, "/").replace(/^\.\//, "");
   if (paths.includes(n)) return n;
   const ends = paths.filter((p) => n.endsWith(`/${p}`)).sort((a, b) => b.length - a.length);

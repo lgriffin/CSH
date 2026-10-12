@@ -131,13 +131,46 @@ Nothing here changes what a run reports; it changes what a run asks git and how 
 
 ## 5. Traceability past the file (stage 42)
 
-- A Playwright test's `{ tag: "@id" }` option cites, as a title does.
-- `csh results import` reads cucumber-js JSON and Playwright JSON as well as Jest and Vitest.
-- A steps file that loads a feature (`loadFeature("path")`) is linked to it, and each scenario step is matched to a
-  step definition: a step with no definition and a definition no step uses are each a gap.
-- A feature's description can cite decisions (`decisionsField`, such as `Decisions` or `Specified by`).
-- `fileId` is a pattern over a feature's path that gives its identity, so two files with the same identifier collide.
-- A rule that cites an ADR does not verify it: the ADR is reported as cited and not verified, a gap.
+Each form below adds items, edges or results; what they resolve to, or fail to, lands as every edge does: converged,
+a gap, or not decided.
+
+- **Tag options.** A `test`, `it` or `describe` call (Playwright's `test.describe` among them) whose second argument is
+  an object literal with a `tag` of one string or an array of strings cites each identifier its tags name, as a title
+  does. A tag is matched as written and, when that finds nothing, upper-cased, so `@rule-0001` cites `RULE-0001` where
+  the pattern is upper case. A `test.describe` call is a describe, not a test.
+- **Cucumber and Playwright reports.** `csh results import` and a practice's `executions` read cucumber-js JSON (an
+  array of features with `uri` and `elements`) and Playwright JSON (an object with `suites`).
+    - cucumber-js: each scenario of each feature is one result in the feature's file. Its name is the feature's name,
+      the scenario's name and its tags, so a tag cites. Its outcome is failed when a step failed, skipped when a step
+      was skipped, pending or undefined and none failed, errored when a step was ambiguous, and passed otherwise. A
+      background is not a result.
+    - Playwright: each test of each spec is one result in the spec's file, read from the directory the report names
+      as `config.rootDir`. Its name is the titles of the suites around it, the spec's title and its tags. `expected`
+      and `flaky` are passed, `unexpected` is failed, `skipped` is skipped.
+    - A scenarios practice joins results too: a result in a feature file joins that feature, and its citations resolve
+      as a test's do.
+- **Steps and the features they load.** In a test file a scenarios practice can read (`style: cucumber`), a call
+  `loadFeature("path")` links the file to the feature at that path: from the repository root, or from the file's own
+  directory when the path begins with `../`. A path that names no feature item is a dangling reference. Such a file's
+  `given`, `when`, `then`, `and` and `but` calls are step definitions as well as the capitalised ones.
+- **Steps matched to definitions.** When a run reads both scenario steps and step definitions, each step of each
+  scenario (its background's steps first, an outline's once per row of its examples) is matched against every
+  definition: a string is a Cucumber expression (`{int}`, `{float}`, `{word}`, `{string}`, `{}`, optional `(text)`,
+  alternatives `a/b`), and a regular expression is itself.
+    - A step no definition matches is an `undefined-step` gap of its scenario.
+    - A definition no step matches is an `unused-step-definition` gap of its file.
+    - A definition CSH cannot read (a template with `${}`, a regular expression it cannot compile) could match any
+      step: then no step is undefined, and each step no readable definition matches is listed in a `steps-undecided`
+      gap of its scenario, naming the unreadable definitions.
+- **Decisions in descriptions.** A scenarios practice's `decisionsField` names description lines, such as
+  `Decisions|Specified by`. A line of a feature's or rule's description that begins with one of them and a colon
+  links that feature or rule, by a `decided-by` edge, to each identifier the practice's identifier pattern finds in
+  the rest of the line, and to each path in it that ends in `.md`.
+- **Feature identity by path.** A scenarios practice's `fileId` is a pattern over a feature file's path whose first
+  group is the file's identity (`(?:^|/)([0-9]{4})-[^/]*\.feature$`). Each feature item keeps it as `fileId`, and two
+  files with the same identity are the warning `duplicate-file-id`, naming both.
+- **Decisions do not verify.** A rule or requirement that nothing verifies stays `unverified` when it is linked to a
+  decision; the gap's detail names the decision as cited and not verified.
 
 ## 6. Output (stage 43)
 

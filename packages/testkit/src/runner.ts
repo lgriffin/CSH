@@ -39,7 +39,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 41;
+export const BUILT_THROUGH_STAGE = 42;
 
 const AGENT_BIN = resolve(import.meta.dirname, "../../agent/bin/csh-agent.js");
 

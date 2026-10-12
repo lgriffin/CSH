@@ -27,11 +27,13 @@ export function importResults(p: Project, practiceId: string, report: string, ba
     return { ok: false, message: `cannot read ${report}: ${(err as Error).message}` };
   }
   const settings = practice.settings ?? {};
-  const cite = new RegExp(`\\b(?:${settings.citePattern ?? settings.idPattern ?? DEFAULT_CITE})\\b`, "g");
+  // A scenario's result cites what its tags name, as the scenarios practice reads a tag (stage 42).
+  const scenario = practice.kind === "scenarios" ? [settings.idTag, settings.tagCites, settings.idPattern].filter((x) => x !== undefined) : [];
+  const cite = new RegExp(`\\b(?:${scenario.length > 0 ? scenario.join("|") : (settings.citePattern ?? settings.idPattern ?? DEFAULT_CITE)})\\b`, "g");
   // A subject's results are of its pinned commit, whether or not it is checked out yet. A project's own results name no
   // commit: importing and committing them moves HEAD past any commit they could name, so they would never be joined.
   const commit = p.component?.manifest.subject?.commit;
-  const { reduced, problems } = reduceTestResults(text, { cite, ...(base !== undefined ? { base: resolve(base) } : {}), ...(commit !== undefined ? { commit } : {}) });
+  const { reduced, problems } = reduceTestResults(text, { cite, ...(base !== undefined ? { base: isAbsolute(base) ? base : resolve(base) } : {}), ...(commit !== undefined ? { commit } : {}) });
   if (problems.length > 0) return { ok: false, message: `the report is malformed: ${problems[0]!.message}${problems.length > 1 ? ` (and ${problems.length - 1} more)` : ""}` };
   if (reduced.files.length === 0) return { ok: false, message: "the report holds no test file" };
   const absolute = reduced.files.find((f) => isAbsolute(f.file));

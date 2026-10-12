@@ -1,7 +1,7 @@
 // The witness format (csh-witness/v1 and v2), the execution line (csh-execution/v1) and the adapter contract (Evidence
 // tab, sections 2 and 4; Anchor, harnesses and A3, sections 3.2, 6.2 and 6.3).
 import { canonicalJson, digestOf, type ClaimSet, type Digest, type Binding, type Source, type Vocabulary } from "@csh/kernel";
-import { isGoTestJson, isJUnitXml, parseGoTestJson, parseJUnit } from "./runners.ts";
+import { isCucumberJson, isGoTestJson, isJUnitXml, isPlaywrightJson, parseCucumberJson, parseGoTestJson, parseJUnit, parsePlaywrightJson } from "./runners.ts";
 
 export type Json = string | number | boolean | null;
 
@@ -53,9 +53,10 @@ export type ItemKind = "requirement" | "rule" | "scenario" | "feature" | "test-f
  * scenario sits under a rule. `cites`: a test names a requirement in its title. `mentions`: free text names an item; it
  * counts only when it resolves. `mentions-file`: text names a path. `mentions-symbol` (stage 24): text names a symbol
  * beside the one code path on its line, as "symbol:" path "#" name. `mentions-script`: text names `npm run` and a
- * script, as "script:" name.
+ * script, as "script:" name. `loads` (stage 42): a steps file loads the feature at a path, named as the feature item.
+ * `decided-by` (stage 42): a feature or rule names, in its description, a decision it rests on.
  */
-export type EdgeRel = "implements" | "verified-by" | "exemplifies" | "cites" | "mentions" | "mentions-file" | "mentions-symbol" | "mentions-script";
+export type EdgeRel = "implements" | "verified-by" | "exemplifies" | "cites" | "mentions" | "mentions-file" | "mentions-symbol" | "mentions-script" | "loads" | "decided-by";
 
 export interface ItemEdge {
   /** The item the edge starts from, in the same source. */
@@ -370,7 +371,7 @@ const RUNNER_STATUS: Record<string, TestOutcome> = { passed: "passed", failed: "
 
 /**
  * A test runner's results (Ingesting a codebase, stage 26): the JSON report Jest's --json and Vitest's json reporter
- * write, JUnit XML or `go test -json` events (stage 30, see runners.ts), a csh-results/v1 file, or csh-execution/v1
+ * write, JUnit XML or `go test -json` events (stage 30, see runners.ts), cucumber-js and Playwright JSON (stage 42), a csh-results/v1 file, or csh-execution/v1
  * lines. A file of a JSON report that failed to run and reports no test is one errored result for that file, with an
  * empty name. Malformed input is reported, never dropped silently.
  */
@@ -378,6 +379,8 @@ export function parseTestResults(text: string): { results: RunnerResult[]; probl
   const trimmed = text.trimStart();
   if (isJUnitXml(text)) return parseJUnit(text);
   if (isGoTestJson(text)) return parseGoTestJson(text);
+  if (isCucumberJson(text)) return parseCucumberJson(text);
+  if (isPlaywrightJson(text)) return parsePlaywrightJson(text);
   if (trimmed.startsWith("{") && /"schema"\s*:\s*"csh-results\/v1"/.test(trimmed)) return expandResults(text);
   if (!trimmed.startsWith("{") || !/"testResults"\s*:/.test(trimmed)) {
     const parsed = parseExecutions(text);

@@ -1,0 +1,45 @@
+[
+  {
+    "uri": "features/0001-checkout.feature",
+    "name": "Checkout",
+    "elements": [
+      { "keyword": "Background", "type": "background", "name": "", "steps": [{ "keyword": "Given ", "name": "a cart with 2 items", "result": { "status": "passed" } }] },
+      {
+        "keyword": "Scenario",
+        "type": "scenario",
+        "name": "Paying records the order",
+        "tags": [{ "name": "@R-1" }, { "name": "@REQ-1" }],
+        "steps": [
+          { "keyword": "When ", "name": "the shopper pays \"card\"", "result": { "status": "passed" } },
+          { "keyword": "Then ", "name": "the order is recorded", "result": { "status": "passed" } }
+        ]
+      },
+      {
+        "keyword": "Scenario Outline",
+        "type": "scenario",
+        "name": "Totals",
+        "tags": [{ "name": "@R-1" }, { "name": "@REQ-1" }],
+        "steps": [
+          { "keyword": "When ", "name": "the shopper adds 1 items", "result": { "status": "passed" } },
+          { "keyword": "Then ", "name": "the total is 10", "result": { "status": "failed" } }
+        ]
+      }
+    ]
+  },
+  {
+    "uri": "features/0001-refunds.feature",
+    "name": "Refunds",
+    "elements": [
+      {
+        "keyword": "Scenario",
+        "type": "scenario",
+        "name": "Refund a paid order",
+        "steps": [
+          { "keyword": "Given ", "name": "a paid order", "result": { "status": "passed" } },
+          { "keyword": "When ", "name": "the shopper asks for a refund", "result": { "status": "undefined" } },
+          { "keyword": "Then ", "name": "the order is refunded", "result": { "status": "skipped" } }
+        ]
+      }
+    ]
+  }
+]
