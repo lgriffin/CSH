@@ -34,6 +34,7 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 30: Results from JUnit XML and go test -json](stage-30.md)
 - [Stage 31: A Python reader](stage-31.md)
 - [Stage 32: A Java reader](stage-32.md)
+- [Stage 33: A Go reader](stage-33.md)
 - [Stage 35: Test inventory for pytest, JUnit, Go and Rust](stage-35.md)
 
 Stages 10 to 16 build the anchor design ([09](../spec/09-anchor-harness-a3.md)): a component to anchor on, harnesses,
