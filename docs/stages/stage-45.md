@@ -31,8 +31,7 @@ and that no `run` fixture can check the overview, which a unit test in `packages
 
 ## Not done
 
-- A-170 and A-171 to A-172 are provisional until the owner answers [Q-40 and Q-41](../../QUESTIONS.md).
+- A-170 is decided ([Q-40](../../QUESTIONS.md)). A-171 and A-172 are provisional until the owner answers [Q-41](../../QUESTIONS.md).
 - Go and Rust: a Go import path and a Rust crate are not dotted names, so neither rule applies to them; Go has no
   nested types, and Rust's nested items are modules, already declared.
-- `csh init --subject` and `csh subject fetch` findings from the same run belong to the stages that own that code
-  (38 and 40).
+- The `csh init --subject` and `csh subject fetch` findings from the same run are fixed in stage 46.

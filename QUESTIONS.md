@@ -317,7 +317,7 @@ was not declared at all; nested types are now declared ([14](docs/spec/14-from-t
 - **By its simple name, `StreamingCallback`.** As documents usually say it; two nested types of one name in one file
   would collide.
 
-Provisional, recorded as A-170.
+Decided on 12 October 2026: the dotted name. Recorded as A-170.
 
 ## Q-41 Does `java.sql.*` select the dependency `java.sql`?
 
