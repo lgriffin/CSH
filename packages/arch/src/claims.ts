@@ -29,8 +29,15 @@ export type ClaimResult = { result: "holds"; detail: string; evidence?: ClaimEvi
 
 type Truth = { value: boolean; detail: string; evidence?: ClaimEvidence[] } | { reason: string };
 
-/** Classes no source declares that end a chain of bases: they extend nothing a claim could name. */
-const BUILT_IN_BASES = new Set(["Error", "TypeError", "RangeError", "SyntaxError", "ReferenceError", "AggregateError", "Object", "Array", "Map", "Set", "Promise", "EventTarget"]);
+/**
+ * Classes no source declares that end a chain of bases: they extend nothing a claim could name. JavaScript's, then
+ * Python's and Java's roots and common exceptions (stage 29).
+ */
+const BUILT_IN_BASES = new Set([
+  ...["Error", "TypeError", "RangeError", "SyntaxError", "ReferenceError", "AggregateError", "Object", "Array", "Map", "Set", "Promise", "EventTarget"],
+  ...["object", "Exception", "BaseException", "ValueError", "KeyError", "IndexError", "LookupError", "RuntimeError", "OSError", "IOError", "AttributeError", "NotImplementedError", "ArithmeticError", "dict", "list", "tuple", "str", "int", "set"],
+  ...["Throwable", "RuntimeException", "IllegalArgumentException", "IllegalStateException", "UnsupportedOperationException", "IOException", "Enum", "Record"],
+]);
 
 const unescape = (s: string) => s.replace(/~1/g, "/").replace(/~0/g, "~");
 const esc = (s: string) => s.replace(/~/g, "~0").replace(/\//g, "~1");

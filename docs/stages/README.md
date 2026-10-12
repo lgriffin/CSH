@@ -30,6 +30,7 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 26: Test results](stage-26.md)
 - [Stage 27: Scale and the overview](stage-27.md)
 - [Stage 28: The ESI.ts profile and its A3](stage-28.md)
+- [Stage 29: Language seams](stage-29.md)
 
 Stages 10 to 16 build the anchor design ([09](../spec/09-anchor-harness-a3.md)): a component to anchor on, harnesses,
 runs and the A3. Their fixtures, F80 to F96, were written before any of their code, and the fixture runner reports

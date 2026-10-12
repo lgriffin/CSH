@@ -22,6 +22,6 @@
     "@csh/adapter-c4-mermaid": "workspace:*",
     "@csh/facts": "workspace:*",
     "@csh/adapter-items": "workspace:*",
-    "@csh/facts-ts": "workspace:*"
+    "@csh/facts-code": "workspace:*"
   }
 }

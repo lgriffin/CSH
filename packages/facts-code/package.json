@@ -1,0 +1,18 @@
+{
+  "name": "@csh/facts-code",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@csh/facts-ts": "workspace:*",
+    "@csh/kernel": "workspace:*",
+    "@csh/witness": "workspace:*",
+    "tree-sitter-go": "0.25.0",
+    "tree-sitter-java": "0.23.5",
+    "tree-sitter-python": "0.25.0",
+    "tree-sitter-rust": "0.24.0",
+    "web-tree-sitter": "0.26.13"
+  }
+}

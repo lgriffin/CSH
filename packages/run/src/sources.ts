@@ -22,7 +22,7 @@ export const BUILTIN_ADAPTERS: Record<string, string> = {
   TestFiles: "@csh/adapter-items/tests",
   Issues: "@csh/adapter-items/jsonl",
   Traces: "@csh/adapter-items/yaml",
-  Code: "@csh/facts-ts",
+  Code: "@csh/facts-code",
 };
 
 export type { SourceRun };

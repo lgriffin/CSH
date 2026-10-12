@@ -42,7 +42,7 @@ interface Open {
   field?: string;
 }
 
-const CODE_FILE = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/;
+const CODE_FILE = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|py|pyi|java|go|rs)$/;
 
 export function run(input: AdapterInput): AdapterOutput {
   const idPattern = idPatternOf(input);

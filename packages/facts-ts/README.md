@@ -6,7 +6,7 @@
 
 ## Where it sits
 
-It belongs to the "Adapters" container, shown in the [containers diagram](../../docs/architecture/containers.mmd), as the code reader in [components-adapters.mmd](../../docs/architecture/components-adapters.mmd). `@csh/run` runs it in the isolated adapter subprocess for sources of kind `Code`. The check engine's architecture step reads its facts.
+It belongs to the "Adapters" container, shown in the [containers diagram](../../docs/architecture/containers.mmd), as the code reader in [components-adapters.mmd](../../docs/architecture/components-adapters.mmd). `@csh/facts-code` runs it, in the isolated adapter subprocess, on the TypeScript and JavaScript files of sources of kind `Code`. The check engine's architecture step reads its facts.
 
 ## Public interface
 
@@ -19,7 +19,7 @@ It belongs to the "Adapters" container, shown in the [containers diagram](../../
 ## Depends on and used by
 
 - Depends on: `typescript` (the parser alone), `@csh/kernel` (ordering) and `@csh/witness` (the fact and adapter types).
-- Used by: no package imports it at run time. `@csh/run` names it in `BUILTIN_ADAPTERS` for the kind `Code` and depends on it so that it resolves. `subjects/esi-ts` reads ESI.ts through it.
+- Used by: `@csh/facts-code`, which hands it the TypeScript, JavaScript, JSON and YAML files of a `Code` source (stage 29). `subjects/esi-ts` reads ESI.ts through it.
 
 ## Invariants it protects
 
