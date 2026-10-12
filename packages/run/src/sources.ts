@@ -162,9 +162,17 @@ function filesAt(root: string, at: string, dirs?: Set<string>): { files?: { path
     for (const e of readdirSync(dir, { withFileTypes: true }).sort((a, b) => compareCodePoints(a.name, b.name))) {
       const p = join(dir, e.name);
       if (e.isSymbolicLink()) {
-        if (!inside(realRoot, realpathSync(p))) continue;
-        if (statSync(p).isDirectory()) walk(p);
-        else add(p);
+        // A link that loops or names nothing is skipped, as a link out of the project is.
+        let real: string;
+        try {
+          real = realpathSync(p);
+        } catch {
+          continue;
+        }
+        if (!inside(realRoot, real)) continue;
+        if (statSync(p).isDirectory()) {
+          if (dirs === undefined || dirs.has(relative(root, p).split(sep).join("/"))) walk(p);
+        } else add(p);
       } else if (e.isDirectory()) {
         if (dirs === undefined || dirs.has(relative(root, p).split(sep).join("/"))) walk(p);
       } else add(p);

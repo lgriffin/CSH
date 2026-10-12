@@ -60,11 +60,17 @@ describe("proposeProfile", () => {
     expect(r.manifest.practices.find((p) => p.id === "docs")?.settings?.idPattern).toBe("(?:II|HH|GG|FF|EE|DD|BB|AA)-[0-9]+");
   });
 
-  it("past eight families, proposes their common shape rather than the first eight (stage 46)", () => {
-    const text = ["AUTH", "PERF", "SEC", "DATA", "UX", "OPS", "API", "LOG", "CFG", "NET"].map((p) => `${p}-001 ${p}-002`).join("\n");
+  it("past eight families, names every prefix in the pattern and the first eight in the guess (stage 46)", () => {
+    const prefixes = ["AUTH", "PERF", "SEC", "DATA", "UX", "OPS", "API", "LOG", "CFG", "NET"];
+    const text = prefixes.map((p) => `${p}-001 ${p}-002`).join("\n");
     const r = propose(checkout({ "docs/x.md": `${text}\n` }));
-    expect(r.manifest.practices.find((p) => p.id === "docs")?.settings?.idPattern).toBe("[A-Z]{2,4}-[0-9]{3}");
-    expect(r.guesses.join("\n")).toMatch(/and 2 more prefixes of the same form/);
+    const idPattern = r.manifest.practices.find((p) => p.id === "docs")?.settings?.idPattern as string;
+    for (const p of prefixes) expect(idPattern).toContain(p);
+    const re = new RegExp(`^${idPattern}$`);
+    expect(re.test("NET-001")).toBe(true);
+    expect(re.test("UTF-8")).toBe(false);
+    expect(re.test("RFC-2119")).toBe(false);
+    expect(r.guesses.join("\n")).toMatch(/and 2 more prefixes in the Markdown/);
   });
 
   it("proposes nothing under a committed Python virtual environment (stage 46)", () => {

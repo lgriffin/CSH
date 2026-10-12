@@ -13,6 +13,14 @@ describe("claim spans", () => {
     ]);
   });
 
+  it("pairs a span with its own clause when only a later clause carries a span", () => {
+    expect(claimSpans(finding("claim-conflict", "the root README and docs/b.md:4: B: one says engines.node is >=18, the other engines.node is >=22"))).toEqual([{ span: "docs/b.md:4", values: ["22"] }]);
+  });
+
+  it("takes no value from a glob, a path or a parenthesis", () => {
+    expect(claimSpans(finding("fact-conflict", "docs/a.md:3: says count of modules packages/v2/* (from 2 globs) is 5; 7 are read"))).toEqual([{ span: "docs/a.md:3", values: ["5"] }]);
+  });
+
   it("finds the line of a table or list that holds the value, and keeps the span's line otherwise", () => {
     const lines = ["## Packages", "", "| Package | Count |", "|---|---|", "| total | 15 |", "| published | 5 |", "", "There are 5 more."];
     expect(lineHolding(lines, 2, ["5"])).toBe(5);

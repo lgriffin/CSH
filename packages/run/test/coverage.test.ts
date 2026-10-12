@@ -47,4 +47,24 @@ describe("coverage", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+  it("never follows a link into an untracked directory, even one that loops (stage 46)", () => {
+    const dir = mkdtempSync(join(tmpdir(), "csh-coverage-"));
+    try {
+      const git = (...a: string[]) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...a], { cwd: dir, stdio: "ignore" });
+      git("init", "-q");
+      mkdirSync(join(dir, "src"));
+      writeFileSync(join(dir, "src", "a.ts"), "export const a = 1;\n");
+      git("add", ".");
+      git("commit", "-q", "-m", "one");
+      // Untracked: a link to a directory that holds a link back to itself, and a dangling link.
+      mkdirSync(join(dir, "cache", "deep"), { recursive: true });
+      symlinkSync(join(dir, "cache"), join(dir, "cache", "deep", "up"));
+      symlinkSync(join(dir, "cache"), join(dir, "src", "cache"));
+      symlinkSync(join(dir, "missing"), join(dir, "src", "gone"));
+      const c = coverageOfSources(dir, [{ name: "Code", kind: "Code", at: ".", include: ["**/*.ts"] }])!;
+      expect(c.sources[0]!.files).toBe(1);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });

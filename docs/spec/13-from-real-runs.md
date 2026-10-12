@@ -31,8 +31,8 @@ with what it was read from, and nothing is written over an existing `csh/compone
 - **Identifier pattern.** In the Markdown and Gherkin files, every token `[A-Z]{2,5}-[0-9]+` is counted by its prefix.
   A prefix is an identifier family when it names at least two different identifiers and is not a well-known external
   one (`UTF`, `SHA`, `ISO`, `RFC`, `CVE`, `AES`, `RSA`, `TLS`, `SSL`, `HTTP`, `ES`, `ECMA`, `PEP`, `JSR`, `GPL`, `LGPL`,
-  `AGPL`, `MIT`, `BSD`, `CC`). The pattern is `(?:A|B|...)-[0-9]+` over the families, most frequent first, at most
-  eight. With no family, no pattern is proposed and each adapter keeps its default.
+  `AGPL`, `MIT`, `BSD`, `CC`). The pattern is `(?:A|B|...)-[0-9]+` over the families, most frequent first, every
+  family named; the printed guess lists the first eight. With no family, no pattern is proposed and each adapter keeps its default.
 - **Requirements.** A Markdown file with a heading that begins with an identifier is a requirements document. They
   form a `Requirements` source of kind `Documents`, read by `@csh/adapter-items/markdown`, in a practice of kind
   `requirements`.
@@ -214,8 +214,8 @@ Leigh re-ran the six repositories on Windows after stages 38 to 44. These are th
   a URL subject.
 - `undefined-step` and `unused-step-definition` are gaps, each with what would close it. `steps-undecided` is
   indeterminate and says to check it by hand.
-- `csh init --subject` names up to eight identifier prefixes. With more than eight, it proposes their common shape,
-  for example `[A-Z]{2,4}-[0-9]{3}`. It takes no test or step definition under a `fixtures` directory or a
+- `csh init --subject` names every identifier prefix in the pattern, however many; a shape such as
+  `[A-Z]{2,4}-[0-9]{3}` would also match `UTF-8` and `RFC-2119`. The guess lists the first eight. It takes no test or step definition under a `fixtures` directory or a
   dot-directory.
 - `csh init --subject` proposes nothing under `.venv`, `venv`, `site-packages` or `__pycache__`, even when they are
   tracked.

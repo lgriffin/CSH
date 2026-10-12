@@ -29,25 +29,36 @@ const READINGS = [
  */
 export type SentenceAt = (span: string, values?: string[]) => { at: string; text: string } | undefined;
 
-/** The numbers and versions a claim's description states: 5, 22.12, 1.35.0. */
-const valuesIn = (text: string): string[] => [...new Set([...text.matchAll(/\d+(?:\.\d+)*/g)].map((m) => m[0]))];
+/**
+ * The numbers and versions a claim's description states as its value: 5, 22.12, 1.35.0. A number inside what the claim
+ * is about (a glob such as `src/v2/*.ts`, a selector's parentheses) is not one.
+ */
+const valuesIn = (text: string): string[] => {
+  const asserted = text.replace(/\([^)]*\)/g, " ").split(/\s+/).filter((w) => !/[/*]/.test(w)).join(" ");
+  return [...new Set([...asserted.matchAll(/\d+(?:\.\d+)*/g)].map((m) => m[0]))];
+};
 
 /**
  * Where a claim finding's sentences are: each `path:line` its reason opens a clause with, and the values the claim at
- * that span states (stage 46), so that the sentence shown is the one holding them.
+ * that span states (stage 46), so that the sentence shown is the one holding them. A claim-conflict's reason has two
+ * clauses, either of which may have no span; each span takes its own clause's values.
  */
 export const claimSpans = (f: Finding): { span: string; values: string[] }[] => {
   if (f.kind !== "fact-conflict" && f.kind !== "claim-conflict") return [];
   const reason = f.reason ?? "";
-  const spans = [...reason.matchAll(/(?:^| and )([^\s:]+:\d+): /g)].map((m) => m[1]!);
-  const said =
-    f.kind === "fact-conflict"
-      ? [/ says (.*?)(?:; |$)/.exec(reason)?.[1] ?? ""]
-      : (() => {
-          const m = /one says (.*), the other (.*)$/.exec(reason);
-          return m === null ? [] : [m[1]!, m[2]!];
-        })();
-  return spans.map((span, i) => ({ span, values: valuesIn(said[i] ?? "") }));
+  const spanOf = (clause: string) => /^([^\s:]+:\d+): /.exec(clause)?.[1];
+  if (f.kind === "fact-conflict") {
+    const span = spanOf(reason);
+    return span === undefined ? [] : [{ span, values: valuesIn(/ says (.*?)(?:; |$)/.exec(reason)?.[1] ?? "") }];
+  }
+  const m = /^(.*): one says (.*), the other (.*)$/.exec(reason);
+  if (m === null) return [];
+  const clauses = m[1]!.split(" and ");
+  const said = [m[2]!, m[3]!];
+  return [clauses[0] ?? "", clauses.slice(1).join(" and ")].flatMap((c, i) => {
+    const span = spanOf(c);
+    return span === undefined ? [] : [{ span, values: valuesIn(said[i]!) }];
+  });
 };
 
 /**

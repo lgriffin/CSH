@@ -77,7 +77,7 @@ function globsFor(intended: string[], universe: string[], include?: string[], ex
 }
 
 /** The identifier families of the documents: prefix, how many different identifiers, how many mentions. */
-function families(texts: string[]): { prefix: string; ids: number; mentions: number; widths: number[] }[] {
+function families(texts: string[]): { prefix: string; ids: number; mentions: number }[] {
   const by = new Map<string, { ids: Set<string>; mentions: number }>();
   for (const t of texts) {
     for (const m of t.matchAll(/\b([A-Z]{2,5})-([0-9]+)\b/g)) {
@@ -89,23 +89,17 @@ function families(texts: string[]): { prefix: string; ids: number; mentions: num
   }
   return [...by]
     .filter(([p, f]) => f.ids.size >= 2 && !EXTERNAL_FAMILIES.includes(p))
-    .map(([prefix, f]) => ({ prefix, ids: f.ids.size, mentions: f.mentions, widths: [...new Set([...f.ids].map((id) => id.length - prefix.length - 1))] }))
+    .map(([prefix, f]) => ({ prefix, ids: f.ids.size, mentions: f.mentions }))
     .sort((a, b) => b.mentions - a.mentions || compareCodePoints(a.prefix, b.prefix));
 }
 
 /**
- * The identifier pattern of the families: each prefix named, or, past eight, their common shape: a repository with a
- * dozen prefixes of the same form (AUTH-001, PERF-002) means them all, and a list of the first eight would miss the
- * rest (From real runs, stage 46).
+ * The identifier pattern of the families: every prefix named, however many. A shape such as `[A-Z]{2,4}-[0-9]{3}`
+ * would also match UTF-8 and RFC-2119, which are excluded, so the alternation is kept whole; the guess names only the
+ * first eight (From real runs, stage 46).
  */
-export function idPatternOf(fams: { prefix: string; widths: number[] }[]): string | undefined {
-  if (fams.length === 0) return undefined;
-  if (fams.length <= 8) return `(?:${fams.map((f) => f.prefix).join("|")})-[0-9]+`;
-  const lengths = fams.map((f) => f.prefix.length);
-  const widths = [...new Set(fams.flatMap((f) => f.widths))];
-  const lo = Math.min(...lengths);
-  const hi = Math.max(...lengths);
-  return `[A-Z]{${lo === hi ? lo : `${lo},${hi}`}}-[0-9]${widths.length === 1 ? `{${widths[0]}}` : "+"}`;
+export function idPatternOf(fams: { prefix: string }[]): string | undefined {
+  return fams.length === 0 ? undefined : `(?:${fams.map((f) => f.prefix).join("|")})-[0-9]+`;
 }
 
 /** The tags of each Rule, Scenario or Example of a feature file, and of the Feature itself. */
@@ -159,7 +153,7 @@ export function proposeProfile(dir: string): Proposal | { error: string } {
   const fams = families([...mdText.values(), ...featureText.values()]);
   const idPattern = idPatternOf(fams);
   const named = fams.slice(0, 8).map((f) => `${f.prefix} (${f.ids} identifiers, ${f.mentions} mentions)`).join(", ");
-  if (idPattern !== undefined) guesses.push(`idPattern ${idPattern}: ${named}${fams.length > 8 ? ` and ${fams.length - 8} more prefixes of the same form` : ""} in the Markdown and Gherkin files`);
+  if (idPattern !== undefined) guesses.push(`idPattern ${idPattern}: ${named}${fams.length > 8 ? ` and ${fams.length - 8} more prefixes` : ""} in the Markdown and Gherkin files`);
   else guesses.push("no idPattern: no prefix names two or more identifiers in the Markdown and Gherkin files, so each adapter keeps its default");
   const idSettings = idPattern === undefined ? {} : { idPattern };
 

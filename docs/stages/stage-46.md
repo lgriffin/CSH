@@ -15,10 +15,11 @@
 
 - `run`:
   - `trackedDirsOf`; `filesAt` enters no directory without a tracked file when the tracked list is known
-    ([A-160](../../ASSUMPTIONS.md))
+    ([A-160](../../ASSUMPTIONS.md)); a link is followed only into such a directory, and a broken or looping one
+    is skipped
   - `coverageOfSources` reads tracked files only
   - `subjectWarnings` asks a path subject for its origin
-  - `idPatternOf`
+  - `idPatternOf` names every identifier prefix, however many
   - fixtures and dot-directories are not tests
   - nothing under a virtual environment is proposed
   - `renameRetrying` moves a fetched checkout into place ([A-162](../../ASSUMPTIONS.md))
