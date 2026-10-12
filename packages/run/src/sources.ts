@@ -145,6 +145,20 @@ function filesAt(root: string, at: string): { files?: { path: string; abs: strin
   return { files: out };
 }
 
+/**
+ * The files a source reads: those under its location, narrowed by the include and exclude globs of the manifest, which
+ * match the path below the location (a source that is one file matches its own name).
+ */
+export function selectFiles(root: string, at: string, include?: string[], exclude?: string[]): { path: string; abs: string }[] {
+  const found = filesAt(root, at).files ?? [];
+  const inc = include?.map(globRegExp);
+  const exc = exclude?.map(globRegExp);
+  if (inc === undefined && exc === undefined) return found;
+  const base0 = relative(root, resolve(root, at)).split(sep).join("/");
+  const below = (p: string) => (base0 === "" ? p : p.startsWith(`${base0}/`) ? p.slice(base0.length + 1) : p.split("/").pop()!);
+  return found.filter((f) => (inc === undefined || inc.some((r) => r.test(below(f.path)))) && !(exc ?? []).some((r) => r.test(below(f.path))));
+}
+
 /** Globs over paths below a source's location; kept here under its stage 22 name, now in the kernel. */
 export { globRegExp };
 

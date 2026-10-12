@@ -179,6 +179,7 @@ csh overview [--run <dir|commit>] [--signal <id>] [--out <file>] [--json]
                                             Place every result of the last report as a gap (a suggestion, with what
                                             would close it), indeterminate (with what would decide it) or converged;
                                             write reports/csh-overview.html, which opens on any #<id>.
+csh coverage                                What each source reads, and the tracked files no source reads, by extension
 csh explain <finding-id> [--run <dir|commit>]
                                             Print one finding, members rendered through the printer; with
                                             --run, from a stored run (csh run --at writes no reports/ files).
