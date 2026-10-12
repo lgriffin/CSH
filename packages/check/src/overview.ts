@@ -82,6 +82,15 @@ const placeOf = (kind: string) => (kind === "untraced-change" ? "history" : "spe
 
 const anchorOf = (kind: string, subject: string) => `x-${digestJson({ kind, subject }).slice(7, 23)}`;
 
+/** The most reasons an entry lists before it counts the rest. */
+const MAX_REASONS = 6;
+
+/** Why an obligation was judged as it was (the edges that break a rule, the fact that refutes a claim), for the fragments given. */
+function reasonsOf(report: Report, fragments: string[]): string[] {
+  const all = (report.assessments ?? []).filter((a) => fragments.includes(a.fragment)).flatMap((a) => a.reasons);
+  return all.length <= MAX_REASONS ? all : [...all.slice(0, MAX_REASONS), `and ${all.length - MAX_REASONS} more`];
+}
+
 /** The overview of one report. The practice of each source comes from the manifest when given, else the report's. */
 export function overviewOf(report: Report, manifest?: PracticeMap): Overview {
   const practiceOf = manifest?.sources ?? report.component?.sources ?? {};
@@ -94,12 +103,16 @@ export function overviewOf(report: Report, manifest?: PracticeMap): Overview {
     const gap = GAP_NEXT[s.kind];
     const converged = CONVERGED_NEXT[s.kind];
     const subject = s.subject ?? (s.fragments.length > 0 ? s.fragments.join(", ") : s.kind);
+    // A violated rule and a conflict about a claim say why: the signal carries a query or an authority, and the
+    // obligation's reasons carry the edge or the fact.
+    const why = s.kind === "violated" || s.kind.endsWith("-conflict") ? reasonsOf(report, s.fragments) : [];
+    const detail = s.kind === "violated" && why.length > 0 ? why.join("; ") : [s.detail ?? "", ...why].filter((x) => x !== "").join("; ");
     entries.push({
       outcome: gap !== undefined ? "gap" : converged !== undefined ? "converged" : "indeterminate",
       kind: s.kind,
       practice: s.practices[0] ?? placeOf(s.kind),
       subject,
-      ...(s.detail !== undefined && s.detail !== "" ? { detail: s.detail } : {}),
+      ...(detail !== "" ? { detail } : {}),
       next: gap ?? converged ?? INDETERMINATE_NEXT[s.kind] ?? OTHER_NEXT,
       signal: s.id,
       anchor: s.id,
