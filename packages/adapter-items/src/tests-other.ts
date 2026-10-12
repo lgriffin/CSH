@@ -176,32 +176,33 @@ function nameSources(at: number, name: string, prefix: RegExp): CiteSource[] {
 interface Block {
   indent: number;
   kind: "class" | "def";
-  name: string;
-  testClass: boolean;
+  /** A class named `Test*`, or one naming `TestCase` among its bases (which pytest collects even with an `__init__`). */
+  named: boolean;
+  testCase: boolean;
+  /** Learnt from the class body, so known only once it is read: `__init__` defined, or `__test__ = False`. */
+  hasInit: boolean;
+  off: boolean;
   skip: boolean;
-  hasTests: boolean;
   cites: CiteSource[];
 }
 
 /**
  * pytest's conventions: a function whose name starts `test`, at module level or in a class whose name starts `Test`
  * (or one that names `TestCase` among its bases), nested only in such classes. A function inside a function is not
- * collected. Cites: the name, the first line of the docstring with words, the string arguments of a
- * `@pytest.mark.<marker>(...)` decorator, and of a `parametrize` only its `ids=[...]` and each `pytest.param(id=...)`.
- * The same on a test class, when it holds a test. `@pytest.mark.skip` and `@unittest.skip` count a test as skipped;
- * `skipif` and `xfail` decide at run time and do not.
+ * collected, nor one decorated as a fixture, nor any in a class that sets `__test__ = False`, nor in a `Test*` class
+ * that defines `__init__` (a `TestCase` subclass is collected regardless). Cites: the name, the first line of the
+ * docstring with words, the string arguments of a `@pytest.mark.<marker>(...)` decorator, and of a `parametrize` only
+ * its `ids=[...]` and each `pytest.param(id=...)`. The same on a test class, when it holds a test. `@pytest.mark.skip`
+ * and `@unittest.skip` count a test as skipped; `skipif` and `xfail` decide at run time and do not.
  */
 function python({ code, strings }: Lexed): Found {
-  const sources: CiteSource[] = [];
-  let tests = 0;
-  let skipped = 0;
+  // A class's body can rule its tests out after they are read, so each candidate is decided once the file is read.
+  const candidates: { classes: Block[]; skip: boolean; sources: CiteSource[] }[] = [];
+  const classes: Block[] = [];
   const stack: Block[] = [];
   let decorators: [number, number][] = [];
-  const close = (b: Block) => {
-    if (b.kind === "class" && b.hasTests) sources.push(...b.cites);
-  };
   for (const { start, end, indent } of logicalLines(code)) {
-    while (stack.length > 0 && stack[stack.length - 1]!.indent >= indent) close(stack.pop()!);
+    while (stack.length > 0 && stack[stack.length - 1]!.indent >= indent) stack.pop();
     const line = code.slice(start, end);
     if (line.startsWith("@")) {
       decorators.push([start, end]);
@@ -209,28 +210,45 @@ function python({ code, strings }: Lexed): Found {
     }
     const def = /^(?:async\s+)?def\s+(\w+)/.exec(line);
     const cls = /^class\s+(\w+)/.exec(line);
+    const top = stack[stack.length - 1];
+    if (top?.kind === "class" && /^__test__\s*=\s*False\b/.test(line)) top.off = true;
     const marks = decorators.flatMap(([a, b]) => pytestMarks(code, strings, a, b));
-    const skip = decorators.some(([a, b]) => /(?<![\w.])(?:(?:pytest\.)?mark|unittest)\.skip\b/.test(code.slice(a, b)));
+    const decorated = (re: RegExp) => decorators.some(([a, b]) => re.test(code.slice(a, b)));
+    const skip = decorated(/(?<![\w.])(?:(?:pytest\.)?mark|unittest)\.skip\b/);
+    const fixture = decorated(/^@\s*(?:pytest\s*\.\s*)?fixture\b/);
     decorators = [];
     if (cls !== null) {
       const at = start + cls[0].length - cls[1]!.length;
-      const testClass = (cls[1]!.startsWith("Test") || /\bTestCase\b/.test(line)) && stack.every((b) => b.kind === "class" && b.testClass);
-      stack.push({ indent, kind: "class", name: cls[1]!, testClass, skip, hasTests: false, cites: [...nameSources(at, cls[1]!, /^Test_?/), ...marks] });
+      const testCase = /\bTestCase\b/.test(line);
+      const block: Block = { indent, kind: "class", named: cls[1]!.startsWith("Test") || testCase, testCase, hasInit: false, off: false, skip, cites: [...nameSources(at, cls[1]!, /^Test_?/), ...marks] };
+      classes.push(block);
+      stack.push(block);
     } else if (def !== null) {
       const name = def[1]!;
       const at = start + def[0].length - name.length;
-      if (name.startsWith("test") && stack.every((b) => b.kind === "class" && b.testClass)) {
-        tests++;
-        if (skip || stack.some((b) => b.skip)) skipped++;
-        for (const b of stack) b.hasTests = true;
-        sources.push(...nameSources(at, name, /^test_?/), ...marks);
+      if (name === "__init__" && top?.kind === "class") top.hasInit = true;
+      if (name.startsWith("test") && !fixture && stack.every((b) => b.kind === "class")) {
+        const sources = [...nameSources(at, name, /^test_?/), ...marks];
         const doc = docstring(code, strings, at + name.length);
         if (doc !== undefined) sources.push(doc);
+        candidates.push({ classes: [...stack], skip, sources });
       }
-      stack.push({ indent, kind: "def", name, testClass: false, skip: false, hasTests: false, cites: [] });
+      stack.push({ indent, kind: "def", named: false, testCase: false, hasInit: false, off: false, skip: false, cites: [] });
     }
   }
-  while (stack.length > 0) close(stack.pop()!);
+  const collected = (b: Block) => b.named && !b.off && (b.testCase || !b.hasInit);
+  const sources: CiteSource[] = [];
+  const used = new Set<Block>();
+  let tests = 0;
+  let skipped = 0;
+  for (const c of candidates) {
+    if (!c.classes.every(collected)) continue;
+    tests++;
+    if (c.skip || c.classes.some((b) => b.skip)) skipped++;
+    for (const b of c.classes) used.add(b);
+    sources.push(...c.sources);
+  }
+  for (const b of classes) if (used.has(b)) sources.push(...b.cites);
   return { tests, skipped, sources };
 }
 
@@ -410,7 +428,8 @@ function go({ code, strings, comments }: Lexed): Found {
     const shut = pastClose(code, open);
     const params = code.slice(open, shut - 1);
     const brace = code.indexOf("{", shut);
-    if (brace < 0) continue;
+    // A test, fuzz target or example returns nothing: a result clause makes it an ordinary function.
+    if (brace < 0 || code.slice(shut, brace).trim() !== "") continue;
     const body: [number, number] = [brace, pastClose(code, brace + 1, "{", "}")];
     if (kind === "Test" && !/^\s*(?:\w+\s+)?\*\s*testing\s*\.\s*T\s*$/.test(params)) continue;
     if (kind === "Fuzz" && !/^\s*(?:\w+\s+)?\*\s*testing\s*\.\s*F\s*$/.test(params)) continue;
@@ -501,6 +520,14 @@ function backTo(code: string, at: number, open: string, close: string): number {
   return -1;
 }
 
+/**
+ * A runner's reported name read as the inventory reads a test's name, for a pattern that cannot hold an underscore:
+ * underscores as hyphens, and a runner's prefix set apart, so `test_REQ_12` and `pkg.TestREQ_12/case` both cite `REQ-12`.
+ */
+export function runnerName(name: string): string {
+  return name.replace(/_/g, "-").replace(/(?<![A-Za-z0-9])([Tt]est|Fuzz|Example)(?=[A-Z])/g, "$1 ");
+}
+
 /** The offset at which each line of a text starts. */
 export function lineStarts(text: string): number[] {
   const out = [0];
@@ -523,14 +550,17 @@ export function lineIndex(starts: number[], at: number): number {
 /**
  * Whether an identifier pattern can never match an underscore, so that in a name (`test_REQ_12_rejects`) an underscore
  * can only be a separator and is read as a hyphen (`REQ-12`) unambiguously. Decided from the pattern's text, and
- * cautiously: `_`, `\w`, `\W`, `\S`, `\D`, a negated class or an unescaped dot each could match one.
+ * cautiously: `_`, `\w`, `\W`, `\S`, `\D`, `\p`, an escape by code (`\x`, `\u`, `\c`, octal), a back reference, a
+ * negated class or an unescaped dot each could match one.
  */
 export function underscoreFree(pattern: string): boolean {
   let inClass = false;
   for (let k = 0; k < pattern.length; k++) {
     const c = pattern[k]!;
     if (c === "\\") {
-      if (/[wWSDpPu]/.test(pattern[k + 1] ?? "")) return false;
+      // A class escape, or one that names a character by code (\x5f, _, \u{5f}, \cX, an octal escape) or refers back
+      // (\1, \k<name>), could match an underscore.
+      if (/[wWSDpPuxck0-9]/.test(pattern[k + 1] ?? "")) return false;
       k++;
     } else if (c === "_") return false;
     else if (c === "[" && !inClass) {

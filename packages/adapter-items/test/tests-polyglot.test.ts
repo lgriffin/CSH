@@ -327,3 +327,53 @@ describe("the inventory across languages", () => {
     expect(tests(input(a))).toEqual(tests(input(b)));
   });
 });
+
+describe("review findings", () => {
+  const jest = (file: string, fullName: string) => JSON.stringify({ testResults: [{ name: file, assertionResults: [{ fullName, status: "passed" }] }] });
+
+  it("reads a polyglot result's name as the inventory reads the test's name, and a TypeScript one as written", () => {
+    const py = tests(input({ "tests/test_a.py": "def test_REQ_12(): pass\n" }, undefined, { "r.json": jest("/ci/tests/test_a.py", "test_REQ_12") }));
+    expect(py.results!.map((r) => r.cites)).toEqual([["REQ-12"]]);
+    const go = tests(input({ "a_test.go": "func TestREQ_13(t *testing.T) {}\n" }, undefined, { "r.json": jest("/ci/a_test.go", "TestREQ_13") }));
+    expect(go.results!.map((r) => r.cites)).toEqual([["REQ-13"]]);
+    const ts = tests(input({ "a.test.ts": "it('x', () => {});\n" }, undefined, { "r.json": jest("/ci/a.test.ts", "test_REQ_12") }));
+    expect(ts.results!.map((r) => r.cites)).toEqual([[]]);
+    const held = tests(input({ "tests/test_a.py": "def test_REQ_12(): pass\n" }, { idPattern: "[A-Z_]+-[0-9]+" }, { "r.json": jest("/ci/tests/test_a.py", "test_REQ_12") }));
+    expect(held.results!.map((r) => r.cites)).toEqual([[]]);
+  });
+
+  it("does not count a pytest fixture named test_*", () => {
+    const text = ["import pytest", "from pytest import fixture", "", "@pytest.fixture", "def test_client(): return 1", "", '@pytest.fixture(scope="module")', "def test_db(): return 2", "", "@fixture", "def test_app(): return 3", "", "def test_real(test_client): pass", ""].join("\n");
+    expect(read("test_f.py", text).attrs).toEqual({ tests: "1" });
+  });
+
+  it("does not count the tests of a class that sets __test__ = False", () => {
+    const text = ["class TestBase:", "    __test__ = False", "", "    def test_REQ_20(self): pass", "", "class TestReal:", "    def test_REQ_21(self): pass", ""].join("\n");
+    expect(read("test_c.py", text)).toMatchObject({ attrs: { tests: "1" }, cites: [["REQ-21", "test_c.py:7"]] });
+  });
+
+  it("does not count a Test class with __init__, unless it is a TestCase", () => {
+    const text = [
+      "class TestWithInit:",
+      "    def test_REQ_22(self): pass",
+      "    def __init__(self): pass",
+      "",
+      "class Case(unittest.TestCase):",
+      "    def __init__(self, *a): super().__init__(*a)",
+      "    def test_REQ_23(self): pass",
+      "",
+    ].join("\n");
+    expect(read("test_i.py", text)).toMatchObject({ attrs: { tests: "1" }, cites: [["REQ-23", "test_i.py:7"]] });
+  });
+
+  it("does not count a Go Test function with a result", () => {
+    const text = ["func TestCheck(t *testing.T) int {", "\treturn 1", "}", "func TestOk(t *testing.T) {}", "func ExampleE() (n int) {", "\t// Output: 1", "\treturn", "}", ""].join("\n");
+    expect(read("a_test.go", text).attrs).toEqual({ tests: "1" });
+  });
+
+  it("does not hyphenate when the pattern names a character by code or refers back", () => {
+    for (const p of ["REQ\\x5f[0-9]+", "REQ\\u005f[0-9]+", "REQ\\u{5f}[0-9]+", "REQ\\137[0-9]+", "REQ\\cA", "(R)\\1", "(?<a>R)\\k<a>"]) expect(underscoreFree(p)).toBe(false);
+    expect(underscoreFree("REQ-\\d+\\b")).toBe(true);
+    expect(read("test_x.py", "def test_REQ_12(): pass\n", { idPattern: "REQ\\x5f[0-9]+" }).cites).toEqual([["REQ_12", "test_x.py:1"]]);
+  });
+});

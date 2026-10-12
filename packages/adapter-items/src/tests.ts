@@ -9,7 +9,7 @@
 import { digestOf } from "@csh/kernel";
 import { type Adapter, type AdapterInput, type AdapterOutput, type Diagnostic, type ItemEdge, parseTestResults, type SourceItem, type TestOutcome, type TestResult } from "@csh/witness";
 import { decode, idPatternOf, sortedFiles } from "./common.ts";
-import { inventory, languageOf, lineIndex, lineStarts, underscoreFree } from "./tests-other.ts";
+import { inventory, languageOf, lineIndex, lineStarts, runnerName, underscoreFree } from "./tests-other.ts";
 
 export const manifest = {
   id: "csh.adapter.items.tests",
@@ -214,7 +214,7 @@ export function run(input: AdapterInput): AdapterOutput {
     if (tests === 0 && steps === 0) diagnostics.push({ code: "no-tests", severity: "info", message: `${file.path} declares no it or test call with a literal title`, span: file.path });
   }
   if (input.executions === undefined) return { items, edges, diagnostics };
-  const results = joinResults(input, items, id, diagnostics);
+  const results = joinResults(input, items, id, diagnostics, hyphenate);
   return { items, edges, diagnostics, results };
 }
 
@@ -231,7 +231,7 @@ function fileOf(name: string, paths: string[]): string | undefined {
 }
 
 /** Each test the results files report, joined to its file and to the identifiers its full name cites (A-115). */
-function joinResults(input: AdapterInput, items: SourceItem[], id: RegExp, diagnostics: Diagnostic[]): TestResult[] {
+function joinResults(input: AdapterInput, items: SourceItem[], id: RegExp, diagnostics: Diagnostic[], hyphenate: boolean): TestResult[] {
   const paths = items.map((i) => i.id);
   const results: TestResult[] = [];
   const unmatched = new Map<string, number>();
@@ -250,7 +250,9 @@ function joinResults(input: AdapterInput, items: SourceItem[], id: RegExp, diagn
         unmatched.set(r.file, (unmatched.get(r.file) ?? 0) + 1);
         continue;
       }
-      const cites = r.cites ?? [...new Set([...r.name.matchAll(id)].map((m) => m[0]))].sort();
+      // A Python, Java, Go or Rust runner reports the function's name, so it is read as the inventory reads that name.
+      const names = hyphenate && languageOf(file) !== undefined ? [r.name, runnerName(r.name)] : [r.name];
+      const cites = r.cites ?? [...new Set(names.flatMap((n) => [...n.matchAll(id)].map((m) => m[0])))].sort();
       results.push({ file, outcome: r.outcome, cites, span: /^\d+$/.test(r.at) ? `${f.path}:${r.at}` : `${f.path}#${r.at}` });
       const c = counts.get(file) ?? { passed: 0, failed: 0, errored: 0, skipped: 0 };
       c[r.outcome]++;
