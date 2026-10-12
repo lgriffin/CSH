@@ -15,7 +15,8 @@ export interface Proposal {
 }
 
 /** Directories never proposed for any source: installed, built or vendored files. */
-export const NEVER_PROPOSED = ["node_modules", "dist", "build", "out", "coverage", "vendor", "target"];
+// A Python virtual environment is installed code, as node_modules is, even when someone committed it (stage 46).
+export const NEVER_PROPOSED = ["node_modules", "dist", "build", "out", "coverage", "vendor", "target", ".venv", "venv", "site-packages", "__pycache__"];
 const NEVER_GLOBS = NEVER_PROPOSED.map((d) => `**/${d}/**`);
 
 /** Prefixes of identifiers that belong to the world, not to the repository: UTF-8, SHA-256, RFC-9110. */
@@ -100,8 +101,16 @@ function families(texts: string[]): { prefix: string; ids: number; mentions: num
   return [...by]
     .filter(([, f]) => f.ids.size >= 2 && !EXTERNAL_FAMILIES.includes(f.head))
     .map(([prefix, f]) => ({ prefix, ids: f.ids.size, mentions: f.mentions }))
-    .sort((a, b) => b.mentions - a.mentions || compareCodePoints(a.prefix, b.prefix))
-    .slice(0, 8);
+    .sort((a, b) => b.mentions - a.mentions || compareCodePoints(a.prefix, b.prefix));
+}
+
+/**
+ * The identifier pattern of the families: every prefix named, however many. A shape such as `[A-Z]{2,4}-[0-9]{3}`
+ * would also match UTF-8 and RFC-2119, which are excluded, so the alternation is kept whole; the guess names only the
+ * first eight (From real runs, stage 46).
+ */
+export function idPatternOf(fams: { prefix: string }[]): string | undefined {
+  return fams.length === 0 ? undefined : `(?:${fams.map((f) => f.prefix).join("|")})-[0-9]+`;
 }
 
 /** The tags of each Rule, Scenario or Example of a feature file, and of the Feature itself. */
@@ -153,8 +162,9 @@ export function proposeProfile(dir: string): Proposal | { error: string } {
   const featureText = new Map(features.map((p) => [p, read(p)]));
   const mdText = new Map(markdown.map((p) => [p, read(p)]));
   const fams = families([...mdText.values(), ...featureText.values()]);
-  const idPattern = fams.length === 0 ? undefined : `(?:${fams.map((f) => f.prefix).join("|")})-[0-9]+`;
-  if (idPattern !== undefined) guesses.push(`idPattern ${idPattern}: ${fams.map((f) => `${f.prefix} (${f.ids} identifiers, ${f.mentions} mentions)`).join(", ")} in the Markdown and Gherkin files`);
+  const idPattern = idPatternOf(fams);
+  const named = fams.slice(0, 8).map((f) => `${f.prefix} (${f.ids} identifiers, ${f.mentions} mentions)`).join(", ");
+  if (idPattern !== undefined) guesses.push(`idPattern ${idPattern}: ${named}${fams.length > 8 ? ` and ${fams.length - 8} more prefixes` : ""} in the Markdown and Gherkin files`);
   else guesses.push("no idPattern: no prefix names two or more identifiers in the Markdown and Gherkin files, so each adapter keeps its default");
   const idSettings = idPattern === undefined ? {} : { idPattern };
 
@@ -228,9 +238,10 @@ export function proposeProfile(dir: string): Proposal | { error: string } {
   }
 
   // Tests by their runners' conventions, and step definitions beside features.
-  const fixtures = (p: string) => underAny(p, ["fixtures", "__fixtures__"]);
+  // A fixture, or a file under a dot-directory (.claude, .github), is test data or tooling, not the project's tests.
+  const fixtures = (p: string) => underAny(p, ["fixtures", "__fixtures__"]) || segments(p).slice(0, -1).some((d) => d.startsWith("."));
   const tests = files.filter((p) => testConvention(p) !== undefined && !fixtures(p));
-  const steps = features.length === 0 ? [] : files.filter((p) => testConvention(p) === undefined && stepConvention(p) !== undefined);
+  const steps = features.length === 0 ? [] : files.filter((p) => testConvention(p) === undefined && stepConvention(p) !== undefined && !fixtures(p));
   const testGlobs = [...new Set(tests.map((p) => testConvention(p)!))].sort(compareCodePoints);
   const stepGlobs = [...new Set(steps.map((p) => stepConvention(p)!))].sort(compareCodePoints);
   const deps = files

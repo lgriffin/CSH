@@ -46,6 +46,7 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 43: Clearer output](stage-43.md)
 - [Stage 44: Process and safety](stage-44.md)
 - [Stage 45: From the Java and Python runs](stage-45.md)
+- [Stage 46: The second round of real runs](stage-46.md)
 - [Stage 47: The Assertion Ladder, by name](stage-47.md)
 - [Stage 48: Rungs](stage-48.md)
 - [Stage 49: Prevention](stage-49.md)
@@ -65,7 +66,7 @@ code, and are reported as pending until their stage is built.
 Stages 21 to 28 make CSH ingest a real git codebase ([11](../spec/11-ingesting-a-codebase.md)), with ESI.ts as the
 subject throughout. Its profile is [subjects/esi-ts](../../subjects/esi-ts).
 
-Stages 38 to 44 answer what Leigh's runs over six TypeScript repositories asked for ([13](../spec/13-from-real-runs.md),
+Stages 38 to 46 answer what Leigh's runs over six TypeScript repositories asked for ([13](../spec/13-from-real-runs.md),
 [issue 66](https://github.com/lgriffin/CSH/issues/66)). Their fixtures start at F130.
 
 Stages 47 to 52 bring [the Assertion Ladder](https://github.com/lgriffin/AI-Reference-Projects/tree/master/paper) into

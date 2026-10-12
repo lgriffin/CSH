@@ -66,6 +66,9 @@ export const GAP_NEXT: Record<string, string> = {
   "unplaced-package": "Place the package in a container of the diagram",
   "unowned-source": "Name the practice that owns the source",
   unliftable: "Rewrite the content in a form its adapter reads, or move it out of the source",
+  // Step matching (From real runs, stage 46): placed, so that each says what would close it.
+  "undefined-step": "Write a step definition that matches the step, or reword the step to match one",
+  "unused-step-definition": "Use the definition in a scenario, or remove it",
 };
 
 /** Signal kinds the tool could not decide, with what would decide each. Any other kind is indeterminate too. */
@@ -77,6 +80,7 @@ export const INDETERMINATE_NEXT: Record<string, string> = {
   relaxed: "A person relaxed this obligation: confirm the relaxation still holds",
   reserved: "The term is reserved: bind it or remove it once its meaning is settled",
   "unconstrained-after": "Say what the event leaves unchanged",
+  "steps-undecided": "Check by hand whether a definition CSH cannot read (a custom parameter type, a computed pattern) matches the step",
 };
 /** Signal kinds that are a convergence: the source states a silence and its reason, and nothing contradicts it. */
 export const CONVERGED_NEXT: Record<string, string> = {

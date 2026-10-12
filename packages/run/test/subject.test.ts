@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { componentStatus, fetchSubject, loadProject, runAt, runComponent, subjectCheckout } from "../src/index.ts";
+import { componentStatus, fetchSubject, renameRetrying, loadProject, runAt, runComponent, subjectCheckout } from "../src/index.ts";
 
 const REPO = resolve(import.meta.dirname, "../../..");
 let base: string;
@@ -174,5 +174,27 @@ describe("a subject profile", () => {
     const p = loadProject(subject, subject, { subject });
     expect(p.component).toBeUndefined();
     expect(p.componentProblems.map((x) => x.code)).toEqual(["no-subject"]);
+  });
+});
+
+describe("moving a fetched checkout into place (stage 46)", () => {
+  it("tries again while Windows says the files are busy, and says why when it gives up", () => {
+    let calls = 0;
+    const busy = (times: number) => () => {
+      calls++;
+      if (calls <= times) throw Object.assign(new Error("EPERM: operation not permitted, rename"), { code: "EPERM" });
+    };
+    expect(renameRetrying("a", "b", 5, 1, busy(3))).toBeUndefined();
+    expect(calls).toBe(4);
+    calls = 0;
+    expect(renameRetrying("a", "b", 3, 1, busy(10))).toMatch(/EPERM/);
+    expect(calls).toBe(3);
+    calls = 0;
+    const other = () => {
+      calls++;
+      throw Object.assign(new Error("ENOENT: no such file"), { code: "ENOENT" });
+    };
+    expect(renameRetrying("a", "b", 5, 1, other)).toMatch(/ENOENT/);
+    expect(calls).toBe(1);
   });
 });

@@ -3,7 +3,7 @@
 // is outside it. This lists, per source, the files it reads, then the tracked files no source reads, by extension.
 import { posix } from "node:path";
 import { compareCodePoints } from "@csh/kernel";
-import { selectFiles, trackedFiles } from "./sources.ts";
+import { selectFiles, trackedDirsOf, trackedFiles } from "./sources.ts";
 import type { Project } from "./project.ts";
 import type { DeclaredSource } from "@csh/component";
 
@@ -32,8 +32,10 @@ export function coverageOfSources(root: string, declared: readonly DeclaredSourc
   if (tracked === undefined) return undefined;
   const read = new Set<string>();
   const sources: Coverage["sources"] = [];
+  const dirs = trackedDirsOf(tracked);
+  const isTracked = new Set(tracked);
   for (const s of declared) {
-    const files = selectFiles(root, s.at, s.include, s.exclude);
+    const files = selectFiles(root, s.at, s.include, s.exclude, dirs).filter((f) => isTracked.has(f.path));
     for (const f of files) read.add(f.path);
     sources.push({ name: s.name, kind: s.kind, files: files.length });
   }
@@ -41,7 +43,9 @@ export function coverageOfSources(root: string, declared: readonly DeclaredSourc
   for (const f of tracked) {
     if (read.has(f)) continue;
     const k = extOf(f);
-    groups.set(k, [...(groups.get(k) ?? []), f]);
+    const g = groups.get(k);
+    if (g === undefined) groups.set(k, [f]);
+    else g.push(f);
   }
   const unread = [...groups].map(([ext, fs]) => ({ ext, files: fs.length, sample: fs[0]! })).sort((a, b) => b.files - a.files || compareCodePoints(a.ext, b.ext));
   return { tracked: tracked.length, read: tracked.filter((f) => read.has(f)).length, sources, unread };
