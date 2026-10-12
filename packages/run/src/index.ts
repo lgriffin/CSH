@@ -8,3 +8,4 @@ export * from "./status.ts";
 export * from "./queue.ts";
 export * from "./history.ts";
 export * from "./results.ts";
+export * from "./propose.ts";

@@ -13,10 +13,10 @@ import { authorship, formatDecision, gitVcs, LEDGER_PATH, MAINTAINERS_PATH, read
 import { printModule } from "@csh/print";
 import type { SolverPort } from "@csh/solver";
 import { createTestRepo, gpgAvailable, type TestRepo } from "./git.ts";
-import { checkModule, componentQueue, componentStatus, emitProject, evaluateProject, evaluateSpec, type FixtureConfig, loadProject, readConfig, readStoredRun, specPathOf } from "@csh/run";
+import { checkModule, componentQueue, componentStatus, coverageOfSources, emitProject, evaluateProject, evaluateSpec, type FixtureConfig, loadProject, proposeProfile, readConfig, readStoredRun, selectFiles, specPathOf } from "@csh/run";
 import { verifyCounterexample, verifyNoOutcome } from "./verify.ts";
 import { packWorkspace } from "./pack.ts";
-import { type ComponentProblem, parseComponent } from "@csh/component";
+import { type ComponentProblem, parseComponent, validateManifest } from "@csh/component";
 import { type DiffContext, diffRuns, type ManifestView, renderDiff, type RunSide, type Unavailable } from "@csh/review";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
@@ -39,7 +39,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 35;
+export const BUILT_THROUGH_STAGE = 38;
 
 const AGENT_BIN = resolve(import.meta.dirname, "../../agent/bin/csh-agent.js");
 
@@ -131,6 +131,7 @@ export class FixtureRunner {
       else if (e.diff !== undefined) this.diff(dir, e.diff, failures);
       else if (e.a3 !== undefined) await this.a3(dir, e.a3, failures);
       else if (e.run !== undefined) await this.project(dir, e.run, failures);
+      else if (e.init !== undefined) await this.init(dir, e.init, failures);
       else if (e.starter !== undefined) {
         const skipped = this.starter(e.starter, failures);
         if (skipped !== undefined) res.skipped = skipped;
@@ -690,7 +691,95 @@ export class FixtureRunner {
       git("init", "-q", "-b", "main");
       git("add", "-A");
       git("-c", "user.email=test-only@example.invalid", "-c", "user.name=test-only", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "the project");
-      const p = loadProject(work, work);
+      await this.projectRun(loadProject(work, work), x, failures);
+    } finally {
+      rmSync(work, { recursive: true, force: true });
+    }
+  }
+
+  // ---------------------------------------------------------------- csh init --subject (from real runs)
+
+  /**
+   * The checkout in inputs/subject, committed to a scratch repository with no remote, proposed as csh init --subject
+   * proposes it (From real runs, section 1). Each source is compared by the files it selects, not by its globs; the
+   * proposal is then written to a separate root and run against the checkout as it stands.
+   */
+  private async init(dir: string, x: Exp, failures: string[]): Promise<void> {
+    const work = mkdtempSync(join(this.o.workDir, "init-"));
+    try {
+      const subject = join(work, "subject");
+      copyDir(join(dir, "inputs", "subject"), subject);
+      const git = (...args: string[]) => {
+        const r = spawnSync("git", args, { cwd: subject, encoding: "utf8" });
+        if (r.status !== 0) throw new Error(`git ${args.join(" ")} failed: ${r.stderr}`);
+        return r.stdout.trim();
+      };
+      git("init", "-q", "-b", "main");
+      git("add", "-A");
+      git("-c", "user.email=test-only@example.invalid", "-c", "user.name=test-only", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "the subject");
+      const r = proposeProfile(subject);
+      if ("error" in r) {
+        failures.push(`no proposal: ${r.error}`);
+        return;
+      }
+      const m = r.manifest;
+      for (const problem of validateManifest(m)) failures.push(`the proposal is not a manifest: ${problem.code}: ${problem.detail}`);
+      const sources = m.sources ?? [];
+      for (const [name, want] of Object.entries((x.sources ?? {}) as Record<string, { kind: string; files: string[] }>)) {
+        const s = sources.find((y) => y.name === name);
+        if (s === undefined) {
+          failures.push(`no source ${name}; proposed ${sources.map((y) => y.name).join(", ") || "none"}`);
+          continue;
+        }
+        if (s.kind !== want.kind) failures.push(`source ${name}: kind ${s.kind}, expected ${want.kind}`);
+        const got = selectFiles(subject, s.at, s.include, s.exclude).map((f) => f.path).sort();
+        if (JSON.stringify(got) !== JSON.stringify([...want.files].sort())) failures.push(`source ${name} reads ${JSON.stringify(got)}, expected ${JSON.stringify(want.files)}`);
+      }
+      const extra = sources.filter((y) => !Object.hasOwn(x.sources ?? {}, y.name));
+      if (x.sources !== undefined && extra.length > 0) failures.push(`sources not expected: ${extra.map((y) => y.name).join(", ")}`);
+      for (const want of (x.practices ?? []) as Exp[]) {
+        const p = m.practices.find((y) => JSON.stringify(y.sources) === JSON.stringify(want.sources));
+        if (p === undefined) {
+          failures.push(`no practice for ${want.sources.join(", ")}`);
+          continue;
+        }
+        if (p.kind !== want.kind) failures.push(`practice ${p.id}: kind ${p.kind}, expected ${want.kind}`);
+        if (want.adapter !== undefined && p.adapter !== want.adapter) failures.push(`practice ${p.id}: adapter ${p.adapter ?? "(built in)"}, expected ${want.adapter}`);
+        const sorted = (o: Record<string, string> | undefined) => JSON.stringify(Object.fromEntries(Object.entries(o ?? {}).sort(([a], [b]) => (a < b ? -1 : 1))));
+        if (sorted(p.settings) !== sorted(want.settings)) failures.push(`practice ${p.id}: settings ${JSON.stringify(p.settings ?? {})}, expected ${JSON.stringify(want.settings ?? {})}`);
+        if (p.executions !== want.executions) failures.push(`practice ${p.id}: executions ${p.executions ?? "(none)"}, expected ${want.executions ?? "(none)"}`);
+      }
+      if (x.implementation !== undefined && JSON.stringify(m.implementation) !== JSON.stringify(x.implementation)) failures.push(`implementation ${JSON.stringify(m.implementation)}, expected ${JSON.stringify(x.implementation)}`);
+      if (m.subject?.commit !== git("rev-parse", "HEAD")) failures.push(`subject.commit ${m.subject?.commit}, expected the checkout's HEAD`);
+      if (x.subjectRepoIsPath === true && m.subject?.repo !== subject) failures.push(`subject.repo ${m.subject?.repo}, expected the checkout's path`);
+      const said = r.guesses.join("\n");
+      for (const g of (x.guessesInclude ?? []) as string[]) if (!said.includes(g)) failures.push(`no guess mentions ${g}; guessed:\n${said}`);
+      for (const g of (x.guessesExclude ?? []) as string[]) if (said.includes(g)) failures.push(`a guess mentions ${g}; guessed:\n${said}`);
+      if (x.coverage !== undefined) {
+        const c = coverageOfSources(subject, sources);
+        if (c === undefined) failures.push("no coverage of the proposal");
+        else {
+          if (c.tracked !== x.coverage.tracked || c.read !== x.coverage.read) failures.push(`coverage ${c.read} of ${c.tracked}, expected ${x.coverage.read} of ${x.coverage.tracked}`);
+          const tracked = spawnSync("git", ["ls-files"], { cwd: subject, encoding: "utf8" }).stdout.split("\n").filter((f) => f !== "");
+          const read = new Set(sources.flatMap((s) => selectFiles(subject, s.at, s.include, s.exclude).map((f) => f.path)));
+          const unread = tracked.filter((f) => !read.has(f)).sort();
+          if (JSON.stringify(unread) !== JSON.stringify([...x.coverage.unread].sort())) failures.push(`unread ${JSON.stringify(unread)}, expected ${JSON.stringify(x.coverage.unread)}`);
+        }
+      }
+      if (x.run !== undefined) {
+        const root = join(work, "root");
+        mkdirSync(join(root, "csh"), { recursive: true });
+        writeFileSync(join(root, "csh", "component.json"), stableJson(m));
+        await this.projectRun(loadProject(root, root, { subject }), x.run, failures);
+      }
+    } finally {
+      rmSync(work, { recursive: true, force: true });
+    }
+  }
+
+  /** A loaded project evaluated as csh run evaluates it, and its report compared with the expectation. */
+  private async projectRun(p: ReturnType<typeof loadProject>, x: Exp, failures: string[]): Promise<void> {
+    {
       if (p.componentProblems.length > 0) {
         failures.push(`the component manifest cannot be used: ${JSON.stringify(p.componentProblems)}`);
         return;
@@ -746,8 +835,6 @@ export class FixtureRunner {
       const diagList = () => report.diagnostics.map((y) => `${y.source} ${y.code} ${y.span ?? ""}`).join("; ") || "none";
       for (const d of x.diagnostics ?? []) if (!report.diagnostics.some(diagMatch(d))) failures.push(`diagnostic ${JSON.stringify(d)} not reported; got ${diagList()}`);
       for (const d of x.diagnosticsAbsent ?? []) if (report.diagnostics.some(diagMatch(d))) failures.push(`diagnostic ${JSON.stringify(d)} should be absent; got ${diagList()}`);
-    } finally {
-      rmSync(work, { recursive: true, force: true });
     }
   }
 

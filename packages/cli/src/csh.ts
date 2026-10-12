@@ -19,6 +19,9 @@ const USAGE = `csh: the Composable Specification Harness
 
   csh init                        Write csh/component.json by asking for each field. Guesses nothing. Writes under
                                   the same root as every other command: --root, or the git top level.
+  csh init --subject <dir>        Propose csh/component.json from a checkout's tracked files: sources by directory and
+                                  extension, an identifier pattern, tag and test settings, a results file. Prints
+                                  every guess and what the proposal leaves unread.
   csh run [--at <commit>] [--mode advisory|enforcing] [--budget ms] [--no-cache]
                                   Run each practice's harness, check and gate one snapshot of the component, and
                                   store the run under .csh-cache/runs/. Exits non-zero only on block in enforcing
@@ -26,8 +29,8 @@ const USAGE = `csh: the Composable Specification Harness
   csh check [spec] [--out report.json] [--json] [--budget ms] [--no-cache]
                                   Run every check and write the report. Exits 0 when the run completed.
   csh gaps [spec]                 Print the gap view only.
+  csh coverage [--json]           What each source reads, and the tracked files no source reads, by extension.
   csh overview [--run <dir|commit>] [--signal <id>] [--out <file>] [--json]
-  csh coverage                            What each source reads, and the tracked files no source reads, by extension
                                   Place every result of the last report in one of three outcomes: gaps (suggestions,
                                   with what would close each), indeterminate (with what would decide it) and
                                   converged. Prints the counts by practice and kind and writes the sheet to
@@ -272,7 +275,7 @@ export async function csh(argv: string[], io: Io): Promise<number> {
     io.out(USAGE);
     return cmd === undefined ? 2 : 0;
   }
-  if (cmd === "init") return init(io.cwd, a.options.root, io);
+  if (cmd === "init") return init(io.cwd, a.options.root, io, a.options.subject);
   const subject = a.options.subject !== undefined ? resolve(io.cwd, a.options.subject) : undefined;
   const p = loadProject(io.cwd, a.options.root, subject !== undefined ? { subject } : {});
   switch (cmd) {
@@ -540,6 +543,9 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
   for (const [k, { n, at }] of shown) lines.push(`    ${n} ${k}, e.g. ${at}`);
   if (kinds.size > shown.length) lines.push(`    and ${kinds.size - shown.length} more kinds: csh check lists them`);
   for (const e of report.errors.slice(0, 5)) lines.push(`    ${e.severity} ${e.code}: ${e.detail}`);
+  // What the profile leaves unread, said on every run of the current snapshot (From real runs, section 1.4).
+  const c = a.options.at === undefined ? coverageOf(p) : undefined;
+  if (c !== undefined) lines.push(c.read === c.tracked ? `  coverage: all ${c.tracked} tracked files read` : `  coverage: ${c.read} of ${c.tracked} tracked files read; csh coverage lists the rest`);
   const v = (x: string) => (report.assessments ?? []).filter((y) => y.verdict === x).length;
   lines.push(`  obligations ${(report.assessments ?? []).length}: conflicting ${v("conflicting")}, violated ${v("violated")}, satisfied ${v("satisfied")}, unknown ${v("unknown")}`);
   lines.push(`  gate ${decision.overall} (${decision.mode})`);

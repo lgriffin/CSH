@@ -4,6 +4,11 @@
 command that runs each practice's tests. `csh init` writes it by asking for each field, at the git repository's top level unless `--root` names another directory, the same root every other command reads. It says what is evaluated,
 never what is right: it holds no judgment and no authority ([09](../spec/09-anchor-harness-a3.md), section 2.1).
 
+For a repository evaluated from outside, `csh init --subject <checkout>` proposes a version 2 manifest instead: sources
+by directory and extension, an identifier pattern from the documents, tag and test settings, and a results file when
+`package.json` names Vitest or Jest. It prints every guess with what it was read from, and what the proposal leaves
+unread, so the manifest can be corrected before its first run ([13](../spec/13-from-real-runs.md), section 1).
+
 ```json
 {
   "schema": "csh-component/v1",
