@@ -443,3 +443,19 @@ describe("citeBodies", () => {
     expect((tests(input({ "t.test.ts": file }, { citePattern: cfg.citePattern }, "TestFiles")).edges ?? []).map((e) => e.to)).toEqual([]);
   });
 });
+
+describe("requirements written as table rows", () => {
+  const spec = ["# 011 Ingest core", "", "| ID | Pattern | Requirement |", "|----|---------|-------------|", "| ING-001 | Ubiquitous | The system shall never modify a source file. |", "| ING-002 | Event | When a scan ends, the system shall report duplicates. |", ""].join("\n");
+
+  it("are items of kind requirement whose text is the sentence, not the pattern column", () => {
+    const out = markdown(input({ "req.md": spec }));
+    const reqs = (out.items ?? []).filter((i) => i.kind === "requirement");
+    expect(reqs.map((r) => [r.id, r.pattern, r.span])).toEqual([["ING-001", "ubiquitous", "req.md:5"], ["ING-002", "event-driven", "req.md:6"]]);
+    expect(reqs[0]!.text).toBe("The system shall never modify a source file.");
+  });
+
+  it("are left alone when the practice reads its identifiers as references", () => {
+    const out = markdown(input({ "req.md": spec }, { headings: "references" }));
+    expect((out.items ?? []).filter((i) => i.kind === "requirement")).toEqual([]);
+  });
+});

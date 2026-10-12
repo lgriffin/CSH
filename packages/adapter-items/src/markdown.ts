@@ -53,6 +53,10 @@ export function run(input: AdapterInput): AdapterOutput {
   // "references": a heading that opens with an identifier is a section about an item another source defines, read as
   // an implements edge from the document rather than as an item of its own.
   const headingsAreItems = input.config?.headings !== "references";
+  // A table row whose first cell is an identifier defines a requirement: `| ING-001 | Event | When ..., the system shall ... |`.
+  // The sentence is the first cell that says shall (a pattern or status column often sits between), else the first cell.
+  const tableId = new RegExp(`^\\|\\s*(${idPattern})\\s*\\|`);
+  const tableCells = (row: string): string[] => row.replace(/^\|/, "").replace(/\|\s*$/, "").split("|").map((c) => plain(c));
   const items: SourceItem[] = [];
   const edges: ItemEdge[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -166,6 +170,20 @@ export function run(input: AdapterInput): AdapterOutput {
         }
         mentions(h[2]!, fromId(), span);
         codeMentions(h[2]!, fromId(), span);
+        return;
+      }
+      const row = headingsAreItems ? tableId.exec(raw.trim()) : null;
+      if (row !== null) {
+        endField();
+        close();
+        const cells = tableCells(raw.trim()).slice(1);
+        const text = cells.find((c) => /\bshall\b/i.test(c)) ?? cells[0] ?? "";
+        const item: SourceItem = { id: row[1]!, kind: "requirement", text, span, textDigest: digestOf(text) };
+        const pattern = classify(text);
+        if (pattern !== undefined) item.pattern = pattern;
+        add(item);
+        mentions(raw, row[1]!, span);
+        codeMentions(raw, row[1]!, span);
         return;
       }
       const line = raw.trim();
