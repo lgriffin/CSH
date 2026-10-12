@@ -13,7 +13,7 @@ export const COMPONENT_SCHEMA = "csh-component/v1";
  * manifests are read unchanged.
  */
 export const COMPONENT_SCHEMA_V2 = "csh-component/v2";
-export const PRACTICE_KINDS = ["requirements", "scenarios", "tests", "design-notes", "architecture", "facts", "documents", "issues", "traces"] as const;
+export const PRACTICE_KINDS = ["requirements", "scenarios", "tests", "design-notes", "architecture", "facts", "documents", "instructions", "issues", "traces"] as const;
 /** Where a harness's execution lines go when the manifest does not say (section 3.2). */
 export const DEFAULT_EXECUTIONS = "reports/executions.ndjson";
 /** How long a harness command may run when the manifest does not say: ten minutes (owner-decided, #20). */

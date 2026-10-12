@@ -1,0 +1,14 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Maps",
+  "spec": "csh/spec.csl.ts",
+  "implementation": ["src"],
+  "sources": [
+    { "name": "Reqs", "kind": "Documents", "at": "docs/requirements.md" },
+    { "name": "Code", "kind": "Code", "at": ".", "include": ["src/**/*.ts"] }
+  ],
+  "practices": [
+    { "id": "reqs", "name": "Requirements", "kind": "requirements", "sources": ["Reqs"], "adapter": "@csh/adapter-items/markdown", "settings": { "idPattern": "R-[A-Z]+-[0-9]+" } },
+    { "id": "code", "name": "Code facts", "kind": "facts", "sources": ["Code"] }
+  ]
+}

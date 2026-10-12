@@ -1,0 +1,31 @@
+{
+  "fixture": "F153",
+  "section": "The Assertion Ladder, section 4",
+  "stage": 49,
+  "expect": {
+    "run": {
+      "assessments": [
+        { "fragment": "Api/Prevented/StatusIsTotal", "verdict": "satisfied", "reasonsInclude": ["ApiError"] },
+        { "fragment": "Api/Prevented/PartialIsTotal", "verdict": "violated" },
+        { "fragment": "Api/Prevented/NamedIsTotal", "verdict": "violated" },
+        { "fragment": "Api/Prevented/MapperIsTotal", "verdict": "satisfied" },
+        { "fragment": "Api/Prevented/OtherIsTotalOverApiError", "verdict": "violated" },
+        { "fragment": "Api/Prevented/OtherIsTotalOverLevel", "verdict": "satisfied" }
+      ],
+      "facts": [
+        { "module": "src/error.rs", "symbol": "ApiError", "members": ["NotFound", "Conflict", "Invalid"] },
+        { "module": "src/error.rs", "symbol": "Level", "members": ["Low", "High"] },
+        { "module": "src/error.rs", "symbol": "status", "total": ["ApiError"] },
+        { "module": "src/error.rs", "symbol": "partial", "total": null },
+        { "module": "src/error.rs", "symbol": "named", "total": null },
+        { "module": "src/error.rs", "symbol": "Mapper", "total": ["ApiError"] },
+        { "module": "src/error.rs", "symbol": "other", "total": ["Level"] },
+        { "module": "src/error.rs", "symbol": "ApiError", "total": ["ApiError"] },
+        { "module": "src/error.rs", "symbol": "by_ref", "total": ["ApiError"] },
+        { "module": "src/error.rs", "symbol": "bare", "total": ["Level"] },
+        { "module": "src/error.rs", "symbol": "unattributed", "total": null }
+      ],
+      "rungs": [{ "item": "Reqs/R-R-1", "rung": "L5", "byIncludes": ["status", "ApiError"] }]
+    }
+  }
+}

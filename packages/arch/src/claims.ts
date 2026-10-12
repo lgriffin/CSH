@@ -8,7 +8,7 @@ import { type Claim, compareCodePoints, matchesGlobs, type Prop } from "@csh/ker
 export interface ClaimFacts {
   /** Every module read, by path. */
   modules: Set<string>;
-  declares: { module: string; symbol: string; declares: string; base?: string; value?: string; at: string }[];
+  declares: { module: string; symbol: string; declares: string; base?: string; value?: string; members?: string[]; total?: string[]; at: string }[];
   exports: { module: string; symbol: string; at: string }[];
   fields: { file: string; path: string; value: string; at: string }[];
   /** The files the repository tracks; undefined when not known. */
@@ -181,9 +181,45 @@ export function truthOf(p: Prop, f: ClaimFacts): Truth {
       if ("reason" in b) return b;
       return { value: a.value === b.value, detail: `${a.at}: ${p.a.name} is ${JSON.stringify(a.value)}; ${b.at}: ${p.b.name} is ${JSON.stringify(b.value)}`, evidence: [{ at: a.at }, { at: b.at }] };
     }
+    case "total":
+      return totalOf(p, f);
     case "atom":
       return { reason: `no fact decides ${p.name}` };
   }
+}
+
+/** What checks a mapping is complete, by the language of the module that holds it (The Assertion Ladder, stage 49). */
+const COMPILERS: Record<string, string> = { javascript: "tsc", java: "javac", rust: "rustc" };
+/** Languages whose compiler checks no mapping for completeness, with why: the claim is unknown, never refuted. */
+const NO_PREVENTION: Record<string, string> = { python: "no-compiler: python checks no mapping for completeness when it runs", go: "no-closed-types: go has no closed type to map completely" };
+
+/**
+ * total(module, symbol, over): the declaration maps every member of the closed type `over` in a construct the compiler
+ * checks. Unknown when the module was not read, when its language has no such compiler, or when no closed type `over`
+ * was read; refuted when the module was read and the declaration is absent, or maps no such type, or `over` is
+ * declared and is not closed.
+ */
+function totalOf(p: Extract<Prop, { k: "total" }>, f: ClaimFacts): Truth {
+  if (!f.modules.has(p.module)) return { reason: `not-read: ${p.module}` };
+  const language = f.languages?.get(p.module) ?? "javascript";
+  const none = NO_PREVENTION[language];
+  if (none !== undefined) return { reason: none };
+  const compiler = COMPILERS[language] ?? language;
+  const d = f.declares.filter((x) => x.module === p.module && x.symbol === p.symbol);
+  if (d.length === 0) return { value: false, detail: `${p.module} declares no ${p.symbol}` };
+  // A closed type is matched by name; one declared twice could be either, so both must be closed for it to count.
+  const types = f.declares.filter((x) => x.symbol === p.over && (f.languages?.get(x.module) ?? "javascript") === language);
+  const closed = types.filter((x) => x.members !== undefined);
+  const mapping = d.find((x) => (x.total ?? []).includes(p.over));
+  // With no declaration of `over` read, nothing says what a complete mapping would cover, so neither way is decided.
+  if (types.length === 0) return { reason: `not-read: no declaration of ${p.over} was read` };
+  if (closed.length < types.length) {
+    const open = types.find((x) => x.members === undefined)!;
+    return { value: false, detail: `${open.at}: ${p.over} is not a closed type, so no mapping over it is complete` };
+  }
+  if (mapping === undefined) return { value: false, detail: `${d[0]!.at}: ${p.symbol} maps no closed type ${p.over} completely in a form ${compiler} checks`, evidence: [{ at: d[0]!.at }] };
+  const t = closed[0]!;
+  return { value: true, detail: `${mapping.at}: ${p.symbol} maps every member of ${p.over} (${t.at}: ${t.members!.join(", ")}), and ${compiler} rejects a member left unmapped`, evidence: [{ at: mapping.at }, { at: t.at }] };
 }
 
 /** A claim against the facts: it holds when the proposition's truth is what the claim says. */
@@ -225,6 +261,8 @@ export function describeProp(p: Prop): string {
       return `the script ${p.name} exists`;
     case "same":
       return `${p.a.module} ${p.a.name} equals ${p.b.module} ${p.b.name}`;
+    case "total":
+      return `${p.module} ${p.symbol} maps every member of ${p.over}`;
     case "atom":
       return p.name;
   }

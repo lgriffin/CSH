@@ -11,6 +11,10 @@ C4Component
     Component(store, "Run store", "run/src/run.ts", "csh-run/v1 under .csh-cache/runs/<snapshot digest>/ with report.json, gate.json and model.json")
     Component(status, "Status", "run/src/status.ts", "csh status: root of trust, maintainers, authority counts, mode, stored decision against the current snapshot; reads only")
     Component(at, "Past-commit runner", "run/src/run.ts (runAt)", "Throwaway worktree; refuses when dependency files differ")
+    Component(propose, "Proposal", "run/src/propose.ts", "csh init --subject: practices, sources, identifier families and instruction files guessed from tracked files, each with what it was read from")
+    Component(coverage, "Coverage", "run/src/coverage.ts", "Per source, the files it reads; the tracked files no source reads")
+    Component(subjects, "Subjects and results", "run/src/project.ts, results.ts, safety.ts", "Fetch a subject at its pin; import a runner's report; warn of private or local-path subjects")
+    Component(queue, "Queue", "run/src/queue.ts", "csh queue: candidates awaiting the owner, by what approving unlocks")
     Component(history, "History source", "run/src/history.ts", "Blame, log -L, rev-list and trailers in the checkout sources are read from; hashes, dates and counts only")
   }
   Container_Ext(component, "Component", "component", "Manifest")
@@ -32,3 +36,6 @@ C4Component
   Rel(at, store, "Stores under the project")
   Rel(status, project, "Ledger, snapshot")
   Rel(status, sources, "Items, for cited text")
+  Rel(subjects, vcs, "Clone at the pinned commit")
+  Rel(coverage, sources, "Files each source reads")
+  Rel(queue, project, "Ledger, candidates")

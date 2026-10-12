@@ -21,6 +21,11 @@ export interface TraceInput {
 export interface TraceResult {
   gaps: Gap[];
   edges: NonNullable<Report["edges"]>;
+  /**
+   * For each item, the mechanisms an edge says check it (The Assertion Ladder, stage 48): a test file or a scenario that
+   * cites it, a scenario that sits under it, and what its "Verified by" names when that resolves.
+   */
+  checks: Map<string, string[]>;
 }
 
 const VERIFYING = new Set(["requirement"]);
@@ -107,6 +112,11 @@ export function trace(input: TraceInput): TraceResult {
   const testCited = new Set<string>();
   // The decisions a feature or rule names (stage 42): shown on its gap as cited, never counted as verifying it.
   const decided = new Map<string, string[]>();
+  const checks = new Map<string, string[]>();
+  const check = (item: string, how: string) => {
+    const seen = checks.get(item) ?? [];
+    if (!seen.includes(how)) checks.set(item, [...seen, how]);
+  };
   const stale = new Map<string, Map<string, string>>();
   const h = input.history;
   for (const e of edges) {
@@ -125,7 +135,17 @@ export function trace(input: TraceInput): TraceResult {
     if (e.rel === "decided-by") decided.set(from, [...(decided.get(from) ?? []), e.to.replace(/^file:/, "")]);
     // A mechanism that resolves supports a stated status: a verified-by edge to a file or an item, or the script a
     // verified-by `npm run x` names, read as a mentions-script edge on the same line.
-    if (e.rel === "verified-by" && typeof r === "string") supported.add(from);
+    if (e.rel === "verified-by" && typeof r === "string") {
+      supported.add(from);
+      check(from, `verified by ${r === "file" ? e.to.replace(/^(file|symbol|script):/, "") : r}`);
+    }
+    // What checks an item, for its rung: a citation or a scenario under it, from a test file or a scenario (stage 48).
+    // A Gherkin rule or feature that cites an item states it again; only its scenarios check anything.
+    if ((e.rel === "cites" || e.rel === "exemplifies") && typeof r === "string" && r !== "file") {
+      const kind = byQualified.get(from)?.kind;
+      if (kind === "test-file") check(r, `test file ${e.from}`);
+      else if (kind === "scenario") check(r, `scenario ${from}`);
+    }
     // The command and the script are matched by name, so another script on the same line supports nothing.
     const command = e.rel === "verified-by" && r === null ? /^text:npm run ([\w:.\-]+)(?=$|\s)/.exec(e.to) : null;
     if (command !== null) unresolvedAt.add(`${from}\u0000${e.span}\u0000${command[1]}`);
@@ -159,7 +179,11 @@ export function trace(input: TraceInput): TraceResult {
   for (const [subject, refs] of dangling) {
     gaps.push({ kind: "dangling-reference", subject, fragments: [], detail: `names what does not exist: ${refs.join("; ")}` });
   }
-  for (const k of unresolvedAt) if (scriptsAt.has(k)) supported.add(k.slice(0, k.indexOf("\u0000")));
+  for (const k of unresolvedAt) if (scriptsAt.has(k)) {
+    const item = k.slice(0, k.indexOf("\u0000"));
+    supported.add(item);
+    check(item, `verified by npm run ${k.slice(k.lastIndexOf("\u0000") + 1)}`);
+  }
   for (const [subject, refs] of stale) {
     gaps.push({ kind: "stale-prose", subject, fragments: [], detail: [...refs.keys()].sort(compareCodePoints).map((k) => refs.get(k)!).join("; ") });
   }
@@ -188,5 +212,5 @@ export function trace(input: TraceInput): TraceResult {
     }
   }
   gaps.push(...stepGaps(input.prepared));
-  return { gaps, edges: out };
+  return { gaps, edges: out, checks };
 }

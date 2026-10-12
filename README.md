@@ -14,7 +14,7 @@ unknown.
 | You want to | Go to |
 | --- | --- |
 | See what it does | [See it](#see-it): the lockout A3, then the walkthrough that makes it |
-| Run it on your own code | [Use it](#use-it): the starter, then the ladder |
+| Run it on your own code | [Use it](#use-it): the starter, then the adoption steps |
 | Know how it is built, and why | [Understand it](#understand-it): context, containers, a package, a decision |
 | Find the gaps in a codebase you already have | [Analyse it](#analyse-it): converged, gaps and indeterminate, on ESI.ts |
 
@@ -80,12 +80,12 @@ npx csh run
 
 Then replace the function with yours, as [the starter's README](examples/starter/README.md) says.
 
-### The ladder
+### Adoption steps
 
-Each rung is one thing you add and one result you get back. No rung requires the next, so you can stop where the
-value stops.
+Each step is one thing you add and one result you get back. No step requires the next, so you can stop where the
+value stops. (These were once called a ladder; that word now means [the Assertion Ladder](#the-assertion-ladder).)
 
-| Rung | You add | You get back |
+| Step | You add | You get back |
 | --- | --- | --- |
 | 1 Inventory | `csh init`: a manifest naming your practices and where their files are | Every requirement sentence as an identified item, each listed as uncited; your tests counted as unobserved |
 | 2 Vocabulary and a probe | The state and one event in CSL; [a probe](docs/guides/probe.md) around one function; bindings | Your passing tests as examples in one vocabulary, each with no rule behind it |
@@ -102,7 +102,8 @@ Read these in order:
 1. [The context diagram](docs/architecture/context.mmd): who uses the harness and what it touches.
 2. [The container diagram](docs/architecture/containers.mmd): the eleven runtime containers and every package by name, with [a component diagram for each](docs/architecture/README.md).
 3. A package README, such as [run](packages/run/README.md), [check](packages/check/README.md) or [a3](packages/a3/README.md): purpose, interface, invariants, tests and limits, in the same eight sections for every package.
-4. The decision records in [docs/adr](docs/adr), such as [ADR-15](docs/adr/ADR-15-ledger-of-signed-commits.md) on authority.
+4. [The deck](docs/deck/csh.md): twenty-two Marp slides on what CSH is, how it works, how it is designed and what it reports.
+5. The decision records in [docs/adr](docs/adr), such as [ADR-15](docs/adr/ADR-15-ledger-of-signed-commits.md) on authority.
 
 The design is in [docs/spec](docs/spec), a read-only export of the specification: start with
 [the main tab](docs/spec/00-main.md), and read [09](docs/spec/09-anchor-harness-a3.md) for components, harnesses
@@ -138,6 +139,34 @@ Four smaller profiles read one public codebase per language at a pinned commit: 
 
 The A3 and the Lean foundations serve this outcome: the A3 reads the gaps as one problem with candidate causes and
 countermeasures, and the solver decides which rules hold. Nothing a run finds is approved until a person approves it.
+
+## The Assertion Ladder
+
+[The Assertion Ladder](https://github.com/lgriffin/AI-Reference-Projects/tree/master/paper) grades how strongly a
+repository asserts each rule, from L0 Implied to L5 Prevented. CSH reports it as a second axis beside the outcome
+([15](docs/spec/15-assertion-ladder.md)): every told rule (a requirement, a Gherkin rule, an EARS sentence) gets the
+highest rung its evidence establishes, and the outcome stays converged, gap or indeterminate.
+
+| Rung | The rule is | CSH sees it when |
+| --- | --- | --- |
+| L2 Told | stated in prose | a source states it, and nothing checks it (also a gap: `unverified` or `uncited`) |
+| L3 Checked | enforced by a check | a test or scenario cites it or sits under it, or what its "Verified by" names resolves |
+| L4 Explained | enforced by a check that names the rule, the offender and the fix | an approved obligation of the specification cites it |
+| L5 Prevented | impossible to write wrongly | a holding `total` claim cites it: a mapping the compiler checks is complete |
+
+A rung counts only what stops a wrong change in the repository itself, so a subject profile's rules, which are CSH's
+reading, never raise one. `total` is read in TypeScript (`Record<K, V>`), Java (a `switch` with no `default` over an
+enum or sealed type) and Rust (a `match` with no catch-all); in Python and Go it is unknown, since no compiler checks it.
+`csh ladder` lists every told rule, weakest first, with why it sits there:
+
+```sh
+node packages/cli/bin/csh.js ladder --run csh/a3/three-practices/stages/approved --root .csh-cache/walkthrough/lockout
+```
+
+The paper's own receivers are three profiles with known answers: [taskboard-typescript](subjects/taskboard-typescript),
+[taskboard-java](subjects/taskboard-java) and [taskboard-python](subjects/taskboard-python). Every requirement is L3,
+and R-ERR-1 is L5 in TypeScript and Java and L3 in Python, where the paper's compiler-caught mistake V6 needs an
+architecture rule instead. [docs/guides/ladder.md](docs/guides/ladder.md) says how to climb.
 
 ## The two findings
 
@@ -184,6 +213,8 @@ csh overview [--run <dir|commit>] [--signal <id>] [--out <file>] [--json]
                                             would close it), indeterminate (with what would decide it) or converged;
                                             write reports/csh-overview.html, which opens on any #<id>.
 csh coverage                                What each source reads, and the tracked files no source reads, by extension
+csh ladder [--run <dir|commit>] [--json]   Every told rule on the Assertion Ladder, weakest first: its rung, the
+                                            mechanisms that establish it, and the outcomes it landed in. Reads only.
 csh explain <finding-id> [--run <dir|commit>]
                                             Print one finding, members rendered through the printer; with
                                             --run, from a stored run (csh run --at writes no reports/ files).
@@ -296,11 +327,12 @@ Its security model is read as a structured trace, its test results are committed
 
 ## Status of the build
 
-Stages 1 to 20 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 103 golden
-fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F125, F130 to F132, F140 to F142), as do
+Stages 1 to 20 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 109 golden
+fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F125, F130 to F132, F140 to F142, F150 to F155), as do
 the unit, property and fault-injection tests; F118 to F125 cover [polyglot code](docs/spec/12-polyglot-code.md),
-stages 29 to 35, F130 to F132 [what real runs asked for](docs/spec/13-from-real-runs.md), stages 38 to 44, and F140
-to F142 [what the Java and Python runs asked for](docs/spec/14-from-the-java-and-python-runs.md), stage 45. The composition fixtures
+stages 29 to 35, F130 to F132 [what real runs asked for](docs/spec/13-from-real-runs.md), stages 38 to 44, F140
+to F142 [what the Java and Python runs asked for](docs/spec/14-from-the-java-and-python-runs.md), stage 45, and F150 to F155
+[the Assertion Ladder](docs/spec/15-assertion-ladder.md), stages 47 to 52. The composition fixtures
 F70 to F78 were written by the implementer and accepted by the owner. [docs/stages](docs/stages) records what each
 stage built and what its fixtures revealed.
 

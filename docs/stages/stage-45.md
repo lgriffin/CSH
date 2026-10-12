@@ -38,4 +38,4 @@ and that no `run` fixture can check the overview, which a unit test in `packages
 - A-170 to A-172 are decided by the owner ([Q-40 and Q-41](../../QUESTIONS.md)).
 - Go and Rust: a Go import path and a Rust crate are not dotted names, so neither rule applies to them; Go has no
   nested types, and Rust's nested items are modules, already declared.
-- The `csh init --subject` and `csh subject fetch` findings from the same run are fixed in stage 46.
+- The `csh init --subject` and `csh subject fetch` findings from the same run are fixed in stage 47.

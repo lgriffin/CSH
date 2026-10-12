@@ -4,6 +4,7 @@
 // Every signal of the report is an entry, so a sheet built from the overview opens on any signal; a kind no rule
 // places is indeterminate, never dropped. The overview reads the report and decides nothing new.
 import { compareCodePoints, digestJson } from "@csh/kernel";
+import { ladderCounts, ladderLine, type Rung, RUNGS, RUNG_NAMES } from "./ladder.ts";
 import { type PracticeMap, signalsOf } from "./signals.ts";
 import type { Report } from "./types.ts";
 
@@ -22,11 +23,17 @@ export interface OverviewEntry {
   signal?: string;
   /** The entry's anchor in a sheet: the signal id, or a digest of its kind and subject. */
   anchor: string;
+  /** When the subject is a told rule, its rung on the Assertion Ladder (stage 48): a second axis, never an outcome. */
+  rung?: Rung;
 }
 
 export interface Overview {
   schema: "csh-overview/v1";
   counts: Record<Outcome, number>;
+  /** How many told rules sit at each rung of the Assertion Ladder (stage 48); absent when the run read none. */
+  ladder?: Record<Rung, number>;
+  /** Each told rule's rung, weakest first. */
+  rungs?: { item: string; rung: Rung }[];
   entries: OverviewEntry[];
 }
 
@@ -175,7 +182,15 @@ export function overviewOf(report: Report, manifest?: PracticeMap): Overview {
   entries.sort((a, b) => order.indexOf(a.outcome) - order.indexOf(b.outcome) || compareCodePoints(a.practice, b.practice) || compareCodePoints(a.kind, b.kind) || compareCodePoints(a.subject, b.subject));
   const counts = { converged: 0, gap: 0, indeterminate: 0 };
   for (const e of entries) counts[e.outcome]++;
-  return { schema: "csh-overview/v1", counts, entries };
+  const rungs = report.rungs ?? [];
+  if (rungs.length === 0) return { schema: "csh-overview/v1", counts, entries };
+  const rungOf = new Map(rungs.map((r) => [r.item, r.rung]));
+  for (const e of entries) {
+    const r = rungOf.get(e.subject);
+    if (r !== undefined) e.rung = r;
+  }
+  const ordered = [...rungs].sort((a, b) => RUNGS.indexOf(a.rung) - RUNGS.indexOf(b.rung) || compareCodePoints(a.item, b.item)).map((r) => ({ item: r.item, rung: r.rung }));
+  return { schema: "csh-overview/v1", counts, ladder: ladderCounts(rungs), rungs: ordered, entries };
 }
 
 const TITLES: Record<Outcome, string> = { gap: "Gaps: suggestions to address", indeterminate: "Indeterminate: what could not be decided", converged: "Converged: what the evidence bears out" };
@@ -195,7 +210,7 @@ function groups(entries: OverviewEntry[]): { practice: string; kinds: { kind: st
 
 /** The overview as text: counts by outcome, then by practice and kind, each kind with what would move it. */
 export function renderOverview(o: Overview): string {
-  const out = [`CSH overview: ${o.counts.gap} gaps, ${o.counts.indeterminate} indeterminate, ${o.counts.converged} converged`, ""];
+  const out = [`CSH overview: ${o.counts.gap} gaps, ${o.counts.indeterminate} indeterminate, ${o.counts.converged} converged`, ...(o.ladder !== undefined ? [ladderLine(o.ladder)] : []), ""];
   for (const outcome of ["gap", "indeterminate", "converged"] as Outcome[]) {
     const es = o.entries.filter((e) => e.outcome === outcome);
     if (es.length === 0) continue;
@@ -212,7 +227,7 @@ export function renderOverview(o: Overview): string {
 
 /** One entry as text, its detail one part per line. */
 export function renderEntry(e: OverviewEntry): string {
-  const lines = [`${e.outcome} ${e.kind}  ${e.subject}`, `  practice ${e.practice}${e.signal !== undefined ? `; signal ${e.signal}` : ""}`];
+  const lines = [`${e.outcome} ${e.kind}  ${e.subject}`, `  practice ${e.practice}${e.signal !== undefined ? `; signal ${e.signal}` : ""}${e.rung !== undefined ? `; rung ${e.rung} ${RUNG_NAMES[e.rung]}` : ""}`];
   for (const part of (e.detail ?? "").split(/;\s+/).filter((x) => x !== "")) lines.push(`  - ${part}`);
   lines.push(`  next: ${e.next}`, "");
   return lines.join("\n");
@@ -226,7 +241,8 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
  */
 export function renderOverviewHtml(o: Overview, title: string): string {
   const body: string[] = [];
-  body.push(`<header><h1>${esc(title)}</h1><div class="tiles">${(["gap", "indeterminate", "converged"] as Outcome[]).map((x) => `<a class="tile ${x}" href="#${x}"><b>${o.counts[x]}</b><span>${x === "gap" ? "gaps" : x}</span></a>`).join("")}</div></header>`);
+  const ladder = o.ladder !== undefined ? `<div class="ladder" aria-label="Assertion Ladder">${RUNGS.map((r) => `<span class="rung ${r}"><b>${o.ladder![r]}</b> ${r} ${RUNG_NAMES[r]}</span>`).join("")}</div>` : "";
+  body.push(`<header><h1>${esc(title)}</h1><div class="tiles">${(["gap", "indeterminate", "converged"] as Outcome[]).map((x) => `<a class="tile ${x}" href="#${x}"><b>${o.counts[x]}</b><span>${x === "gap" ? "gaps" : x}</span></a>`).join("")}</div>${ladder}</header>`);
   for (const outcome of ["gap", "indeterminate", "converged"] as Outcome[]) {
     const es = o.entries.filter((e) => e.outcome === outcome);
     body.push(`<details class="outcome ${outcome}" id="${outcome}"${outcome === "gap" ? " open" : ""}><summary><h2>${esc(TITLES[outcome])} <small>${es.length}</small></h2></summary>`);
@@ -237,7 +253,7 @@ export function renderOverviewHtml(o: Overview, title: string): string {
         body.push(`<details class="kind"><summary><code>${esc(k.kind)}</code> <small>${k.entries.length}</small> <span class="next">${esc(k.next)}</span></summary><ul>`);
         for (const e of k.entries) {
           const parts = (e.detail ?? "").split(/;\s+/).filter((x) => x !== "");
-          body.push(`<li id="${esc(e.anchor)}"><div class="subject">${esc(e.subject)}${e.signal !== undefined ? ` <a class="sig" href="#${esc(e.anchor)}">${esc(e.signal)}</a>` : ""}</div>${parts.length > 0 ? `<ul class="detail">${parts.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}</li>`);
+          body.push(`<li id="${esc(e.anchor)}"><div class="subject">${esc(e.subject)}${e.rung !== undefined ? ` <span class="rung ${e.rung}">${e.rung}</span>` : ""}${e.signal !== undefined ? ` <a class="sig" href="#${esc(e.anchor)}">${esc(e.signal)}</a>` : ""}</div>${parts.length > 0 ? `<ul class="detail">${parts.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}</li>`);
         }
         body.push(`</ul></details>`);
       }
@@ -260,6 +276,7 @@ details details{margin-left:1rem}.tiles{display:flex;gap:.75rem;flex-wrap:wrap}
 .next{color:var(--muted)}ul{margin:.25rem 0 .75rem;padding-left:1.25rem}li{margin:.2rem 0;overflow-wrap:anywhere}
 .subject{font-family:ui-monospace,monospace;font-size:.9em}.sig{color:var(--muted);font-size:.85em}.detail{color:var(--muted);font-size:.9em}
 li:target{background:var(--hl);border-radius:4px}
+.ladder{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem;color:var(--muted)}.rung{border:1px solid var(--line);border-radius:4px;padding:0 .35rem;font-size:.85em}.ladder .rung b{color:var(--fg)}
 </style></head><body>
 ${body.join("\n")}
 <script>

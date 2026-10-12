@@ -10,6 +10,7 @@ import { gapView } from "./gaps.ts";
 import { prepare, type Prepared, type SourceRun } from "./pool.ts";
 import { buildPool, runQueries, sortFindings } from "./run.ts";
 import { testOutcomes } from "./results.ts";
+import { rungsOf } from "./ladder.ts";
 import { trace } from "./trace.ts";
 import { ALL_CANDIDATE, type AuthorityInfo, type AuthorityResolver, type ComponentInfo, type Gap, type HistoryPort, type Report, TOOL_VERSION } from "./types.ts";
 
@@ -113,6 +114,8 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
     }),
   };
   if (traced.edges.length > 0) report.edges = traced.edges;
+  const rungs = rungsOf({ items: report.items, checks: traced.checks, fragments: prepared.fragments, assessments, examples: report.examples ?? [] });
+  if (rungs.length > 0) report.rungs = rungs;
   if (tested.outcomes.length > 0) report.outcomes = tested.outcomes;
   if (tested.verifiedBy.length > 0) report.verifiedBy = tested.verifiedBy;
   if (opts.snapshot !== undefined) report.snapshot = opts.snapshot;

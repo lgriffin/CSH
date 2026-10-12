@@ -108,6 +108,15 @@ export function same(a: { module: string; name: string }, b: { module: string; n
   return { k: "same", a, b };
 }
 
+/**
+ * The declaration maps every member of the closed type `over` in a construct the language's compiler checks, so a new
+ * member does not compile until it is mapped (The Assertion Ladder, stage 49): a `Record<Over, V>` constant in
+ * TypeScript, a `switch` with no `default` in Java, a `match` with no catch-all arm in Rust.
+ */
+export function total(module: string, symbol: string, over: string): Prop {
+  return { k: "total", module, symbol, over };
+}
+
 /** A named proposition no fact decides; two sources can still contradict each other about it. */
 export function atom(name: string): Prop {
   return { k: "atom", name };

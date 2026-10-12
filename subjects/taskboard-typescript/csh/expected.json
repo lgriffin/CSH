@@ -1,0 +1,105 @@
+{
+  "schema": "csh-expected/v1",
+  "rungs": {
+    "Requirements/R-FLOW-1": "L3",
+    "Requirements/R-FLOW-2": "L3",
+    "Requirements/R-MOVE-1": "L3",
+    "Requirements/R-WIP-1": "L3",
+    "Requirements/R-DONE-1": "L3",
+    "Requirements/R-DONE-2": "L3",
+    "Requirements/R-FIND-1": "L3",
+    "Requirements/R-LIST-1": "L3",
+    "Requirements/R-VAL-1": "L3",
+    "Requirements/R-ERR-1": "L5"
+  },
+  "rows": [
+    {
+      "row": 1,
+      "title": "An unmapped domain error does not compile, so R-ERR-1 is prevented (the paper, V6 caught by the compiler)",
+      "expect": [
+        {
+          "outcome": "converged",
+          "kind": "satisfied",
+          "subject": "TaskboardTypescript/Prevented/ErrorStatusIsTotal"
+        }
+      ]
+    },
+    {
+      "row": 2,
+      "title": "The domain imports no other layer (AGENTS.md, Where things go)",
+      "expect": [
+        {
+          "outcome": "converged",
+          "kind": "satisfied",
+          "subject": "TaskboardTypescript/Layering/DomainImportsNoOtherLayer"
+        }
+      ]
+    },
+    {
+      "row": 3,
+      "title": "Repositories import only the domain",
+      "expect": [
+        {
+          "outcome": "converged",
+          "kind": "satisfied",
+          "subject": "TaskboardTypescript/Layering/RepositoriesImportOnlyTheDomain"
+        }
+      ]
+    },
+    {
+      "row": 4,
+      "title": "Services import the domain, repositories and events only",
+      "expect": [
+        {
+          "outcome": "converged",
+          "kind": "satisfied",
+          "subject": "TaskboardTypescript/Layering/ServicesImportNoApiOrConfig"
+        }
+      ]
+    },
+    {
+      "row": 5,
+      "title": "Events import only the domain",
+      "expect": [
+        {
+          "outcome": "converged",
+          "kind": "satisfied",
+          "subject": "TaskboardTypescript/Layering/EventsImportOnlyTheDomain"
+        }
+      ]
+    },
+    {
+      "row": 6,
+      "title": "The API imports the domain and services only",
+      "expect": [
+        {
+          "outcome": "converged",
+          "kind": "satisfied",
+          "subject": "TaskboardTypescript/Layering/ApiImportsOnlyDomainAndServices"
+        }
+      ]
+    },
+    {
+      "row": 7,
+      "title": "The settings import no layer",
+      "expect": [
+        {
+          "outcome": "converged",
+          "kind": "satisfied",
+          "subject": "TaskboardTypescript/Layering/ConfigImportsNoLayer"
+        }
+      ]
+    },
+    {
+      "row": 8,
+      "title": "The domain is free of frameworks: no Fastify, no Zod",
+      "expect": [
+        {
+          "outcome": "converged",
+          "kind": "satisfied",
+          "subject": "TaskboardTypescript/Layering/DomainUsesNoFramework"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "fixture": "F150",
+  "section": "The Assertion Ladder, section 3",
+  "stage": 48,
+  "expect": {
+    "run": {
+      "authority": { "approve": ["Ladder/Layering/DomainImportsNoApi", "Ladder/Layering/DomainImportsNoTests"] },
+      "assessments": [
+        { "fragment": "Ladder/Layering/DomainImportsNoApi", "verdict": "satisfied" },
+        { "fragment": "Ladder/Layering/DomainImportsNoTests", "verdict": "satisfied" },
+        { "fragment": "Ladder/Layering/ApiImportsNoTests", "verdict": "satisfied" }
+      ],
+      "rungs": [
+        { "item": "Reqs/R-A-1", "rung": "L2" },
+        { "item": "Reqs/R-A-2", "rung": "L3", "byIncludes": ["tests/a.test.ts"] },
+        { "item": "Reqs/R-A-3", "rung": "L3", "byIncludes": ["tests/b.test.ts"] },
+        { "item": "Reqs/R-A-4", "rung": "L4", "byIncludes": ["DomainImportsNoApi"] },
+        { "item": "Reqs/R-A-5", "rung": "L2" },
+        { "item": "Reqs/R-A-6", "rung": "L4", "byIncludes": ["DomainImportsNoTests", "tests/a.test.ts"] },
+        { "item": "Ears/EARS-1", "rung": "L4", "byIncludes": ["DomainImportsNoApi"] },
+        { "item": "Ears/EARS-2", "rung": "L2" }
+      ],
+      "ladder": { "L2": 3, "L3": 2, "L4": 3, "L5": 0 },
+      "gaps": [
+        { "kind": "unverified", "subject": "Reqs/R-A-1" },
+        { "kind": "unverified", "subject": "Reqs/R-A-5" },
+        { "kind": "uncited", "subject": "Ears/EARS-2" }
+      ],
+      "gapsAbsent": [
+        { "kind": "unverified", "subject": "Reqs/R-A-2" },
+        { "kind": "unverified", "subject": "Reqs/R-A-3" }
+      ]
+    }
+  }
+}

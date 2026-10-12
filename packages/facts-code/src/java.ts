@@ -40,6 +40,13 @@ export interface JavaDeclaration {
   value?: string;
   /** For a type: whether it is declared `public`. */
   public?: boolean;
+  /** For an enum or a sealed type, its members by simple name, in source order (stage 49). */
+  members?: string[];
+  /**
+   * For a top-level type, each `switch` in it that Java checks for completeness (stage 49): its case labels, and the
+   * simple name of its selector's declared type when the selector is a parameter, local or field declared with one.
+   */
+  switches?: { labels: string[]; selector?: string }[];
   /** For a type declared in another type's body: it is declared, never exported. */
   nested?: boolean;
 }
@@ -140,6 +147,89 @@ function constantsOf(type: Node, name: string): JavaDeclaration[] {
   return out;
 }
 
+/**
+ * The members of a closed type (stage 49): an enum's constants; a sealed type's `permits` list, else the types nested in
+ * it that extend or implement it. Undefined for any other type.
+ */
+function closedMembersOf(n: Node, declares: string, name: string): string[] | undefined {
+  const body = n.childForFieldName("body");
+  if (declares === "enum") return (body?.namedChildren ?? []).filter((c) => c.type === "enum_constant").flatMap((c) => c.childForFieldName("name")?.text ?? []);
+  if (!modifiersOf(n).has("sealed")) return undefined;
+  const permits = n.namedChildren.find((c) => c.type === "permits")?.namedChildren.find((c) => c.type === "type_list");
+  if (permits !== undefined) return permits.namedChildren.map((t) => stripType(t.text).split(".").pop()!);
+  const names = (c: Node | null | undefined) => (c?.namedChildren ?? []).flatMap((t) => (t.type === "type_list" ? t.namedChildren : [t])).map((t) => stripType(t.text).split(".").pop()!);
+  return (body?.namedChildren ?? []).filter((c) => Object.hasOwn(TYPES, c.type)).flatMap((c) => {
+    const supers = [...names(c.childForFieldName("superclass")), ...names(c.childForFieldName("interfaces")), ...names(c.namedChildren.find((x) => x.type === "extends_interfaces"))];
+    const id = c.childForFieldName("name");
+    return id !== null && supers.includes(name) ? [id.text] : [];
+  });
+}
+
+/** Where a `switch` is a statement: Java checks such a switch for completeness only when its labels are patterns. */
+const STATEMENT = new Set(["block", "constructor_body", "switch_block_statement_group", "labeled_statement", "if_statement", "while_statement", "for_statement", "enhanced_for_statement", "do_statement", "expression_statement", "program"]);
+
+/**
+ * The labels of each `switch` in a type that Java checks for completeness (stage 49): one used as an expression, or one
+ * with a pattern label. A switch with a `default` label is never complete over a type, since a new member falls into it.
+ */
+function switchesIn(n: Node): { labels: string[]; selector?: string }[] {
+  const out: { labels: string[]; selector?: string }[] = [];
+  for (const s of n.descendantsOfType("switch_expression")) {
+    // Its own labels, not those of a switch nested in it: each sits in a rule or group of this switch's block.
+    const body = s.childForFieldName("body");
+    const labels = s.descendantsOfType("switch_label").filter((l) => body !== null && l.parent?.parent?.id === body.id);
+    if (labels.some((l) => l.children.some((c) => c.type === "default"))) continue;
+    const patterns = labels.some((l) => l.namedChildren.some((c) => c.type === "pattern" || c.type === "type_pattern" || c.type === "record_pattern"));
+    if (!patterns && STATEMENT.has(s.parent?.type ?? "program")) continue;
+    const names = labels.flatMap((l) =>
+      l.namedChildren.flatMap((c) => {
+        const t = c.type === "pattern" ? c.namedChildren[0] : c;
+        if (t === undefined) return [];
+        if (t.type === "type_pattern" || t.type === "record_pattern") {
+          const ty = t.namedChildren.find((x) => x.type !== "identifier" && x.type !== "modifiers");
+          return ty !== undefined ? [stripType(ty.text).split(".").pop()!] : [];
+        }
+        if (t.type === "identifier") return [t.text];
+        if (t.type === "field_access") return [t.childForFieldName("field")?.text ?? t.text];
+        return [];
+      }),
+    );
+    if (names.length === 0) continue;
+    const selector = selectorType(s);
+    out.push({ labels: names, ...(selector !== undefined ? { selector } : {}) });
+  }
+  return out;
+}
+
+/**
+ * The declared type of a switch's selector, by simple name, when the selector is a name declared with a type: a
+ * parameter or local of an enclosing method, constructor or lambda, else a field of an enclosing type. `var`, and
+ * any other expression, says nothing.
+ */
+function selectorType(s: Node): string | undefined {
+  const cond = s.childForFieldName("condition");
+  const e = cond?.type === "parenthesized_expression" ? cond.namedChildren[0] : cond;
+  if (e === null || e === undefined || e.type !== "identifier") return undefined;
+  const name = e.text;
+  const typeOf = (t: Node | null): string | undefined => (t === null || t.text === "var" ? undefined : stripType(t.text).split(".").pop()!);
+  for (let a = s.parent; a !== null; a = a.parent) {
+    if (a.type === "method_declaration" || a.type === "constructor_declaration" || a.type === "lambda_expression") {
+      for (const p of a.descendantsOfType(["formal_parameter", "local_variable_declaration"])) {
+        if (p === null) continue;
+        const id = p.type === "formal_parameter" ? p.childForFieldName("name") : p.childForFieldName("declarator")?.childForFieldName("name");
+        if (id?.text === name) return typeOf(p.childForFieldName("type"));
+      }
+    }
+    if (a.type === "class_body" || a.type === "enum_body" || a.type === "interface_body" || a.type === "record_declaration") {
+      for (const fd of a.namedChildren) {
+        if (fd === null || fd.type !== "field_declaration") continue;
+        if (fd.childForFieldName("declarator")?.childForFieldName("name")?.text === name) return typeOf(fd.childForFieldName("type"));
+      }
+    }
+  }
+  return undefined;
+}
+
 /** Every import and top-level declaration of one Java file, as plain data: the tree is freed once read. */
 export function readJava(text: string): Promise<JavaFile> {
   return parseWith("java", text, readTree);
@@ -175,7 +265,10 @@ function declareType(n: Node, outer: string, out: JavaDeclaration[]): void {
   if (declares === "class") base = n.childForFieldName("superclass")?.namedChildren[0];
   else if (declares === "interface") base = n.namedChildren.find((c) => c.type === "extends_interfaces")?.namedChildren[0]?.namedChildren[0];
   const stripped = base !== null && base !== undefined ? stripType(base.text) : "";
-  out.push({ symbol, declares, line: lineOf(id), ...(stripped !== "" ? { base: stripped } : {}), public: modifiersOf(n).has("public"), ...(outer !== "" ? { nested: true } : {}) });
+  const members = closedMembersOf(n, declares, id.text);
+  // A switch belongs to the top-level type that holds it, nested types' included (stage 49).
+  const switches = outer === "" ? switchesIn(n) : [];
+  out.push({ symbol, declares, line: lineOf(id), ...(stripped !== "" ? { base: stripped } : {}), public: modifiersOf(n).has("public"), ...(outer !== "" ? { nested: true } : {}), ...(members !== undefined ? { members } : {}), ...(switches.length > 0 ? { switches } : {}) });
   out.push(...constantsOf(n, symbol));
   for (const m of membersOf(n)) if (Object.hasOwn(TYPES, m.type)) declareType(m, symbol, out);
 }
@@ -260,6 +353,20 @@ export async function readJavaFiles(input: readonly InputFile[], ctx: FactContex
     }
     return undefined;
   };
+  // The closed types read, by simple name; a switch is complete over the one whose members its labels name exactly
+  // (stage 49). Its selector's declared type, when read, decides which; without one, two closed types with the same
+  // members leave the switch unattributed rather than credit a type it may not switch over.
+  const closed = new Map<string, Set<string>[]>();
+  for (const j of read.values()) for (const d of j.declarations) if (d.members !== undefined) closed.set(d.symbol, [...(closed.get(d.symbol) ?? []), new Set(d.members)]);
+  const totalOf = (d: JavaDeclaration): string[] => {
+    const over = new Set<string>();
+    for (const sw of d.switches ?? []) {
+      const named = new Set(sw.labels);
+      const fits = [...closed].filter(([name, sets]) => (sw.selector === undefined || sw.selector === name) && sets.some((m) => m.size === named.size && [...m].every((x) => named.has(x)))).map(([name]) => name);
+      if (fits.length === 1) over.add(fits[0]!);
+    }
+    return [...over].sort(compareCodePoints);
+  };
   for (const f of files) {
     const j = read.get(f.path);
     if (j === undefined) {
@@ -288,7 +395,10 @@ export async function readJavaFiles(input: readonly InputFile[], ctx: FactContex
       else if (found.files.length > 1) facts.push({ ...base, kind: "skipped", at, from: f.path, reason: `ambiguous ${found.fqn}: declared in ${found.files.join(", ")}` });
       else depend(found.files[0]!);
     }
-    for (const d of j.declarations) facts.push({ ...base, kind: "declare", at: `${f.path}:${d.line}`, module: f.path, symbol: d.symbol, declares: d.declares, ...(d.base !== undefined ? { base: d.base } : {}), ...(d.value !== undefined ? { value: d.value } : {}) });
+    for (const d of j.declarations) {
+      const total = totalOf(d);
+      facts.push({ ...base, kind: "declare", at: `${f.path}:${d.line}`, module: f.path, symbol: d.symbol, declares: d.declares, ...(d.base !== undefined ? { base: d.base } : {}), ...(d.value !== undefined ? { value: d.value } : {}), ...(d.members !== undefined ? { members: d.members } : {}), ...(total.length > 0 ? { total } : {}) });
+    }
     for (const d of j.declarations) if (d.public === true && d.nested !== true) facts.push({ ...base, kind: "export", at: `${f.path}:${d.line}`, module: f.path, symbol: d.symbol, typeOnly: false });
   }
   return { facts, diagnostics };

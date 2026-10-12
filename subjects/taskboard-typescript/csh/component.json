@@ -1,0 +1,97 @@
+{
+  "schema": "csh-component/v2",
+  "name": "TaskboardTypescript",
+  "subject": {
+    "repo": "https://github.com/lgriffin/AI-Reference-Projects",
+    "commit": "ce2767cadf01aa9cd664d718d057cd6431a01489"
+  },
+  "implementation": [
+    "typescript/src"
+  ],
+  "sources": [
+    {
+      "name": "Requirements",
+      "kind": "Documents",
+      "at": "typescript/REQUIREMENTS.md"
+    },
+    {
+      "name": "Instructions",
+      "kind": "Documents",
+      "at": "typescript",
+      "include": [
+        "AGENTS.md",
+        "CLAUDE.md"
+      ]
+    },
+    {
+      "name": "Tests",
+      "kind": "TestFiles",
+      "at": "typescript",
+      "include": [
+        "tests/**/*.test.ts"
+      ]
+    },
+    {
+      "name": "Code",
+      "kind": "Code",
+      "at": ".",
+      "include": [
+        "typescript/src/**/*.ts",
+        "typescript/package.json"
+      ]
+    }
+  ],
+  "practices": [
+    {
+      "id": "requirements",
+      "name": "Requirements",
+      "kind": "requirements",
+      "sources": [
+        "Requirements"
+      ],
+      "adapter": "@csh/adapter-items/markdown",
+      "author": "Maintainer",
+      "unit": "the requirement",
+      "settings": {
+        "idPattern": "R-[A-Z]+-[0-9]+"
+      }
+    },
+    {
+      "id": "instructions",
+      "name": "Instructions",
+      "kind": "instructions",
+      "sources": [
+        "Instructions"
+      ],
+      "author": "Maintainer",
+      "unit": "the instruction file",
+      "settings": {
+        "idPattern": "R-[A-Z]+-[0-9]+"
+      }
+    },
+    {
+      "id": "tests",
+      "name": "Tests",
+      "kind": "tests",
+      "sources": [
+        "Tests"
+      ],
+      "author": "Maintainer",
+      "unit": "the test file",
+      "settings": {
+        "idPattern": "R-[A-Z]+-[0-9]+"
+      }
+    },
+    {
+      "id": "code",
+      "name": "Code facts",
+      "kind": "facts",
+      "sources": [
+        "Code"
+      ],
+      "author": "facts-code",
+      "unit": "the module"
+    }
+  ],
+  "spec": "csh/spec.csl.ts"
+}

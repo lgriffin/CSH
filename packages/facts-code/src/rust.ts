@@ -48,7 +48,9 @@ interface FileData {
   inlineMods: string[][];
   uses: UseLeaf[];
   externs: { name: string; line: number }[];
-  declarations: { symbol: string; declares: RustDeclares; line: number; base?: string; value?: string }[];
+  declarations: { symbol: string; declares: RustDeclares; line: number; base?: string; value?: string; members?: string[] }[];
+  /** Each `match` with no catch-all arm, by the top-level item it sits in: the variants it names and the enums it names them by (stage 49). */
+  matches: { owner: string; variants: string[]; enums: string[]; scrutinee?: string }[];
   exports: { symbol: string; from?: string }[];
   /** Names the file's top level declares, which a 2018 path may start with. */
   topLevel: Set<string>;
@@ -164,7 +166,7 @@ const ITEMS: Record<string, RustDeclares> = {
 
 /** Pass one: everything the reader needs of one file's tree, as plain data. */
 export function readTree(root: Node): FileData {
-  const d: FileData = { mods: [], inlineMods: [], uses: [], externs: [], declarations: [], exports: [], topLevel: new Set(), names: new Set() };
+  const d: FileData = { mods: [], inlineMods: [], uses: [], externs: [], declarations: [], exports: [], topLevel: new Set(), names: new Set(), matches: [] };
   const walk = (n: Node, inline: string[]): void => {
     for (const c of n.namedChildren) {
       if (c === null) continue;
@@ -186,6 +188,11 @@ export function readTree(root: Node): FileData {
         if (name !== "self") d.externs.push({ name, line: lineOf(c) });
         d.names.add(alias !== null ? text(alias) : name);
         continue;
+      }
+      // The matches of an impl block belong to its type, when the file declares that type at its top level (stage 49).
+      if (c.type === "impl_item" && inline.length === 0 && n.type === "source_file") {
+        const owner = text(c.childForFieldName("type")).replace(/<[\s\S]*$/, "");
+        for (const m of matchesIn(c, owner)) d.matches.push({ owner, ...m });
       }
       const declares = ITEMS[c.type];
       if (declares === undefined) {
@@ -209,7 +216,9 @@ export function readTree(root: Node): FileData {
       d.topLevel.add(symbol);
       const base = c.type === "trait_item" ? firstBound(c) : undefined;
       const value = c.type === "const_item" || c.type === "static_item" ? literalValue(c.childForFieldName("value")) : undefined;
-      d.declarations.push({ symbol, declares, line: lineOf(c), ...(base !== undefined ? { base } : {}), ...(value !== undefined ? { value } : {}) });
+      const members = c.type === "enum_item" ? (c.childForFieldName("body")?.namedChildren ?? []).flatMap((v) => (v !== null && v.type === "enum_variant" ? [text(v.childForFieldName("name"))] : [])) : undefined;
+      d.declarations.push({ symbol, declares, line: lineOf(c), ...(base !== undefined ? { base } : {}), ...(value !== undefined ? { value } : {}), ...(members !== undefined ? { members } : {}) });
+      if (c.type === "function_item") for (const m of matchesIn(c)) d.matches.push({ owner: symbol, ...m });
       const exported = c.type === "macro_definition" ? attributesOf(c).some((a) => a.name === "macro_export") : visibility(c) === "pub";
       if (exported) d.exports.push({ symbol });
     }
@@ -226,6 +235,105 @@ export function readTree(root: Node): FileData {
   };
   walk(root, []);
   return d;
+}
+
+/**
+ * The variants a pattern names, with the enum it names each by when the path says so; undefined for a pattern that
+ * catches anything (`_`, or a binding), which makes a match say nothing of completeness (stage 49).
+ */
+function variantsOf(p: Node): { variant: string; via?: string }[] | undefined {
+  switch (p.type) {
+    case "match_pattern":
+      return p.namedChildren[0] === null || p.namedChildren[0] === undefined ? (p.text.trim() === "_" ? undefined : []) : variantsOf(p.namedChildren[0]!);
+    case "or_pattern": {
+      const out: { variant: string; via?: string }[] = [];
+      for (const c of p.namedChildren) {
+        if (c === null) continue;
+        const v = variantsOf(c);
+        if (v === undefined) return undefined;
+        out.push(...v);
+      }
+      return out;
+    }
+    case "reference_pattern":
+      // `&Enum::Variant` names the variant through a reference; `&x` still binds anything.
+      return p.namedChildren[0] === null || p.namedChildren[0] === undefined ? undefined : variantsOf(p.namedChildren[0]!);
+    case "captured_pattern":
+      // `x @ Enum::Variant` binds what the pattern after `@` matches.
+      return p.namedChildren.length < 2 || p.namedChildren[p.namedChildren.length - 1] === null ? undefined : variantsOf(p.namedChildren[p.namedChildren.length - 1]!);
+    case "tuple_struct_pattern":
+    case "struct_pattern":
+      return variantsOf(p.childForFieldName("type") ?? p.namedChildren[0]!);
+    case "scoped_identifier":
+    case "scoped_type_identifier": {
+      const path = p.childForFieldName("path");
+      const name = text(p.childForFieldName("name"));
+      return [{ variant: name, ...(path !== null ? { via: text(path).split("::").pop()! } : {}) }];
+    }
+    case "identifier":
+    case "type_identifier":
+      // A capitalised name is a variant brought into scope; any other name binds whatever is matched.
+      return /^[A-Z]/.test(p.text) ? [{ variant: p.text }] : undefined;
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * The simple name of the type a match's scrutinee is declared with, when the scrutinee is `self` in an impl (its type)
+ * or a name a parameter or `let` of the enclosing item declares with a type; references and paths are stripped.
+ */
+function scrutineeType(m: Node, item: Node, owner: string | undefined): string | undefined {
+  const v = m.childForFieldName("value");
+  if (v === null) return undefined;
+  if (v.type === "self") return owner;
+  if (v.type !== "identifier") return undefined;
+  const named = (t: Node | null): string | undefined => {
+    let x = t;
+    while (x !== null && x.type === "reference_type") x = x.childForFieldName("type");
+    if (x === null) return undefined;
+    if (x.type === "generic_type") x = x.childForFieldName("type");
+    return x === null ? undefined : x.text.split("::").pop()!;
+  };
+  for (const p of item.descendantsOfType(["parameter", "let_declaration"])) {
+    if (p === null || p.childForFieldName("pattern")?.text !== v.text) continue;
+    const t = named(p.childForFieldName("type"));
+    if (t !== undefined) return t;
+  }
+  return undefined;
+}
+
+/**
+ * Each `match` in an item that has no catch-all arm, by the variants its unguarded arms name, the enums its paths
+ * name (`Self` read as the impl's type) and its scrutinee's declared type when known (stage 49).
+ */
+function matchesIn(item: Node, owner?: string): { variants: string[]; enums: string[]; scrutinee?: string }[] {
+  const out: { variants: string[]; enums: string[]; scrutinee?: string }[] = [];
+  for (const m of item.descendantsOfType("match_expression")) {
+    if (m === null) continue;
+    const arms = (m.childForFieldName("body")?.namedChildren ?? []).filter((a): a is Node => a !== null && a.type === "match_arm");
+    const variants: string[] = [];
+    const enums = new Set<string>();
+    let catchAll = false;
+    for (const a of arms) {
+      const pattern = a.childForFieldName("pattern");
+      if (pattern === null) continue;
+      // A guarded arm covers nothing for the compiler's check.
+      if (pattern.childForFieldName("condition") !== null) continue;
+      const v = variantsOf(pattern);
+      if (v === undefined) {
+        catchAll = true;
+        break;
+      }
+      for (const x of v) {
+        variants.push(x.variant);
+        if (x.via !== undefined) enums.add(x.via === "Self" && owner !== undefined ? owner : x.via);
+      }
+    }
+    const scrutinee = scrutineeType(m, item, owner);
+    if (!catchAll && variants.length > 0) out.push({ variants, enums: [...enums].sort(compareCodePoints), ...(scrutinee !== undefined ? { scrutinee } : {}) });
+  }
+  return out;
 }
 
 /** A trait's first supertrait as written, without its type arguments. */
@@ -409,6 +517,23 @@ export async function readRust(files: readonly InputFile[], ctx: FactContext): P
     return external(s0, segs.slice(1), written);
   };
 
+  // The enums read, by name; a match is complete over the one whose variants its arms name exactly (stage 49). The
+  // enum its paths name, else its scrutinee's declared type, decides which; with neither, two enums with the same
+  // variants leave the match unattributed rather than credit an enum it may not match on.
+  const enums = new Map<string, Set<string>[]>();
+  for (const fd of data.values()) for (const x of fd.declarations) if (x.members !== undefined) enums.set(x.symbol, [...(enums.get(x.symbol) ?? []), new Set(x.members)]);
+  const totalOf = (fd: FileData, owner: string): string[] => {
+    const over = new Set<string>();
+    for (const m of fd.matches.filter((y) => y.owner === owner)) {
+      const named = new Set(m.variants);
+      const fits = [...enums]
+        .filter(([name]) => (m.enums.length === 0 || (m.enums.length === 1 && m.enums[0] === name)) && (m.scrutinee === undefined || m.scrutinee === name || m.enums.length > 0))
+        .filter(([, sets]) => sets.some((vs) => vs.size === named.size && [...vs].every((v) => named.has(v))))
+        .map(([name]) => name);
+      if (fits.length === 1) over.add(fits[0]!);
+    }
+    return [...over].sort(compareCodePoints);
+  };
   for (const f of sorted) {
     if (!rs.has(f.path)) {
       const out = tomlFields(f, ctx, TOOL, CARGO_TABLES);
@@ -436,7 +561,10 @@ export async function readRust(files: readonly InputFile[], ctx: FactContext): P
       if ("skip" in r.target) facts.push({ ...base, kind: "skipped", at, from: f.path, reason: r.target.skip });
       else if (r.target.to !== f.path) facts.push({ ...base, kind: "depends", at, from: f.path, to: r.target.to, via: "import", typeOnly: false });
     }
-    for (const x of d.declarations) facts.push({ ...base, kind: "declare", at: `${f.path}:${x.line}`, module: f.path, symbol: x.symbol, declares: x.declares, ...(x.base !== undefined ? { base: x.base } : {}), ...(x.value !== undefined ? { value: x.value } : {}) });
+    for (const x of d.declarations) {
+      const total = totalOf(d, x.symbol);
+      facts.push({ ...base, kind: "declare", at: `${f.path}:${x.line}`, module: f.path, symbol: x.symbol, declares: x.declares, ...(x.base !== undefined ? { base: x.base } : {}), ...(x.value !== undefined ? { value: x.value } : {}), ...(x.members !== undefined ? { members: x.members } : {}), ...(total.length > 0 ? { total } : {}) });
+    }
     for (const e of d.exports) facts.push({ ...base, kind: "export", at: f.path, module: f.path, symbol: e.symbol, ...(e.from !== undefined ? { from: e.from } : {}), typeOnly: false });
   }
   return { facts, diagnostics };

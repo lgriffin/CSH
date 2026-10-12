@@ -1,0 +1,34 @@
+{
+  "fixture": "F151",
+  "section": "The Assertion Ladder, section 4",
+  "stage": 49,
+  "expect": {
+    "run": {
+      "assessments": [
+        { "fragment": "Maps/Prevented/StatusIsTotal", "verdict": "satisfied", "reasonsInclude": ["src/maps.ts", "Code"] },
+        { "fragment": "Maps/Prevented/LabelsIsTotal", "verdict": "satisfied" },
+        { "fragment": "Maps/Prevented/TitlesIsTotal", "verdict": "satisfied" },
+        { "fragment": "Maps/Prevented/SomeIsTotal", "verdict": "violated" },
+        { "fragment": "Maps/Prevented/AnyIsTotal", "verdict": "violated" },
+        { "fragment": "Maps/Prevented/LooseIsTotal", "verdict": "violated", "reasonsInclude": ["not a closed type"] },
+        { "fragment": "Maps/Prevented/OtherIsTotal", "verdict": "unknown", "reasonsInclude": ["not-read"] }
+      ],
+      "facts": [
+        { "module": "src/codes.ts", "symbol": "Code", "members": ["not_found", "conflict", "invalid"] },
+        { "module": "src/codes.ts", "symbol": "Level", "members": ["Low", "High"] },
+        { "module": "src/codes.ts", "symbol": "Loose", "members": null },
+        { "module": "src/maps.ts", "symbol": "STATUS", "total": ["Code"] },
+        { "module": "src/maps.ts", "symbol": "LABELS", "total": ["Level"] },
+        { "module": "src/maps.ts", "symbol": "TITLES", "total": ["Code"] },
+        { "module": "src/maps.ts", "symbol": "SOME", "total": null },
+        { "module": "src/maps.ts", "symbol": "ANY", "total": null },
+        { "module": "src/maps.ts", "symbol": "CAST", "total": null },
+        { "module": "src/maps.ts", "symbol": "FROZEN", "total": ["Code"] }
+      ],
+      "rungs": [
+        { "item": "Reqs/R-P-1", "rung": "L5", "byIncludes": ["STATUS", "Code"] },
+        { "item": "Reqs/R-P-2", "rung": "L2" }
+      ]
+    }
+  }
+}

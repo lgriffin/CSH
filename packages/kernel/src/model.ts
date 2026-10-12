@@ -172,8 +172,9 @@ export type ArchSel =
  * the path. `declares`: the module declares the name at its top level. `exports`: the module exports the name.
  * `inherits`: the class extends the base, directly or through other classes, by name. `field`: a JSON file holds the
  * value at the pointer. `count`: the value at the pointer has that many entries, less the ones excepted. `script`:
- * package.json names the npm script. `same`: two constants have the same literal value. `atom`: a named proposition no
- * fact decides, which two sources can still contradict.
+ * package.json names the npm script. `same`: two constants have the same literal value. `total`: the declaration maps
+ * every member of the closed type `over` in a construct the language's compiler checks for completeness (The Assertion
+ * Ladder, stage 49). `atom`: a named proposition no fact decides, which two sources can still contradict.
  */
 export type Prop =
   | { k: "file"; path: string }
@@ -186,6 +187,7 @@ export type Prop =
   | { k: "count-modules"; globs: string[]; except?: string[]; n: number }
   | { k: "script"; name: string }
   | { k: "same"; a: { module: string; name: string }; b: { module: string; name: string } }
+  | { k: "total"; module: string; symbol: string; over: string }
   | { k: "atom"; name: string };
 
 /**
@@ -242,6 +244,8 @@ export function isProp(x: unknown): x is Prop {
       return nonEmpty(o.name) && keys("name");
     case "same":
       return constant(o.a) && constant(o.b) && keys("a", "b");
+    case "total":
+      return nonEmpty(o.module) && nonEmpty(o.symbol) && nonEmpty(o.over) && keys("module", "symbol", "over");
     case "atom":
       return nonEmpty(o.name) && keys("name");
     default:

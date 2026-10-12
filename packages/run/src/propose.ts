@@ -26,6 +26,8 @@ const CODE_EXT = ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "svelte"
 const JS_EXT = ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs"];
 const ROOT_MANIFESTS = ["package.json", "pyproject.toml", "pom.xml", "go.mod", "Cargo.toml"];
 const TEST_DIRS = ["test", "tests", "__tests__"];
+/** The files an agent's tooling loads at the start of every session, by name, anywhere in the tree (stage 50). */
+export const INSTRUCTION_FILES = ["AGENTS.md", "CLAUDE.md", "GEMINI.md"];
 
 const segments = (p: string) => p.split("/");
 const ext = (p: string) => {
@@ -76,19 +78,28 @@ function globsFor(intended: string[], universe: string[], include?: string[], ex
   return { include: [...inc, ...missing], exclude: [...exc, ...extras] };
 }
 
-/** The identifier families of the documents: prefix, how many different identifiers, how many mentions. */
+/**
+ * The identifier families of the documents: prefix, how many different identifiers, how many mentions. A two-part
+ * identifier such as `R-FLOW-1` is counted first, in the family `R-[A-Z]+`, and blanked, so that `FLOW-1` inside it is
+ * not counted again (The Assertion Ladder, stage 50).
+ */
 function families(texts: string[]): { prefix: string; ids: number; mentions: number }[] {
-  const by = new Map<string, { ids: Set<string>; mentions: number }>();
+  const by = new Map<string, { ids: Set<string>; mentions: number; head: string }>();
+  const count = (prefix: string, head: string, id: string) => {
+    const f = by.get(prefix) ?? { ids: new Set(), mentions: 0, head };
+    f.ids.add(id);
+    f.mentions++;
+    by.set(prefix, f);
+  };
   for (const t of texts) {
-    for (const m of t.matchAll(/\b([A-Z]{2,5})-([0-9]+)\b/g)) {
-      const f = by.get(m[1]!) ?? { ids: new Set(), mentions: 0 };
-      f.ids.add(m[0]);
-      f.mentions++;
-      by.set(m[1]!, f);
-    }
+    const rest = t.replace(/\b([A-Z]{1,5})-([A-Z]{2,8})-([0-9]+)\b/g, (id: string, head: string) => {
+      count(`${head}-[A-Z]+`, head, id);
+      return " ".repeat(id.length);
+    });
+    for (const m of rest.matchAll(/\b([A-Z]{2,5})-([0-9]+)\b/g)) count(m[1]!, m[1]!, m[0]);
   }
   return [...by]
-    .filter(([p, f]) => f.ids.size >= 2 && !EXTERNAL_FAMILIES.includes(p))
+    .filter(([, f]) => f.ids.size >= 2 && !EXTERNAL_FAMILIES.includes(f.head))
     .map(([prefix, f]) => ({ prefix, ids: f.ids.size, mentions: f.mentions }))
     .sort((a, b) => b.mentions - a.mentions || compareCodePoints(a.prefix, b.prefix));
 }
@@ -164,19 +175,27 @@ export function proposeProfile(dir: string): Proposal | { error: string } {
     practices.push({ ...p, sources: [s.name] });
   };
 
-  // Requirements: Markdown files with a heading that begins with an identifier.
+  // Instructions: the files an agent reads at the start of every session (The Assertion Ladder, stage 50).
+  const instructions = markdown.filter((p) => INSTRUCTION_FILES.includes(posix.basename(p)) || p === ".github/copilot-instructions.md");
+  if (instructions.length > 0) {
+    add({ name: "Instructions", kind: "Documents", at: ".", include: [...instructions] }, { id: "instructions", name: "Instructions", kind: "instructions", unit: "the instruction file", settings: { ...idSettings } });
+    guesses.push(`Instructions: ${instructions.length} ${instructions.length === 1 ? "file" : "files"} an agent reads at the start of a session (${instructions.join(", ")}), read as documents in a practice of their own`);
+  }
+
+  // Requirements: Markdown files with a heading, or a table row, that begins with an identifier.
   const heading = idPattern === undefined ? undefined : new RegExp(`^#{1,6}\\s+(?:${idPattern})\\b`, "m");
-  const requirements = heading === undefined ? [] : markdown.filter((p) => heading.test(mdText.get(p)!));
+  const tableRow = idPattern === undefined ? undefined : new RegExp(`^\\s*\\|\\s*(?:${idPattern})\\s*\\|`, "m");
+  const requirements = heading === undefined || tableRow === undefined ? [] : markdown.filter((p) => !instructions.includes(p) && (heading.test(mdText.get(p)!) || tableRow.test(mdText.get(p)!)));
   if (requirements.length > 0) {
     add({ name: "Requirements", kind: "Documents", at: ".", include: [...requirements] }, { id: "requirements", name: "Requirements", kind: "requirements", adapter: "@csh/adapter-items/markdown", unit: "the requirement", settings: { ...idSettings } });
-    guesses.push(`Requirements: ${requirements.length} Markdown ${requirements.length === 1 ? "file has a heading" : "files have headings"} that begin with an identifier, e.g. ${requirements[0]}`);
+    guesses.push(`Requirements: ${requirements.length} Markdown ${requirements.length === 1 ? "file has a heading or table row" : "files have headings or table rows"} that begin with an identifier, e.g. ${requirements[0]}`);
   }
 
   // Documents: every other Markdown file, less changelogs and those in test directories.
   const changelog = (p: string) => /^(CHANGELOG|HISTORY)/i.test(posix.basename(p));
-  const documents = markdown.filter((p) => !requirements.includes(p) && !changelog(p) && !underAny(p, TEST_DIRS));
+  const documents = markdown.filter((p) => !requirements.includes(p) && !instructions.includes(p) && !changelog(p) && !underAny(p, TEST_DIRS));
   if (documents.length > 0) {
-    add({ name: "Documents", kind: "Documents", at: ".", ...globsFor(documents, files, undefined, ["**/CHANGELOG*", "**/HISTORY*", ...TEST_DIRS.map((d) => `**/${d}/**`), ...requirements]) }, { id: "docs", name: "Documents", kind: "documents", unit: "the document", settings: { ...idSettings } });
+    add({ name: "Documents", kind: "Documents", at: ".", ...globsFor(documents, files, undefined, ["**/CHANGELOG*", "**/HISTORY*", ...TEST_DIRS.map((d) => `**/${d}/**`), ...requirements, ...instructions]) }, { id: "docs", name: "Documents", kind: "documents", unit: "the document", settings: { ...idSettings } });
     guesses.push(`Documents: ${documents.length} other Markdown files, leaving out changelogs and test directories`);
   }
 
