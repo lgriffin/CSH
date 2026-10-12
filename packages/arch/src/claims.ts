@@ -268,7 +268,7 @@ export function describeProp(p: Prop): string {
   }
 }
 
-export const describeClaim = (c: Claim): string => `${c.holds ? "" : "not: "}${describeProp(c.p)}`;
+export const describeClaim = (c: Claim): string => `${c.holds ? "" : "it is false that "}${describeProp(c.p)}`;
 
 /** Why two claims cannot both be true, or undefined when they can. */
 export function claimConflict(a: Claim, b: Claim): string | undefined {
@@ -276,9 +276,9 @@ export function claimConflict(a: Claim, b: Claim): string | undefined {
   if (a.p.k === "field" || a.p.k === "count" || a.p.k === "count-modules") {
     const va = a.p.k === "field" ? a.p.value : a.p.n;
     const vb = b.p.k === "field" ? b.p.value : b.p.k === "count" || b.p.k === "count-modules" ? b.p.n : undefined;
-    if (a.holds && b.holds && va !== vb) return `one says ${describeClaim(a)}, the other ${describeClaim(b)}`;
-    if (a.holds !== b.holds && va === vb) return `one says ${describeClaim(a)}, the other ${describeClaim(b)}`;
+    if (a.holds && b.holds && va !== vb) return `one says ${describeClaim(a)}, the other says ${describeClaim(b)}`;
+    if (a.holds !== b.holds && va === vb) return `one says ${describeClaim(a)}, the other says ${describeClaim(b)}`;
     return undefined;
   }
-  return a.holds !== b.holds ? `one says ${describeClaim(a)}, the other ${describeClaim(b)}` : undefined;
+  return a.holds !== b.holds ? `one says ${describeClaim(a)}, the other says ${describeClaim(b)}` : undefined;
 }

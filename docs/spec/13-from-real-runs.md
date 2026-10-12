@@ -221,3 +221,30 @@ Leigh re-ran the six repositories on Windows after stages 38 to 44. These are th
   tracked.
 - `csh subject fetch` retries the final move of a fresh checkout for a few seconds while Windows reports the files
   busy. If the move still fails, the fetch fails with that reason and leaves nothing half-moved.
+
+## 9. The third round (stage 53)
+
+Leigh's re-check of stage 46 on Windows found these:
+
+- A claim finding's headline cites the line shown below it. When the line holding the claim's value is below the
+  span, both the headline and the sentence cite that line.
+- A value is stated by a line that has it in digits, or, for a version, without its trailing zeros (`18.0.0` as `18`),
+  or, for a whole number from 2 to 20, as a word (`13` as `thirteen`). Before this, a row holding 13 further down
+  was cited over the line that says "thirteen".
+- When no line from the span to the next blank line states the claim's value, which is how a count of a list's
+  entries reads, the span's line is shown with `(no line from here to the next blank line states 5)` in place of
+  `says`.
+- A negated claim reads `it is false that ...`, and a claim conflict reads `one says ..., the other says ...`.
+- `csh subject fetch` records the visibility GitHub gives in `.csh-cache/subject-visibility.json`. `csh run` warns
+  about a private or internal subject from that record, never asking GitHub, and only while `csh/component.json` is
+  tracked, which is when committing would publish the profile.
+- On Windows, when gpg is not on PATH, the test kit puts Git for Windows' `usr/bin` on its own PATH when it holds
+  `gpg.exe`. From PowerShell, gpg is otherwise on Git Bash's PATH alone.
+
+Two findings need no change to CSH:
+
+- A claim citing `.beads/issues.jsonl` comes from the profile's `csh/claims.json`; a tracker item is a proposal, not a
+  statement about the code, so the claim belongs on a document.
+- `no practice has a harness` is the run saying that no practice of the profile declares a `harness` command. The
+  tests practices read `executions` from a results file instead, so no test runs during `csh run`.
+

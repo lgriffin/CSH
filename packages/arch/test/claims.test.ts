@@ -80,13 +80,13 @@ describe("structural claims", () => {
   it("find two claims in conflict whatever the facts say", () => {
     const six = claim({ k: "count", file: "package.json", pointer: "/exports", n: 6 });
     const seven = claim({ k: "count", file: "package.json", pointer: "/exports", n: 7 });
-    expect(claimConflict(six, seven)).toBe("one says package.json /exports has 6 entries, the other package.json /exports has 7 entries");
+    expect(claimConflict(six, seven)).toBe("one says package.json /exports has 6 entries, the other says package.json /exports has 7 entries");
     expect(claimConflict(six, claim({ k: "count", file: "package.json", pointer: "/exports", n: 6 }, false))).toBeDefined();
     expect(claimConflict(six, claim({ k: "count", file: "package.json", pointer: "/exports", n: 7 }, false))).toBeUndefined();
     const inh = claim({ k: "inherits", cls: "A", base: "B" });
     expect(claimConflict(inh, claim({ k: "inherits", cls: "A", base: "B" }, false))).toBeDefined();
     expect(claimConflict(inh, claim({ k: "inherits", cls: "A", base: "C" }, false))).toBeUndefined();
-    expect(describeClaim(claim({ k: "file", path: "x" }, false))).toBe("not: x exists");
+    expect(describeClaim(claim({ k: "file", path: "x" }, false))).toBe("it is false that x exists");
   });
 
   it("say unknown, not false, where a fact could be missing because it was not read", () => {

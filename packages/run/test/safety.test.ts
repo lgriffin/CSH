@@ -1,7 +1,9 @@
 // Process and safety (From real runs, stage 44): warnings about where a profile's subject is.
-import { resolve } from "node:path";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { githubSlug, isPathRepo, type Exec, localPathWarning, subjectWarnings } from "../src/safety.ts";
+import { githubSlug, isPathRepo, type Exec, localPathWarning, runWarnings, subjectWarnings, VISIBILITY_PATH } from "../src/safety.ts";
 import type { Project } from "../src/project.ts";
 
 const project = (repo: string) => ({ root: "/r", sourceRoot: "/r", component: { manifest: { subject: { repo, commit: "0".repeat(40) } } } }) as unknown as Project;
@@ -51,5 +53,26 @@ describe("subject warnings", () => {
       "the subject a/secret is private: a profile for it should not be committed to a public repository; keep it out of git with .git/info/exclude (docs/guides/manifest.md)",
     ]);
     expect(calls).toContainEqual(["git", "remote", "get-url", "origin", resolve("/r", "../subject")]);
+  });
+
+  it("says on a run what the last fetch learnt, only while the manifest is tracked (stage 53)", () => {
+    const root = mkdtempSync(join(tmpdir(), "csh-safety-"));
+    try {
+      const at = (repo: string) => ({ root, sourceRoot: root, component: { manifest: { subject: { repo, commit: "0".repeat(40) } } } }) as unknown as Project;
+      const url = "https://github.com/a/b";
+      expect(runWarnings(at(url), exec(true))).toEqual([]);
+      // The fetch records the answer; the run never asks gh.
+      expect(subjectWarnings(at(url), exec(false, "PRIVATE"))).toHaveLength(1);
+      const noGh: Exec = (cmd, args, cwd) => (cmd === "gh" ? expect.unreachable() : exec(true)(cmd, args, cwd));
+      expect(runWarnings(at(url), noGh)).toEqual([expect.stringMatching(/^the subject a\/b is private/)]);
+      expect(runWarnings(at(url), exec(false))).toEqual([]);
+      // A record for another repository says nothing of this one.
+      expect(runWarnings(at("https://github.com/a/c"), exec(true))).toEqual([]);
+      mkdirSync(join(root, ".csh-cache"), { recursive: true });
+      writeFileSync(join(root, VISIBILITY_PATH), "not json");
+      expect(runWarnings(at(url), exec(true))).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });
