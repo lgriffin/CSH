@@ -12,7 +12,7 @@ It belongs to the "Adapters" container, with `@csh/adapter-witness-files` and `@
 
 - `Witness`, `Json`, `LocalResult`: one recorded execution (event, pre, args, result, post, execution facts, subject commit, and in version 2 the requirement identifiers it cites). In version 2 the local result is optional.
 - `Execution`, `parseExecutions(text)`: one finished test as the test runner's reporter records it (test identity and outcome), and the parser for an execution file.
-- `parseTestResults(text)`, `RunnerResult`, `TestResult`, `TestOutcome` (stage 26): a Jest or Vitest JSON report, or execution lines, read as one result per test; `AdapterOutput.results` carries them joined to test files, with no test name ([A-115](../../ASSUMPTIONS.md)). Since stage 28 it also reads `csh-results/v1` and returns the commit it names; `reduceTestResults(text, { cite, base, commit })`, `ReducedResults` and `ReducedFile` make one from a report, keeping paths, counts and cited identifiers only ([A-124](../../ASSUMPTIONS.md)). `ItemKind` gains `property`.
+- `parseTestResults(text)`, `RunnerResult`, `TestResult`, `TestOutcome` (stage 26): a Jest or Vitest JSON report, or execution lines, read as one result per test; `AdapterOutput.results` carries them joined to test files, with no test name ([A-115](../../ASSUMPTIONS.md)). Since stage 28 it also reads `csh-results/v1` and returns the commit it names; `reduceTestResults(text, { cite, base, commit })`, `ReducedResults` and `ReducedFile` make one from a report, keeping paths, counts and cited identifiers only ([A-124](../../ASSUMPTIONS.md)). `ItemKind` gains `property`. Since stage 30 it also reads JUnit XML, as pytest, Maven Surefire, Gradle and cargo-nextest write it, and `go test -json` events; a result's `file` is then the runner's own name for where the test ran: a path for pytest, otherwise a classname, crate or package import path ([A-129](../../ASSUMPTIONS.md)).
 - `outcomeOf(w)`: a witness's outcome, `unknown` when the record states none.
 - `Fact`, `PackageFact`, `DependencyFact`, `SkippedFact` (and, in version 2, `ModuleFact`, `ExportFact`, `FieldFact`, and since stage 24 `DeclareFact`; edges add `mentions-symbol` and `mentions-script`): the fact format, `csh-facts/v1`, evidence beside the witness format; `@csh/facts` reads and writes it ([10](../../docs/spec/10-next-layers.md), section 4.2).
 - `DECLARATION_KINDS`, `DeclarationKind` (stage 29): what a declaration may declare, in TypeScript and in the other languages a `Code` source holds; a `ModuleFact` may name its `language`.
@@ -50,9 +50,15 @@ Adapters sit outside the core and produce IR in one neutral envelope ([ADR-12](.
 - `packages/adapter-items/test/adapters.test.ts` (stage 28): a report reduced with `reduceTestResults` names no test, and reads back as the same results.
 - `packages/run/test/faults.test.ts`: a malformed or missing witness file leaves obligations unknown.
 - Fixtures: F82 to F85 read version 2 records and execution files; F24 and F30 to F35 read `inputs/witnesses.ndjson` through this format; F40, F41, F44, F45 and F64 reuse witnesses across steps.
+- `test/results.test.ts` (stage 30): small, realistic reports from pytest (xunit1 and xunit2), Surefire, Gradle, cargo-nextest and `go test -json`, including a build failure; malformed XML and JSON; reduction to `csh-results/v1`.
 
 ## Known limits
 
 - `recordWitness` no longer defaults the local result to `passed`. A hand-written record with no outcome stays unknown unless an execution line for its test identity joins it.
 - The subject commit defaults to `CSH_COMMIT`, then `GITHUB_SHA`, then `unknown`; a witness recorded as `unknown` is not an ancestor of any snapshot commit, so `csh check` judges it stale.
 - Runtime observations (deployment identity, interval, sampling) are not part of version 1 records (CSH-012 is out of scope here).
+- Only pytest results join test files; results from Surefire, Gradle, cargo-nextest and Go name a class, crate or package, and are counted as `results-unmatched` until classes and packages are mapped to their files.
+- Go reports parent tests as well as their subtests, so a failing subtest counts twice in its package.
+- An identifier joined to a word by `_`, as in `TestAdd/CART-1_empty`, is not cited by the default pattern.
+- `csh results import --base` resolves the base to a directory, so a Go module path is not stripped through the command.
+
