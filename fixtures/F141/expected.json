@@ -1,0 +1,16 @@
+{
+  "fixture": "F141",
+  "section": "From the Java and Python runs, sections 2 and 3; A-131, A-171, A-172, A-173",
+  "stage": 45,
+  "expect": {
+    "run": {
+      "assessments": [
+        { "fragment": "Ledger/Layering/UiUsesNoJdbc", "verdict": "violated", "reasonsInclude": ["src/main/java/com/acme/ledger/ui/LedgerView.java:3", "java.sql"] },
+        { "fragment": "Ledger/Layering/UiUsesNoJdbcAtAnyDepth", "verdict": "violated", "reasonsInclude": ["src/main/java/com/acme/ledger/ui/LedgerView.java:3", "java.sql"] },
+        { "fragment": "Ledger/Layering/UiOpensNoConnection", "verdict": "unknown", "reasonsInclude": ["finer-than-facts", "java.sql.Connection", "src/main/java/com/acme/ledger/ui/LedgerView.java:3"] },
+        { "fragment": "Ledger/Layering/UiUsesNoSwing", "verdict": "satisfied", "reasonsInclude": ["target-selects-nothing", "javax.swing.*"] },
+        { "fragment": "Ledger/Layering/CoreUsesOnlyLists", "verdict": "unknown", "reasonsInclude": ["finer-than-facts", "java.util.List", "src/main/java/com/acme/ledger/core/Ledger.java:3"] }
+      ]
+    }
+  }
+}

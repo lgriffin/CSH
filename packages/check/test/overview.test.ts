@@ -19,4 +19,15 @@ describe("overview detail", () => {
     expect(e.detail!.split("; ")).toHaveLength(7);
     expect(e.detail).toMatch(/and 3 more$/);
   });
+
+  it("gives a forbid that holds only because its target selects nothing a kind of its own (A-173)", () => {
+    const note = "target-selects-nothing: modules(java.sql.*) matches no module, package or dependency of the facts";
+    const held = { ...violated(["forbid met", note]), verdict: "satisfied" };
+    const plain = { ...violated(["forbid met"]), fragment: "S/Layering/Other", verdict: "satisfied" };
+    const o = overviewOf(report([held, plain]));
+    const got = o.entries.map((x) => [x.outcome, x.kind, x.subject, x.detail ?? null]);
+    expect(got).toHaveLength(2);
+    expect(got).toContainEqual(["converged", "target-selects-nothing", "S/Layering/Rule", note]);
+    expect(got).toContainEqual(["converged", "satisfied", "S/Layering/Other", null]);
+  });
 });
