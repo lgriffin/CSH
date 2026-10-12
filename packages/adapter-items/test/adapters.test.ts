@@ -433,3 +433,13 @@ describe("Cucumber step definitions", () => {
     expect(out.diagnostics.map((d) => d.code)).toEqual(["no-tests"]);
   });
 });
+
+describe("citeBodies", () => {
+  const file = ["describe(\"x\", () => {", "  it(\"loops\", () => { for (const m of [\"console-error\", \"focus-order\"]) check(m); });", "  // \"in-comment\"", "});", ""].join("\n");
+
+  it("makes an identifier in any string of the file cite, and a comment still cites nothing", () => {
+    const cfg = { citePattern: "console-error|focus-order|in-comment", citeBodies: "true" };
+    expect((tests(input({ "t.test.ts": file }, cfg, "TestFiles")).edges ?? []).map((e) => e.to)).toEqual(["console-error", "focus-order"]);
+    expect((tests(input({ "t.test.ts": file }, { citePattern: cfg.citePattern }, "TestFiles")).edges ?? []).map((e) => e.to)).toEqual([]);
+  });
+});
