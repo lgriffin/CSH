@@ -93,5 +93,5 @@ No code changed: every reader read its subject without a fault this stage could 
 
 ## Effort
 
-About 330 lines of profiles, expected results and READMEs, and 30 lines of CI. No source or test code changed. Effort
+About 850 lines of profiles, expected results and READMEs, 100 of this note and 30 of CI. No source or test code changed. Effort
 was not timed.
