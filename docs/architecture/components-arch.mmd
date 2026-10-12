@@ -1,17 +1,21 @@
-%% C4 level 3: components of the architecture rules (Next layers, sections 4.1 and 4.3).
+%% C4 level 3: components of the architecture rules (Next layers, sections 4.1 and 4.3; Ingesting a codebase, stage 24; The Assertion Ladder, stage 47).
 C4Component
   title Architecture rules: components
   Container_Boundary(a, "Architecture rules (arch), in the trusted base") {
-    Component(select, "Selectors", "arch/src/arch.ts (selects, containersOf, sameName)", "A package by full or unscoped name, a container's packages, or any package")
+    Component(select, "Selectors", "arch/src/arch.ts (selects, containersOf, sameName)", "A package or module by name or glob, a container's packages, or any package")
     Component(rules, "Rule evaluation", "arch/src/arch.ts (evaluateRule)", "forbid, only and closed against current facts: violated with file and line, holds, or unknown")
     Component(conflicts, "Diagram conflicts", "arch/src/arch.ts (conflictingRelations)", "Drawn relations a rule forbids, each end wholly inside the rule")
     Component(compare, "Diagram against facts", "arch/src/arch.ts", "Undrawn dependencies, unobserved relations, unplaced packages")
+    Component(claims, "Structural claims", "arch/src/claims.ts (evaluateClaim, truthOf)", "exports, declares, extends, value, field and total, judged by lookup: holds, refuted with what was found, or unknown with why")
+    Component(total, "Prevention", "arch/src/claims.ts (totalOf)", "total: a complete mapping over a closed type that tsc, javac or rustc checks; unknown in Python and Go")
   }
-  Container_Ext(check, "Check engine", "check/src/arch.ts", "Findings, gaps, assessments")
-  Container_Ext(kernel, "Kernel", "kernel", "ArchRule, ArchSel")
+  Container_Ext(check, "Check engine", "check/src/arch.ts", "Findings, gaps, assessments, rungs")
+  Container_Ext(kernel, "Kernel", "kernel", "ArchRule, ArchSel, Prop")
   Rel(check, rules, "Each typed rule")
   Rel(check, conflicts, "Each typed rule and the diagram")
   Rel(check, compare, "The diagram and current facts")
+  Rel(check, claims, "Each claim and the facts")
+  Rel(claims, total, "total props")
   Rel(rules, select, "Uses")
   Rel(conflicts, select, "Uses")
   Rel(rules, compare, "closed: undrawn dependencies")

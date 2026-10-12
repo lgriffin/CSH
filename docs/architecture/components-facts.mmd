@@ -1,16 +1,21 @@
-%% C4 level 3: the facts, written by a harness and read by an adapter (Next layers, section 4.2).
+%% C4 level 3: the facts, written by a harness or read from code by an adapter (Next layers, section 4.2; Ingesting a codebase, stage 23; Polyglot code; The Assertion Ladder, stage 47).
 C4Component
   title Facts: components
   Container_Boundary(h, "Harnesses (facts-imports)") {
     Component(workspace, "Workspace reader", "facts-imports/src/scan.ts (workspacePackages)", "Package directories from pnpm-workspace.yaml or package.json workspaces")
-    Component(scan, "Import scan", "facts-imports/src/scan.ts (importsOf)", "TypeScript parser: imports, re-exports, require, dynamic import, import types; type-only flag; computed specifiers skipped")
+    Component(scan, "Import scan", "facts-imports/src/scan.ts (importsOf)", "Imports, re-exports, require, dynamic import, import types; computed specifiers skipped")
     Component(writer, "Facts command", "facts-imports/bin/facts-imports.js", "One fact per package and dependency, stamped with CSH_COMMIT")
   }
-  Container_Boundary(ad, "Adapters (facts, witness)") {
-    Component(format, "Fact format", "witness/src/witness.ts", "csh-facts/v1: package, depends, skipped")
+  Container_Boundary(ad, "Adapters (facts, facts-ts, facts-code, witness)") {
+    Component(format, "Fact format", "witness/src/witness.ts", "csh-facts/v2: package, module, depends, declare (with members and total), export, field, skipped")
     Component(reader, "Facts reader and adapter", "facts/src/facts.ts, adapter.ts", "Parses and validates lines; malformed lines reported")
+    Component(ts, "TypeScript reader", "facts-ts/src/scan.ts", "TypeScript compiler API: modules, imports, exports, declarations; literal unions and enums as closed types; Record mappings as total")
+    Component(dispatch, "Code dispatcher", "facts-code/src/run.ts, languages.ts", "Each file to the reader of its language; a language with no reader is a skipped fact")
+    Component(grammars, "Grammars", "facts-code/src/parser.ts", "tree-sitter as WebAssembly, loaded once per process; parsing reads no file")
+    Component(langs, "Language readers", "facts-code/src/python.ts, java.ts, go.ts, rust.ts", "Imports resolved per language; Java enums and sealed types, Rust enums as closed types; switch and match with no fallback as total")
+    Component(manifests, "Manifest fields", "facts-code/src/manifest.ts", "pyproject.toml, Cargo.toml, pom.xml and go.mod fields by JSON pointer")
   }
-  System_Ext(code, "The workspace's code", "manifests, src and bin")
+  System_Ext(code, "The code read", "source files and manifests")
   Container_Ext(check, "Check engine", "check", "Current only at the snapshot's commit")
   Rel(writer, workspace, "Packages")
   Rel(writer, scan, "Each file of src and bin")
@@ -18,4 +23,11 @@ C4Component
   Rel(scan, code, "Reads files")
   Rel(writer, format, "reports/facts.ndjson")
   Rel(reader, format, "Validates")
+  Rel(dispatch, ts, "TypeScript, JavaScript, JSON")
+  Rel(dispatch, langs, "Python, Java, Go, Rust")
+  Rel(langs, grammars, "Parses")
+  Rel(langs, manifests, "Manifests")
+  Rel(ts, format, "Facts")
+  Rel(langs, format, "Facts")
   Rel(check, reader, "Facts, through the isolated runner")
+  Rel(check, dispatch, "Code sources, through the isolated runner")
