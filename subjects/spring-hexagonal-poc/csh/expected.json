@@ -1,0 +1,37 @@
+{
+  "schema": "csh-expected/v1",
+  "rows": [
+    {
+      "row": 1,
+      "title": "The business core imports no adapter, configuration or entry point",
+      "expect": [{ "outcome": "converged", "kind": "satisfied", "subject": "SpringHexagonalPoc/Layering/BusinessImportsNoAdapter" }]
+    },
+    {
+      "row": 2,
+      "title": "The Readme says the core has no external dependencies; its services and models import Spring and Lombok",
+      "expect": [{ "outcome": "gap", "kind": "violated", "subject": "SpringHexagonalPoc/Layering/BusinessHasNoExternalDependency" }]
+    },
+    {
+      "row": 3,
+      "title": "Driving and driven adapters do not import each other",
+      "expect": [
+        { "outcome": "converged", "kind": "satisfied", "subject": "SpringHexagonalPoc/Layering/PrimaryAdaptersImportNoSecondaryAdapter" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "SpringHexagonalPoc/Layering/SecondaryAdaptersImportNoPrimaryAdapter" }
+      ]
+    },
+    {
+      "row": 4,
+      "title": "The Java version the Readme gives, against the build",
+      "expect": [{ "outcome": "indeterminate", "kind": "unknown-obligation", "subject": "SpringHexagonalPoc/ProseAboutCode/JavaElevenIsTheTarget" }],
+      "unknown": [{ "what": "whether the build targets Java 11", "reason": "the build is Gradle, and no reader reads build.gradle, so the claim's field is not read" }]
+    },
+    {
+      "row": 5,
+      "title": "The files the Readme points to exist",
+      "expect": [
+        { "outcome": "converged", "kind": "satisfied", "subject": "SpringHexagonalPoc/ProseAboutCode/ComposeFileExists" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "SpringHexagonalPoc/ProseAboutCode/LicenceFileExists" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "schema": "csh-expected/v1",
+  "rows": [
+    {
+      "row": 1,
+      "title": "The domain imports no adapter and no binary",
+      "expect": [{ "outcome": "converged", "kind": "satisfied", "subject": "Hexarch/Layering/DomainImportsNoAdapter" }]
+    },
+    {
+      "row": 2,
+      "title": "The domain binds to no HTTP, database or runtime crate",
+      "expect": [{ "outcome": "converged", "kind": "satisfied", "subject": "Hexarch/Layering/DomainBindsToNoTechnology" }]
+    },
+    {
+      "row": 3,
+      "title": "The HTTP framework is imported by the inbound adapter alone",
+      "expect": [{ "outcome": "converged", "kind": "satisfied", "subject": "Hexarch/Layering/HttpPackageIsOpaque" }],
+      "unknown": [{ "what": "uses of the framework by a full path or an attribute, such as an attribute macro of the runtime", "reason": "a dependency is read from use declarations, mod and extern crate; a path written in code or an attribute is not a dependency fact" }]
+    },
+    {
+      "row": 4,
+      "title": "Inbound and outbound adapters do not import each other",
+      "expect": [
+        { "outcome": "converged", "kind": "satisfied", "subject": "Hexarch/Layering/InboundImportsNoOutbound" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "Hexarch/Layering/OutboundImportsNoInbound" }
+      ]
+    },
+    {
+      "row": 5,
+      "title": "The ports the doc comments describe are public, and the service implementing them is declared",
+      "expect": [
+        { "outcome": "converged", "kind": "satisfied", "subject": "Hexarch/ProseAboutCode/BlogServiceIsAPort" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "Hexarch/ProseAboutCode/BlogRepositoryIsAPort" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "Hexarch/ProseAboutCode/BlogMetricsIsAPort" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "Hexarch/ProseAboutCode/AuthorNotifierIsAPort" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "Hexarch/ProseAboutCode/ServiceIsTheCanonicalImplementation" },
+        { "outcome": "converged", "kind": "satisfied", "subject": "Hexarch/ProseAboutCode/HttpServerIsExported" }
+      ],
+      "unknown": [
+        { "what": "whether Service is a trait, as the README calls it, or the struct implementing the BlogService trait", "reason": "a claim names a declaration, not its kind, so no claim can say which; the README and the doc comments read differently" },
+        { "what": "that each outbound adapter implements the port its doc comment names", "reason": "impl blocks declare nothing in the facts, so which trait a type implements is not a fact" }
+      ]
+    }
+  ]
+}

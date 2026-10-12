@@ -1,0 +1,75 @@
+{
+  "schema": "csh-component/v2",
+  "name": "GoCleanArch",
+  "subject": {
+    "repo": "https://github.com/bxcodec/go-clean-arch",
+    "commit": "e06c6d0cb37069b0ef56e3df67f80ca130a1ab82"
+  },
+  "implementation": [
+    "."
+  ],
+  "sources": [
+    {
+      "name": "Docs",
+      "kind": "Documents",
+      "at": ".",
+      "include": [
+        "README.md",
+        "internal/README.md"
+      ]
+    },
+    {
+      "name": "Tests",
+      "kind": "TestFiles",
+      "at": ".",
+      "include": [
+        "**/*_test.go"
+      ]
+    },
+    {
+      "name": "Code",
+      "kind": "Code",
+      "at": ".",
+      "include": [
+        "**/*.go",
+        "go.mod"
+      ],
+      "exclude": [
+        "**/*_test.go"
+      ]
+    }
+  ],
+  "practices": [
+    {
+      "id": "docs",
+      "name": "Docs",
+      "kind": "documents",
+      "sources": [
+        "Docs"
+      ],
+      "author": "Maintainer",
+      "unit": "the document"
+    },
+    {
+      "id": "tests",
+      "name": "Tests",
+      "kind": "tests",
+      "sources": [
+        "Tests"
+      ],
+      "author": "Maintainer",
+      "unit": "the test file"
+    },
+    {
+      "id": "code",
+      "name": "Code facts",
+      "kind": "facts",
+      "sources": [
+        "Code"
+      ],
+      "author": "facts-code",
+      "unit": "the module"
+    }
+  ],
+  "spec": "csh/spec.csl.ts"
+}
