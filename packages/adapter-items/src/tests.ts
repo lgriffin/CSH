@@ -4,10 +4,12 @@
 // comments, cite nothing. The file is read as text and never run: a small lexer tells comments, strings and regular
 // expressions from code, so a test written inside a fixture string is not a test. The runner's results, when the
 // practice names a results file (stage 26), are joined to each file and to the identifiers each test's full name cites;
-// they are counted, and never decide anything.
+// they are counted, and never decide anything. Python, Java, Go and Rust test files are read by their runners'
+// conventions (tests-other.ts, stage 35), and their results join by path as these do.
 import { digestOf } from "@csh/kernel";
 import { type Adapter, type AdapterInput, type AdapterOutput, type Diagnostic, type ItemEdge, parseTestResults, type SourceItem, type TestOutcome, type TestResult } from "@csh/witness";
 import { decode, idPatternOf, sortedFiles } from "./common.ts";
+import { inventory, languageOf, lineIndex, lineStarts, underscoreFree } from "./tests-other.ts";
 
 export const manifest = {
   id: "csh.adapter.items.tests",
@@ -117,27 +119,50 @@ export function declarations(text: string): { line: number; describe: boolean; m
   return out;
 }
 
-/** A Cucumber step definition: Given, When, Then, And, But, Step or defineStep, called with a string or a regular expression. */
-const STEP = /(?<![.\w$])(Given|When|Then|And|But|Step|defineStep)\s*\(/g;
-
-/**
- * Each step definition of a file (Cucumber-js style): its line and its literal text. A regular expression is a step
- * whose text is not kept: the lexer blanks its content, so it cites nothing.
- */
-export function stepDefinitions(text: string): { line: number; title: string }[] {
-  const { code, strings } = lex(text);
-  const out: { line: number; title: string }[] = [];
-  for (const m of code.matchAll(STEP)) {
-    const at = skipSpace(code, m.index + m[0].length);
-    const title = strings.get(at) ?? (code[at] === "/" ? "" : undefined);
-    if (title === undefined) continue;
-    out.push({ line: code.slice(0, at).split("\n").length, title });
-  }
-  return out;
-}
-
+/** A Cucumber step definition: Given, When, Then, And, But, Step or defineStep, called with a string or a regular expression. */
+
+const STEP = /(?<![.\w$])(Given|When|Then|And|But|Step|defineStep)\s*\(/g;
+
+
+
+/**
+
+ * Each step definition of a file (Cucumber-js style): its line and its literal text. A regular expression is a step
+
+ * whose text is not kept: the lexer blanks its content, so it cites nothing.
+
+ */
+
+export function stepDefinitions(text: string): { line: number; title: string }[] {
+
+  const { code, strings } = lex(text);
+
+  const out: { line: number; title: string }[] = [];
+
+  for (const m of code.matchAll(STEP)) {
+
+    const at = skipSpace(code, m.index + m[0].length);
+
+    const title = strings.get(at) ?? (code[at] === "/" ? "" : undefined);
+
+    if (title === undefined) continue;
+
+    out.push({ line: code.slice(0, at).split("\n").length, title });
+
+  }
+
+  return out;
+
+}
+
+
+
 export function run(input: AdapterInput): AdapterOutput {
-  const id = new RegExp(`\\b(?:${input.config?.citePattern ?? idPatternOf(input)})\\b`, "g");
+  const pattern = input.config?.citePattern ?? idPatternOf(input);
+  const id = new RegExp(`\\b(?:${pattern})\\b`, "g");
+  // In a Python, Java, Go or Rust test's name, an underscore stands for a hyphen (test_REQ_12 cites REQ-12), but only
+  // when the identifier pattern cannot hold an underscore itself; otherwise the name is read as written (A-1xx-tests).
+  const hyphenate = underscoreFree(pattern);
   const items: SourceItem[] = [];
   const edges: ItemEdge[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -147,6 +172,26 @@ export function run(input: AdapterInput): AdapterOutput {
   const citeBodies = input.config?.citeBodies === "true";
   for (const file of sortedFiles(input)) {
     const text = decode(file.bytes);
+    const lang = languageOf(file.path);
+    if (lang !== undefined) {
+      const found = inventory(text, lang, file.path);
+      const starts = lineStarts(text);
+      const cited = new Set<string>();
+      const cite = (value: string, at: number) => {
+        for (const c of value.matchAll(id)) {
+          if (cited.has(c[0])) continue;
+          cited.add(c[0]);
+          edges.push({ from: file.path, rel: "cites", to: c[0], span: `${file.path}:${lineIndex(starts, at) + 1}` });
+        }
+      };
+      for (const s of found.sources) cite(s.name && hyphenate ? s.text.replace(/_/g, "-") : s.text, s.at);
+      if (citeBodies) for (const [at, value] of found.strings) cite(value, at);
+      const attrs: Record<string, string> = { tests: String(found.tests) };
+      if (found.skipped > 0) attrs.skipped = String(found.skipped);
+      items.push({ id: file.path, kind: "test-file", text: file.path, span: `${file.path}:1`, textDigest: digestOf(text), attrs });
+      if (found.tests === 0) diagnostics.push({ code: "no-tests", severity: "info", message: `${file.path} declares no test its runner would collect`, span: file.path });
+      continue;
+    }
     let steps = 0;
     let tests = 0;
     let skipped = 0;
