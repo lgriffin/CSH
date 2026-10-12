@@ -1,0 +1,907 @@
+{
+  "commit": "195e0d10cccd226f5bafb97898c664b2bf68fbae",
+  "files": [
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/a3-courses.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/a3-pointer.test.ts",
+      "passed": 4,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/a3.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/asset-graph.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/attribute.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/bus.test.ts",
+      "passed": 15,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/canonical.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/causes.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/changes.test.ts",
+      "passed": 37,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/claim-hygiene.test.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/claim-lifetimes.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/claims-coverage.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/claims-draft.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/claims.test.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/clock-probe.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/collectors.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/compare.test.ts",
+      "passed": 26,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/confidence.test.ts",
+      "passed": 26,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/console-drop.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/contract.test.ts",
+      "passed": 96,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/course-capture.test.ts",
+      "passed": 15,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/course-check.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/course-experience.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/course-schema.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/digests.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/docs-counts.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/engine-change.test.ts",
+      "passed": 15,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/examples.test.ts",
+      "passed": 1,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/extra-engines.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [
+        {
+          "cites": [
+            "focus-order"
+          ],
+          "outcome": "passed"
+        }
+      ],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/fixtures.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/flag-errors.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/gate.test.ts",
+      "passed": 23,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/glance.test.ts",
+      "passed": 32,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/help.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/image-cache.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/image-ref.test.ts",
+      "passed": 15,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/image-static.test.ts",
+      "passed": 40,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/images.test.ts",
+      "passed": 28,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/in-run-noise.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/input-errors.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/journey-count.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/journey-watchdog.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/levels.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/local-cli.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/local-compare.test.ts",
+      "passed": 45,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/local-doctor.test.ts",
+      "passed": 46,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/local-guard.test.ts",
+      "passed": 10,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/local-noise-store.test.ts",
+      "passed": 23,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/local-parity.test.ts",
+      "passed": 23,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/local-prune.test.ts",
+      "passed": 22,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/local-tasks.test.ts",
+      "passed": 49,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/main-preview.test.ts",
+      "passed": 19,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/mask-change.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/masks-footer-version.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/masks-media-and-compute-pressure.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/masks-post-deploy.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/masks-realtime-fallback.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/migration-seam.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/migration.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/monorepo-docs.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [
+        {
+          "cites": [
+            "added-package"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "base-swap"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "base-swap"
+          ],
+          "outcome": "passed"
+        }
+      ],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/mutant-build.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/mutants-selftest.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/network-status-mask.test.ts",
+      "passed": 7,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/noise-history.test.ts",
+      "passed": 20,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/normalise.test.ts",
+      "passed": 16,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/not-collected.test.ts",
+      "passed": 15,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/origins.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/persistence-seam.test.ts",
+      "passed": 13,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/policy.test.ts",
+      "passed": 22,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/post-deploy-claims.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/production-build.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/project-name.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/quality-strip.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/readiness.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/redact.test.ts",
+      "passed": 16,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 3,
+      "file": "tests/release-command.test.ts",
+      "passed": 47,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/release-control.test.ts",
+      "passed": 22,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/release-gate.test.ts",
+      "passed": 21,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/release-record.test.ts",
+      "passed": 21,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/release-tags.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/replay.test.ts",
+      "passed": 6,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/report-archive.test.ts",
+      "passed": 29,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/report.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/rules.test.ts",
+      "passed": 20,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/run-outdir.test.ts",
+      "passed": 1,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/runtime-collectors.test.ts",
+      "passed": 24,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/runtime-engines.test.ts",
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/runtime-report.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/scoreboard.test.ts",
+      "passed": 34,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/scorecard.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/screenshot-region.test.ts",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/service-levels.test.ts",
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/site.test.ts",
+      "passed": 12,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/slo.test.ts",
+      "passed": 17,
+      "skipped": 0
+    },
+    {
+      "cited": [
+        {
+          "cites": [
+            "unsigned-build"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "unsigned-build"
+          ],
+          "outcome": "passed"
+        },
+        {
+          "cites": [
+            "unsigned-build"
+          ],
+          "outcome": "passed"
+        }
+      ],
+      "errored": 0,
+      "failed": 1,
+      "file": "tests/soak.test.ts",
+      "passed": 14,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/stack.test.ts",
+      "passed": 19,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/stats.test.ts",
+      "passed": 30,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/third-party-cache.test.ts",
+      "passed": 15,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/tolerance.test.ts",
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/vex.test.ts",
+      "passed": 11,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/vuln-db.test.ts",
+      "passed": 23,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 1,
+      "file": "tests/why.test.ts",
+      "passed": 22,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/workflow-branch-probe.test.ts",
+      "passed": 2,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/workflow-exit-codes.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/workflow-run-name.test.ts",
+      "passed": 5,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/workflows-third-party.test.ts",
+      "passed": 3,
+      "skipped": 0
+    },
+    {
+      "cited": [],
+      "errored": 0,
+      "failed": 0,
+      "file": "tests/workflows-vuln.test.ts",
+      "passed": 11,
+      "skipped": 0
+    }
+  ],
+  "schema": "csh-results/v1"
+}
