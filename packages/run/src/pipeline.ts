@@ -177,6 +177,20 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   const historyCache = opts.cacheDir === undefined ? undefined : join(opts.cacheDir, "history", `${digestOf(new TextEncoder().encode(historyRoot)).slice(-16)}.json`);
   const history = wanted !== undefined ? gitHistory(historyRoot, { implementation: opts.component!.manifest.implementation, ...(wanted.since !== undefined ? { since: wanted.since } : {}), ...(wanted.frozen !== undefined ? { frozen: wanted.frozen } : {}), ...(wanted.tests !== undefined ? { tests: wanted.tests } : {}), ...(historyCache !== undefined ? { cache: historyCache, tool: toolCodeDigest() } : {}) }) : undefined;
   if (history !== undefined) checkOpts.history = history;
+  // The files that prose names, and the documents that name them, are what the check will ask the history about: ask for them
+  // together now (the others are asked when the check reaches them).
+  if (history !== undefined) {
+    const files: string[] = [];
+    const documents: string[] = [];
+    for (const r of runs) {
+      for (const e of r.output.edges ?? []) {
+        if (!/^(file|symbol):/.test(e.to)) continue;
+        files.push(e.to.replace(/^(file|symbol):/, "").replace(/#.*$/, "").replace(/\/$/, ""));
+        documents.push(e.span.replace(/:[0-9]+$/, ""));
+      }
+    }
+    await history.prefetch?.({ files, documents });
+  }
   const checked = await check(checkOpts);
   history?.save();
   if (history?.sinceProblem !== undefined) checked.report.errors.push({ code: "history-since-unknown", severity: "warning", detail: `${history.sinceProblem}; no untraced-change is reported` });

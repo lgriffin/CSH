@@ -2,9 +2,9 @@
 // its checked-out commit. Blame dates a line, `git log -L` finds when it was first written, rev-list lists the commits
 // that changed a file since, and commit trailers say which changes name a reference and which an agent co-authored.
 // Only commit hashes, dates and counts leave this file: never a commit's message or a line's text.
-import { execFileSync } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, posix } from "node:path";
 import type { Dated, HistoryPort } from "@csh/check";
 
 export interface HistoryOptions {
@@ -70,9 +70,24 @@ function run(root: string, args: string[]): string | undefined {
   }
 }
 
+/** The same question as run, asked without waiting: many can be in flight, which a process spawn each makes worth doing. */
+function runAsync(root: string, args: string[]): Promise<string | undefined> {
+  return new Promise((done) => {
+    execFile("git", args, { cwd: root, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 }, (err, stdout) => done(err === null ? stdout : undefined));
+  });
+}
+
+/** Run the tasks `width` at a time. */
+async function pool(width: number, tasks: (() => Promise<void>)[]): Promise<void> {
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(width, tasks.length) }, async () => {
+    while (next < tasks.length) await tasks[next++]!();
+  }));
+}
+
 /** The history of the repository at `root`, read lazily and kept for the life of the port. */
 export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sinceProblem?: string; save(): void } {
-  const existedCache = new Map<string, boolean>();
+  const everHeld = new Map<string, boolean>();
   const testGlobs = (o.tests ?? []).map(globPattern);
   const frozenGlobs = (o.frozen ?? []).map(globPattern);
   const dates = new Map<string, string>();
@@ -87,30 +102,76 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
   };
 
   // A file with uncommitted changes has other line numbers than HEAD's: none of its lines is dated.
-  const edited = new Map<string, boolean>();
+  // One git process names every file that differs from HEAD. If git cannot say, every file counts as edited.
+  let editedFiles: Set<string> | undefined | null;
   const isEdited = (path: string): boolean => {
-    let e = edited.get(path);
-    if (e === undefined) edited.set(path, (e = run(root, ["diff", "--quiet", "HEAD", "--", path]) === undefined));
-    return e;
+    if (editedFiles === undefined) {
+      const out = run(root, ["diff", "--name-only", "--relative", "-z", "HEAD"]);
+      editedFiles = out === undefined ? null : new Set(out.split("\0").filter((x) => x !== ""));
+    }
+    return editedFiles === null || editedFiles.has(path);
+  };
+
+  // How commits descend from one another, read once: "is this commit before that one" is then a walk in memory, and the
+  // commits after a line that touch a file are those touching it that the line's commit does not reach.
+  let parents: Map<string, string[]> | undefined;
+  const graph = (): Map<string, string[]> => {
+    if (parents === undefined) {
+      parents = new Map();
+      for (const l of (run(root, ["rev-list", "--parents", "HEAD"]) ?? "").split("\n")) {
+        const [c, ...ps] = l.trim().split(" ");
+        if (c !== undefined && c !== "") parents.set(c, ps);
+      }
+    }
+    return parents;
+  };
+  const reach = new Map<string, Set<string>>();
+  const reachFrom = (commit: string): Set<string> => {
+    let seen = reach.get(commit);
+    if (seen !== undefined) return seen;
+    seen = new Set();
+    const g = graph();
+    const todo = [commit];
+    while (todo.length > 0) {
+      const c = todo.pop()!;
+      if (seen.has(c)) continue;
+      seen.add(c);
+      todo.push(...(g.get(c) ?? []));
+    }
+    reach.set(commit, seen);
+    return seen;
+  };
+  // The commits that changed a file, as git's own path-limited history says: asked per path, and kept. prefetch asks for
+  // many at once, so a run waits for a few batches rather than for each in turn.
+  const touching = new Map<string, string[]>();
+  const listOf = (out: string | undefined): string[] => (out ?? "").split("\n").filter((x) => x !== "");
+  const commitsTouching = (path: string): string[] => {
+    let cs = touching.get(path);
+    if (cs === undefined) touching.set(path, (cs = listOf(run(root, ["rev-list", "HEAD", "--", path]))));
+    return cs;
   };
   const blames = new Map<string, Map<number, string>>();
-  const blameOf = (path: string): Map<number, string> => {
-    // Kept or not, a file with uncommitted changes has no dated line.
-    if (isEdited(path)) return new Map();
-    let m = blames.get(path);
-    if (m !== undefined) return m;
-    m = new Map();
-    blames.set(path, m);
-    dirty = true;
+  const parseBlame = (out: string | undefined): Map<number, string> => {
+    const m = new Map<number, string>();
     let commit: string | undefined;
     let line = 0;
-    for (const l of (run(root, ["blame", "--line-porcelain", "HEAD", "--", path]) ?? "").split("\n")) {
+    for (const l of (out ?? "").split("\n")) {
       const head = /^([0-9a-f]{40}) \d+ (\d+)/.exec(l);
       if (head !== null) {
         commit = head[1];
         line = Number(head[2]);
       } else if (l.startsWith("\t") && commit !== undefined) m.set(line, commit);
     }
+    return m;
+  };
+  const blameOf = (path: string): Map<number, string> => {
+    // Kept or not, a file with uncommitted changes has no dated line.
+    if (isEdited(path)) return new Map();
+    let m = blames.get(path);
+    if (m !== undefined) return m;
+    m = parseBlame(run(root, ["blame", "--line-porcelain", "HEAD", "--", path]));
+    blames.set(path, m);
+    dirty = true;
     return m;
   };
 
@@ -169,7 +230,10 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
         // branch in is the same as one parent and is left out by git; one that resolves a conflict in the file is kept.
         // A commit made in the same second as the line counts, since scripted and rebased commits share a time.
         const from = dated(commit);
-        hit = (run(root, ["rev-list", `${commit}..HEAD`, "--", path]) ?? "").split("\n").flatMap((c) => dated(c) ?? []).filter((d) => from === undefined || d.date >= from.date);
+        // A commit the graph does not know (the history was cut) is asked of git directly, as before.
+        const known = graph().has(commit);
+        const after = known ? commitsTouching(path).filter((c) => !reachFrom(commit).has(c)) : (run(root, ["rev-list", `${commit}..HEAD`, "--", path]) ?? "").split("\n");
+        hit = after.flatMap((c) => dated(c) ?? []).filter((d) => from === undefined || d.date >= from.date);
         since.set(key, hit);
         dirty = true;
       }
@@ -185,8 +249,20 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
       return introduced.get(key);
     },
     existed(path) {
-      if (!existedCache.has(path)) existedCache.set(path, (run(root, ["log", "--all", "--format=%H", "-1", "--", path]) ?? "").trim() !== "");
-      return existedCache.get(path)!;
+      if (!everHeld.has(path)) everHeld.set(path, (run(root, ["log", "--all", "--format=%H", "-1", "--", path]) ?? "").trim() !== "");
+      return everHeld.get(path)!;
+    },
+    async prefetch(want: { files: string[]; documents: string[] }) {
+      const tracked = new Set(listOf(await runAsync(root, ["ls-files"])));
+      const files = [...new Set(want.files)].filter((f) => tracked.has(f) && !touching.has(f));
+      const documents = [...new Set(want.documents)].filter((d) => tracked.has(d) && !blames.has(d) && !isEdited(d));
+      await pool(8, [
+        ...files.map((f) => async () => void touching.set(f, listOf(await runAsync(root, ["rev-list", "HEAD", "--", f])))),
+        ...documents.map((d) => async () => {
+          blames.set(d, parseBlame(await runAsync(root, ["blame", "--line-porcelain", "HEAD", "--", d])));
+          dirty = true;
+        }),
+      ]);
     },
     frozen: (path: string) => frozenGlobs.some((g) => g.test(path)),
     untraced() {
@@ -213,7 +289,7 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
     save() {
       if (o.cache === undefined || cacheKey === undefined || !dirty) return;
       // Only what HEAD alone decides is kept: no blame of a file with uncommitted changes, and no origin of its lines.
-      const clean = (path: string) => edited.get(path) !== true;
+      const clean = (path: string) => !isEdited(path);
       const pathOf = (key: string) => key.slice(0, key.lastIndexOf(":"));
       const kept: Kept = {
         schema: "csh-history-cache/v1",
