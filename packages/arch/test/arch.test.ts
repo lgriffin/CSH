@@ -93,3 +93,25 @@ describe("the diagram against a rule and the facts", () => {
     expect(unplacedPackages(diagram, f)).toEqual(["@s/tools"]);
   });
 });
+
+describe("a rule over nothing", () => {
+  const modules = ["src/core/a.ts", "src/core/b.ts"];
+  const facts = { packages: [], modules, depends: [dep("src/core/a.ts", "src/core/b.ts")] };
+
+  it("is unknown, not held, when its subject selects no module read", () => {
+    const typo: ArchRule = { k: "forbid", from: { k: "modules", globs: ["src/cor/**"] }, to: { k: "package", name: "pg" } };
+    expect(evaluateRule(typo, facts, undefined)).toEqual({ result: "unknown", reason: "selects-nothing: modules(src/cor/**) matches none of 2 modules read" });
+    const only: ArchRule = { k: "only", from: { k: "modules", globs: ["lib/**"] }, to: [] };
+    expect(evaluateRule(only, facts, undefined).result).toBe("unknown");
+  });
+
+  it("holds when its subject exists and the thing it forbids is absent", () => {
+    const rule: ArchRule = { k: "forbid", from: { k: "modules", globs: ["src/core/**"] }, to: { k: "package", name: "pg" } };
+    expect(evaluateRule(rule, facts, undefined).result).toBe("holds");
+  });
+
+  it("is judged as before when the facts do not list their modules", () => {
+    const rule: ArchRule = { k: "forbid", from: { k: "modules", globs: ["src/cor/**"] }, to: { k: "package", name: "pg" } };
+    expect(evaluateRule(rule, { packages: [], depends: [] }, undefined).result).toBe("holds");
+  });
+});

@@ -22,6 +22,8 @@ export interface ArchFacts {
   /** Packages of the workspace; the source files a modules selector reads are not among them (stage 23). */
   packages: string[];
   depends: ArchDependency[];
+  /** Modules read, for telling a rule whose subject selects nothing (a typo, a moved directory) from one that holds. */
+  modules?: string[];
   /** Source files a reader could not read, such as a file in a language with no reader (stage 29). */
   unread?: string[];
 }
@@ -115,10 +117,25 @@ export function unplacedPackages(d: ArchDiagram, facts: ArchFacts): string[] {
 
 export type RuleResult = { result: "violated"; by: ArchDependency[] } | { result: "holds" } | { result: "unknown"; reason: string };
 
+/** A selector as a person wrote it, for a reason. */
+function describeSel(sel: ArchSel): string {
+  if (sel.k === "any") return "anything";
+  if (sel.k === "package") return `pkg(${sel.name})`;
+  if (sel.k === "modules") return `modules(${sel.globs.join(", ")})`;
+  return `container(${sel.id})`;
+}
+
 /** A rule against current facts. `closed` needs the diagram it names. */
 export function evaluateRule(rule: ArchRule, facts: ArchFacts, d: ArchDiagram | undefined): RuleResult {
   const missing = unknownContainers(rule, d);
   if (missing.length > 0) return { result: "unknown", reason: `unknown-container: ${missing.join(", ")}` };
+  // A rule over nothing holds of nothing: when its subject selects no module, package or file the facts know, the rule
+  // is a typo or points at a directory that moved, and "holds" would say a thing about code it never looked at.
+  // (What a forbid names as the target, or an only allows, may well be absent: that is the rule being kept.)
+  if ((rule.k === "forbid" || rule.k === "only") && facts.modules !== undefined) {
+    const universe = [...facts.modules, ...facts.packages, ...facts.depends.map((x) => x.from), ...(facts.unread ?? [])];
+    if (!universe.some((m) => selects(rule.from, m, d))) return { result: "unknown", reason: `selects-nothing: ${describeSel(rule.from)} matches none of ${facts.modules.length} modules read` };
+  }
   let by: ArchDependency[];
   if (rule.k === "forbid") {
     by = facts.depends.filter((x) => x.from !== x.to && selects(rule.from, x.from, d) && selects(rule.to, x.to, d));
