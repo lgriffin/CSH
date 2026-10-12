@@ -224,6 +224,23 @@ function recordedAuthoredBy(p: Project, slug: string): "person" | "agent" | "unk
   }
 }
 
+/**
+ * The problems with a sheet's judgments: each one when there are a few; past ten, counted by kind with the first
+ * examples of each (From real runs, stage 43), since a first run's hundreds share a handful of causes. a3.md lists all.
+ */
+export function problemsText(problems: string[]): string {
+  if (problems.length === 0) return "  no problems with the judgments\n";
+  const head = `  ${problems.length} problem${problems.length === 1 ? "" : "s"} with the judgments`;
+  if (problems.length <= 10) return `${head}:\n${problems.map((x) => `    ${x}`).join("\n")}\n`;
+  const kinds = new Map<string, string[]>();
+  for (const x of problems) {
+    const kind = /^[\w-]+/.exec(x)?.[0] ?? x;
+    kinds.set(kind, [...(kinds.get(kind) ?? []), x]);
+  }
+  const rows = [...kinds].sort((a, b) => b[1].length - a[1].length || (a[0] < b[0] ? -1 : 1)).map(([k, xs]) => `    ${xs.length} ${k}, e.g. ${xs.slice(0, 2).map((x) => x.slice(k.length).replace(/^:?\s*/, "")).join("; ")}`);
+  return `${head}, by kind (a3.md lists each):\n${rows.join("\n")}\n`;
+}
+
 async function build(p: Project, slug: string, check: boolean, io: A3Io, lead = ""): Promise<number> {
   const recorded = check ? recordedAuthoredBy(p, slug) : undefined;
   const r = await buildOutputs(p, slug, recorded !== undefined ? { authoredBy: recorded } : {});
@@ -245,7 +262,7 @@ async function build(p: Project, slug: string, check: boolean, io: A3Io, lead = 
     for (const [f, text] of Object.entries(r.files)) writeFileSync(join(dir, f), text);
     io.out(`${lead}wrote ${rel}/a3.json, a3.md and a3.html\n`);
   }
-  io.out(r.problems.length === 0 ? "  no problems with the judgments\n" : `  ${r.problems.length} problem${r.problems.length === 1 ? "" : "s"} with the judgments:\n${r.problems.map((x) => `    ${x}`).join("\n")}\n`);
+  io.out(problemsText(r.problems));
   return 0;
 }
 

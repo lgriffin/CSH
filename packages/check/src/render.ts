@@ -22,8 +22,19 @@ const READINGS = [
   "  3. The intent is undecided, and a person must decide it.",
 ];
 
-function finding(f: Finding): string[] {
+/** The sentence at a span such as `docs/x.md:12`, when the caller can read the repository (From real runs, stage 43). */
+export type SentenceAt = (span: string) => string | undefined;
+
+/** Where a claim finding's sentences are: each `path:line` its reason opens a clause with. */
+export const claimSpans = (f: Finding): string[] => (f.kind === "fact-conflict" || f.kind === "claim-conflict" ? [...(f.reason ?? "").matchAll(/(?:^| and )([^\s:]+:\d+): /g)].map((m) => m[1]!) : []);
+
+function finding(f: Finding, sentenceAt?: SentenceAt): string[] {
   const lines = [`[${f.kind}] ${f.id}${f.crossSource ? "  (cross-source)" : ""}  from ${f.query}`];
+  // A claim reads as the sentence that made it, beside the fact that decides it.
+  for (const span of sentenceAt !== undefined ? claimSpans(f) : []) {
+    const said = sentenceAt!(span);
+    if (said !== undefined) lines.push(`  ${span} says: "${said}"`);
+  }
   for (const m of f.members) lines.push(`  - ${m.fragment}  source ${m.source}, ${m.authority}`);
   if (f.context.length > 0) lines.push(`  context: ${f.context.join(", ")}`);
   if (f.collisionTerms.length > 0) lines.push(`  collision terms: ${f.collisionTerms.join(", ")}`);
@@ -48,12 +59,12 @@ function assessment(a: Assessment): string {
 
 const RESULT_PROBLEMS = new Set(["malformed-results", "no-results"]);
 
-export function renderReport(r: Report): string {
+export function renderReport(r: Report, sentenceAt?: SentenceAt): string {
   const out: string[] = [`CSH report for ${r.moduleDigest}`, `tool ${r.tool.version}, solver ${r.tool.solver}, budget ${r.tool.budgetMs} ms${r.snapshot !== undefined ? `, commit ${r.snapshot.commit}, ledger head ${r.snapshot.ledgerHead}` : ""}`, ""];
   const section = (title: string, fs: Finding[]) => {
     if (fs.length === 0) return;
     out.push(`== ${title}`, "");
-    for (const f of fs) out.push(...finding(f), "");
+    for (const f of fs) out.push(...finding(f, sentenceAt), "");
   };
   section("Cross-source conflicts", r.findings.filter((f) => CONFLICTS.has(f.kind) && f.crossSource));
   section("Other conflicts", r.findings.filter((f) => CONFLICTS.has(f.kind) && !f.crossSource));

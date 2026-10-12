@@ -69,8 +69,9 @@ as `csh coverage` prints it, so the files no source reads are listed before the 
 ### 1.4 Coverage in every run
 
 `csh run` adds one line after its counts: `coverage: N of M tracked files read; csh coverage lists the rest`, or
-`coverage: all M tracked files read`. It is left out when the run is of another commit (`--at`) or the source root is
-not a git repository.
+`coverage: all M tracked files read`. It is left out when the run is of another commit (`--at`), the source root is
+not a git repository, or the component manifest declares no sources (a specification that declares its own sources is
+not counted, and would read as nothing read; stage 43).
 
 ## 2. Rules that can be stated (stage 39)
 
@@ -174,11 +175,18 @@ a gap, or not decided.
 
 ## 6. Output (stage 43)
 
-- The run summary counts `errors` and `warnings` apart.
-- A claim finding prints the claim's sentence and the fact that decides it.
-- A3 problems from a first run are summarised by kind.
-- `placeholders` is a list of patterns for tokens a profile treats as examples, never as paths.
-- A profile can list volatile files that `stale-prose` does not weigh.
+- **Errors and warnings apart.** The run summary's count of report problems reads `N errors, M warnings`, with
+  `K notes` when any is of severity info, never `errors` for all of them.
+- **Claims as sentences.** For each claim the facts refute (`fact-conflict`) and each pair of claims that disagree
+  (`claim-conflict`), `csh run` prints the finding's reason, which holds what the claim says and the fact that
+  decides it, and the line of the source tree at each span the reason names (`docs/x.md:12 says: "..."`), up to five
+  findings, then how many more. `csh check` prints the same line under each such finding.
+- **A3 problems by kind.** When a sheet has more than ten problems with its judgments, `csh a3 build` and
+  `csh history` count them by kind, with the first two of each kind; `a3.md` and `a3.html` still list each.
+- **Placeholders.** The Markdown adapter's `placeholders` setting is one pattern; a backticked token that matches it
+  whole is an example, and names no file.
+- **Volatile files.** `history.volatile` lists path globs of files that change all the time; prose that names one is
+  never `stale-prose` because of its changes.
 
 ## 7. Process and safety (stage 44)
 

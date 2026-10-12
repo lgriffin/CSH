@@ -212,6 +212,8 @@ export interface HistoryPort {
   prefetch?(want: { files: string[]; documents: string[] }): Promise<void>;
   /** Whether a document records a moment, and so is not described stale by a later change to a file it names. */
   frozen?(path: string): boolean;
+  /** Whether a named file changes so often that prose naming it is never stale (stage 43). */
+  volatile?(path: string): boolean;
   untraced(): { commit: string; date: string; files: number; agent: boolean }[];
 }
 

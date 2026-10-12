@@ -15,6 +15,8 @@ export interface HistoryOptions {
   since?: string;
   /** Globs of documents that record a moment: release notes, decisions. Prose in them is never stale-prose. */
   frozen?: string[];
+  /** Files that change all the time (package.json, a composition root): prose naming them is never stale (stage 43). */
+  volatile?: string[];
   /** Globs of paths that hold tests beside the usual conventions (a feature directory, a step directory). */
   tests?: string[];
   /** Paths whose change is a change to the implementation: a path, or a directory and everything under it. */
@@ -93,6 +95,7 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
   const everHeld = new Map<string, boolean>();
   const testGlobs = (o.tests ?? []).map(globPattern);
   const frozenGlobs = (o.frozen ?? []).map(globPattern);
+  const volatileGlobs = (o.volatile ?? []).map(globPattern);
   const dates = new Map<string, string>();
   for (const l of (run(root, ["log", "--format=%H %cI", "HEAD"]) ?? "").split("\n")) {
     const [h, d] = l.split(" ");
@@ -290,6 +293,7 @@ export function gitHistory(root: string, o: HistoryOptions): HistoryPort & { sin
       ]);
     },
     frozen: (path: string) => frozenGlobs.some((g) => g.test(path)),
+    volatile: (path: string) => volatileGlobs.some((g) => g.test(path)),
     untraced() {
       if (untraced !== undefined) return untraced;
       untraced = [];

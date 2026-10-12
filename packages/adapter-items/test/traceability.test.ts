@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { digestOf } from "@csh/kernel";
 import type { AdapterInput } from "@csh/witness";
 import { run as gherkin } from "../src/gherkin.ts";
+import { run as markdown } from "../src/markdown.ts";
 import { declarations, loadedFeatures, run as tests, stepDefinitions } from "../src/tests.ts";
 
 const input = (files: Record<string, string>, config?: Record<string, string>, executions?: Record<string, string>): AdapterInput => {
@@ -114,5 +115,14 @@ describe("scenario steps, decisions and file identities", () => {
     const out = gherkin(input({ "features/0003-cart.feature": feature }, { idTag: "(R-[0-9]+)" }, { "results/cucumber.json": report }));
     expect(out.results).toEqual([{ file: "features/0003-cart.feature", outcome: "passed", cites: ["R-1"], span: "results/cucumber.json#[0].elements[0]" }]);
     expect(out.diagnostics.map((d) => d.code)).toContain("results-unmatched");
+  });
+});
+
+describe("placeholders (stage 43)", () => {
+  it("reads a token the pattern matches whole as an example, never a path", () => {
+    const doc = "# Guide\n\nPut code in `src/x.ts` or `src/real.ts`, and name it `<name>.ts`.\n";
+    const to = (config?: Record<string, string>) => markdown({ ...input({ "docs/guide.md": doc }, config), source: { name: "D", kind: "Documents", at: "." } }).edges!.filter((e) => e.rel === "mentions-file").map((e) => e.to);
+    expect(to()).toEqual(["file:src/x.ts", "file:src/real.ts"]);
+    expect(to({ placeholders: "src/x\\.ts" })).toEqual(["file:src/real.ts"]);
   });
 });

@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { a3Dir, readJudgments } from "@csh/a3";
-import { checkExpected, DIVERGENCE_READINGS, type Finding, overviewOf, parseExpected, renderExpect, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report } from "@csh/check";
+import { checkExpected, claimSpans, DIVERGENCE_READINGS, type Finding, overviewOf, parseExpected, renderExpect, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report, type SentenceAt } from "@csh/check";
 import { exitCode, formatDecision as formatGate, type GateDecision, type Mode } from "@csh/gate";
 import { digestOf, fragmentsOf, textDigestOf, type Module, stableJson } from "@csh/kernel";
 import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons } from "@csh/ledger";
@@ -328,7 +328,7 @@ export async function csh(argv: string[], io: Io): Promise<number> {
       if (res === undefined) return 1;
       write(join(p.root, a.options.out ?? REPORT_PATH), stableJson(res.report));
       write(join(p.root, MODEL_PATH), stableJson(res.model));
-      io.out(a.flags.has("json") ? stableJson(res.report) : renderReport(res.report));
+      io.out(a.flags.has("json") ? stableJson(res.report) : renderReport(res.report, sentenceAt(p)));
       return 0;
     }
     case "gaps": {
@@ -507,6 +507,23 @@ async function runGate(p: Project, a: Args, io: Io): Promise<number> {
 }
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
+/** The sentence on a line of the source tree, for a claim's span (From real runs, stage 43); undefined outside it. */
+function sentenceAt(p: Project): SentenceAt {
+  return (span) => {
+    const m = /^(.*):(\d+)$/.exec(span);
+    if (m === null) return undefined;
+    const file = resolve(p.sourceRoot, m[1]!);
+    if (!file.startsWith(resolve(p.sourceRoot)) || !existsSync(file)) return undefined;
+    try {
+      const line = readFileSync(file, "utf8").split(/\r?\n/)[Number(m[2]) - 1]?.trim();
+      if (line === undefined || line === "") return undefined;
+      return line.length > 200 ? `${line.slice(0, 197)}...` : line;
+    } catch {
+      return undefined;
+    }
+  };
+}
 const countOf = (r: Report, kinds: string[]) => r.findings.filter((f) => kinds.includes(f.kind)).length;
 
 /** csh run: harnesses, check and gate for one snapshot of the component (Anchor, harnesses and A3, section 4). */
@@ -529,7 +546,7 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
   for (const h of record.harnesses) lines.push(`  harness ${h.practice}: ${h.argv.join(" ")}  exit ${h.exitCode ?? h.error ?? "none"}, ${h.witnesses} witnesses, ${h.executions} executions (not sandboxed)`);
   if (record.harnesses.length === 0) lines.push("  no practice has a harness");
   const conflicts = countOf(report, ["state-conflict", "joint-conflict", "example-conflict", "arch-conflict", "claim-conflict", "fact-conflict", "vacuous"]);
-  lines.push(`  findings ${report.findings.length} (${plural(conflicts, "conflict")}, ${plural(countOf(report, ["example-divergence"]), "divergence")}, ${report.findings.filter((f) => f.crossSource).length} cross-source); gaps ${report.gapView.gaps.length}; not comparable ${report.notComparable.length}; errors ${report.errors.length}`);
+  lines.push(`  findings ${report.findings.length} (${plural(conflicts, "conflict")}, ${plural(countOf(report, ["example-divergence"]), "divergence")}, ${report.findings.filter((f) => f.crossSource).length} cross-source); gaps ${report.gapView.gaps.length}; not comparable ${report.notComparable.length}; ${plural(report.errors.filter((e) => e.severity === "error").length, "error")}, ${plural(report.errors.filter((e) => e.severity === "warning").length, "warning")}${report.errors.some((e) => e.severity === "info") ? `, ${plural(report.errors.filter((e) => e.severity === "info").length, "note")}` : ""}`);
   const sev = (x: string) => report.diagnostics.filter((d) => d.severity === x).length;
   lines.push(`  items ${report.items.length}; unliftable ${report.unliftable.length}; adapter diagnostics ${report.diagnostics.length} (${plural(sev("error"), "error")}, ${plural(sev("warning"), "warning")})`);
   // What the counts are made of: errors and warnings by code with an example, never only a number to go and dig for.
@@ -543,8 +560,20 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
   for (const [k, { n, at }] of shown) lines.push(`    ${n} ${k}, e.g. ${at}`);
   if (kinds.size > shown.length) lines.push(`    and ${kinds.size - shown.length} more kinds: csh check lists them`);
   for (const e of report.errors.slice(0, 5)) lines.push(`    ${e.severity} ${e.code}: ${e.detail}`);
+  // A claim the facts refute, or two that disagree: the sentence and the fact, never only the claim's name (stage 43).
+  const claims = report.findings.filter((f) => f.kind === "fact-conflict" || f.kind === "claim-conflict");
+  const said = sentenceAt(p);
+  for (const f of claims.slice(0, 5)) {
+    lines.push(`  ${f.kind}: ${f.reason ?? f.query}`);
+    for (const span of claimSpans(f)) {
+      const sentence = said(span);
+      if (sentence !== undefined) lines.push(`    ${span} says: "${sentence}"`);
+    }
+  }
+  if (claims.length > 5) lines.push(`  and ${claims.length - 5} more claim findings: csh check lists them`);
   // What the profile leaves unread, said on every run of the current snapshot (From real runs, section 1.4).
-  const c = a.options.at === undefined ? coverageOf(p) : undefined;
+  // Only sources the manifest declares are counted: a specification that declares its own would read as nothing read.
+  const c = a.options.at === undefined && (p.component?.manifest.sources ?? []).length > 0 ? coverageOf(p) : undefined;
   if (c !== undefined) lines.push(c.read === c.tracked ? `  coverage: all ${c.tracked} tracked files read` : `  coverage: ${c.read} of ${c.tracked} tracked files read; csh coverage lists the rest`);
   const v = (x: string) => (report.assessments ?? []).filter((y) => y.verdict === x).length;
   lines.push(`  obligations ${(report.assessments ?? []).length}: conflicting ${v("conflicting")}, violated ${v("violated")}, satisfied ${v("satisfied")}, unknown ${v("unknown")}`);

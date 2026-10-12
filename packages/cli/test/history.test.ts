@@ -227,6 +227,15 @@ describe("history in a run", () => {
     expect(gapsOf(r.report, "untraced-change")).toEqual([{ kind: "untraced-change", subject: `commit:${commits.c2!.slice(0, 12)}`, fragments: [], detail: "2026-02-01: changes 1 implementation file, with no test and no Refs: trailer; an agent co-authored it" }]);
     expect(r.report.findings.map((f) => f.kind)).toContain("fact-conflict");
   });
+
+  it("prints a refuted claim as its sentence and the fact that decides it, and counts errors and warnings apart (stage 43)", async () => {
+    const f = io(profile);
+    expect(await csh(["run"], f.io), f.o.err).toBe(0);
+    expect(f.o.out).toMatch(/not comparable \d+; \d+ errors?, \d+ warnings?/);
+    expect(f.o.out).toContain("  fact-conflict: docs/charter.md:15: says ");
+    const line = CHARTER.split("\n")[14]!.trim();
+    expect(f.o.out).toContain(`    docs/charter.md:15 says: "${line}"`);
+  }, 60000);
 });
 
 describe("csh history", () => {

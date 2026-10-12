@@ -71,6 +71,10 @@ export function run(input: AdapterInput): AdapterOutput {
     items.push(it);
     return true;
   };
+  // Tokens the profile says are examples, never paths (From real runs, stage 43): `placeholders` is one pattern a whole
+  // token must match, such as `src/x\\.ts|<[^>]+>`.
+  const placeholder = input.config?.placeholders !== undefined ? new RegExp(`^(?:${input.config.placeholders})$`) : undefined;
+  const pathOf = (t: string) => (placeholder?.test(t.trim()) === true ? undefined : (pathToken(t) ?? bareFileToken(t)));
   for (const file of sortedFiles(input)) {
     if (!/\.(md|markdown)$/i.test(file.path)) continue;
     const text = decode(file.bytes);
@@ -90,10 +94,10 @@ export function run(input: AdapterInput): AdapterOutput {
       for (const { t, span } of verifying.tokens) {
         if (mechanisms.has(t) && !made.has(t)) {
           made.add(t);
-          const p = pathToken(t) ?? bareFileToken(t);
+          const p = pathOf(t);
           edges.push({ from: verifying.item.id, rel: "verified-by", to: p !== undefined ? `file:${p}` : `text:${t}`, span });
         } else if (!mechanisms.has(t)) {
-          const p = pathToken(t) ?? bareFileToken(t);
+          const p = pathOf(t);
           if (p !== undefined) edges.push({ from: verifying.item.id, rel: "mentions-file", to: `file:${p}`, span });
         }
       }
@@ -119,7 +123,7 @@ export function run(input: AdapterInput): AdapterOutput {
     };
     const mentions = (text: string, from: string, span: string) => {
       for (const t of backticked(text)) {
-        const p = pathToken(t) ?? bareFileToken(t);
+        const p = pathOf(t);
         if (p !== undefined) edges.push({ from, rel: "mentions-file", to: `file:${p}`, span });
       }
     };

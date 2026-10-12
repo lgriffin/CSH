@@ -136,7 +136,7 @@ export function trace(input: TraceInput): TraceResult {
     if (h !== undefined && r === "file" && DESCRIBING.has(e.rel)) {
       const path = fileOf(e.to);
       const at = /^(.*):(\d+)$/.exec(e.span);
-      if (path !== undefined && at !== null && !DOCUMENT.test(path) && h.frozen?.(at[1]!) !== true) {
+      if (path !== undefined && at !== null && !DOCUMENT.test(path) && h.frozen?.(at[1]!) !== true && h.volatile?.(path) !== true) {
         const key = `${e.span} ${path}`;
         const seen = stale.get(from);
         if (seen?.has(key) !== true) {

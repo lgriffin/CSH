@@ -4,6 +4,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, write
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { csh } from "../src/index.ts";
+import { problemsText } from "../src/a3.ts";
 
 const REPO = resolve(import.meta.dirname, "../../..");
 let proj: string;
@@ -173,6 +174,17 @@ describe("csh a3", () => {
     const check = io(REPO);
     expect(await csh(["a3", "build", "layering", "--check", "--root", REPO], check.io), check.o.err).toBe(0);
     expect(check.o.out).toMatch(/match the stage records and judgments/);
-    expect(check.o.out).toMatch(/unclassified at first: violated: DiagramIsComplete \(candidate\)/);
+    // Past ten problems they are counted by kind (stage 43); a3.md lists each.
+    expect(check.o.out).toMatch(/19 unclassified, e\.g\. at first: /);
+    expect(readFileSync(join(REPO, "csh/a3/layering/a3.md"), "utf8")).toMatch(/`unclassified` at first: violated: DiagramIsComplete \(candidate\)/);
+  });
+});
+
+describe("problems with the judgments (stage 43)", () => {
+  it("lists a few, and counts many by kind with the first examples of each", () => {
+    expect(problemsText([])).toBe("  no problems with the judgments\n");
+    expect(problemsText(["unanswered: Q1"])).toBe("  1 problem with the judgments:\n    unanswered: Q1\n");
+    const many = [...Array.from({ length: 12 }, (_, i) => `unclassified at v1: signal ${i}`), "dead-rule: lanes.x: {}"];
+    expect(problemsText(many)).toBe("  13 problems with the judgments, by kind (a3.md lists each):\n    12 unclassified, e.g. at v1: signal 0; at v1: signal 1\n    1 dead-rule, e.g. lanes.x: {}\n");
   });
 });
