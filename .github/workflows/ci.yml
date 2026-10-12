@@ -56,7 +56,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
-      - run: pnpm test
+      # Two workers: with more, the runner is loaded enough by the fixtures' subprocesses that vitest's own worker
+      # messages time out after every test has passed.
+      - run: pnpm test --maxWorkers=2
 
   # The gate of a component of the harness itself (Next layers, section 3.2): csh status, then, once the component has a
   # maintainers file, the enforcing run and the decision verified. CSH_ROOT_COMMIT is a repository variable, set by the
