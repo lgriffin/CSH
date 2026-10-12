@@ -306,3 +306,74 @@ Raised in stage 36. Each profile takes one reading where its subject's documents
   source reads as citable items; whether doc comments should become citable is open.
 
 Acknowledged on 12 October 2026: the profiles keep these readings.
+
+## Q-40 Should a subject profile's rules count towards a rung?
+
+Raised in stage 46 ([14](docs/spec/14-assertion-ladder.md), section 1). A profile states a subject's documents as rules
+CSH judges, but nothing in the subject runs them.
+
+- **Never (chosen).** A rung counts only what stops a wrong change in the repository itself; CSH's reading of a subject
+  is the inspection, not the subject's assertion. A rule a profile states stays at the rung the subject's own tests give.
+- **Count a holding profile rule as L3.** The ladder would then report what CSH checks rather than what the repository
+  does, and a subject would climb by being profiled.
+
+Open. Recorded as A-160.
+
+## Q-41 Can CSH tell that a subject's own check explains its failure?
+
+Raised in stage 46. L4 needs a failure that names the rule, the offender and the fix. CSH reads tests without running
+them, so it cannot read what a failing test prints. A test's title names the rule (the receivers' titles open with the
+requirement's identifier) but not the offender or the fix.
+
+- **Not established (chosen).** A subject's test raises a rule to L3 only; L4 comes from an approved CSH obligation.
+- **Read assertion messages statically** (`expect(x, "message")`, `assert x, "message"`, AssertJ's `.as(...)`), per
+  language, and count a message that names a remedy. A heuristic over meaning.
+- **Read failure messages from test results** (JUnit XML, vitest JSON) when a run failed. Only seen when a test fails.
+
+Open. Recorded as A-160.
+
+## Q-42 Fading: should prose that repeats a checked rule be a gap?
+
+Raised in stage 46. The paper removes a rule from the prose once a check covers it. Telling whether a sentence restates
+a rule needs its meaning, which CSH does not read; an identifier in the sentence only says the sentence refers to it.
+
+- **Not reported (chosen).**
+- **Report an instruction-file line that cites an identifier at L3 or above** as a suggestion to fade. It would also
+  flag sentences that only point to the rule.
+
+Open.
+
+## Q-43 Should CSH read the paper's violation seeding results?
+
+Raised in stage 46. The paper benchmarks a repository by planting canonical mistakes and running its gate. CSH reads and
+never runs, so it cannot seed; it could read a seeding run's results (the receivers' `evaluation/results.json`) as
+evidence of which mechanism caught each mistake, as it reads test results.
+
+- **Not read (chosen).** No format is shared yet.
+- **Read them**, as converged where the mechanism that caught a seed matches the rung CSH finds, a gap where it does not.
+
+Open.
+
+## Q-44 Prevention CSH does not read
+
+Raised in stage 47. TypeScript can prevent an unmapped member with an exhaustive `switch` that assigns to `never`;
+Python can with `assert_never` under a type checker; Go linters can demand a complete `switch`. None is read: the first
+needs control flow, the others a tool's configuration and verdict.
+
+- **Not read (chosen).** Such a rule stays at the rung its tests give; a `total` claim is refuted (TypeScript) or
+  unknown (Python, Go).
+- **Read each one**, at the cost of a reader per form.
+
+Open. Recorded as A-162 and A-165.
+
+## Q-45 Paths in a document of a subdirectory
+
+Raised in stage 49. The taskboard receivers each sit in a directory of one repository, and their `AGENTS.md` names
+`src/domain/` meaning `typescript/src/domain/`. Paths are resolved from the repository root, so these are not checked
+(neither resolved nor dangling).
+
+- **Leave them unchecked (chosen).**
+- **Resolve a path against the document's own directory as well**, so a receiver's instructions are checked against its
+  own tree. Could resolve a path the author did not mean.
+
+Open.

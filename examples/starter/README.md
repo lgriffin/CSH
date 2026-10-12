@@ -1,7 +1,7 @@
 # Starter
 
-The smallest component the harness evaluates: one function, one probe, one sentence and one rule, at rung 3 of
-[the ladder](https://github.com/lgriffin/CSH/blob/main/README.md#the-ladder). Unlike the other examples it stands alone. Copy it out of the repository,
+The smallest component the harness evaluates: one function, one probe, one sentence and one rule, at step 3 of
+[the adoption steps](https://github.com/lgriffin/CSH/blob/main/README.md#adoption-steps). Unlike the other examples it stands alone. Copy it out of the repository,
 install the tool beside it, and replace the function with yours.
 
 | File | What it is |
@@ -36,7 +36,7 @@ stored under `.csh-cache/runs/`.
 1. Replace `src/shipping.ts` with your function, and `docs/requirements.md` with your sentences.
 2. In `spec/shipping.csl.ts`, name your event, its arguments and its result, and write one rule that cites one sentence.
 3. In the tests, point the probe at your function. Its mappers name the witness keys the bindings name.
-4. Run `npx csh run`, then climb the ladder: a second practice, a model, approvals, and an A3.
+4. Run `npx csh run`, then take the next adoption steps: a second practice, a model, approvals, and an A3.
 
 ## Containers it exercises
 
