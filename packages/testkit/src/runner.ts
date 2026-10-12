@@ -397,7 +397,10 @@ export class FixtureRunner {
       const tarballs = packWorkspace(packs, repo);
       cpSync(join(repo, "examples", "starter"), project, { recursive: true, filter: (p) => !/[\\/](node_modules|reports|\.csh-cache)$/.test(p) });
       const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith("CSH_")));
-      const sh = (cmd: string, args: string[]) => spawnSync(cmd, args, { cwd: project, encoding: "utf8", env });
+      // On Windows npm and the installed csh are .cmd shims, which only a shell runs.
+      const win = process.platform === "win32";
+      const sh = (cmd: string, args: string[]) =>
+        win ? spawnSync([cmd, ...args].map((a) => `"${a}"`).join(" "), { cwd: project, encoding: "utf8", env, shell: true }) : spawnSync(cmd, args, { cwd: project, encoding: "utf8", env });
       const npm = sh("npm", ["install", "--save-dev", "--no-audit", "--no-fund", ...tarballs]);
       if (npm.status !== 0) {
         // Offline, the registry packages cannot be installed. Like a missing gpg, that skips the fixture only when the

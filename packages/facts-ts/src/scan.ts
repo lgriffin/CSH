@@ -252,7 +252,10 @@ export function readFile(path: string, text: string): { refs: Reference[]; expor
       if (spec !== undefined) refs.push({ specifier: spec, line: lineOf(sf, n), typeOnly });
     } else if (ts.isExportDeclaration(n)) {
       const spec = literal(n.moduleSpecifier);
-      if (spec !== undefined) refs.push({ specifier: spec, line: lineOf(sf, n), typeOnly: n.isTypeOnly });
+      const c = n.exportClause;
+      // Like an import, a re-export whose every named element is a type carries no value.
+      const typeOnly = n.isTypeOnly || (c !== undefined && ts.isNamedExports(c) && c.elements.length > 0 && c.elements.every((e) => e.isTypeOnly));
+      if (spec !== undefined) refs.push({ specifier: spec, line: lineOf(sf, n), typeOnly });
       const from = spec !== undefined ? { from: spec } : {};
       if (n.exportClause === undefined) exports.push({ symbol: "*", ...from, typeOnly: n.isTypeOnly });
       else if (ts.isNamespaceExport(n.exportClause)) exports.push({ symbol: n.exportClause.name.text, ...from, typeOnly: n.isTypeOnly });

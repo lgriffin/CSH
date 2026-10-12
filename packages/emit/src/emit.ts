@@ -104,8 +104,9 @@ interface RunnerReply {
  * often a root outside the directory csh runs from, whose specification cannot reach the tool's packages.
  */
 export function accessMessage(text: string, root: string): string {
+  // A path may hold quotes and parentheses, so each pattern runs to the last delimiter on its line.
   const first = text.split("\n").find((l) => /ERR_ACCESS_DENIED|Access to this API has been restricted|E-ACCESS/.test(l)) ?? text.split("\n")[0] ?? text;
-  const resource = /resource: '([^']*)'/.exec(text)?.[1] ?? /\(refused: ([^)]*)\)/.exec(text)?.[1];
+  const resource = /resource: '(.*)'/.exec(text)?.[1] ?? /\(refused: (.*)\)$/m.exec(text)?.[1];
   if (resource === undefined) return first.trim();
   return `E-ACCESS: the sandbox refused to read ${resource}. A specification may read only its component root (${root}) and the tool's own code; when --root names a directory outside the one csh runs from, run csh from a directory that contains it.`;
 }

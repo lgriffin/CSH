@@ -244,6 +244,7 @@ export async function runIsolated(adapterUrl: string, input: AdapterInput, timeo
  * adapter's crash or timeout is reported as its own.
  */
 export async function runIsolatedBatch(jobs: { adapter: string; input: AdapterInput }[], timeoutMs = 30000): Promise<(AdapterOutput | Error)[]> {
+  if (jobs.length === 0) return [];
   if (jobs.length === 1) return [await runIsolated(jobs[0]!.adapter, jobs[0]!.input, timeoutMs).catch((e: Error) => e)];
   try {
     const r = await isolatedCall<{ results: ({ ok: true; output: AdapterOutput } | { ok: false; message: string })[] }>({ jobs }, timeoutMs * jobs.length, []);
@@ -414,7 +415,9 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
     const execPaths = new Set(execFiles.map((f) => f.path));
     input.files = files.filter((f) => !execPaths.has(f.path));
     const failed = (err: unknown): AdapterOutput => ({ diagnostics: [{ code: "adapter-failed", severity: "error", message: (err as Error).message }] });
-    const finish = (output: AdapterOutput): void => {
+    const finish = (given: AdapterOutput): void => {
+      // An adapter that returns no output failed, like one that threw.
+      const output = typeof given === "object" && given !== null && Array.isArray(given.diagnostics) ? given : failed(new Error("the adapter returned no output"));
       if (output.claims !== undefined) output.claims.source = source.name;
       // A setting the adapter does not read changes nothing, which looks like one that worked.
       if (spec !== undefined) {
@@ -466,6 +469,12 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
 /** Whether a module URL is the tool's own code: under its packages or the node_modules it is installed in. */
 function isToolCode(url: string): boolean {
   if (!url.startsWith("file:")) return true;
-  const path = realpathSync(fileURLToPath(url));
+  let path: string;
+  try {
+    path = realpathSync(fileURLToPath(url));
+  } catch {
+    // A path that names no file is not the tool's: it runs alone and fails there as its own adapter-failed.
+    return false;
+  }
   return toolReadable().some((r) => path === r || path.startsWith(`${r}${sep}`));
 }

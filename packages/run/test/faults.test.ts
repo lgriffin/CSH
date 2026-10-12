@@ -82,6 +82,16 @@ describe("no silent satisfaction", () => {
     expect(satisfied(report)).toEqual([]);
   }, 20000);
 
+  it("an adapter path that names no file, and an adapter that returns nothing", async () => {
+    const d = fresh("no-output");
+    const e = await emit(join(d, "spec.csl.ts"), { root: d, readable: [resolve(d, "..")] });
+    if (!e.ok) throw new Error("emit failed");
+    for (const adapter of [join(ADAPTERS, "no-such-adapter.ts"), join(ADAPTERS, "nothing.ts")]) {
+      const runs = await runSources(e.module, { root: d, adapters: { Witnesses: adapter }, bindingAuthority: () => "approved" });
+      expect(runs.find((x) => x.source === "UnitTests")!.output.diagnostics[0]!.code).toBe("adapter-failed");
+    }
+  }, 20000);
+
   it.each(["clock-at-load", "clock-by-constructor"])("an adapter that reads the clock while it loads (%s)", async (name) => {
     const d = fresh(name);
     const e = await emit(join(d, "spec.csl.ts"), { root: d, readable: [resolve(d, "..")] });
