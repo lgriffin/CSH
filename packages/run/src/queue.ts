@@ -4,7 +4,7 @@
 // the formal specification's rule that review queues are bounded. It reads only.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { compareCodePoints, digestOf, fragmentsOf } from "@csh/kernel";
+import { compareCodePoints, digestOf, fragmentsOf, textDigestOf } from "@csh/kernel";
 import { type AuthoredBy, authoredByOf, type Provenance, resolveAuthority } from "@csh/ledger";
 import type { SolverPort } from "@csh/solver";
 import { evaluateProject } from "./evaluate.ts";
@@ -77,7 +77,7 @@ export async function componentQueue(p: Project, solver: SolverPort): Promise<Qu
     const file = join(a3Dir, slug, "judgments.json");
     if (!existsSync(file)) continue;
     const fragment = `${name}/#a3/${slug}`;
-    const authority = e.ledger === undefined ? "candidate" : resolveAuthority(e.ledger, { name: fragment, digest: digestOf(readFileSync(file)), cites: [] }).authority;
+    const authority = e.ledger === undefined ? "candidate" : resolveAuthority(e.ledger, { name: fragment, digest: textDigestOf(readFileSync(file)), cites: [] }).authority;
     if (authority === "candidate") entries.push(entry(fragment, "a3", fileProvenance(p, `csh/a3/${slug}/judgments.json`), []));
   }
   entries.sort((a, b) => b.unlocks.length - a.unlocks.length || (b.waitedDays ?? -1) - (a.waitedDays ?? -1) || compareCodePoints(a.fragment, b.fragment));

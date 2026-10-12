@@ -2,7 +2,7 @@
 // csh/a3/<slug>/stages/<id>/ and committed, so the sheet reads correctly after its branches are gone.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { digestOf } from "@csh/kernel";
+import { textDigestOf } from "@csh/kernel";
 import { A3_DIR, type Judgments, JUDGMENTS_SCHEMA, MARKS, type StageRecord } from "./types.ts";
 
 export const STAGE_FILES = ["run.json", "report.json", "gate.json"] as const;
@@ -29,7 +29,7 @@ export function readStage(dir: string, id: string): StageRecord | undefined {
     run: JSON.parse(readFileSync(join(dir, "run.json"), "utf8")),
     report: JSON.parse(reportBytes.toString("utf8")),
     gate: JSON.parse(gateBytes.toString("utf8")),
-    digests: { report: digestOf(new Uint8Array(reportBytes)), gate: digestOf(new Uint8Array(gateBytes)) },
+    digests: { report: textDigestOf(new Uint8Array(reportBytes)), gate: textDigestOf(new Uint8Array(gateBytes)) },
   };
 }
 

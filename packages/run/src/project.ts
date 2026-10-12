@@ -278,7 +278,7 @@ async function digestsAtCommit(p: Project, spec: string, commit: string): Promis
   try {
     rmSync(wt, { recursive: true, force: true });
     mkdirSync(dirname(wt), { recursive: true });
-    git(p.root, "worktree", "add", "--detach", "--force", wt, commit);
+    git(p.root, "-c", "core.longpaths=true", "worktree", "add", "--detach", "--force", wt, commit);
     const base = join(wt, p.gitPrefix);
     const file = join(base, specRel);
     if (!existsSync(file)) return undefined;

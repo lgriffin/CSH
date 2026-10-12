@@ -387,7 +387,7 @@ export async function runAt(o: RunOptions & { commit: string }): Promise<RunResu
     } catch {
       // Nothing to prune.
     }
-    git(top, "worktree", "add", "--detach", "--force", wt, commit);
+    git(top, "-c", "core.longpaths=true", "worktree", "add", "--detach", "--force", wt, commit);
     // A component inside a workspace (a package of a monorepo) resolves its packages from its own node_modules and
     // those of the directories above it, which a worktree does not have. The dependency files are the commit's own
     // (checked above), so the installed directories are linked in at the same paths.

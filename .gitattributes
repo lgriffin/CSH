@@ -1,0 +1,3 @@
+# Text is LF in every checkout, Windows included (From real runs, stage 41): fixtures, READMEs, A3 sheets and
+# judgments are compared and digested byte for byte.
+* text=auto eol=lf

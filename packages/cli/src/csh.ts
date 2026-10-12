@@ -5,7 +5,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { a3Dir, readJudgments } from "@csh/a3";
 import { checkExpected, DIVERGENCE_READINGS, type Finding, overviewOf, parseExpected, renderExpect, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report } from "@csh/check";
 import { exitCode, formatDecision as formatGate, type GateDecision, type Mode } from "@csh/gate";
-import { digestOf, fragmentsOf, type Module, stableJson } from "@csh/kernel";
+import { digestOf, fragmentsOf, textDigestOf, type Module, stableJson } from "@csh/kernel";
 import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons } from "@csh/ledger";
 import { printFragment } from "@csh/print";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
@@ -255,7 +255,7 @@ async function decideA3(kind: DecisionKind, p: Project, slug: string, actor: str
     return 2;
   }
   const fragment = a3Fragment(name, slug);
-  const digest = digestOf(read.bytes);
+  const digest = textDigestOf(read.bytes);
   const ledger = await ledgerOf(p, specPathOf(p));
   const solo = ledger === undefined || persons(ledger.maintainers).length <= 1;
   io.out(`${kind} ${fragment}\n  digest ${digest}\n  the judgments in ${a3Dir(p.root, slug).slice(p.root.length + 1)}/judgments.json: ${read.judgments.title || "(untitled)"}\n  Approving them makes the sheet's root causes and countermeasures approved; any edit returns them to candidate.\n`);

@@ -39,6 +39,25 @@ jobs:
       - name: README commands
         run: node packages/testkit/src/triangle.ts readme
 
+  # The same suite on Windows (From real runs, stage 41): paths with backslashes, CRLF checkouts and the sandbox's
+  # permission model differ there, and the runs that found these were on Windows.
+  windows:
+    name: Windows (Node 22)
+    runs-on: windows-latest
+    steps:
+      - run: git config --global core.longpaths true
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+
   # The gate of a component of the harness itself (Next layers, section 3.2): csh status, then, once the component has a
   # maintainers file, the enforcing run and the decision verified. CSH_ROOT_COMMIT is a repository variable, set by the
   # owner outside the repository; until it is set csh status reports the root as taken from history (A-28).

@@ -6,7 +6,7 @@ import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSyn
 import { join } from "node:path";
 import { A3_DIR, a3Dir, type Authority, buildA3, type Judgments, readJudgments, readStage, renderHtml, renderMarkdown, skeleton, SLUG, STAGE_FILES, stageDir, stageIntegrity, type StageRecord } from "@csh/a3";
 import type { Mode } from "@csh/gate";
-import { digestOf, stableJson } from "@csh/kernel";
+import { stableJson, textDigestOf } from "@csh/kernel";
 import { authoredByOf, resolveAuthority } from "@csh/ledger";
 import { fetchSubject, fileProvenance, ledgerOf, type Project, type RunOptions, runAt, runComponent, RUNS_DIR, specPathOf, subjectCheckout } from "@csh/run";
 import type { Args } from "./args.ts";
@@ -120,7 +120,7 @@ export async function buildOutputs(p: Project, slug: string, o: { authoredBy?: "
     return own === undefined ? [] : [`${own.problem} ${rec.id}: ${own.detail}`];
   });
   if (altered.length > 0) return { error: `the stage records cannot be used:\n${altered.map((x) => `  ${x}`).join("\n")}` };
-  const digest = digestOf(read.bytes);
+  const digest = textDigestOf(read.bytes);
   const vcs = p.vcs;
   const model = buildA3({
     slug,

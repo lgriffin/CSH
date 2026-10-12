@@ -98,6 +98,18 @@ interface RunnerReply {
   composition?: { errors: { code: string; message: string }[]; shadowed: ShadowedObligation[]; inherited: { name: string; pack: string }[] } | null;
 }
 
+/**
+ * Why the sandbox refused a read, naming the path (From real runs, stage 41): Node's own message says only that access
+ * is restricted. A specification may read its component root and the tool's own code; a path outside both is most
+ * often a root outside the directory csh runs from, whose specification cannot reach the tool's packages.
+ */
+export function accessMessage(text: string, root: string): string {
+  const first = text.split("\n").find((l) => /ERR_ACCESS_DENIED|Access to this API has been restricted|E-ACCESS/.test(l)) ?? text.split("\n")[0] ?? text;
+  const resource = /resource: '([^']*)'/.exec(text)?.[1] ?? /\(refused: ([^)]*)\)/.exec(text)?.[1];
+  if (resource === undefined) return first.trim();
+  return `E-ACCESS: the sandbox refused to read ${resource}. A specification may read only its component root (${root}) and the tool's own code; when --root names a directory outside the one csh runs from, run csh from a directory that contains it.`;
+}
+
 /** Run the module once in a fresh, locked-down subprocess. */
 export function runSandboxed(file: string, opts: EmitOptions = {}): Promise<RunnerReply> {
   const abs = resolve(file);
@@ -125,7 +137,10 @@ export function runSandboxed(file: string, opts: EmitOptions = {}): Promise<Runn
       done(r);
     };
     const timer = setTimeout(() => finish({ ok: false, code: "E-TIMEOUT", message: `emission exceeded ${opts.timeoutMs ?? 30000} ms` }), opts.timeoutMs ?? 30000);
-    child.on("message", (m) => finish(m as RunnerReply));
+    child.on("message", (m) => {
+      const r = m as RunnerReply;
+      finish(r.code === "E-ACCESS" && r.message !== undefined ? { ...r, message: accessMessage(r.message, root) } : r);
+    });
     child.stdout?.on("data", (d: Buffer) => (stdout += d.toString()));
     child.stderr?.on("data", (d: Buffer) => (stderr += d.toString()));
     child.on("error", (err) => finish({ ok: false, code: "E-EVAL", message: err.message }));
@@ -134,7 +149,7 @@ export function runSandboxed(file: string, opts: EmitOptions = {}): Promise<Runn
     child.on("close", (code) => {
       if (settled) return;
       const text = `${stderr}\n${stdout}`.trim();
-      if (/ERR_ACCESS_DENIED|Access to this API has been restricted/.test(text)) finish({ ok: false, code: "E-ACCESS", message: text.split("\n")[0] ?? text });
+      if (/ERR_ACCESS_DENIED|Access to this API has been restricted/.test(text)) finish({ ok: false, code: "E-ACCESS", message: accessMessage(text, root) });
       else finish({ ok: false, code: "E-EVAL", message: `emission subprocess exited with ${code}: ${text.slice(0, 2000)}` });
     });
   });

@@ -10,6 +10,8 @@ import {
   CanonicalError,
   checkBool,
   digestJson,
+  digestOf,
+  textDigestOf,
   emptyModule,
   evaluate,
   EvalError,
@@ -235,5 +237,23 @@ describe("claims (stage 24)", () => {
     expect(isArchRule({ k: "claim", holds: false, p: { k: "atom", name: "SBOM published" }, at: "x.md:1" })).toBe(true);
     expect(isArchRule({ k: "claim", holds: "no", p: { k: "atom", name: "x" } })).toBe(false);
     expect(isArchRule({ k: "claim", holds: true, p: { k: "atom", name: "x" }, why: "?" })).toBe(false);
+  });
+});
+
+describe("textDigestOf (stage 41)", () => {
+  it("digests LF text exactly as digestOf does", () => {
+    const text = '{\n  "a": 1\n}\n';
+    expect(textDigestOf(text)).toBe(digestOf(text));
+    expect(textDigestOf(new TextEncoder().encode(text))).toBe(digestOf(text));
+  });
+
+  it("reads CRLF as LF, so a Windows checkout and CI agree", () => {
+    fc.assert(
+      fc.property(fc.array(fc.string({ unit: fc.constantFrom("a", "é", " ", "{", "\"") }), { maxLength: 8 }), (lines) => {
+        const lf = `${lines.join("\n")}\n`;
+        const crlf = lf.replace(/\n/g, "\r\n");
+        expect(textDigestOf(new TextEncoder().encode(crlf))).toBe(digestOf(lf));
+      }),
+    );
   });
 });

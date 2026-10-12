@@ -72,6 +72,16 @@ export function digestOf(data: string | Uint8Array): Digest {
   return `sha256:${sha256Hex(data)}`;
 }
 
+/**
+ * The digest of a text file with its line endings read as LF (stage 41), so a checkout that writes CRLF (Git for
+ * Windows with core.autocrlf) and one that writes LF agree. LF bytes digest exactly as `digestOf` does.
+ */
+export function textDigestOf(data: string | Uint8Array): Digest {
+  const text = typeof data === "string" ? data : Buffer.from(data).toString("utf8");
+  if (!text.includes("\r\n")) return digestOf(data);
+  return digestOf(text.replace(/\r\n/g, "\n"));
+}
+
 export function digestJson(value: unknown): Digest {
   return digestOf(canonicalJson(value));
 }

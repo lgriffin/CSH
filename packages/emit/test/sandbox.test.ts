@@ -19,6 +19,16 @@ describe("emission sandbox", () => {
     });
   }
 
+  it("names the path it refused to read (stage 41)", async () => {
+    const r = await emit(join(dir, "fs.csl.ts"), { root: dir, skipTypeCheck: true });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      const e = r.errors.find((x) => x.code === "E-ACCESS")!;
+      expect(e.message).toMatch(/the sandbox refused to read \S+/);
+      expect(e.message).toContain(dir);
+    }
+  });
+
   it("with nondeterminism forced, a module that reads the clock fails S9 (two emissions differ)", async () => {
     const r = await emit(join(dir, "random.csl.ts"), { root: dir, skipTypeCheck: true, unsafeAllowNondeterminism: true });
     // Two random draws can coincide; the property is that it never passes silently with differing digests.

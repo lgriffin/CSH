@@ -8,7 +8,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { type Assessment, type AuthorityResolver, cachingSolver, makeRefiner, type Finding, MemoryEvidenceStore, type Report, SolverCache } from "@csh/check";
 import { emit, type Lock, readLock, typeCheck } from "@csh/emit";
 import { acceptDecision, gate, type Snapshot, type Waiver } from "@csh/gate";
-import { digestJson, digestOf, type Fragment, fragmentsOf, type Module, stableJson } from "@csh/kernel";
+import { digestJson, digestOf, type Fragment, fragmentsOf, type Module, stableJson, textDigestOf } from "@csh/kernel";
 import { authorship, formatDecision, gitVcs, LEDGER_PATH, MAINTAINERS_PATH, readLedger, resolveAuthority, type Decision, type LedgerState, type Role } from "@csh/ledger";
 import { printModule } from "@csh/print";
 import type { SolverPort } from "@csh/solver";
@@ -39,7 +39,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 40;
+export const BUILT_THROUGH_STAGE = 41;
 
 const AGENT_BIN = resolve(import.meta.dirname, "../../agent/bin/csh-agent.js");
 
@@ -626,7 +626,7 @@ export class FixtureRunner {
     if (read === undefined || read.problems.length > 0) throw new Error(`fixture judgments unusable: ${JSON.stringify(read?.problems)}`);
     const stages = read.judgments.stages.map((s) => readStage(stageDir(inputs, slug, s.id), s.id)).filter((s): s is StageRecord => s !== undefined);
     if (x.problems !== undefined) {
-      const model = buildA3({ slug, judgments: read.judgments, judgmentsDigest: digestOf(read.bytes), component: { name: manifest.name, practices: manifest.practices }, stages, authority: { authority: "candidate" } });
+      const model = buildA3({ slug, judgments: read.judgments, judgmentsDigest: textDigestOf(read.bytes), component: { name: manifest.name, practices: manifest.practices }, stages, authority: { authority: "candidate" } });
       for (const want of x.problems as { kind: string; subject?: string; stage?: string }[]) {
         if (!model.problems.some((p) => p.kind === want.kind && (want.subject === undefined || p.subject.includes(want.subject)) && (want.stage === undefined || p.stage === want.stage))) {
           failures.push(`a3 problem ${JSON.stringify(want)} not reported; got ${JSON.stringify(model.problems)}`);
@@ -653,12 +653,12 @@ export class FixtureRunner {
       const original = readFileSync(join(inputs, "csh", "a3", slug, "judgments.json"), "utf8");
       repo.write(file, original);
       repo.commit("Judgments", null);
-      const d: Decision = { schema: "csh-decision/v1", seq: 1, kind: "approve", fragment: name, digest: digestOf(original), rationale: "the sheet's root causes are right", actor: "Owner", selfApproved: true };
+      const d: Decision = { schema: "csh-decision/v1", seq: 1, kind: "approve", fragment: name, digest: textDigestOf(original), rationale: "the sheet's root causes are right", actor: "Owner", selfApproved: true };
       repo.write(LEDGER_PATH, `${formatDecision(d)}\n`);
       repo.commit("Approve the judgments", "Owner");
       const check = (after: string) => {
         const text = readFileSync(join(repo.dir, file), "utf8");
-        const a = resolveAuthority(readLedger(gitVcs(repo.dir, { env: repo.env })), { name, digest: digestOf(text), cites: [] });
+        const a = resolveAuthority(readLedger(gitVcs(repo.dir, { env: repo.env })), { name, digest: textDigestOf(text), cites: [] });
         for (const w of want.filter((x) => x.after === after)) {
           if (a.authority !== w.authority) failures.push(`after ${after}: authority ${a.authority}, expected ${w.authority}`);
           if (w.selfApproved !== undefined && a.selfApproved !== w.selfApproved) failures.push(`after ${after}: selfApproved ${String(a.selfApproved)}, expected ${String(w.selfApproved)}`);

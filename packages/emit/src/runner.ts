@@ -124,7 +124,9 @@ function classify(err: unknown): { ok: false; code: string; message: string } {
   const e = err as { code?: unknown; message?: unknown } | undefined;
   const message = String(e?.message ?? err);
   if (e?.code === "E-ACCESS" || e?.code === "ERR_ACCESS_DENIED" || /E-ACCESS|ERR_ACCESS_DENIED|Access to this API has been restricted/.test(message)) {
-    return { ok: false, code: "E-ACCESS", message };
+    // Node names the path it refused as the error's resource; say which, so a root outside the tree is plain (stage 41).
+    const resource = (err as { resource?: unknown } | undefined)?.resource;
+    return { ok: false, code: "E-ACCESS", message: typeof resource === "string" && resource !== "" ? `${message} (refused: ${resource})` : message };
   }
   const m = /^(E-[A-Z]+):/.exec(message);
   if (m !== null) return { ok: false, code: m[1]!, message };
