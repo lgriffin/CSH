@@ -181,6 +181,11 @@ public class Runner {
     expect(deps(out.facts!)).toEqual([["src/main/java/demo/Use.java:2", "src/main/java/demo/Runner.java"]]);
   });
 
+  it("marks a dependency on a package that was not read as a dotted namespace, and one on a file read not (A-171)", async () => {
+    const out = await run(input({ "src/A.java": "package p;\nimport java.sql.SQLException;\nimport q.B;\nclass A {}\n", "src/B.java": "package q;\npublic class B {}\n" }));
+    expect(out.facts!.flatMap((f) => (f.kind === "depends" ? [[f.to, f.namespace ?? null]] : []))).toEqual([["java.sql", "dotted"], ["src/B.java", null]]);
+  });
+
   it("follows a chain of bases to a Java exception, as an inherits claim does", async () => {
     const out = await run(input({ "B.java": "class B extends A {}\n", "A.java": "class A extends RuntimeException {}\n" }));
     const bases = new Map(out.facts!.flatMap((f) => (f.kind === "declare" && f.declares === "class" ? [[f.symbol, f.base]] : [])));

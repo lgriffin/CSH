@@ -13,10 +13,14 @@ except where [14](../spec/14-from-the-java-and-python-runs.md) changes it.
   types are never exported. An import of a nested type lands on the file that declares it ([A-170](../../ASSUMPTIONS.md)).
 - `facts-code` (`python.ts`): a class defined directly in a class body is declared as `Outer.Inner`; one inside a
   function is not; neither is exported (A-170).
-- `arch` (`selects`): a glob ending in `.*` or `.**` selects the dotted name before it, never a path (A-171).
+- `witness`, `facts-code`, `check`: a `depends` fact on a dotted namespace carries `namespace: "dotted"`; Java sets it
+  on a package not read, Python on every external package; the check passes it to `arch` (A-171).
+- `arch` (`selects`): a glob ending in `.*` or `.**` selects a dotted namespace named before it, never a path or an
+  npm name (A-171).
 - `arch` (`evaluateRule`): a `forbid` whose target names part of an external name a selected module depends on, and an
   `only` whose offending dependencies are all on names an allowed glob refines, are unknown with `finer-than-facts`,
-  naming the globs, the name and the first three dependencies (A-172).
+  naming the globs, the name and the first three dependencies; a reaching `forbid` checks every namespace it reaches,
+  exceptions remove a finer glob, and an unread file is reported first (A-172).
 - `check` (`overview`): a satisfied obligation carrying `target-selects-nothing` is the converged kind of that name
   (A-173).
 - `adapter-items` (`tests`): `results-missing` names the first ten files (A-174).

@@ -120,6 +120,10 @@ describe("python modules and dependencies", () => {
     ]);
   });
 
+  it("marks a dependency on an external package or the standard library as a dotted namespace (A-171)", async () => {
+    const facts = await read({ "a/__init__.py": "", "a/m.py": "import os.path\nfrom PySide6.QtCore import QThread\nfrom . import n\n", "a/n.py": "" });
+    expect(facts.flatMap((f) => (f.kind === "depends" ? [[f.to, f.namespace ?? null]] : []))).toEqual([["python:os", "dotted"], ["PySide6", "dotted"], ["a/n.py", null]]);
+  });
   it("names a dependency on the standard library python:<name>, and any other by its top-level package", async () => {
     const facts = await read({ "a.py": "import xml.etree.ElementTree\nfrom google.cloud import storage\nimport tomllib, numpy as np\n" });
     expect(deps(facts).map((d) => d[1])).toEqual(["python:xml", "google", "python:tomllib", "numpy"]);
@@ -209,6 +213,9 @@ describe("python exports", () => {
       ["make", "function", null, null],
     ]);
     expect(exps(facts)).toEqual(["Updater", "make"]);
+    // A decorated class is declared at its decorator; a class nested in it keeps its own line.
+    const lines = (await read({ "d.py": "@dataclass\nclass Outer:\n    class Inner: pass\n" })).flatMap((f) => (f.kind === "declare" ? [`${f.symbol} ${f.at}`] : []));
+    expect(lines).toEqual(["Outer d.py:1", "Outer.Inner d.py:3"]);
   });
 
   it("exports every public top-level name when there is no __all__", async () => {

@@ -34,22 +34,27 @@ because `*` needs at least one more character after `java.sql.`. The rule held w
 `java.sql.SQLException`. A rule forbidding `PySide6.*` held the same way while a core module imported
 `PySide6.QtCore`.
 
-- **A package covers its members.** A selector glob that ends in `.*` or `.**` also selects the name before that
-  suffix, when that name contains no `/`. So `modules("java.sql.*")` selects the dependency `java.sql`, and
-  `modules("PySide6.*")` selects `PySide6`. An `except` glob still removes what it matches. The rule is about dotted
-  names and holds in every language ([Q-41](../../QUESTIONS.md)).
-- **Finer than the facts is indeterminate.** A dependency on an external name `n` is one the facts record whole. When
-  a rule's glob names something under `n` (its text before the first `*` or `?` starts with `n.`), CSH cannot tell
-  whether the code uses that part of `n`.
+- **A package covers its members.** A selector glob that ends in `.*` or `.**` also selects a dependency on the
+  dotted namespace named before that suffix. So `modules("java.sql.*")` selects the dependency `java.sql`, and
+  `modules("PySide6.*")` selects `PySide6`. An `except` glob still removes what it matches
+  ([Q-41](../../QUESTIONS.md)).
+- **Which names are namespaces.** A reader marks a dependency whose target is a dotted namespace, one whose members
+  are named `<target>.<member>`, as `namespace: "dotted"` on its `depends` fact. The Java reader marks a package that
+  was not read, and the Python reader every external and standard library package. An npm name is never marked, since
+  `lodash.debounce` is a package of its own and no part of `lodash`. So the rules here are stated without any
+  language, and the language is known only to the reader that marks the fact.
+- **Finer than the facts is indeterminate.** A dependency on a dotted namespace `n` is one the facts record whole.
+  When a rule's glob names something under `n` (its text before the first `*` or `?` starts with `n.`) and the rule's
+  exceptions do not remove it, CSH cannot tell whether the code uses that part of `n`.
   - A `forbid` rule whose target is such a glob, and which no dependency violates, is unknown when a module it selects
-    depends on `n`. The reason is `finer-than-facts`, naming the selector and `n` and giving the dependency's file and
-    line.
+    depends on `n`, or, with `reaches`, reaches a dependency on `n`. The reason is `finer-than-facts`, naming the
+    selector and `n` and giving the dependency's file and line.
   - An `only` rule is unknown in the same way when its only offending dependencies are on names that one of its
     allowed globs is finer than. A dependency no allowed glob covers or refines still violates it.
 
   For example, `forbid(modules("app/core/**"), modules("PySide6.QtWidgets"))` over a module that imports
   `PySide6.QtCore` is unknown, since the facts record `PySide6`. It is not held.
-- An external name is a dependency target that is not a module read.
+- A file that was not read is reported before a finer glob: a rule over an unread file stays unknown with `not-read`.
 
 ## 3. A target that selects nothing is shown in the overview
 

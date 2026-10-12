@@ -272,8 +272,9 @@ export async function readJavaFiles(input: readonly InputFile[], ctx: FactContex
     if (j.syntaxError !== undefined) diagnostics.push({ code: "syntax-error", severity: "warning", message: "the Java parser recovered from a syntax error; facts after it may be missing", span: `${f.path}:${j.syntaxError}` });
     for (const imp of j.imports) {
       const at = `${f.path}:${imp.line}`;
-      const depend = (to: string) => {
-        if (to !== f.path) facts.push({ ...base, kind: "depends", at, from: f.path, to, via: "import", typeOnly: false });
+      // A package that was not read is a dotted namespace: its classes and subpackages are named under it (A-171).
+      const depend = (to: string, external = false) => {
+        if (to !== f.path) facts.push({ ...base, kind: "depends", at, from: f.path, to, via: "import", typeOnly: false, ...(external ? { namespace: "dotted" as const } : {}) });
       };
       // `import a.b.*` names a package, or the member types of a class; a static import names a class's members.
       const onPackage = imp.wildcard && !imp.isStatic ? packages.get(imp.name) : undefined;
@@ -283,7 +284,7 @@ export async function readJavaFiles(input: readonly InputFile[], ctx: FactContex
       }
       const cls = imp.isStatic && !imp.wildcard && imp.name.includes(".") ? imp.name.slice(0, imp.name.lastIndexOf(".")) : imp.name;
       const found = typeOf(cls);
-      if (found === undefined) depend(packageOfName(cls, !(imp.wildcard && !imp.isStatic)));
+      if (found === undefined) depend(packageOfName(cls, !(imp.wildcard && !imp.isStatic)), true);
       else if (found.files.length > 1) facts.push({ ...base, kind: "skipped", at, from: f.path, reason: `ambiguous ${found.fqn}: declared in ${found.files.join(", ")}` });
       else depend(found.files[0]!);
     }

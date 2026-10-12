@@ -157,7 +157,8 @@ are fields a claim can name, such as `field("package.json", "/packageManager", "
 An external dependency is named as its ecosystem names it: a Java package (`java.sql`), a Python top-level package
 (`PySide6`), a Go import path, a Rust crate. A glob ending in `.*` or `.**` also selects the name before it, so
 `modules("java.sql.*")` selects an import of `java.sql.SQLException` and `modules("PySide6.*")` one of
-`PySide6.QtCore`. A glob that names part of what the facts record whole, such as `java.sql.Connection` or
+`PySide6.QtCore`; an npm name such as `lodash.debounce` is a package of its own and is never covered this way. A glob
+that names part of what the facts record whole, such as `java.sql.Connection` or
 `PySide6.QtWidgets`, cannot be decided: a rule over it is unknown with the reason `finer-than-facts` when a module it
 selects depends on that package. A nested type is declared under its dotted name, so a claim names it
 `declares("Runner.java", "Runner.Callback")` ([14](../spec/14-from-the-java-and-python-runs.md), sections 1 and 2).

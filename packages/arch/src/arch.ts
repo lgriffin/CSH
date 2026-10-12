@@ -16,6 +16,8 @@ export interface ArchDependency {
   at: string;
   typeOnly: boolean;
   via: string;
+  /** The target is a dotted namespace, whose members are named `<to>.<member>`: a Java or Python package (A-171). */
+  dotted?: boolean;
 }
 
 export interface ArchFacts {
@@ -51,26 +53,21 @@ export function unknownContainers(rule: ArchRule, d: ArchDiagram | undefined): s
 }
 
 /** Whether a selector selects a package of the facts. */
-export function selects(sel: ArchSel, pkgName: string, d: ArchDiagram | undefined): boolean {
+export function selects(sel: ArchSel, pkgName: string, d: ArchDiagram | undefined, dotted = false): boolean {
   if (sel.k === "any") return true;
   if (sel.k === "package") return sameName(sel.name, pkgName);
-  if (sel.k === "modules") return matchesGlobs(pkgName, sel.globs, sel.except) || coversMembers(pkgName, sel.globs, sel.except ?? []);
+  if (sel.k === "modules") return matchesGlobs(pkgName, sel.globs, sel.except) || (dotted && coversMembers(pkgName, sel.globs, sel.except ?? []));
   return containersOf(d, pkgName).includes(sel.id);
 }
 
 /**
- * A dotted name covers its members: `java.sql.*` and `java.sql.**` select the dependency `java.sql`, which is all the
- * facts know of an import of `java.sql.SQLException` (A-171). A path, which holds a `/`, is never a member of another.
+ * A dotted namespace covers its members: `java.sql.*` and `java.sql.**` select the dependency `java.sql`, which is all
+ * the facts know of an import of `java.sql.SQLException` (A-171). Only a dependency its reader marks dotted is a
+ * namespace: npm's `lodash.debounce` is a package of its own, not a member of `lodash`.
  */
 function coversMembers(name: string, globs: readonly string[], except: readonly string[]): boolean {
-  if (name.includes("/")) return false;
   const covering = (g: string) => g === `${name}.*` || g === `${name}.**`;
   return globs.some(covering) && !except.some((g) => covering(g) || globRegExp(g).test(name));
-}
-
-/** A dependency target that is no module read: a package or library, named as its ecosystem names it. */
-function isExternal(facts: ArchFacts, name: string): boolean {
-  return facts.modules !== undefined && !facts.modules.includes(name) && !(facts.unread ?? []).includes(name);
 }
 
 /** The reason a rule is unknown for globs finer than the facts: each name, its globs and its first dependencies. */
@@ -89,12 +86,15 @@ function finerReason(deps: ArchDependency[], globsOf: (x: ArchDependency) => str
 const headOf = (glob: string): string => glob.split(/[*?]/, 1)[0]!;
 
 /**
- * The selector's globs that name part of the external name `name` (A-172): their text before the first wildcard
- * starts with `name.`, so a dependency the facts record as `name` whole may or may not be on that part.
+ * The selector's globs that name part of the dotted namespace a dependency is on (A-172): their text before the first
+ * wildcard starts with `<to>.`, so a dependency the facts record whole may or may not be on that part. A glob the
+ * selector's exceptions remove, or a namespace they remove, names nothing.
  */
-function finerGlobs(sel: ArchSel, name: string): string[] {
-  if (sel.k !== "modules" || name.includes("/")) return [];
-  return sel.globs.filter((g) => headOf(g).startsWith(`${name}.`));
+function finerGlobs(sel: ArchSel, x: ArchDependency): string[] {
+  if (sel.k !== "modules" || x.dotted !== true) return [];
+  const except = sel.except ?? [];
+  if (except.some((e) => globRegExp(e).test(x.to))) return [];
+  return sel.globs.filter((g) => headOf(g).startsWith(`${x.to}.`) && !except.some((e) => e === g || globRegExp(e).test(g)));
 }
 
 /** Whether a selector selects a name written in the diagram, inside element `elementId`. */
@@ -177,13 +177,14 @@ const counted = (sel: ArchSel, deps: ArchDependency[]) => (sel.k === "modules" &
  * end, shortest first; and the unread modules the chains could pass through. Breadth first from each start, so each
  * chain found is a shortest one.
  */
-function chainsOf(from: ArchSel, to: ArchSel, deps: ArchDependency[], unread: Set<string>, d: ArchDiagram | undefined): { chains: ArchDependency[][]; unreadReached: string[] } {
+function chainsOf(from: ArchSel, to: ArchSel, deps: ArchDependency[], unread: Set<string>, d: ArchDiagram | undefined): { chains: ArchDependency[][]; unreadReached: string[]; finerReached: ArchDependency[] } {
   const out = new Map<string, ArchDependency[]>();
   const next = new Map<string, ArchDependency[]>();
   for (const x of deps) if (x.from !== x.to) next.set(x.from, [...(next.get(x.from) ?? []), x]);
   for (const list of next.values()) list.sort((a, b) => compareCodePoints(a.to, b.to) || compareCodePoints(a.at, b.at));
   const starts = [...new Set(deps.map((x) => x.from))].filter((m) => selects(from, m, d)).sort(compareCodePoints);
   const unreadReached = new Set<string>();
+  const finerReached = new Set<ArchDependency>();
   for (const start of starts) {
     const via = new Map<string, ArchDependency>();
     const seen = new Set([start]);
@@ -192,11 +193,12 @@ function chainsOf(from: ArchSel, to: ArchSel, deps: ArchDependency[], unread: Se
       const after: string[] = [];
       for (const m of frontier) {
         for (const x of next.get(m) ?? []) {
+          if (!selects(to, x.to, d, x.dotted) && finerGlobs(to, x).length > 0) finerReached.add(x);
           if (seen.has(x.to)) continue;
           seen.add(x.to);
           via.set(x.to, x);
           if (unread.has(x.to)) unreadReached.add(x.to);
-          if (selects(to, x.to, d)) {
+          if (selects(to, x.to, d, x.dotted)) {
             const chain: ArchDependency[] = [];
             for (let at: string | undefined = x.to; at !== undefined && at !== start; at = via.get(at)?.from) chain.unshift(via.get(at)!);
             out.set(`${start}->${x.to}`, chain);
@@ -208,7 +210,7 @@ function chainsOf(from: ArchSel, to: ArchSel, deps: ArchDependency[], unread: Se
     }
   }
   const chains = [...out.values()].sort((a, b) => a.length - b.length || compareCodePoints(a[0]!.from, b[0]!.from) || compareCodePoints(a.at(-1)!.to, b.at(-1)!.to));
-  return { chains, unreadReached: [...unreadReached].sort(compareCodePoints) };
+  return { chains, unreadReached: [...unreadReached].sort(compareCodePoints), finerReached: [...finerReached].sort((a, b) => compareCodePoints(a.at, b.at)) };
 }
 
 /**
@@ -315,6 +317,9 @@ export function evaluateRule(rule: ArchRule, facts: ArchFacts, d: ArchDiagram | 
   const notRead = (unread: string[]): RuleResult => ({ result: "unknown", reason: `not-read: ${unread.slice(0, 3).join(", ")}${unread.length > 3 ? ` and ${unread.length - 3} more` : ""}` });
   let by: ArchDependency[];
   let unreadReached: string[] = [];
+  // Dependencies on a dotted namespace that the rule's globs name part of: whether the code uses that part is not
+  // known, so they decide nothing, and leave the rule unknown when nothing else does (A-172).
+  let finer: { deps: ArchDependency[]; globs: (x: ArchDependency) => string[] } | undefined;
   if (rule.k === "forbid" && rule.reaches === true) {
     const deps = counted(rule.from, facts.depends);
     // Once past the first step a chain is no longer the subject's own, so values: true applies to every step.
@@ -322,14 +327,18 @@ export function evaluateRule(rule: ArchRule, facts: ArchFacts, d: ArchDiagram | 
     unreadReached = r.unreadReached;
     if (r.chains.length > 0) return { result: "violated", by: r.chains.flat(), chains: r.chains };
     by = [];
+    finer = { deps: r.finerReached, globs: (x) => finerGlobs(rule.to, x) };
   } else if (rule.k === "forbid") {
-    by = counted(rule.from, facts.depends).filter((x) => x.from !== x.to && selects(rule.from, x.from, d) && selects(rule.to, x.to, d));
+    const from = counted(rule.from, facts.depends).filter((x) => x.from !== x.to && selects(rule.from, x.from, d));
+    by = from.filter((x) => selects(rule.to, x.to, d, x.dotted));
+    finer = { deps: from.filter((x) => !selects(rule.to, x.to, d, x.dotted) && finerGlobs(rule.to, x).length > 0), globs: (x) => finerGlobs(rule.to, x) };
   } else if (rule.k === "only") {
-    const offending = counted(rule.from, facts.depends).filter((x) => selects(rule.from, x.from, d) && !selects(rule.from, x.to, d) && !rule.to.some((t) => selects(t, x.to, d)));
-    // An offending dependency on an external name that an allowed glob names part of may be on the allowed part.
-    const finer = offending.filter((x) => isExternal(facts, x.to) && rule.to.some((t) => finerGlobs(t, x.to).length > 0));
-    by = offending.filter((x) => !finer.includes(x));
-    if (by.length === 0 && finer.length > 0) return { result: "unknown", reason: finerReason(finer, (x) => rule.to.flatMap((t) => finerGlobs(t, x.to))) };
+    const offending = counted(rule.from, facts.depends).filter((x) => selects(rule.from, x.from, d) && !selects(rule.from, x.to, d) && !rule.to.some((t) => selects(t, x.to, d, x.dotted)));
+    // An offending dependency on a namespace that an allowed glob names part of may be on the allowed part.
+    const globs = (x: ArchDependency) => rule.to.flatMap((t) => finerGlobs(t, x));
+    const uncertain = offending.filter((x) => globs(x).length > 0);
+    by = offending.filter((x) => !uncertain.includes(x));
+    finer = { deps: uncertain, globs };
   } else if (rule.k === "acyclic") {
     const cycles = cyclesOf(rule.within, rule.group, counted(rule.within, facts.depends), d);
     if (cycles.length > 0) return { result: "violated", by: cycles.flat(), chains: cycles };
@@ -347,17 +356,12 @@ export function evaluateRule(rule: ArchRule, facts: ArchFacts, d: ArchDiagram | 
     const unread = [...new Set([...(facts.unread ?? []).filter((m) => selects(rule.from, m, d)), ...unreadReached])].sort(compareCodePoints);
     if (unread.length > 0) return notRead(unread);
   }
-  // A forbidden target that names part of an external name a selected module depends on: the facts record the name
-  // whole, so whether the code uses that part is not known (A-172).
-  if (rule.k === "forbid") {
-    const finer = counted(rule.from, facts.depends).filter((x) => x.from !== x.to && selects(rule.from, x.from, d) && isExternal(facts, x.to) && finerGlobs(rule.to, x.to).length > 0);
-    if (finer.length > 0) return { result: "unknown", reason: finerReason(finer, (x) => finerGlobs(rule.to, x.to)) };
-  }
+  if (finer !== undefined && finer.deps.length > 0) return { result: "unknown", reason: finerReason(finer.deps, finer.globs) };
   // A forbidden target that selects nothing the facts know: nothing can depend on it, so the rule holds, and says so,
   // since a mistyped path and a package that is legitimately absent read the same.
   if (rule.k === "forbid" && facts.modules !== undefined) {
-    const known = [...facts.modules, ...facts.packages, ...facts.depends.map((x) => x.to), ...(facts.unread ?? [])];
-    if (!known.some((m) => selects(rule.to, m, d))) return { result: "holds", notes: [`target-selects-nothing: ${describeSel(rule.to)} matches no module, package or dependency of the facts`] };
+    const known = [...facts.modules, ...facts.packages, ...(facts.unread ?? [])];
+    if (!known.some((m) => selects(rule.to, m, d)) && !facts.depends.some((x) => selects(rule.to, x.to, d, x.dotted))) return { result: "holds", notes: [`target-selects-nothing: ${describeSel(rule.to)} matches no module, package or dependency of the facts`] };
   }
   return { result: "holds" };
 }

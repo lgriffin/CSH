@@ -124,7 +124,8 @@ function declarationsOf(n: Node): PyDeclaration[] {
   const line = lineOf(n);
   if (n.type === "decorated_definition") {
     const def = n.childForFieldName("definition");
-    return def === null ? [] : declarationsOf(def).map((d) => ({ ...d, line }));
+    // The decorator's line is the definition's own; a class nested in it keeps its line.
+    return def === null ? [] : declarationsOf(def).map((d, i) => (i === 0 ? { ...d, line } : d));
   }
   if (n.type === "class_definition") {
     const name = n.childForFieldName("name")?.text;
@@ -330,7 +331,7 @@ export const python: LanguageReader = {
         const at = `${f.path}:${imp.line}`;
         const res = resolveImport(f.path, imp, code, roots);
         if ("unresolved" in res) facts.push({ ...base, kind: "skipped", at, from: f.path, reason: `unresolved ${res.unresolved}` });
-        else if ("external" in res) facts.push({ ...base, kind: "depends", at, from: f.path, to: res.external, via: "import", typeOnly: imp.typeOnly });
+        else if ("external" in res) facts.push({ ...base, kind: "depends", at, from: f.path, to: res.external, via: "import", typeOnly: imp.typeOnly, namespace: "dotted" });
         else for (const to of res.to) if (to !== f.path) facts.push({ ...base, kind: "depends", at, from: f.path, to, via: "import", typeOnly: imp.typeOnly });
       }
       for (const line of r.computed) facts.push({ ...base, kind: "skipped", at: `${f.path}:${line}`, from: f.path, reason: "computed specifier" });
