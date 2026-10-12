@@ -1,7 +1,7 @@
 // The csh command (Joint evaluation, section 7; Authority tab, sections 3.4 and 6; Anchor, harnesses and A3, section 7.1).
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { a3Dir, readJudgments } from "@csh/a3";
 import { checkExpected, claimSpans, DIVERGENCE_READINGS, type Finding, overviewOf, parseExpected, renderExpect, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report, type SentenceAt } from "@csh/check";
 import { exitCode, formatDecision as formatGate, type GateDecision, type Mode } from "@csh/gate";
@@ -9,7 +9,7 @@ import { digestOf, fragmentsOf, textDigestOf, type Module, stableJson } from "@c
 import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons } from "@csh/ledger";
 import { printFragment } from "@csh/print";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { componentQueue, coverageOf, renderCoverage, componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderQueue, renderStatus, ledgerOf, loadProject, MODEL_PATH, OVERVIEW_PATH, type Project, REPORT_PATH, importResults, runAt, runComponent, type RunResult, fetchSubject, specPathOf, storedRuns } from "@csh/run";
+import { componentQueue, coverageOf, renderCoverage, componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderQueue, renderStatus, ledgerOf, loadProject, MODEL_PATH, OVERVIEW_PATH, type Project, REPORT_PATH, importResults, runAt, runComponent, type RunResult, fetchSubject, localPathWarning, specPathOf, storedRuns, subjectWarnings } from "@csh/run";
 import { type Args, parseArgs } from "./args.ts";
 import { init } from "./init.ts";
 import { a3Command, a3Fragment, historyCommand } from "./a3.ts";
@@ -305,6 +305,8 @@ export async function csh(argv: string[], io: Io): Promise<number> {
         return 1;
       }
       io.out(`${r.fetched ? "fetched" : "already fetched"} ${p.component!.manifest.subject!.repo} at ${commit} into ${relative(io.cwd, r.dir)}\n`);
+      // Said, never refused: the profile is the owner's to keep or commit (From real runs, stage 44).
+      for (const w of subjectWarnings(p)) io.err(`warning: ${w}\n`);
       return 0;
     }
     case "run":
@@ -315,7 +317,7 @@ export async function csh(argv: string[], io: Io): Promise<number> {
         io.err("usage: csh results import <practice> <runner-report> [--base <dir>]\n");
         return 2;
       }
-      const r = importResults(p, practice, resolve(io.cwd, report), a.options.base !== undefined ? resolve(io.cwd, a.options.base) : undefined);
+      const r = importResults(p, practice, resolve(io.cwd, report), a.options.base !== undefined ? (isAbsolute(a.options.base) ? a.options.base : resolve(io.cwd, a.options.base)) : undefined);
       if (!r.ok) {
         io.err(`csh results import: ${r.message}\n`);
         return 1;
@@ -543,6 +545,8 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
   const { record, report, decision } = r;
   const lines = [`run ${record.component} at ${record.snapshot.commit}`];
   if (record.snapshot.subject !== undefined) lines.push(`  subject ${record.snapshot.subject.repo} at ${record.snapshot.subject.commit}`);
+  const local = localPathWarning(p);
+  if (local !== undefined) lines.push(`  warning: ${local}`);
   for (const h of record.harnesses) lines.push(`  harness ${h.practice}: ${h.argv.join(" ")}  exit ${h.exitCode ?? h.error ?? "none"}, ${h.witnesses} witnesses, ${h.executions} executions (not sandboxed)`);
   if (record.harnesses.length === 0) lines.push("  no practice has a harness");
   const conflicts = countOf(report, ["state-conflict", "joint-conflict", "example-conflict", "arch-conflict", "claim-conflict", "fact-conflict", "vacuous"]);

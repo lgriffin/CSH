@@ -190,7 +190,11 @@ a gap, or not decided.
 
 ## 7. Process and safety (stage 44)
 
-- `csh subject fetch` warns when the subject repository is private (asked of `gh` when it is installed), since a
-  profile for it should not be committed to a public CSH.
-- A committed manifest whose `subject.repo` is a local path is warned about.
+Each is a warning: nothing is refused, since the profile is its owner's to keep or commit.
+
+- `csh subject fetch` asks `gh repo view <owner>/<name> --json visibility` when the subject is a GitHub repository and
+  `gh` is installed; a subject that is `PRIVATE` or `INTERNAL` is the warning that its profile should not be committed
+  to a public repository. When `gh` is missing or cannot answer, nothing is said.
+- When `subject.repo` names a path (no URL scheme and not `user@host:path`) and `csh/component.json` is tracked in the
+  component's repository, `csh subject fetch` and `csh run` warn that the profile works only on this machine.
 - The manifest guide documents keeping a local profile out of git with `.git/info/exclude`.

@@ -67,10 +67,25 @@ unchanged.
 
 | Field | Meaning |
 | --- | --- |
-| `subject.repo` | Where the subject is fetched from: a URL, or a path to a local clone relative to the component root |
+| `subject.repo` | Where the subject is fetched from: a URL, or a path to a local clone relative to the component root (warned about once the manifest is committed) |
 | `subject.commit` | The full commit, 40 hexadecimal digits. It joins the snapshot, beside the profile's own commit |
 | `spec` | Optional in version 2 |
 | `sources[]` | Each source's `name`, `kind` and `at`. Without `spec` they are the model's only sources; beside a `spec` they join its sources, and a name both declare is `duplicate-source` ([A-102](../../ASSUMPTIONS.md)). A practice naming a source declared in neither is `practice-unknown-source` |
+
+### Profiles of private repositories (stage 44)
+
+A profile names its subject's repository, so committing it says where that repository is and what it holds. `csh
+subject fetch` warns when GitHub says the subject is private or internal (it asks `gh repo view`, when `gh` is
+installed and signed in), and `csh subject fetch` and `csh run` warn when a committed manifest names its subject by a
+local path, which works only on the machine that wrote it. Neither warning stops anything ([A-159](../../ASSUMPTIONS.md)).
+
+To keep a local profile out of git without a `.gitignore` entry everyone sees, list it in the repository's own
+`.git/info/exclude`, which is never committed:
+
+```text
+# .git/info/exclude
+subjects/my-private-app/
+```
 
 ## Inventory sources (stage 22)
 
