@@ -264,7 +264,7 @@
     ]
   },
   "goal": "Every line that names a file is re-read when the file changes, and every fact the prose states about the code is either a claim CSH checks or generated from the code. The count of stale-prose items falls at each release instead of rising, and no claim the code refutes survives a release.",
-  "judgmentsDigest": "sha256:604045d0f948f8bf8b693ad5ca9d27f0078e6873f12261e9950d221b6e1d2827",
+  "judgmentsDigest": "sha256:6b1fb0fbf0271bd1dec4d059b71eba9a1703f98e87a3e080f3a593e144677cd5",
   "lanes": [
     {
       "counts": [
