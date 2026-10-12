@@ -124,7 +124,7 @@ function reportFor(p: Project, a: Args, stored: { report: string } | undefined, 
   if (stored !== undefined) return JSON.parse(readFileSync(stored.report, "utf8")) as Report;
   const path = join(p.root, a.options.report ?? REPORT_PATH);
   if (existsSync(path)) return JSON.parse(readFileSync(path, "utf8")) as Report;
-  io.err(`csh ${cmd}: no report at ${relative(io.cwd, path) || path}; csh run or csh check writes one, and writes none when it fails\n`);
+  io.err(`csh ${cmd}: no report at ${(relative(io.cwd, path) || path).replace(/\\/g, "/")}; csh run or csh check writes one, and writes none when it fails\n`);
   return undefined;
 }
 

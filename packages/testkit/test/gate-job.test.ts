@@ -19,9 +19,12 @@ let repo: TestRepo;
 let rootCommit: string;
 let runnerHome: string;
 
-/** The job as a CI runner runs it: a keyring holding no key at all, the root pinned outside the repository. */
+/**
+ * The job as a CI runner runs it: a keyring holding no key at all, the root pinned outside the repository. On Windows
+ * the MSYS bash would turn GNUPGHOME back into a drive path for the git it starts, whose gpg reads only the POSIX form.
+ */
 async function runJob(env: Record<string, string> = {}): Promise<{ status: number | null; out: string; decision: { overall: string; obligations: { fragment: string; disposition: string }[] } | undefined }> {
-  const child = spawn("bash", [job, repo.dir], { env: { ...process.env, GNUPGHOME: gpgHomeEnv(runnerHome), GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1", CSH_ROOT_COMMIT: rootCommit, ...env } });
+  const child = spawn("bash", [job, repo.dir], { env: { ...process.env, GNUPGHOME: gpgHomeEnv(runnerHome), MSYS2_ENV_CONV_EXCL: "GNUPGHOME", GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1", CSH_ROOT_COMMIT: rootCommit, ...env } });
   let out = "";
   child.stdout.on("data", (d: Buffer) => (out += d.toString()));
   child.stderr.on("data", (d: Buffer) => (out += d.toString()));

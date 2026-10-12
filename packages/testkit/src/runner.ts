@@ -406,7 +406,7 @@ export class FixtureRunner {
         // Offline, the registry packages cannot be installed. Like a missing gpg, that skips the fixture only when the
         // environment says it may (A-51); otherwise it fails.
         if (process.env["CSH_ALLOW_OFFLINE_SKIP"] === "1") return `npm install could not complete (${npm.status}); CSH_ALLOW_OFFLINE_SKIP is set`;
-        failures.push(`npm install failed (${npm.status}): ${npm.stderr.slice(0, 2000)}`);
+        failures.push(`npm install failed (${npm.status}): ${(npm.stderr ?? String(npm.error)).slice(0, 2000)}`);
         return;
       }
       const run = sh(join(project, "node_modules", ".bin", "csh"), ["run"]);
