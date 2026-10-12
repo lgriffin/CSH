@@ -2,7 +2,7 @@
 // looking it up in the facts. Nothing is solved. A claim the facts refute is a fact-conflict; two claims that cannot
 // both be true are a claim-conflict, whatever the facts say. A fact that is missing leaves a claim unknown, never
 // refuted: a module that was not read says nothing about what it declares.
-import { type Claim, compareCodePoints, type Prop } from "@csh/kernel";
+import { type Claim, compareCodePoints, matchesGlobs, type Prop } from "@csh/kernel";
 
 /** The facts a claim is judged by, all taken at the commit under evaluation. */
 export interface ClaimFacts {
@@ -15,6 +15,8 @@ export interface ClaimFacts {
   files?: Set<string>;
   /** The language of each module read in a language other than TypeScript or JavaScript (stage 29). */
   languages?: Map<string, string>;
+  /** Source files a reader could not read (stage 29), which a count over modules cannot count (stage 39). */
+  unread?: string[];
 }
 
 /**
@@ -153,6 +155,13 @@ export function truthOf(p: Prop, f: ClaimFacts): Truth {
       const keys = [...new Set(in_.filter((x) => x.path.startsWith(prefix)).map((x) => unescape(x.path.slice(prefix.length).split("/")[0]!)))].filter((k) => !except.has(k)).sort(compareCodePoints);
       return { value: keys.length === p.n, detail: `${p.file} has ${keys.length} entries at ${p.pointer}${except.size > 0 ? ` less ${[...except].join(", ")}` : ""}` };
     }
+    case "count-modules": {
+      const sel = `modules(${p.globs.join(", ")})${p.except !== undefined ? ` less ${p.except.join(", ")}` : ""}`;
+      const unread = (f.unread ?? []).filter((m) => matchesGlobs(m, p.globs, p.except));
+      if (unread.length > 0) return { reason: `not-read: ${unread.slice(0, 3).join(", ")}${unread.length > 3 ? ` and ${unread.length - 3} more` : ""}` };
+      const n = [...f.modules].filter((m) => matchesGlobs(m, p.globs, p.except)).length;
+      return { value: n === p.n, detail: `${n} modules match ${sel}` };
+    }
     case "script": {
       const in_ = f.fields.filter((x) => x.file === "package.json");
       if (in_.length === 0) return notRead("package.json");
@@ -189,6 +198,7 @@ export function evaluateClaim(c: Claim, f: ClaimFacts): ClaimResult {
 function subjectOf(p: Prop): string {
   if (p.k === "field") return JSON.stringify(["field", p.file, p.pointer]);
   if (p.k === "count") return JSON.stringify(["count", p.file, p.pointer, [...(p.except ?? [])].sort(compareCodePoints)]);
+  if (p.k === "count-modules") return JSON.stringify(["count-modules", [...p.globs].sort(compareCodePoints), [...(p.except ?? [])].sort(compareCodePoints)]);
   // Equality is symmetric: the operands are ordered so that either way round names the same subject.
   if (p.k === "same") return JSON.stringify(["same", ...[p.a, p.b].map((c) => `${c.module}#${c.name}`).sort(compareCodePoints)]);
   return JSON.stringify(p);
@@ -209,6 +219,8 @@ export function describeProp(p: Prop): string {
       return `${p.file} ${p.pointer} is ${JSON.stringify(p.value)}`;
     case "count":
       return `${p.file} ${p.pointer} has ${p.n} entries`;
+    case "count-modules":
+      return `modules(${p.globs.join(", ")}) selects ${p.n} modules`;
     case "script":
       return `the script ${p.name} exists`;
     case "same":
@@ -223,9 +235,9 @@ export const describeClaim = (c: Claim): string => `${c.holds ? "" : "not: "}${d
 /** Why two claims cannot both be true, or undefined when they can. */
 export function claimConflict(a: Claim, b: Claim): string | undefined {
   if (subjectOf(a.p) !== subjectOf(b.p)) return undefined;
-  if (a.p.k === "field" || a.p.k === "count") {
+  if (a.p.k === "field" || a.p.k === "count" || a.p.k === "count-modules") {
     const va = a.p.k === "field" ? a.p.value : a.p.n;
-    const vb = b.p.k === "field" ? b.p.value : b.p.k === "count" ? b.p.n : undefined;
+    const vb = b.p.k === "field" ? b.p.value : b.p.k === "count" || b.p.k === "count-modules" ? b.p.n : undefined;
     if (a.holds && b.holds && va !== vb) return `one says ${describeClaim(a)}, the other ${describeClaim(b)}`;
     if (a.holds !== b.holds && va === vb) return `one says ${describeClaim(a)}, the other ${describeClaim(b)}`;
     return undefined;

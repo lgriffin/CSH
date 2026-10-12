@@ -1,0 +1,13 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Hub",
+  "spec": "csh/spec.csl.ts",
+  "implementation": ["src"],
+  "sources": [
+    { "name": "Code", "kind": "Code", "at": ".", "include": ["src/**/*.ts", "package.json"] }
+  ],
+  "practices": [
+    { "id": "rules", "name": "Rules", "kind": "requirements", "sources": ["Rules"] },
+    { "id": "code", "name": "Code facts", "kind": "facts", "sources": ["Code"] }
+  ]
+}

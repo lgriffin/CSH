@@ -1,0 +1,24 @@
+{
+  "fixture": "F131",
+  "section": "From real runs, section 2",
+  "stage": 39,
+  "expect": {
+    "run": {
+      "assessments": [
+        { "fragment": "Hub/Layering/PodsReachNoDatabase", "verdict": "violated", "reasonsInclude": ["src/pods/pod.ts:1", "src/core/session.ts:1", "src/db/client.ts"] },
+        { "fragment": "Hub/Layering/PodsImportNoDatabase", "verdict": "satisfied" },
+        { "fragment": "Hub/Layering/FrontendImportsOnlyTypesFromCore", "verdict": "violated", "reasonsInclude": ["src/frontend/view.ts:2"] },
+        { "fragment": "Hub/Layering/PanelImportsOnlyTypesFromCore", "verdict": "satisfied" },
+        { "fragment": "Hub/Layering/NoCycleBetweenDirectories", "verdict": "violated", "reasonsInclude": ["src/core/format.ts:1", "src/util/text.ts:1"] },
+        { "fragment": "Hub/Layering/NoCycleInTheDatabase", "verdict": "satisfied" },
+        { "fragment": "Hub/Layering/CoreIgnoresPackages", "verdict": "satisfied", "reasonsInclude": ["target-selects-nothing", "src/pakages/**"] },
+        { "fragment": "Hub/Prose/TenUseCases", "verdict": "conflicting", "reasonsInclude": ["claim-conflict"] },
+        { "fragment": "Hub/Prose/ThreeUseCases", "verdict": "conflicting", "reasonsInclude": ["claim-conflict"] },
+        { "fragment": "Hub/Prose/NotFourUseCases", "verdict": "satisfied", "reasonsInclude": ["3 modules"] },
+        { "fragment": "Hub/Prose/PinnedToPnpm9", "verdict": "violated", "reasonsInclude": ["pnpm@10.28.0"] },
+        { "fragment": "Hub/Prose/TwoWorkspaceGlobs", "verdict": "satisfied" },
+        { "fragment": "Hub/Prose/VitestPinned", "verdict": "satisfied" }
+      ]
+    }
+  }
+}

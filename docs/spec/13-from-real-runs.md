@@ -74,18 +74,32 @@ not a git repository.
 
 ## 2. Rules that can be stated (stage 39)
 
-- **`reaches`.** `forbid(a, b, { reaches: true })` is violated when a module of `a` reaches a module of `b` through any
-  chain of dependencies, each step a dependency the facts hold. The violation names the chain.
-- **Value imports.** `modules(globs, { values: true })` selects the same modules, but only their dependencies that are
-  not type-only count when the selector is the subject of a rule.
-- **Cycles.** `acyclic(modules(globs), { across })` is violated by each cycle of dependencies among the selected
-  modules; with `across: "package"` or `across: "workspace"` only a cycle that crosses that boundary counts.
-- **Counts over modules.** `count(modules(globs))` is the number of modules selected, so a sentence such as "ten use
-  cases" is a claim checked against the files.
+Each form below is judged, like every rule, only over facts current at the commit, and lands violated, satisfied or
+unknown.
+
+- **`reaches`.** `forbid(a, b, { reaches: true })` is violated when a module of `a` reaches a module or package of `b`
+  through a chain of one or more dependencies, each a dependency the facts hold. Each violation names its chain, one
+  dependency per step with its file and line, shortest chain first. A chain through a module that could not be read
+  cannot be followed: when such a module is reachable and nothing is violated, the rule is unknown (`not-read`).
+- **Value imports.** `modules(globs, { values: true })` selects the same modules, and when it is the subject of a rule
+  (the first argument of `forbid` or `only`, or of `acyclic`), a dependency that imports types alone does not count.
+  With `reaches`, no step of a chain may be type-only.
+- **Cycles.** `acyclic(sel)` is violated by each cycle of dependencies among the modules `sel` selects, named by its
+  dependencies. `acyclic(sel, { group: "packages/*" })` groups each module under the directory the glob matches at
+  the start of its path (`packages/a/src/x.ts` is in `packages/a`): a dependency between two groups is an edge, and
+  only a cycle between groups counts. A module the glob does not match is in no group and makes no edge. Each cycle is
+  reported once, starting from its least member in code point order. A relative import that crosses a workspace
+  boundary is not stated: the facts keep where an import resolves, not how it was written.
+- **Counts over modules.** `count(modules(globs), n)` is a claim that the selector selects exactly `n` modules read, so
+  a sentence such as "ten use cases" is checked against the files. A file the selector matches that could not be
+  read leaves it unknown. Two such claims over the same selector with different counts are a claim-conflict.
 - **Manifest fields.** `packageManager`, `dependencies`, `devDependencies` and `workspaces` of a `package.json` are
-  fields, so a claim about a pinned tool version or a workspace list is decided.
-- **A target that selects nothing.** A `forbid` whose target selects no module still holds, with an info diagnostic
-  naming the selector, so a mistyped path is visible and a package that is legitimately absent is not an error.
+  fields, beside those read before (`/dependencies/zod`, `/workspaces/0`), so a claim about a pinned tool version or a
+  workspace list is decided, and `count("package.json", "/workspaces", n)` counts the workspace globs.
+- **A target that selects nothing.** A `forbid` whose target selects no module, package or dependency the facts know
+  still holds, since nothing can depend on what is not there, and its assessment carries the reason
+  `target-selects-nothing` naming the selector, so a mistyped path is visible while a package that is legitimately
+  absent is not an error.
 
 ## 3. Speed (stage 40)
 

@@ -119,6 +119,7 @@ i.claim("SixEntryPoints", count("package.json", "/exports", 6, { except: ["./pac
 | `inherits(cls, base)` | The class extends the base, through the classes the source declares |
 | `field(file, pointer, value)` | A JSON file holds the value at the pointer |
 | `count(file, pointer, n, { except })` | The object or array at the pointer has n entries, less the exceptions |
+| `count(modules(globs), n)` | The selector selects n modules read; a matching file that was not read leaves it unknown (stage 39) |
 | `script(name)` | `package.json` names the npm script |
 | `same(constant(module, name), constant(module, name))` | Two constants hold the same literal |
 | `atom(name)` | A sentence no fact decides; it stays `unknown`, and two atoms can still conflict |
@@ -129,6 +130,28 @@ A claim is looked up in the facts, never solved. One the facts refute is a `fact
 writing: the Markdown adapter reads a backticked symbol beside its code file, and `npm run <name>`, as edges that trace
 resolves against the facts, so a symbol that does not exist is a `dangling-reference` ([A-106](../../ASSUMPTIONS.md)).
 An agent proposes a claim with `propose_claim`, into `csh/claims.json` ([A-107](../../ASSUMPTIONS.md)).
+
+## Chains, value imports and cycles (stage 39)
+
+```ts
+import { forbid, acyclic, modules } from "csl";
+
+i.architecture("PodsReachNoDatabase", forbid(modules("src/pods/**"), modules("src/db/**"), { reaches: true }));
+i.architecture("FrontendImportsOnlyTypes", forbid(modules("apps/web/**", { values: true }), modules("packages/core/**")));
+i.architecture("NoCycleBetweenPackages", acyclic(modules("packages/**"), { group: "packages/*" }));
+```
+
+| Form | Says |
+|---|---|
+| `forbid(a, b, { reaches: true })` | No module of `a` reaches `b` through any chain of dependencies. A violation names the chain step by step; a chain through a file that was not read leaves the rule unknown |
+| `modules(globs, { values: true })` | As a rule's subject, a dependency that imports types alone does not count |
+| `acyclic(sel)` | No cycle among the selected modules. Each cycle is reported once, as its dependencies |
+| `acyclic(sel, { group })` | Modules are grouped by the directory the glob matches (`packages/a`), and only a cycle between groups counts |
+
+A `forbid` whose target selects nothing the facts know holds, with the reason `target-selects-nothing`, so a mistyped
+path shows in the assessment. `package.json`'s `packageManager`, `dependencies`, `devDependencies` and `workspaces`
+are fields a claim can name, such as `field("package.json", "/packageManager", "pnpm@10.28.0")`
+([13](../spec/13-from-real-runs.md), section 2).
 
 ## Limits
 

@@ -1,7 +1,7 @@
 // Architecture rules against a container diagram and dependency facts (Next layers, section 4.3). No solver is
 // involved: the elements are a finite set and every comparison is a set comparison, so every result is exact. This
 // package is in the trusted base, since it produces verdicts.
-import { type ArchRule, type ArchSel, compareCodePoints, matchesGlobs } from "@csh/kernel";
+import { type ArchRule, type ArchSel, compareCodePoints, globRegExp, matchesGlobs } from "@csh/kernel";
 
 /** The diagram as this package reads it: elements holding written package names, and relations between them. */
 export interface ArchDiagram {
@@ -46,7 +46,7 @@ export function containersOf(d: ArchDiagram | undefined, pkgName: string): strin
 
 /** Selector identifiers the rule names that the diagram does not have. */
 export function unknownContainers(rule: ArchRule, d: ArchDiagram | undefined): string[] {
-  const sels = rule.k === "forbid" ? [rule.from, rule.to] : rule.k === "only" ? [rule.from, ...rule.to] : [];
+  const sels = rule.k === "forbid" ? [rule.from, rule.to] : rule.k === "only" ? [rule.from, ...rule.to] : rule.k === "acyclic" ? [rule.within] : [];
   return sels.filter((s): s is Extract<ArchSel, { k: "container" }> => s.k === "container" && !(d?.elements.some((e) => e.id === s.id) ?? false)).map((s) => s.id);
 }
 
@@ -115,14 +115,150 @@ export function unplacedPackages(d: ArchDiagram, facts: ArchFacts): string[] {
   return [...new Set(facts.packages)].filter((p) => containersOf(d, p).length === 0).sort(compareCodePoints);
 }
 
-export type RuleResult = { result: "violated"; by: ArchDependency[] } | { result: "holds" } | { result: "unknown"; reason: string };
+/**
+ * A rule's result. A violation lists the dependencies that break it; for `reaches` and `acyclic` each chain or cycle is
+ * one entry of `chains`, its dependencies in order (stage 39). A rule that holds may carry notes, such as a target
+ * that selects nothing.
+ */
+export type RuleResult = { result: "violated"; by: ArchDependency[]; chains?: ArchDependency[][] } | { result: "holds"; notes?: string[] } | { result: "unknown"; reason: string };
 
 /** A selector as a person wrote it, for a reason. */
-function describeSel(sel: ArchSel): string {
+export function describeSel(sel: ArchSel): string {
   if (sel.k === "any") return "anything";
   if (sel.k === "package") return `pkg(${sel.name})`;
   if (sel.k === "modules") return `modules(${sel.globs.join(", ")})`;
   return `container(${sel.id})`;
+}
+
+/** The dependencies a rule over `sel` counts: with `values`, not those that import types alone (stage 39). */
+const counted = (sel: ArchSel, deps: ArchDependency[]) => (sel.k === "modules" && sel.values === true ? deps.filter((x) => !x.typeOnly) : deps);
+
+/**
+ * Every shortest chain of dependencies from a module `from` selects to one `to` selects, one per pair of start and
+ * end, shortest first; and the unread modules the chains could pass through. Breadth first from each start, so each
+ * chain found is a shortest one.
+ */
+function chainsOf(from: ArchSel, to: ArchSel, deps: ArchDependency[], unread: Set<string>, d: ArchDiagram | undefined): { chains: ArchDependency[][]; unreadReached: string[] } {
+  const out = new Map<string, ArchDependency[]>();
+  const next = new Map<string, ArchDependency[]>();
+  for (const x of deps) if (x.from !== x.to) next.set(x.from, [...(next.get(x.from) ?? []), x]);
+  for (const list of next.values()) list.sort((a, b) => compareCodePoints(a.to, b.to) || compareCodePoints(a.at, b.at));
+  const starts = [...new Set(deps.map((x) => x.from))].filter((m) => selects(from, m, d)).sort(compareCodePoints);
+  const unreadReached = new Set<string>();
+  for (const start of starts) {
+    const via = new Map<string, ArchDependency>();
+    const seen = new Set([start]);
+    let frontier = [start];
+    while (frontier.length > 0) {
+      const after: string[] = [];
+      for (const m of frontier) {
+        for (const x of next.get(m) ?? []) {
+          if (seen.has(x.to)) continue;
+          seen.add(x.to);
+          via.set(x.to, x);
+          if (unread.has(x.to)) unreadReached.add(x.to);
+          if (selects(to, x.to, d)) {
+            const chain: ArchDependency[] = [];
+            for (let at: string | undefined = x.to; at !== undefined && at !== start; at = via.get(at)?.from) chain.unshift(via.get(at)!);
+            out.set(`${start}->${x.to}`, chain);
+          }
+          after.push(x.to);
+        }
+      }
+      frontier = after;
+    }
+  }
+  const chains = [...out.values()].sort((a, b) => a.length - b.length || compareCodePoints(a[0]!.from, b[0]!.from) || compareCodePoints(a.at(-1)!.to, b.at(-1)!.to));
+  return { chains, unreadReached: [...unreadReached].sort(compareCodePoints) };
+}
+
+/**
+ * Each cycle of dependencies among the modules `within` selects, or between the groups `group` makes of them, once,
+ * from its least member. Found by Tarjan's strongly connected components, then one shortest cycle through the least
+ * member of each component.
+ */
+function cyclesOf(within: ArchSel, group: string | undefined, deps: ArchDependency[], d: ArchDiagram | undefined): ArchDependency[][] {
+  const groupRe = group === undefined ? undefined : new RegExp(`^${globSource(group)}(?=/)`);
+  const node = (m: string): string | undefined => {
+    if (!selects(within, m, d)) return undefined;
+    if (groupRe === undefined) return m;
+    return groupRe.exec(m)?.[0];
+  };
+  // Edges between nodes, each kept with the dependency that makes it (the first by file and line).
+  const edges = new Map<string, Map<string, ArchDependency>>();
+  for (const x of [...deps].sort((a, b) => compareCodePoints(a.at, b.at))) {
+    const a = node(x.from);
+    const b = node(x.to);
+    if (a === undefined || b === undefined || a === b) continue;
+    const m = edges.get(a) ?? new Map<string, ArchDependency>();
+    if (!m.has(b)) m.set(b, x);
+    edges.set(a, m);
+  }
+  const out = (v: string) => [...(edges.get(v) ?? new Map<string, ArchDependency>())].sort((p, q) => compareCodePoints(p[0], q[0]));
+  const nodes = [...new Set([...edges.keys(), ...[...edges.values()].flatMap((m) => [...m.keys()])])].sort(compareCodePoints);
+  // Tarjan's algorithm.
+  let index = 0;
+  const idx = new Map<string, number>();
+  const low = new Map<string, number>();
+  const stack: string[] = [];
+  const on = new Set<string>();
+  const comps: string[][] = [];
+  const visit = (v: string) => {
+    idx.set(v, index);
+    low.set(v, index++);
+    stack.push(v);
+    on.add(v);
+    for (const [w] of out(v)) {
+      if (!idx.has(w)) {
+        visit(w);
+        low.set(v, Math.min(low.get(v)!, low.get(w)!));
+      } else if (on.has(w)) low.set(v, Math.min(low.get(v)!, idx.get(w)!));
+    }
+    if (low.get(v) === idx.get(v)) {
+      const comp: string[] = [];
+      for (;;) {
+        const w = stack.pop()!;
+        on.delete(w);
+        comp.push(w);
+        if (w === v) break;
+      }
+      if (comp.length > 1) comps.push(comp.sort(compareCodePoints));
+    }
+  };
+  for (const v of nodes) if (!idx.has(v)) visit(v);
+  const cycles: ArchDependency[][] = [];
+  for (const comp of comps) {
+    const inComp = new Set(comp);
+    const start = comp[0]!;
+    // The shortest path from the start back to itself inside the component, breadth first.
+    const back = new Map<string, { prev: string; dep: ArchDependency }>();
+    let frontier = [start];
+    let closing: { prev: string; dep: ArchDependency } | undefined;
+    while (frontier.length > 0 && closing === undefined) {
+      const after: string[] = [];
+      for (const v of frontier) {
+        for (const [w, dep] of out(v)) {
+          if (!inComp.has(w)) continue;
+          if (w === start) closing ??= { prev: v, dep };
+          else if (!back.has(w)) {
+            back.set(w, { prev: v, dep });
+            after.push(w);
+          }
+        }
+        if (closing !== undefined) break;
+      }
+      frontier = after;
+    }
+    const cycle: ArchDependency[] = [closing!.dep];
+    for (let at = closing!.prev; at !== start; at = back.get(at)!.prev) cycle.unshift(back.get(at)!.dep);
+    cycles.push(cycle);
+  }
+  return cycles.sort((a, b) => compareCodePoints(a[0]!.from, b[0]!.from));
+}
+
+/** A glob as the source of a regular expression, unanchored. */
+function globSource(glob: string): string {
+  return globRegExp(glob).source.replace(/^\^/, "").replace(/\$$/, "");
 }
 
 /** A rule against current facts. `closed` needs the diagram it names. */
@@ -132,15 +268,30 @@ export function evaluateRule(rule: ArchRule, facts: ArchFacts, d: ArchDiagram | 
   // A rule over nothing holds of nothing: when its subject selects no module, package or file the facts know, the rule
   // is a typo or points at a directory that moved, and "holds" would say a thing about code it never looked at.
   // (What a forbid names as the target, or an only allows, may well be absent: that is the rule being kept.)
-  if ((rule.k === "forbid" || rule.k === "only") && facts.modules !== undefined) {
+  if ((rule.k === "forbid" || rule.k === "only" || rule.k === "acyclic") && facts.modules !== undefined) {
+    const subject = rule.k === "acyclic" ? rule.within : rule.from;
     const universe = [...facts.modules, ...facts.packages, ...facts.depends.map((x) => x.from), ...(facts.unread ?? [])];
-    if (!universe.some((m) => selects(rule.from, m, d))) return { result: "unknown", reason: `selects-nothing: ${describeSel(rule.from)} matches none of ${facts.modules.length} modules read` };
+    if (!universe.some((m) => selects(subject, m, d))) return { result: "unknown", reason: `selects-nothing: ${describeSel(subject)} matches none of ${facts.modules.length} modules read` };
   }
+  const notRead = (unread: string[]): RuleResult => ({ result: "unknown", reason: `not-read: ${unread.slice(0, 3).join(", ")}${unread.length > 3 ? ` and ${unread.length - 3} more` : ""}` });
   let by: ArchDependency[];
-  if (rule.k === "forbid") {
-    by = facts.depends.filter((x) => x.from !== x.to && selects(rule.from, x.from, d) && selects(rule.to, x.to, d));
+  let unreadReached: string[] = [];
+  if (rule.k === "forbid" && rule.reaches === true) {
+    const deps = counted(rule.from, facts.depends);
+    // Once past the first step a chain is no longer the subject's own, so values: true applies to every step.
+    const r = chainsOf(rule.from, rule.to, rule.from.k === "modules" && rule.from.values === true ? deps : facts.depends, new Set(facts.unread ?? []), d);
+    unreadReached = r.unreadReached;
+    if (r.chains.length > 0) return { result: "violated", by: r.chains.flat(), chains: r.chains };
+    by = [];
+  } else if (rule.k === "forbid") {
+    by = counted(rule.from, facts.depends).filter((x) => x.from !== x.to && selects(rule.from, x.from, d) && selects(rule.to, x.to, d));
   } else if (rule.k === "only") {
-    by = facts.depends.filter((x) => selects(rule.from, x.from, d) && !selects(rule.from, x.to, d) && !rule.to.some((t) => selects(t, x.to, d)));
+    by = counted(rule.from, facts.depends).filter((x) => selects(rule.from, x.from, d) && !selects(rule.from, x.to, d) && !rule.to.some((t) => selects(t, x.to, d)));
+  } else if (rule.k === "acyclic") {
+    const cycles = cyclesOf(rule.within, rule.group, counted(rule.within, facts.depends), d);
+    if (cycles.length > 0) return { result: "violated", by: cycles.flat(), chains: cycles };
+    const unread = (facts.unread ?? []).filter((m) => selects(rule.within, m, d));
+    return unread.length > 0 ? notRead(unread) : { result: "holds" };
   } else if (rule.k === "claim") {
     return { result: "unknown", reason: "a claim is judged by evaluateClaim" };
   } else {
@@ -150,8 +301,14 @@ export function evaluateRule(rule: ArchRule, facts: ArchFacts, d: ArchDiagram | 
   if (by.length > 0) return { result: "violated", by };
   // A file that was not read could depend on anything: a rule over it cannot hold, though what was read can violate it.
   if (rule.k === "forbid" || rule.k === "only") {
-    const unread = (facts.unread ?? []).filter((m) => selects(rule.from, m, d));
-    if (unread.length > 0) return { result: "unknown", reason: `not-read: ${unread.slice(0, 3).join(", ")}${unread.length > 3 ? ` and ${unread.length - 3} more` : ""}` };
+    const unread = [...new Set([...(facts.unread ?? []).filter((m) => selects(rule.from, m, d)), ...unreadReached])].sort(compareCodePoints);
+    if (unread.length > 0) return notRead(unread);
+  }
+  // A forbidden target that selects nothing the facts know: nothing can depend on it, so the rule holds, and says so,
+  // since a mistyped path and a package that is legitimately absent read the same.
+  if (rule.k === "forbid" && facts.modules !== undefined) {
+    const known = [...facts.modules, ...facts.packages, ...facts.depends.map((x) => x.to), ...(facts.unread ?? [])];
+    if (!known.some((m) => selects(rule.to, m, d))) return { result: "holds", notes: [`target-selects-nothing: ${describeSel(rule.to)} matches no module, package or dependency of the facts`] };
   }
   return { result: "holds" };
 }
@@ -162,7 +319,7 @@ export function evaluateRule(rule: ArchRule, facts: ArchFacts, d: ArchDiagram | 
  * its own diagram.
  */
 export function conflictingRelations(rule: ArchRule, d: ArchDiagram): ArchDiagram["relations"] {
-  if (rule.k === "closed" || rule.k === "claim") return [];
+  if (rule.k === "closed" || rule.k === "claim" || rule.k === "acyclic") return [];
   const el = new Map(d.elements.map((e) => [e.id, e]));
   return d.relations.filter((r) => {
     const a = el.get(r.from);
@@ -177,4 +334,9 @@ export function conflictingRelations(rule: ArchRule, d: ArchDiagram): ArchDiagra
 /** How a dependency reads as a witness: its file and line, and whether it imports types alone. */
 export function describeDependency(x: ArchDependency): string {
   return `${x.at}: ${x.from} -> ${x.to}${x.via === "manifest" ? " (manifest)" : ""}${x.typeOnly ? " (type-only)" : ""}`;
+}
+
+/** A chain or cycle as one reason: each step's file and line, in order. */
+export function describeChain(chain: ArchDependency[]): string {
+  return `${chain.length === 1 ? "" : `${chain.length} steps: `}${chain.map(describeDependency).join(", then ")}`;
 }
