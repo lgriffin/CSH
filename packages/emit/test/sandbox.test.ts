@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { emit } from "@csh/emit";
+import { accessMessage, emit } from "@csh/emit";
 
 const dir = join(import.meta.dirname, "sandbox");
 
@@ -18,6 +18,21 @@ describe("emission sandbox", () => {
       if (!r.ok) expect(r.errors.map((e) => e.code)).toContain("E-ACCESS");
     });
   }
+
+  it("names the path it refused to read (stage 41)", async () => {
+    const r = await emit(join(dir, "fs.csl.ts"), { root: dir, skipTypeCheck: true });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      const e = r.errors.find((x) => x.code === "E-ACCESS")!;
+      expect(e.message).toMatch(/the sandbox refused to read \S+/);
+      expect(e.message).toContain(dir);
+    }
+  });
+
+  it("keeps quotes and parentheses in a refused path", () => {
+    expect(accessMessage("E-ACCESS: denied (refused: /w/a (copy)/b.ts)", "/w")).toContain("refused to read /w/a (copy)/b.ts.");
+    expect(accessMessage("Error: Access to this API has been restricted\n  resource: '/w/o'neil/x.ts'", "/w")).toContain("refused to read /w/o'neil/x.ts.");
+  });
 
   it("with nondeterminism forced, a module that reads the clock fails S9 (two emissions differ)", async () => {
     const r = await emit(join(dir, "random.csl.ts"), { root: dir, skipTypeCheck: true, unsafeAllowNondeterminism: true });

@@ -155,6 +155,11 @@ describe("trace with history (stage 25)", () => {
     expect(r.gaps.filter((g) => g.kind === "dangling-reference")).toEqual([]);
   });
 
+  it("weighs no change to a volatile file (stage 43)", () => {
+    const r = trace({ prepared: prepare(module, charter), files, facts, history: { ...history, volatile: (p) => p === "src/a.ts" } });
+    expect(r.gaps.filter((g) => g.kind === "stale-prose")).toEqual([]);
+  });
+
   it("reports an Enforced status that no mechanism it names supports; a script named on the verifying line supports it", () => {
     const r = trace({ prepared: prepare(module, charter), files, facts, history });
     expect(r.gaps.filter((g) => g.kind === "status-unsupported")).toEqual([{ kind: "status-unsupported", subject: "Charter/R-3", fragments: [], detail: "R-3:1: its stated status is Enforced, and nothing it names as a mechanism resolves, and no test cites it" }]);

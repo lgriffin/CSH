@@ -128,6 +128,11 @@ describe("facts-ts", () => {
       { specifier: "fs", line: 4, typeOnly: false },
     ]);
   });
+
+  it("reads a re-export of types alone as type-only", () => {
+    const r = readFile("a.ts", "export { type A, type B } from './a';\nexport { type C, D } from './c';\nexport type { E } from './e';\n");
+    expect(r.refs.map((x) => x.typeOnly)).toEqual([true, false, true]);
+  });
 });
 
 describe("declarations and data files (stage 24)", () => {

@@ -5,6 +5,7 @@
 import { compareCodePoints } from "@csh/kernel";
 import type { Fact, ItemEdge } from "@csh/witness";
 import type { Prepared } from "./pool.ts";
+import { stepGaps } from "./steps.ts";
 import type { Gap, HistoryPort, Report } from "./types.ts";
 
 export interface TraceInput {
@@ -104,6 +105,8 @@ export function trace(input: TraceInput): TraceResult {
   const unresolvedAt = new Set<string>();
   const scriptsAt = new Set<string>();
   const testCited = new Set<string>();
+  // The decisions a feature or rule names (stage 42): shown on its gap as cited, never counted as verifying it.
+  const decided = new Map<string, string[]>();
   const stale = new Map<string, Map<string, string>>();
   const h = input.history;
   for (const e of edges) {
@@ -119,6 +122,7 @@ export function trace(input: TraceInput): TraceResult {
     }
     out.push(row);
     if (e.rel === "verified-by") verifiedBy.add(from);
+    if (e.rel === "decided-by") decided.set(from, [...(decided.get(from) ?? []), e.to.replace(/^file:/, "")]);
     // A mechanism that resolves supports a stated status: a verified-by edge to a file or an item, or the script a
     // verified-by `npm run x` names, read as a mentions-script edge on the same line.
     if (e.rel === "verified-by" && typeof r === "string") supported.add(from);
@@ -132,7 +136,7 @@ export function trace(input: TraceInput): TraceResult {
     if (h !== undefined && r === "file" && DESCRIBING.has(e.rel)) {
       const path = fileOf(e.to);
       const at = /^(.*):(\d+)$/.exec(e.span);
-      if (path !== undefined && at !== null && !DOCUMENT.test(path) && h.frozen?.(at[1]!) !== true) {
+      if (path !== undefined && at !== null && !DOCUMENT.test(path) && h.frozen?.(at[1]!) !== true && h.volatile?.(path) !== true) {
         const key = `${e.span} ${path}`;
         const seen = stale.get(from);
         if (seen?.has(key) !== true) {
@@ -173,7 +177,8 @@ export function trace(input: TraceInput): TraceResult {
       const status = it.attrs?.status !== undefined ? `; its stated status is ${it.attrs.status}` : "";
       gaps.push({ kind: "unverified", subject: q, fragments: [], detail: `${it.span}: names no mechanism that verifies it, and no test cites it${status}` });
     } else if (it.kind === "rule" && !into.has("exemplifies")) {
-      gaps.push({ kind: "unverified", subject: q, fragments: [], detail: `${it.span}: no scenario sits under this rule` });
+      const d = decided.get(q);
+      gaps.push({ kind: "unverified", subject: q, fragments: [], detail: `${it.span}: no scenario sits under this rule${d !== undefined ? `; it cites ${d.join(", ")}, a decision, cited and not verified` : ""}` });
     } else if (it.kind === "property" && !into.has("cites")) {
       // A structured trace entry no scenario cites (stage 28). One that records why it has none is a justified gap: a
       // silence stated with its reason reads differently from a bare one.
@@ -182,5 +187,6 @@ export function trace(input: TraceInput): TraceResult {
       else gaps.push({ kind: "unverified", subject: q, fragments: [], detail: `${it.span}: no scenario or test cites it${silent !== undefined ? `; it records ${silent} as none, with no reason` : ""}` });
     }
   }
+  gaps.push(...stepGaps(input.prepared));
   return { gaps, edges: out };
 }

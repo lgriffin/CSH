@@ -1,21 +1,20 @@
 // The golden-fixture runner: each fixture's expected.json is an accepting or rejecting test
 // (Semantic contract, section 7). It drives the real pipeline and compares observed with
 // expected, collecting every mismatch rather than stopping at the first.
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync, type SpawnOptions } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { type Assessment, type AuthorityResolver, cachingSolver, makeRefiner, type Finding, MemoryEvidenceStore, type Report, SolverCache } from "@csh/check";
 import { emit, type Lock, readLock, typeCheck } from "@csh/emit";
 import { acceptDecision, gate, type Snapshot, type Waiver } from "@csh/gate";
-import { digestJson, digestOf, type Fragment, fragmentsOf, type Module, stableJson } from "@csh/kernel";
+import { digestJson, digestOf, type Fragment, fragmentsOf, type Module, stableJson, textDigestOf } from "@csh/kernel";
 import { authorship, formatDecision, gitVcs, LEDGER_PATH, MAINTAINERS_PATH, readLedger, resolveAuthority, type Decision, type LedgerState, type Role } from "@csh/ledger";
 import { printModule } from "@csh/print";
 import type { SolverPort } from "@csh/solver";
 import { createTestRepo, gpgAvailable, type TestRepo } from "./git.ts";
 import { checkModule, componentQueue, componentStatus, coverageOfSources, emitProject, evaluateProject, evaluateSpec, type FixtureConfig, loadProject, proposeProfile, readConfig, readStoredRun, selectFiles, specPathOf } from "@csh/run";
 import { verifyCounterexample, verifyNoOutcome } from "./verify.ts";
-import { packWorkspace } from "./pack.ts";
 import { type ComponentProblem, parseComponent, validateManifest } from "@csh/component";
 import { type DiffContext, diffRuns, type ManifestView, renderDiff, type RunSide, type Unavailable } from "@csh/review";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -39,7 +38,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 40;
+export const BUILT_THROUGH_STAGE = 44;
 
 const AGENT_BIN = resolve(import.meta.dirname, "../../agent/bin/csh-agent.js");
 
@@ -133,7 +132,7 @@ export class FixtureRunner {
       else if (e.run !== undefined) await this.project(dir, e.run, failures);
       else if (e.init !== undefined) await this.init(dir, e.init, failures);
       else if (e.starter !== undefined) {
-        const skipped = this.starter(e.starter, failures);
+        const skipped = await this.starter(e.starter, failures);
         if (skipped !== undefined) res.skipped = skipped;
       }
       else if (e.git === true) await this.git(dir, e, failures);
@@ -388,17 +387,29 @@ export class FixtureRunner {
    * from this workspace, and run csh run with the installed command. Packages outside the workspace (TypeScript, Z3,
    * Node's types) come from the npm registry, as a user's install would.
    */
-  private starter(x: { run: "completed" }, failures: string[]): string | undefined {
+  private async starter(x: { run: "completed" }, failures: string[]): Promise<string | undefined> {
     const repo = resolve(this.o.fixturesDir, "..");
     const work = mkdtempSync(join(tmpdir(), "csh-starter-"));
     try {
       const packs = join(work, "packs");
       const project = join(work, "starter");
-      const tarballs = packWorkspace(packs, repo);
+      // Packing, installing and running take minutes on a slow machine. Each runs in a subprocess awaited, never
+      // synchronously, so the test worker stays responsive to its runner meanwhile.
+      const packed = await spawnAsync(process.execPath, [join(repo, "packages", "testkit", "src", "pack.ts"), packs], { cwd: repo, env: process.env });
+      if (packed.status !== 0) {
+        failures.push(`packing the workspace failed (${packed.status}): ${packed.stderr.slice(0, 2000)}`);
+        return;
+      }
+      const tarballs = packed.stdout.split("\n").filter((l) => l.trim() !== "").map((l) => resolve(repo, l.trim()));
       cpSync(join(repo, "examples", "starter"), project, { recursive: true, filter: (p) => !/[\\/](node_modules|reports|\.csh-cache)$/.test(p) });
       const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith("CSH_")));
-      const sh = (cmd: string, args: string[]) => spawnSync(cmd, args, { cwd: project, encoding: "utf8", env });
-      const npm = sh("npm", ["install", "--save-dev", "--no-audit", "--no-fund", ...tarballs]);
+      // On Windows npm and the installed csh are .cmd shims, which only a shell runs. The command itself stays unquoted
+      // when it can: a quoted name found on PATH gives the shim the wrong %~dp0, and npm.cmd then looks for itself here.
+      const win = process.platform === "win32";
+      const q = (a: string) => (/[\s"]/.test(a) ? `"${a}"` : a);
+      const sh = (cmd: string, args: string[]) =>
+        win ? spawnAsync([q(cmd), ...args.map((a) => `"${a}"`)].join(" "), [], { cwd: project, env, shell: true }) : spawnAsync(cmd, args, { cwd: project, env });
+      const npm = await sh("npm", ["install", "--save-dev", "--no-audit", "--no-fund", ...tarballs]);
       if (npm.status !== 0) {
         // Offline, the registry packages cannot be installed. Like a missing gpg, that skips the fixture only when the
         // environment says it may (A-51); otherwise it fails.
@@ -406,7 +417,7 @@ export class FixtureRunner {
         failures.push(`npm install failed (${npm.status}): ${npm.stderr.slice(0, 2000)}`);
         return;
       }
-      const run = sh(join(project, "node_modules", ".bin", "csh"), ["run"]);
+      const run = await sh(join(project, "node_modules", ".bin", "csh"), ["run"]);
       // Completed means more than an exit of 0, which advisory mode gives whatever the tests did: one stored run whose
       // every harness exited 0 and recorded witnesses.
       const runs = join(project, ".csh-cache", "runs");
@@ -626,7 +637,7 @@ export class FixtureRunner {
     if (read === undefined || read.problems.length > 0) throw new Error(`fixture judgments unusable: ${JSON.stringify(read?.problems)}`);
     const stages = read.judgments.stages.map((s) => readStage(stageDir(inputs, slug, s.id), s.id)).filter((s): s is StageRecord => s !== undefined);
     if (x.problems !== undefined) {
-      const model = buildA3({ slug, judgments: read.judgments, judgmentsDigest: digestOf(read.bytes), component: { name: manifest.name, practices: manifest.practices }, stages, authority: { authority: "candidate" } });
+      const model = buildA3({ slug, judgments: read.judgments, judgmentsDigest: textDigestOf(read.bytes), component: { name: manifest.name, practices: manifest.practices }, stages, authority: { authority: "candidate" } });
       for (const want of x.problems as { kind: string; subject?: string; stage?: string }[]) {
         if (!model.problems.some((p) => p.kind === want.kind && (want.subject === undefined || p.subject.includes(want.subject)) && (want.stage === undefined || p.stage === want.stage))) {
           failures.push(`a3 problem ${JSON.stringify(want)} not reported; got ${JSON.stringify(model.problems)}`);
@@ -653,12 +664,12 @@ export class FixtureRunner {
       const original = readFileSync(join(inputs, "csh", "a3", slug, "judgments.json"), "utf8");
       repo.write(file, original);
       repo.commit("Judgments", null);
-      const d: Decision = { schema: "csh-decision/v1", seq: 1, kind: "approve", fragment: name, digest: digestOf(original), rationale: "the sheet's root causes are right", actor: "Owner", selfApproved: true };
+      const d: Decision = { schema: "csh-decision/v1", seq: 1, kind: "approve", fragment: name, digest: textDigestOf(original), rationale: "the sheet's root causes are right", actor: "Owner", selfApproved: true };
       repo.write(LEDGER_PATH, `${formatDecision(d)}\n`);
       repo.commit("Approve the judgments", "Owner");
       const check = (after: string) => {
         const text = readFileSync(join(repo.dir, file), "utf8");
-        const a = resolveAuthority(readLedger(gitVcs(repo.dir, { env: repo.env })), { name, digest: digestOf(text), cites: [] });
+        const a = resolveAuthority(readLedger(gitVcs(repo.dir, { env: repo.env })), { name, digest: textDigestOf(text), cites: [] });
         for (const w of want.filter((x) => x.after === after)) {
           if (a.authority !== w.authority) failures.push(`after ${after}: authority ${a.authority}, expected ${w.authority}`);
           if (w.selfApproved !== undefined && a.selfApproved !== w.selfApproved) failures.push(`after ${after}: selfApproved ${String(a.selfApproved)}, expected ${String(w.selfApproved)}`);
@@ -1054,4 +1065,17 @@ export function summarise(results: FixtureResult[]): string {
 
 export function relativeTo(root: string, p: string): string {
   return relative(root, p);
+}
+
+/** A subprocess awaited: its exit status and output; a process that cannot start gives status null and its error. */
+function spawnAsync(cmd: string, args: string[], opts: SpawnOptions): Promise<{ status: number | null; stdout: string; stderr: string }> {
+  return new Promise((done) => {
+    const child = spawn(cmd, args, { ...opts, stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    child.stdout?.on("data", (d: Buffer) => (stdout += d.toString()));
+    child.stderr?.on("data", (d: Buffer) => (stderr += d.toString()));
+    child.on("error", (e) => done({ status: null, stdout, stderr: `${stderr}${String(e)}` }));
+    child.on("close", (status) => done({ status, stdout, stderr }));
+  });
 }

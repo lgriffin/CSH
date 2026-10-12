@@ -42,7 +42,7 @@ summary:
 $ csh run
 run SignInService at 793bdcbdf0e7fbcf0c1a504616569ed1402d37f1
   harness tdd: node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=@csh/harness/reporter --test-reporter-destination=stdout test/lockout.test.ts  exit 0, 4 witnesses, 4 executions (not sandboxed)
-  findings 5 (4 conflicts, 1 divergence, 4 cross-source); gaps 8; not comparable 1; errors 2
+  findings 5 (4 conflicts, 1 divergence, 4 cross-source); gaps 8; not comparable 1; 1 error, 1 warning
   items 5; unliftable 2; adapter diagnostics 9 (0 errors, 1 warning)
   obligations 3: conflicting 3, violated 0, satisfied 0, unknown 0
   gate allow (advisory)
@@ -57,7 +57,7 @@ compute exactly what `csh run` does after the harness. The last stage, with the 
 $ csh run --mode enforcing
 run SignInService at 3ddf75879ae42c681d04559d41e3f866223119be
   harness tdd: node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=@csh/harness/reporter --test-reporter-destination=stdout test/lockout.test.ts  exit 0, 4 witnesses, 4 executions (not sandboxed)
-  findings 3 (1 conflict, 2 divergences, 3 cross-source); gaps 8; not comparable 0; errors 0
+  findings 3 (1 conflict, 2 divergences, 3 cross-source); gaps 8; not comparable 0; 0 errors, 0 warnings
   items 5; unliftable 2; adapter diagnostics 1 (0 errors, 1 warning)
   obligations 4: conflicting 0, violated 1, satisfied 3, unknown 0
   gate block (enforcing)

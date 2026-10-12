@@ -4,6 +4,7 @@
 // repository's keys, commits or csh/maintainers.json.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import type { Identity, Maintainers, Role } from "@csh/ledger";
 
@@ -29,15 +30,24 @@ export function gpgAvailable(): boolean {
   }
 }
 
+/**
+ * A directory for a gpg home: under /tmp, since gpg's agent socket path must be short; on Windows, which has no /tmp
+ * and no such limit, under the system temp directory.
+ */
+export const gpgHomeDir = (prefix: string): string => mkdtempSync(process.platform === "win32" ? join(tmpdir(), prefix) : `/tmp/${prefix}`);
+
+/** A gpg home as GNUPGHOME names it: Git for Windows' gpg reads C:\\x\\y as /c/x/y. */
+export const gpgHomeEnv = (dir: string): string => (process.platform === "win32" ? dir.replace(/^([A-Za-z]):/, (_, d: string) => `/${d.toLowerCase()}`).replace(/\\/g, "/") : dir);
+
 /** Create a repository under `parent` (which must be inside the workspace so that "csl" resolves). */
 export function createTestRepo(parent: string, identities: string[]): TestRepo {
   mkdirSync(parent, { recursive: true });
   const dir = mkdtempSync(join(parent, "repo-"));
   // gpg's agent socket path must be short, so the keyring goes under the system temp directory.
-  const gnupg = mkdtempSync("/tmp/csh-gnupg-");
+  const gnupg = gpgHomeDir("csh-gnupg-");
   const env: NodeJS.ProcessEnv = {
     ...process.env,
-    GNUPGHOME: gnupg,
+    GNUPGHOME: gpgHomeEnv(gnupg),
     GIT_CONFIG_GLOBAL: "/dev/null",
     GIT_CONFIG_NOSYSTEM: "1",
     GIT_AUTHOR_NAME: "CSH test",

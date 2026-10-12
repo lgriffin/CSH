@@ -1,15 +1,15 @@
 // The csh command (Joint evaluation, section 7; Authority tab, sections 3.4 and 6; Anchor, harnesses and A3, section 7.1).
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { a3Dir, readJudgments } from "@csh/a3";
-import { checkExpected, DIVERGENCE_READINGS, type Finding, overviewOf, parseExpected, renderExpect, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report } from "@csh/check";
+import { checkExpected, claimSpans, DIVERGENCE_READINGS, type Finding, overviewOf, parseExpected, renderExpect, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report, type SentenceAt } from "@csh/check";
 import { exitCode, formatDecision as formatGate, type GateDecision, type Mode } from "@csh/gate";
-import { digestOf, fragmentsOf, type Module, stableJson } from "@csh/kernel";
+import { digestOf, fragmentsOf, textDigestOf, type Module, stableJson } from "@csh/kernel";
 import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons } from "@csh/ledger";
 import { printFragment } from "@csh/print";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { componentQueue, coverageOf, renderCoverage, componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderQueue, renderStatus, ledgerOf, loadProject, MODEL_PATH, OVERVIEW_PATH, type Project, REPORT_PATH, importResults, runAt, runComponent, type RunResult, fetchSubject, specPathOf, storedRuns } from "@csh/run";
+import { componentQueue, coverageOf, renderCoverage, componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderQueue, renderStatus, ledgerOf, loadProject, MODEL_PATH, OVERVIEW_PATH, type Project, REPORT_PATH, importResults, runAt, runComponent, type RunResult, fetchSubject, localPathWarning, specPathOf, storedRuns, subjectWarnings } from "@csh/run";
 import { type Args, parseArgs } from "./args.ts";
 import { init } from "./init.ts";
 import { a3Command, a3Fragment, historyCommand } from "./a3.ts";
@@ -124,7 +124,7 @@ function reportFor(p: Project, a: Args, stored: { report: string } | undefined, 
   if (stored !== undefined) return JSON.parse(readFileSync(stored.report, "utf8")) as Report;
   const path = join(p.root, a.options.report ?? REPORT_PATH);
   if (existsSync(path)) return JSON.parse(readFileSync(path, "utf8")) as Report;
-  io.err(`csh ${cmd}: no report at ${relative(io.cwd, path) || path}; csh run or csh check writes one, and writes none when it fails\n`);
+  io.err(`csh ${cmd}: no report at ${(relative(io.cwd, path) || path).replace(/\\/g, "/")}; csh run or csh check writes one, and writes none when it fails\n`);
   return undefined;
 }
 
@@ -258,7 +258,7 @@ async function decideA3(kind: DecisionKind, p: Project, slug: string, actor: str
     return 2;
   }
   const fragment = a3Fragment(name, slug);
-  const digest = digestOf(read.bytes);
+  const digest = textDigestOf(read.bytes);
   const ledger = await ledgerOf(p, specPathOf(p));
   const solo = ledger === undefined || persons(ledger.maintainers).length <= 1;
   io.out(`${kind} ${fragment}\n  digest ${digest}\n  the judgments in ${a3Dir(p.root, slug).slice(p.root.length + 1)}/judgments.json: ${read.judgments.title || "(untitled)"}\n  Approving them makes the sheet's root causes and countermeasures approved; any edit returns them to candidate.\n`);
@@ -308,6 +308,8 @@ export async function csh(argv: string[], io: Io): Promise<number> {
         return 1;
       }
       io.out(`${r.fetched ? "fetched" : "already fetched"} ${p.component!.manifest.subject!.repo} at ${commit} into ${relative(io.cwd, r.dir)}\n`);
+      // Said, never refused: the profile is the owner's to keep or commit (From real runs, stage 44).
+      for (const w of subjectWarnings(p)) io.err(`warning: ${w}\n`);
       return 0;
     }
     case "run":
@@ -318,7 +320,7 @@ export async function csh(argv: string[], io: Io): Promise<number> {
         io.err("usage: csh results import <practice> <runner-report> [--base <dir>]\n");
         return 2;
       }
-      const r = importResults(p, practice, resolve(io.cwd, report), a.options.base !== undefined ? resolve(io.cwd, a.options.base) : undefined);
+      const r = importResults(p, practice, resolve(io.cwd, report), a.options.base !== undefined ? (isAbsolute(a.options.base) ? a.options.base : resolve(io.cwd, a.options.base)) : undefined);
       if (!r.ok) {
         io.err(`csh results import: ${r.message}\n`);
         return 1;
@@ -331,7 +333,7 @@ export async function csh(argv: string[], io: Io): Promise<number> {
       if (res === undefined) return 1;
       write(join(p.root, a.options.out ?? REPORT_PATH), stableJson(res.report));
       write(join(p.root, MODEL_PATH), stableJson(res.model));
-      io.out(a.flags.has("json") ? stableJson(res.report) : renderReport(res.report));
+      io.out(a.flags.has("json") ? stableJson(res.report) : renderReport(res.report, sentenceAt(p)));
       return 0;
     }
     case "gaps": {
@@ -513,6 +515,23 @@ async function runGate(p: Project, a: Args, io: Io): Promise<number> {
 }
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
+/** The sentence on a line of the source tree, for a claim's span (From real runs, stage 43); undefined outside it. */
+function sentenceAt(p: Project): SentenceAt {
+  return (span) => {
+    const m = /^(.*):(\d+)$/.exec(span);
+    if (m === null) return undefined;
+    const file = resolve(p.sourceRoot, m[1]!);
+    if (!file.startsWith(resolve(p.sourceRoot)) || !existsSync(file)) return undefined;
+    try {
+      const line = readFileSync(file, "utf8").split(/\r?\n/)[Number(m[2]) - 1]?.trim();
+      if (line === undefined || line === "") return undefined;
+      return line.length > 200 ? `${line.slice(0, 197)}...` : line;
+    } catch {
+      return undefined;
+    }
+  };
+}
 const countOf = (r: Report, kinds: string[]) => r.findings.filter((f) => kinds.includes(f.kind)).length;
 
 /** csh run: harnesses, check and gate for one snapshot of the component (Anchor, harnesses and A3, section 4). */
@@ -532,10 +551,12 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
   const { record, report, decision } = r;
   const lines = [`run ${record.component} at ${record.snapshot.commit}`];
   if (record.snapshot.subject !== undefined) lines.push(`  subject ${record.snapshot.subject.repo} at ${record.snapshot.subject.commit}`);
+  const local = localPathWarning(p);
+  if (local !== undefined) lines.push(`  warning: ${local}`);
   for (const h of record.harnesses) lines.push(`  harness ${h.practice}: ${h.argv.join(" ")}  exit ${h.exitCode ?? h.error ?? "none"}, ${h.witnesses} witnesses, ${h.executions} executions (not sandboxed)`);
   if (record.harnesses.length === 0) lines.push("  no practice has a harness");
   const conflicts = countOf(report, ["state-conflict", "joint-conflict", "example-conflict", "arch-conflict", "claim-conflict", "fact-conflict", "vacuous"]);
-  lines.push(`  findings ${report.findings.length} (${plural(conflicts, "conflict")}, ${plural(countOf(report, ["example-divergence"]), "divergence")}, ${report.findings.filter((f) => f.crossSource).length} cross-source); gaps ${report.gapView.gaps.length}; not comparable ${report.notComparable.length}; errors ${report.errors.length}`);
+  lines.push(`  findings ${report.findings.length} (${plural(conflicts, "conflict")}, ${plural(countOf(report, ["example-divergence"]), "divergence")}, ${report.findings.filter((f) => f.crossSource).length} cross-source); gaps ${report.gapView.gaps.length}; not comparable ${report.notComparable.length}; ${plural(report.errors.filter((e) => e.severity === "error").length, "error")}, ${plural(report.errors.filter((e) => e.severity === "warning").length, "warning")}${report.errors.some((e) => e.severity === "info") ? `, ${plural(report.errors.filter((e) => e.severity === "info").length, "note")}` : ""}`);
   const sev = (x: string) => report.diagnostics.filter((d) => d.severity === x).length;
   lines.push(`  items ${report.items.length}; unliftable ${report.unliftable.length}; adapter diagnostics ${report.diagnostics.length} (${plural(sev("error"), "error")}, ${plural(sev("warning"), "warning")})`);
   // What the counts are made of: errors and warnings by code with an example, never only a number to go and dig for.
@@ -549,8 +570,20 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
   for (const [k, { n, at }] of shown) lines.push(`    ${n} ${k}, e.g. ${at}`);
   if (kinds.size > shown.length) lines.push(`    and ${kinds.size - shown.length} more kinds: csh check lists them`);
   for (const e of report.errors.slice(0, 5)) lines.push(`    ${e.severity} ${e.code}: ${e.detail}`);
+  // A claim the facts refute, or two that disagree: the sentence and the fact, never only the claim's name (stage 43).
+  const claims = report.findings.filter((f) => f.kind === "fact-conflict" || f.kind === "claim-conflict");
+  const said = sentenceAt(p);
+  for (const f of claims.slice(0, 5)) {
+    lines.push(`  ${f.kind}: ${f.reason ?? f.query}`);
+    for (const span of claimSpans(f)) {
+      const sentence = said(span);
+      if (sentence !== undefined) lines.push(`    ${span} says: "${sentence}"`);
+    }
+  }
+  if (claims.length > 5) lines.push(`  and ${claims.length - 5} more claim findings: csh check lists them`);
   // What the profile leaves unread, said on every run of the current snapshot (From real runs, section 1.4).
-  const c = a.options.at === undefined ? coverageOf(p) : undefined;
+  // Only sources the manifest declares are counted: a specification that declares its own would read as nothing read.
+  const c = a.options.at === undefined && (p.component?.manifest.sources ?? []).length > 0 ? coverageOf(p) : undefined;
   if (c !== undefined) lines.push(c.read === c.tracked ? `  coverage: all ${c.tracked} tracked files read` : `  coverage: ${c.read} of ${c.tracked} tracked files read; csh coverage lists the rest`);
   const v = (x: string) => (report.assessments ?? []).filter((y) => y.verdict === x).length;
   lines.push(`  obligations ${(report.assessments ?? []).length}: conflicting ${v("conflicting")}, violated ${v("violated")}, satisfied ${v("satisfied")}, unknown ${v("unknown")}`);

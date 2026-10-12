@@ -1,0 +1,19 @@
+{
+  "config": { "rootDir": "/work/shop/e2e" },
+  "suites": [
+    {
+      "title": "cart.spec.ts",
+      "file": "cart.spec.ts",
+      "specs": [],
+      "suites": [
+        {
+          "title": "cart",
+          "file": "cart.spec.ts",
+          "specs": [
+            { "title": "shows totals", "file": "cart.spec.ts", "line": 4, "tags": ["req-2", "smoke", "REQ-3"], "tests": [{ "status": "expected", "results": [{ "status": "passed" }] }] }
+          ]
+        }
+      ]
+    }
+  ]
+}

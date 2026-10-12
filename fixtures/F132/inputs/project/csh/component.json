@@ -1,0 +1,26 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Shop",
+  "implementation": ["src"],
+  "sources": [
+    { "name": "Reqs", "kind": "Documents", "at": "docs/requirements.md" },
+    { "name": "Decisions", "kind": "Documents", "at": "docs/adr" },
+    { "name": "Features", "kind": "Features", "at": "features" },
+    { "name": "Steps", "kind": "TestFiles", "at": ".", "include": ["steps/**/*.ts"] },
+    { "name": "E2E", "kind": "TestFiles", "at": ".", "include": ["e2e/**/*.ts"] }
+  ],
+  "practices": [
+    { "id": "reqs", "name": "Requirements", "kind": "requirements", "sources": ["Reqs"], "adapter": "@csh/adapter-items/markdown", "settings": { "idPattern": "REQ-[0-9]+" } },
+    { "id": "adr", "name": "Decisions", "kind": "documents", "sources": ["Decisions"], "adapter": "@csh/adapter-items/markdown", "settings": { "idPattern": "ADR-[0-9]+" } },
+    {
+      "id": "bdd",
+      "name": "Behaviour",
+      "kind": "scenarios",
+      "sources": ["Features"],
+      "settings": { "idTag": "(R-[0-9]+)", "tagCites": "(REQ-[0-9]+)", "idPattern": "ADR-[0-9]+", "decisionsField": "Decisions|Specified by", "fileId": "(?:^|/)([0-9]{4})-[^/]*\\.feature$" },
+      "executions": "results/cucumber.json"
+    },
+    { "id": "steps", "name": "Step definitions", "kind": "tests", "sources": ["Steps"], "settings": { "idPattern": "REQ-[0-9]+", "style": "cucumber" } },
+    { "id": "e2e", "name": "End to end", "kind": "tests", "sources": ["E2E"], "settings": { "idPattern": "REQ-[0-9]+" }, "executions": "results/playwright.json" }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "fixture": "F132",
+  "section": "From real runs, section 5",
+  "stage": 42,
+  "expect": {
+    "run": {
+      "items": [
+        { "source": "Features", "id": "features/0001-checkout.feature", "kind": "feature", "attrs": { "fileId": "0001" } },
+        { "source": "Features", "id": "features/0001-refunds.feature", "kind": "feature", "attrs": { "fileId": "0001" } },
+        { "source": "E2E", "id": "e2e/cart.spec.ts", "kind": "test-file", "attrs": { "tests": "1" } }
+      ],
+      "edges": [
+        { "source": "E2E", "from": "e2e/cart.spec.ts", "rel": "cites", "to": "REQ-2" },
+        { "source": "E2E", "from": "e2e/cart.spec.ts", "rel": "cites", "to": "REQ-3" },
+        { "source": "Steps", "from": "steps/checkout.steps.ts", "rel": "loads", "to": "features/0001-checkout.feature" },
+        { "source": "Steps", "from": "steps/missing.steps.ts", "rel": "loads", "to": "features/0002-gone.feature" },
+        { "source": "Features", "from": "features/0001-checkout.feature", "rel": "decided-by", "to": "ADR-1" },
+        { "source": "Features", "from": "features/0001-checkout.feature", "rel": "decided-by", "to": "file:docs/adr/0001-events.md" },
+        { "source": "Features", "from": "R-2", "rel": "decided-by", "to": "ADR-1" }
+      ],
+      "outcomes": [
+        { "item": "Features/features/0001-checkout.feature", "tests": 2, "passed": 1, "failed": 1 },
+        { "item": "Features/features/0001-refunds.feature", "tests": 1, "skipped": 1 },
+        { "item": "Reqs/REQ-1", "tests": 2, "passed": 1, "failed": 1 },
+        { "item": "E2E/e2e/cart.spec.ts", "tests": 1, "passed": 1 },
+        { "item": "Reqs/REQ-2", "tests": 1, "passed": 1 },
+        { "item": "Reqs/REQ-3", "tests": 1, "passed": 1 }
+      ],
+      "gaps": [
+        { "kind": "failing-test", "subject": "Features/features/0001-checkout.feature", "detailIncludes": ["REQ-1"] },
+        { "kind": "undefined-step", "subject": "Features/features/0001-refunds.feature#/refund-a-paid-order", "detailIncludes": ["the shopper asks for a refund", "features/0001-refunds.feature:5"] },
+        { "kind": "unused-step-definition", "subject": "Steps/steps/refunds.steps.ts", "detailIncludes": ["the receipt is emailed", "steps/refunds.steps.ts:7"] },
+        { "kind": "dangling-reference", "subject": "Steps/steps/missing.steps.ts", "detailIncludes": ["features/0002-gone.feature"] },
+        { "kind": "unverified", "subject": "Features/R-2", "detailIncludes": ["ADR-1", "not verified"] }
+      ],
+      "gapsAbsent": [
+        { "kind": "undefined-step", "subject": "Features/R-1/paying-records-the-order" },
+        { "kind": "undefined-step", "subject": "Features/R-1/totals" },
+        { "kind": "unused-step-definition", "subject": "Steps/steps/checkout.steps.ts" },
+        { "kind": "steps-undecided" },
+        { "kind": "dangling-reference", "subject": "Steps/steps/checkout.steps.ts" },
+        { "kind": "dangling-reference", "subject": "Features/features/0001-checkout.feature" }
+      ],
+      "diagnostics": [
+        { "source": "Features", "code": "duplicate-file-id" }
+      ],
+      "diagnosticsAbsent": [
+        { "source": "Features", "code": "results-unmatched" },
+        { "source": "E2E", "code": "results-unmatched" }
+      ]
+    }
+  }
+}

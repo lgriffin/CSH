@@ -194,8 +194,8 @@ export function fetchSubject(p: Project, at?: string): { ok: true; dir: string; 
     rmSync(fresh, { recursive: true, force: true });
     mkdirSync(dirname(dir), { recursive: true });
     // core.longpaths: a subject on Windows may hold paths past MAX_PATH, and a checkout that silently drops them reads as "dirty".
-    execFileSync("git", ["-c", "core.longpaths=true", "clone", "--quiet", "--no-checkout", repo, fresh], { stdio: ["ignore", "ignore", "pipe"] });
-    execFileSync("git", ["-c", "core.longpaths=true", "-c", "advice.detachedHead=false", "checkout", "--quiet", "--detach", commit], { cwd: fresh, stdio: ["ignore", "ignore", "pipe"] });
+    execFileSync("git", ["-c", "core.longpaths=true", "-c", "core.autocrlf=false", "clone", "--quiet", "--no-checkout", repo, fresh], { stdio: ["ignore", "ignore", "pipe"] });
+    execFileSync("git", ["-c", "core.longpaths=true", "-c", "core.autocrlf=false", "-c", "advice.detachedHead=false", "checkout", "--quiet", "--detach", commit], { cwd: fresh, stdio: ["ignore", "ignore", "pipe"] });
   } catch (err) {
     rmSync(fresh, { recursive: true, force: true });
     return { ok: false, message: `could not fetch ${subject.repo} at ${commit.slice(0, 12)}: ${String((err as { stderr?: Buffer }).stderr ?? (err as Error).message).trim()}` };
@@ -212,7 +212,7 @@ export function fetchSubject(p: Project, at?: string): { ok: true; dir: string; 
 
 /** A worktree of the checkout `from` at `dir`, detached at `commit`, checked clean; false when one cannot be made. */
 function worktreeOf(from: string, dir: string, commit: string): boolean {
-  const g = (cwd: string, ...args: string[]) => execFileSync("git", ["-c", "core.longpaths=true", ...args], { cwd, stdio: ["ignore", "ignore", "pipe"] });
+  const g = (cwd: string, ...args: string[]) => execFileSync("git", ["-c", "core.longpaths=true", "-c", "core.autocrlf=false", ...args], { cwd, stdio: ["ignore", "ignore", "pipe"] });
   try {
     rmSync(dir, { recursive: true, force: true });
     // A worktree removed by hand is still registered until pruned, and its path cannot be added again until then.
@@ -278,7 +278,7 @@ async function digestsAtCommit(p: Project, spec: string, commit: string): Promis
   try {
     rmSync(wt, { recursive: true, force: true });
     mkdirSync(dirname(wt), { recursive: true });
-    git(p.root, "worktree", "add", "--detach", "--force", wt, commit);
+    git(p.root, "-c", "core.longpaths=true", "-c", "core.autocrlf=false", "worktree", "add", "--detach", "--force", wt, commit);
     const base = join(wt, p.gitPrefix);
     const file = join(base, specRel);
     if (!existsSync(file)) return undefined;

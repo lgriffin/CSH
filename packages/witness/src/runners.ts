@@ -132,3 +132,110 @@ export function parseGoTestJson(text: string): Parsed {
   });
   return { results, problems };
 }
+
+/** True when the report is cucumber-js JSON: an array whose first entry is a feature with a `uri` and `elements` (stage 42). */
+export function isCucumberJson(text: string): boolean {
+  const t = text.replace(/^﻿/, "").trimStart();
+  if (!t.startsWith("[")) return false;
+  try {
+    const v: unknown = JSON.parse(t);
+    return Array.isArray(v) && (v.length === 0 ? false : isRecord(v[0]) && typeof v[0].uri === "string" && Array.isArray(v[0].elements));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The scenarios of a cucumber-js JSON report (stage 42), each one result in its feature's file. Its name is the
+ * feature's name, the scenario's name and its tags, so a tag cites. A failed step fails it; an ambiguous step makes it
+ * errored; a skipped, pending or undefined step, with none failed, skips it. A background is not a result.
+ */
+export function parseCucumberJson(text: string): Parsed {
+  const results: RunnerResult[] = [];
+  const problems: WitnessProblem[] = [];
+  let v: unknown;
+  try {
+    v = JSON.parse(text.replace(/^﻿/, ""));
+  } catch (err) {
+    return { results, problems: [{ line: 1, message: `not JSON: ${(err as Error).message}` }] };
+  }
+  (v as unknown[]).forEach((f, i) => {
+    if (!isRecord(f) || typeof f.uri !== "string" || !Array.isArray(f.elements)) {
+      problems.push({ line: 1, message: `[${i}] is not a feature with a uri and elements` });
+      return;
+    }
+    const feature = typeof f.name === "string" ? f.name : "";
+    f.elements.forEach((e: unknown, j) => {
+      const at = `[${i}].elements[${j}]`;
+      if (!isRecord(e)) {
+        problems.push({ line: 1, message: `${at} is not a scenario` });
+        return;
+      }
+      if (e.type === "background" || e.keyword === "Background") return;
+      const statuses = (Array.isArray(e.steps) ? e.steps : []).map((s: unknown) => (isRecord(s) && isRecord(s.result) && typeof s.result.status === "string" ? s.result.status : "undefined"));
+      const outcome: TestOutcome = statuses.includes("failed") ? "failed" : statuses.includes("ambiguous") ? "errored" : statuses.some((s) => s === "skipped" || s === "pending" || s === "undefined") ? "skipped" : "passed";
+      const tags = (Array.isArray(e.tags) ? e.tags : []).flatMap((t: unknown) => (isRecord(t) && typeof t.name === "string" ? [t.name] : []));
+      const name = [feature, typeof e.name === "string" ? e.name : "", ...tags].filter((x) => x !== "").join(" ");
+      results.push({ file: f.uri as string, name, outcome, at });
+    });
+  });
+  return { results, problems };
+}
+
+/** True when the report is Playwright JSON: an object with a `suites` array and a `config` (stage 42). */
+export function isPlaywrightJson(text: string): boolean {
+  const t = text.replace(/^﻿/, "").trimStart();
+  return t.startsWith("{") && /"suites"\s*:/.test(t) && /"config"\s*:/.test(t) && !/"testResults"\s*:/.test(t);
+}
+
+const PLAYWRIGHT_STATUS: Record<string, TestOutcome> = { expected: "passed", flaky: "passed", unexpected: "failed", skipped: "skipped" };
+
+/**
+ * The tests of a Playwright JSON report (stage 42), each one result in its spec's file, read from the directory the
+ * report names as `config.rootDir`. Its name is the titles of the suites around it, the spec's title and its tags,
+ * each tag with an `@` and, when that differs, upper-cased too, as the tests adapter reads a tag option.
+ */
+export function parsePlaywrightJson(text: string): Parsed {
+  const results: RunnerResult[] = [];
+  const problems: WitnessProblem[] = [];
+  let v: unknown;
+  try {
+    v = JSON.parse(text.replace(/^﻿/, ""));
+  } catch (err) {
+    return { results, problems: [{ line: 1, message: `not JSON: ${(err as Error).message}` }] };
+  }
+  if (!isRecord(v) || !Array.isArray(v.suites)) return { results, problems: [{ line: 1, message: "a Playwright report needs a suites array" }] };
+  const root = isRecord(v.config) && typeof v.config.rootDir === "string" ? v.config.rootDir.replace(/\\/g, "/").replace(/\/+$/, "") : "";
+  const fileOf = (file: string) => (root === "" || /^(?:\/|[A-Za-z]:)/.test(file) ? file : `${root}/${file}`);
+  const visit = (suite: unknown, titles: string[], at: string, top: boolean) => {
+    if (!isRecord(suite)) {
+      problems.push({ line: 1, message: `${at} is not a suite` });
+      return;
+    }
+    // A file's own suite is titled by its path, which is not part of a test's name.
+    const own = !top && typeof suite.title === "string" && suite.title !== "" ? [...titles, suite.title] : titles;
+    (Array.isArray(suite.specs) ? suite.specs : []).forEach((spec: unknown, i) => {
+      const sat = `${at}.specs[${i}]`;
+      if (!isRecord(spec) || typeof spec.file !== "string" || typeof spec.title !== "string") {
+        problems.push({ line: 1, message: `${sat} names no file and title` });
+        return;
+      }
+      const tags = (Array.isArray(spec.tags) ? spec.tags : []).flatMap((t: unknown) => {
+        if (typeof t !== "string") return [];
+        const tag = t.startsWith("@") ? t : `@${t}`;
+        return tag.toUpperCase() === tag ? [tag] : [tag, tag.toUpperCase()];
+      });
+      (Array.isArray(spec.tests) ? spec.tests : []).forEach((t: unknown, j) => {
+        const outcome = isRecord(t) && typeof t.status === "string" ? PLAYWRIGHT_STATUS[t.status] : undefined;
+        if (outcome === undefined) {
+          problems.push({ line: 1, message: `${sat}.tests[${j}] has no status Playwright reports` });
+          return;
+        }
+        results.push({ file: fileOf(spec.file as string), name: [...own, spec.title as string, ...tags].join(" "), outcome, at: `${sat}.tests[${j}]` });
+      });
+    });
+    (Array.isArray(suite.suites) ? suite.suites : []).forEach((s: unknown, k) => visit(s, own, `${at}.suites[${k}]`, false));
+  };
+  v.suites.forEach((s: unknown, k) => visit(s, [], `suites[${k}]`, true));
+  return { results, problems };
+}

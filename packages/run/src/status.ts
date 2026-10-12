@@ -6,7 +6,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { TOOL_VERSION } from "@csh/check";
 import { type GateDecision, snapshotDigest } from "@csh/gate";
-import { digestOf, fragmentsOf } from "@csh/kernel";
+import { digestOf, fragmentsOf, textDigestOf } from "@csh/kernel";
 import { type AuthorityInfo, type LedgerState, MAINTAINERS_PATH, resolveAuthority } from "@csh/ledger";
 import type { SolverPort } from "@csh/solver";
 import { emitProject, emissionProblem } from "./evaluate.ts";
@@ -67,7 +67,7 @@ function a3Judgments(root: string): { slug: string; digest: string }[] {
   return readdirSync(dir)
     .filter((d) => existsSync(join(dir, d, "judgments.json")))
     .sort()
-    .map((slug) => ({ slug, digest: digestOf(readFileSync(join(dir, slug, "judgments.json"))) }));
+    .map((slug) => ({ slug, digest: textDigestOf(readFileSync(join(dir, slug, "judgments.json"))) }));
 }
 
 function rootOf(p: Project): ComponentStatus["root"] {

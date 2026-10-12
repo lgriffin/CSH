@@ -6,7 +6,7 @@ import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSyn
 import { join } from "node:path";
 import { A3_DIR, a3Dir, type Authority, buildA3, type Judgments, readJudgments, readStage, renderHtml, renderMarkdown, skeleton, SLUG, STAGE_FILES, stageDir, stageIntegrity, type StageRecord } from "@csh/a3";
 import type { Mode } from "@csh/gate";
-import { digestOf, stableJson } from "@csh/kernel";
+import { stableJson, textDigestOf } from "@csh/kernel";
 import { authoredByOf, resolveAuthority } from "@csh/ledger";
 import { fetchSubject, fileProvenance, ledgerOf, type Project, type RunOptions, runAt, runComponent, RUNS_DIR, specPathOf, subjectCheckout } from "@csh/run";
 import type { Args } from "./args.ts";
@@ -120,7 +120,7 @@ export async function buildOutputs(p: Project, slug: string, o: { authoredBy?: "
     return own === undefined ? [] : [`${own.problem} ${rec.id}: ${own.detail}`];
   });
   if (altered.length > 0) return { error: `the stage records cannot be used:\n${altered.map((x) => `  ${x}`).join("\n")}` };
-  const digest = digestOf(read.bytes);
+  const digest = textDigestOf(read.bytes);
   const vcs = p.vcs;
   const model = buildA3({
     slug,
@@ -224,6 +224,23 @@ function recordedAuthoredBy(p: Project, slug: string): "person" | "agent" | "unk
   }
 }
 
+/**
+ * The problems with a sheet's judgments: each one when there are a few; past ten, counted by kind with the first
+ * examples of each (From real runs, stage 43), since a first run's hundreds share a handful of causes. a3.md lists all.
+ */
+export function problemsText(problems: string[]): string {
+  if (problems.length === 0) return "  no problems with the judgments\n";
+  const head = `  ${problems.length} problem${problems.length === 1 ? "" : "s"} with the judgments`;
+  if (problems.length <= 10) return `${head}:\n${problems.map((x) => `    ${x}`).join("\n")}\n`;
+  const kinds = new Map<string, string[]>();
+  for (const x of problems) {
+    const kind = /^[\w-]+/.exec(x)?.[0] ?? x;
+    kinds.set(kind, [...(kinds.get(kind) ?? []), x]);
+  }
+  const rows = [...kinds].sort((a, b) => b[1].length - a[1].length || (a[0] < b[0] ? -1 : 1)).map(([k, xs]) => `    ${xs.length} ${k}, e.g. ${xs.slice(0, 2).map((x) => x.slice(k.length).replace(/^:?\s*/, "")).join("; ")}`);
+  return `${head}, by kind (a3.md lists each):\n${rows.join("\n")}\n`;
+}
+
 async function build(p: Project, slug: string, check: boolean, io: A3Io, lead = ""): Promise<number> {
   const recorded = check ? recordedAuthoredBy(p, slug) : undefined;
   const r = await buildOutputs(p, slug, recorded !== undefined ? { authoredBy: recorded } : {});
@@ -232,9 +249,10 @@ async function build(p: Project, slug: string, check: boolean, io: A3Io, lead = 
     return 1;
   }
   const dir = a3Dir(p.root, slug);
-  const rel = dir.slice(p.root.length + 1);
+  const rel = dir.slice(p.root.length + 1).replace(/\\/g, "/");
   if (check) {
-    const stale = Object.entries(r.files).filter(([f, text]) => !existsSync(join(dir, f)) || readFileSync(join(dir, f), "utf8") !== text).map(([f]) => f);
+    // A checkout that writes CRLF (Git for Windows) holds the same sheet (stage 41).
+    const stale = Object.entries(r.files).filter(([f, text]) => !existsSync(join(dir, f)) || readFileSync(join(dir, f), "utf8").replace(/\r\n/g, "\n") !== text).map(([f]) => f);
     if (stale.length > 0) {
       io.err(`csh a3: ${stale.map((f) => `${rel}/${f}`).join(", ")} differ${stale.length === 1 ? "s" : ""} from the built sheet; run csh a3 build ${slug}\n`);
       return 1;
@@ -244,7 +262,7 @@ async function build(p: Project, slug: string, check: boolean, io: A3Io, lead = 
     for (const [f, text] of Object.entries(r.files)) writeFileSync(join(dir, f), text);
     io.out(`${lead}wrote ${rel}/a3.json, a3.md and a3.html\n`);
   }
-  io.out(r.problems.length === 0 ? "  no problems with the judgments\n" : `  ${r.problems.length} problem${r.problems.length === 1 ? "" : "s"} with the judgments:\n${r.problems.map((x) => `    ${x}`).join("\n")}\n`);
+  io.out(problemsText(r.problems));
   return 0;
 }
 

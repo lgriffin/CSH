@@ -1,0 +1,40 @@
+// Process and safety (From real runs, stage 44): warnings about where a profile's subject is.
+import { describe, expect, it } from "vitest";
+import { githubSlug, isPathRepo, type Exec, localPathWarning, subjectWarnings } from "../src/safety.ts";
+import type { Project } from "../src/project.ts";
+
+const project = (repo: string) => ({ root: "/r", sourceRoot: "/r", component: { manifest: { subject: { repo, commit: "0".repeat(40) } } } }) as unknown as Project;
+/** A fake that answers `git ls-files` as tracked or not, and `gh` with a visibility or not at all. */
+const exec = (tracked: boolean, visibility?: string): Exec => (cmd) => (cmd === "git" ? (tracked ? "csh/component.json\n" : undefined) : visibility === undefined ? undefined : `${visibility}\n`);
+
+describe("subject warnings", () => {
+  it("reads a GitHub repository's owner and name from its URL forms", () => {
+    expect(githubSlug("https://github.com/lgriffin/ESI.ts")).toBe("lgriffin/ESI.ts");
+    expect(githubSlug("https://github.com/lgriffin/ESI.ts.git")).toBe("lgriffin/ESI.ts");
+    expect(githubSlug("git@github.com:a/b.git")).toBe("a/b");
+    expect(githubSlug("https://gitlab.com/a/b")).toBeUndefined();
+    expect(githubSlug("../b")).toBeUndefined();
+  });
+
+  it("tells a path from a URL", () => {
+    expect(isPathRepo("../subject")).toBe(true);
+    expect(isPathRepo("C:\\\\work\\\\subject")).toBe(true);
+    expect(isPathRepo("https://github.com/a/b")).toBe(false);
+    expect(isPathRepo("git@github.com:a/b.git")).toBe(false);
+  });
+
+  it("warns about a local path only in a committed manifest", () => {
+    expect(localPathWarning(project("../subject"), exec(true))).toMatch(/local path \.\.\/subject in a committed csh\/component\.json/);
+    expect(localPathWarning(project("../subject"), exec(false))).toBeUndefined();
+    expect(localPathWarning(project("https://github.com/a/b"), exec(true))).toBeUndefined();
+  });
+
+  it("warns about a private or internal subject, and says nothing when gh cannot answer", () => {
+    expect(subjectWarnings(project("https://github.com/a/b"), exec(false, "PRIVATE"))).toEqual([
+      "the subject a/b is private: a profile for it should not be committed to a public repository; keep it out of git with .git/info/exclude (docs/guides/manifest.md)",
+    ]);
+    expect(subjectWarnings(project("https://github.com/a/b"), exec(false, "INTERNAL"))[0]).toMatch(/is internal/);
+    expect(subjectWarnings(project("https://github.com/a/b"), exec(false, "PUBLIC"))).toEqual([]);
+    expect(subjectWarnings(project("https://github.com/a/b"), exec(false))).toEqual([]);
+  });
+});
