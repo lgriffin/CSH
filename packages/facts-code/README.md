@@ -15,6 +15,7 @@ It belongs to the "Adapters" container, shown in the [containers diagram](../../
 - `LanguageReader`, `READERS`: the contract of a language's reader (its language, the manifests it reads, and `read(files, ctx)`), and the readers registered.
 - `languageOf(path)`: the language of a source file by its extension, or undefined for TypeScript, JavaScript and files that are not code.
 - `parseWith(language, text, read)`, `lineOf(node)`, `GRAMMARS`: the tree-sitter grammars, loaded once per process as WebAssembly. A tree is read inside `read` and freed when it returns, since trees live on the WebAssembly heap.
+- `python`, `readPython`, `sourceRoots`, `resolveImport`, `PYTHON_TOOL` (stage 31): the reader for `.py` and `.pyi` files and `pyproject.toml`, as tool `facts-py`. Imports resolve against the source roots (the repository root, `src` and the parent of every top-level package); `if TYPE_CHECKING:` imports are type-only; literal `importlib.import_module` calls are dependencies; exports are a literal `__all__`, else every public top-level name; of `pyproject.toml` only `project` and `build-system` are read ([A-130](../../ASSUMPTIONS.md)).
 
 ## Depends on and used by
 
@@ -35,8 +36,11 @@ A codebase in several languages is one structure: rules about its layering and p
 
 - `test/run.test.ts`: languages by extension; TypeScript read exactly as facts-ts reads it; a skipped fact per file with no reader; a reader handed its own code and manifests; every grammar parses.
 - `packages/run/test/grammars.test.ts`: a grammar loads and parses inside the isolated adapter process.
+- `test/python.test.ts`: a src-layout project with subpackages, relative imports, submodule and module `from` imports, stubs, namespace packages, root order, standard library and third-party names; dynamic, computed and TYPE_CHECKING imports; every declaration form and literal; literal, computed and absent `__all__`; pyproject tables and a malformed manifest; the same facts in any file order. `packages/run/test/python.test.ts` judges two module rules and an `inherits` claim end to end.
 
 ## Known limits
 
 - Languages are known by extension only; a file with no extension, such as a script with a shebang, is not code to CSH.
-- The readers for Python, Java, Go and Rust arrive in stages 31 to 34; until then their files are skipped facts.
+- Files in a language with no reader yet (C, C++, C#, Kotlin, Scala and others) are skipped facts.
+- Python: only the repository root, `src` and package parents are source roots, so `import conftest` from a test directory without `__init__.py` reads as an external package. `requirements*.txt`, `setup.cfg`, `setup.py` and `tool.*` tables are not read. Names re-exported in an `__init__.py` are exports only when `__all__` lists them. Declarations inside top-level `if` or `try` blocks are not read. A base written `mod.Base`, `Generic[T]` or `ABC` leaves an `inherits` claim unknown. The standard library list is Python 3.12's.
+

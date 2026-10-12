@@ -6,6 +6,7 @@ import { compareCodePoints } from "@csh/kernel";
 import { run as runTs } from "@csh/facts-ts";
 import type { Adapter, AdapterInput, AdapterOutput, Diagnostic, Fact } from "@csh/witness";
 import { languageOf } from "./languages.ts";
+import { python } from "./python.ts";
 
 export const TOOL = { id: "facts-code", version: "0.1.0" } as const;
 export const SCHEMA = "csh-facts/v2";
@@ -35,7 +36,7 @@ export interface LanguageReader {
 }
 
 /** The readers, by language. Stages 31 to 34 add Python, Java, Go and Rust. */
-export const READERS: LanguageReader[] = [];
+export const READERS: LanguageReader[] = [python];
 
 export async function run(input: AdapterInput, readers: readonly LanguageReader[] = READERS): Promise<AdapterOutput> {
   const commit = input.config?.commit ?? "unknown";
