@@ -197,15 +197,15 @@ export interface Declaration {
   line: number;
   base?: string;
   value?: string;
-  /** A closed type's members (stage 48). */
+  /** A closed type's members (stage 49). */
   members?: string[];
-  /** The closed types a constant maps completely, by name as written (stage 48). */
+  /** The closed types a constant maps completely, by name as written (stage 49). */
   total?: string[];
 }
 
 /**
  * The members of a closed type alias: a union (or a single member) of string or number literal types, such as
- * `"a" | "b"`; undefined for any other type, since `"a" | string` admits values no mapping can list (stage 48).
+ * `"a" | "b"`; undefined for any other type, since `"a" | string` admits values no mapping can list (stage 49).
  */
 function literalMembers(t: ts.TypeNode): string[] | undefined {
   if (ts.isParenthesizedTypeNode(t)) return literalMembers(t.type);
@@ -224,7 +224,7 @@ function literalMembers(t: ts.TypeNode): string[] | undefined {
 
 /**
  * The key type `Record<K, V>` names, when `K` is a plain name: also inside `Readonly<...>`. `Partial<Record<K, V>>`
- * lets a key be left out, so it names none, and `Record<string, V>` names no closed type (stage 48).
+ * lets a key be left out, so it names none, and `Record<string, V>` names no closed type (stage 49).
  */
 function recordKey(t: ts.TypeNode | undefined): string | undefined {
   if (t === undefined || !ts.isTypeReferenceNode(t) || !ts.isIdentifier(t.typeName)) return undefined;
@@ -236,7 +236,7 @@ function recordKey(t: ts.TypeNode | undefined): string | undefined {
   return ts.isTypeReferenceNode(k) && ts.isIdentifier(k.typeName) && (k.typeArguments ?? []).length === 0 ? k.typeName.text : undefined;
 }
 
-/** The closed type a constant maps completely: its annotation, else a `satisfies` on its initialiser (stage 48). */
+/** The closed type a constant maps completely: its annotation, else a `satisfies` on its initialiser (stage 49). */
 function totalOver(d: ts.VariableDeclaration): string | undefined {
   const annotated = recordKey(d.type);
   // An assertion on the initialiser (`as`, `<T>` or `!`, other than `as const`) turns the key check off, so the

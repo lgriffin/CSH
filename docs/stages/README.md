@@ -46,12 +46,12 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 43: Clearer output](stage-43.md)
 - [Stage 44: Process and safety](stage-44.md)
 - [Stage 45: From the Java and Python runs](stage-45.md)
-- [Stage 46: The Assertion Ladder, by name](stage-46.md)
-- [Stage 47: Rungs](stage-47.md)
-- [Stage 48: Prevention](stage-48.md)
-- [Stage 49: Told](stage-49.md)
-- [Stage 50: The taskboard profiles](stage-50.md)
-- [Stage 51: Diagrams and the deck](stage-51.md)
+- [Stage 47: The Assertion Ladder, by name](stage-47.md)
+- [Stage 48: Rungs](stage-48.md)
+- [Stage 49: Prevention](stage-49.md)
+- [Stage 50: Told](stage-50.md)
+- [Stage 51: The taskboard profiles](stage-51.md)
+- [Stage 52: Diagrams and the deck](stage-52.md)
 
 Stages 10 to 16 build the anchor design ([09](../spec/09-anchor-harness-a3.md)): a component to anchor on, harnesses,
 runs and the A3. Their fixtures, F80 to F96, were written before any of their code, and the fixture runner reports
@@ -68,5 +68,5 @@ subject throughout. Its profile is [subjects/esi-ts](../../subjects/esi-ts).
 Stages 38 to 44 answer what Leigh's runs over six TypeScript repositories asked for ([13](../spec/13-from-real-runs.md),
 [issue 66](https://github.com/lgriffin/CSH/issues/66)). Their fixtures start at F130.
 
-Stages 46 to 51 bring [the Assertion Ladder](https://github.com/lgriffin/AI-Reference-Projects/tree/master/paper) into
+Stages 47 to 52 bring [the Assertion Ladder](https://github.com/lgriffin/AI-Reference-Projects/tree/master/paper) into
 CSH as a second axis beside the outcome ([15](../spec/15-assertion-ladder.md)). Their fixtures start at F150.

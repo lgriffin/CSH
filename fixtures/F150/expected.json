@@ -1,7 +1,7 @@
 {
   "fixture": "F150",
   "section": "The Assertion Ladder, section 3",
-  "stage": 47,
+  "stage": 48,
   "expect": {
     "run": {
       "authority": { "approve": ["Ladder/Layering/DomainImportsNoApi", "Ladder/Layering/DomainImportsNoTests"] },

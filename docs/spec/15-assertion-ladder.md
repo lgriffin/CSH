@@ -41,7 +41,7 @@ The word *ladder* means the Assertion Ladder, and *rung* means one of its six le
 of seven things to add (inventory to A3) is renamed **adoption steps**; [09](09-anchor-harness-a3.md), section 10.2, and
 [11](11-ingesting-a-codebase.md) keep their wording as written, and read "ladder" there as "adoption steps".
 
-## 3. Rungs per rule (stage 47)
+## 3. Rungs per rule (stage 48)
 
 A **told rule** is an item of kind `requirement`, `rule` or `property`, the kinds trace already holds to verification
 ([11](11-ingesting-a-codebase.md), stage 22), or an item with no kind: a sentence the EARS adapter read. Each told rule is given exactly one rung, the highest whose condition
@@ -64,7 +64,7 @@ L0 and L1 are not assigned. A rule at L0 is by definition not in the repository;
 with no rule behind it, which is already the gap `no-rule`, or a test that cites nothing. L1 is a worked slice: a
 shape, not one rule's evidence.
 
-## 4. Prevention: the `total` claim (stage 48)
+## 4. Prevention: the `total` claim (stage 49)
 
 `total(module, symbol, over)` is a structural claim ([11](11-ingesting-a-codebase.md), stage 24): the declaration
 `symbol` of `module` maps every member of the closed type `over`, in a construct the language's compiler checks for
@@ -89,7 +89,7 @@ it is refuted when the module was read, and the declaration is absent or maps no
 module, or the type `over`, was not read, or the module's language has no such compiler. A refuted `total` claim is a
 `fact-conflict` like any refuted claim: the gap says the prose (or profile) names a prevention the code does not have.
 
-## 5. Told: instruction files and two-part identifiers (stage 49)
+## 5. Told: instruction files and two-part identifiers (stage 50)
 
 - **Instruction files.** `csh init --subject` proposes the files an agent reads at the start of every session
   (`AGENTS.md`, `CLAUDE.md` and `GEMINI.md` anywhere in the tree, and `.github/copilot-instructions.md`) as their own
@@ -116,7 +116,7 @@ module, or the type `over`, was not read, or the module's language has no such c
 - **Expected results.** A profile's `expected.json` may hold `rungs`, a map from told rule to rung; `csh expect`
   reports each rung that differs as a mismatch.
 
-## 7. The taskboard profiles (stage 50)
+## 7. The taskboard profiles (stage 51)
 
 The paper's greenfield receivers, `taskboard` in TypeScript, Java and Python (repository
 [AI-Reference-Projects](https://github.com/lgriffin/AI-Reference-Projects), directories `typescript`, `java` and
@@ -148,14 +148,14 @@ Each was a question, not a guess: [QUESTIONS.md](../../QUESTIONS.md), Q-42 to Q-
 
 ## 9. Stages
 
-1. **Stage 46: the name.** Spec 15; the README's adoption steps and its Assertion Ladder section; the starter's README;
+1. **Stage 47: the name.** Spec 15; the README's adoption steps and its Assertion Ladder section; the starter's README;
    [docs/guides/ladder.md](../guides/ladder.md).
-2. **Stage 47: rungs.** `rungs` in the report, the overview's `ladder`, `csh ladder`, `rungs` in expected results.
+2. **Stage 48: rungs.** `rungs` in the report, the overview's `ladder`, `csh ladder`, `rungs` in expected results.
    *Exit:* F150.
-3. **Stage 48: prevention.** `total`, `members` and `total` facts in TypeScript, Java and Rust; unknown in Python and
+3. **Stage 49: prevention.** `total`, `members` and `total` facts in TypeScript, Java and Rust; unknown in Python and
    Go. *Exit:* F151 to F154.
-4. **Stage 49: told.** Instruction files, the `instructions` practice and two-part identifiers in
+4. **Stage 50: told.** Instruction files, the `instructions` practice and two-part identifiers in
    `csh init --subject`. *Exit:* F155.
-5. **Stage 50: the taskboard profiles**, one per receiver language, run in CI against their expected results.
-6. **Stage 51: diagrams and the deck.** The C4 diagrams brought up to date, and a Marp deck on what CSH is, how it
+5. **Stage 51: the taskboard profiles**, one per receiver language, run in CI against their expected results.
+6. **Stage 52: diagrams and the deck.** The C4 diagrams brought up to date, and a Marp deck on what CSH is, how it
    works, how it is designed and what it reports.

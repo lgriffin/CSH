@@ -1,6 +1,6 @@
 # F153
 
-Prevention in Rust ([15](../../docs/spec/15-assertion-ladder.md), section 4; stage 48). `src/error.rs` declares the
+Prevention in Rust ([15](../../docs/spec/15-assertion-ladder.md), section 4; stage 49). `src/error.rs` declares the
 enum `ApiError` with variants `NotFound`, `Conflict` and `Invalid`, and five places that map it:
 
 - `fn status` matches every variant by path and has no catch-all arm: total over `ApiError`;

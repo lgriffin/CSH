@@ -332,7 +332,7 @@ fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 t
 the unit, property and fault-injection tests; F118 to F125 cover [polyglot code](docs/spec/12-polyglot-code.md),
 stages 29 to 35, F130 to F132 [what real runs asked for](docs/spec/13-from-real-runs.md), stages 38 to 44, F140
 to F142 [what the Java and Python runs asked for](docs/spec/14-from-the-java-and-python-runs.md), stage 45, and F150 to F155
-[the Assertion Ladder](docs/spec/15-assertion-ladder.md), stages 46 to 51. The composition fixtures
+[the Assertion Ladder](docs/spec/15-assertion-ladder.md), stages 47 to 52. The composition fixtures
 F70 to F78 were written by the implementer and accepted by the owner. [docs/stages](docs/stages) records what each
 stage built and what its fixtures revealed.
 

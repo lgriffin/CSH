@@ -38,7 +38,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 49;
+export const BUILT_THROUGH_STAGE = 50;
 
 const AGENT_BIN = resolve(import.meta.dirname, "../../agent/bin/csh-agent.js");
 
@@ -812,7 +812,7 @@ export class FixtureRunner {
       }
       const report = r.checked!.report;
       if (x.assessments !== undefined) this.assessmentsExpect(report.assessments ?? [], x.assessments, failures);
-      // Declarations and what each says of closed types (The Assertion Ladder, stage 48): null means the field is absent.
+      // Declarations and what each says of closed types (The Assertion Ladder, stage 49): null means the field is absent.
       const declared = (r.runs ?? []).flatMap((s) => (s.output.facts ?? []).flatMap((f) => (f.kind === "declare" ? [f] : [])));
       for (const want of x.facts ?? []) {
         const got = declared.find((f) => f.module === want.module && f.symbol === want.symbol);
@@ -827,7 +827,7 @@ export class FixtureRunner {
           if (w !== g) failures.push(`${want.module} ${want.symbol}: ${k} ${g ?? "(absent)"}, expected ${w ?? "(absent)"}`);
         }
       }
-      // Rungs on the Assertion Ladder (stage 47), and the overview's count at each rung.
+      // Rungs on the Assertion Ladder (stage 48), and the overview's count at each rung.
       const rungs = report.rungs ?? [];
       for (const want of x.rungs ?? []) {
         const got = rungs.find((y) => y.item === want.item);

@@ -44,7 +44,7 @@ export function validateFact(v: unknown): string | undefined {
   return `unknown kind ${JSON.stringify(o.kind)}`;
 }
 
-/** An optional list of names: absent, or an array of non-empty strings (stage 48). */
+/** An optional list of names: absent, or an array of non-empty strings (stage 49). */
 function names(x: unknown): boolean {
   return x === undefined || (Array.isArray(x) && x.every((n) => typeof n === "string" && n !== ""));
 }

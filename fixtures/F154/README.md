@@ -1,6 +1,6 @@
 # F154
 
-Prevention where the language cannot give it ([15](../../docs/spec/15-assertion-ladder.md), section 4; stage 48).
+Prevention where the language cannot give it ([15](../../docs/spec/15-assertion-ladder.md), section 4; stage 49).
 `app/errors.py` declares `class Code(Enum)` and `STATUS: dict[Code, int]`, a complete mapping today; but no compiler
 checks it, so `total(app/errors.py, STATUS, Code)` is unknown, its reason `no-compiler: python`, and never refuted.
 `api/status.go` declares a map from a string type to a status; Go has no closed type, so

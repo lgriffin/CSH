@@ -1,7 +1,7 @@
 # F155
 
 What an agent is told, proposed by `csh init --subject` ([15](../../docs/spec/15-assertion-ladder.md), section 5;
-stage 49). The subject keeps its rules in `REQUIREMENTS.md` as a table whose first cell is an identifier with two parts
+stage 50). The subject keeps its rules in `REQUIREMENTS.md` as a table whose first cell is an identifier with two parts
 (`R-FLOW-1`, `R-FLOW-2`, `R-WIP-1`), and tells agents how to work in `AGENTS.md`, `CLAUDE.md`, `service/AGENTS.md` and
 `.github/copilot-instructions.md`.
 

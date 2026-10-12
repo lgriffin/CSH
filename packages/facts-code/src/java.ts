@@ -40,10 +40,10 @@ export interface JavaDeclaration {
   value?: string;
   /** For a type: whether it is declared `public`. */
   public?: boolean;
-  /** For an enum or a sealed type, its members by simple name, in source order (stage 48). */
+  /** For an enum or a sealed type, its members by simple name, in source order (stage 49). */
   members?: string[];
   /**
-   * For a top-level type, each `switch` in it that Java checks for completeness (stage 48): its case labels, and the
+   * For a top-level type, each `switch` in it that Java checks for completeness (stage 49): its case labels, and the
    * simple name of its selector's declared type when the selector is a parameter, local or field declared with one.
    */
   switches?: { labels: string[]; selector?: string }[];
@@ -148,7 +148,7 @@ function constantsOf(type: Node, name: string): JavaDeclaration[] {
 }
 
 /**
- * The members of a closed type (stage 48): an enum's constants; a sealed type's `permits` list, else the types nested in
+ * The members of a closed type (stage 49): an enum's constants; a sealed type's `permits` list, else the types nested in
  * it that extend or implement it. Undefined for any other type.
  */
 function closedMembersOf(n: Node, declares: string, name: string): string[] | undefined {
@@ -169,7 +169,7 @@ function closedMembersOf(n: Node, declares: string, name: string): string[] | un
 const STATEMENT = new Set(["block", "constructor_body", "switch_block_statement_group", "labeled_statement", "if_statement", "while_statement", "for_statement", "enhanced_for_statement", "do_statement", "expression_statement", "program"]);
 
 /**
- * The labels of each `switch` in a type that Java checks for completeness (stage 48): one used as an expression, or one
+ * The labels of each `switch` in a type that Java checks for completeness (stage 49): one used as an expression, or one
  * with a pattern label. A switch with a `default` label is never complete over a type, since a new member falls into it.
  */
 function switchesIn(n: Node): { labels: string[]; selector?: string }[] {
@@ -266,7 +266,7 @@ function declareType(n: Node, outer: string, out: JavaDeclaration[]): void {
   else if (declares === "interface") base = n.namedChildren.find((c) => c.type === "extends_interfaces")?.namedChildren[0]?.namedChildren[0];
   const stripped = base !== null && base !== undefined ? stripType(base.text) : "";
   const members = closedMembersOf(n, declares, id.text);
-  // A switch belongs to the top-level type that holds it, nested types' included (stage 48).
+  // A switch belongs to the top-level type that holds it, nested types' included (stage 49).
   const switches = outer === "" ? switchesIn(n) : [];
   out.push({ symbol, declares, line: lineOf(id), ...(stripped !== "" ? { base: stripped } : {}), public: modifiersOf(n).has("public"), ...(outer !== "" ? { nested: true } : {}), ...(members !== undefined ? { members } : {}), ...(switches.length > 0 ? { switches } : {}) });
   out.push(...constantsOf(n, symbol));
@@ -354,7 +354,7 @@ export async function readJavaFiles(input: readonly InputFile[], ctx: FactContex
     return undefined;
   };
   // The closed types read, by simple name; a switch is complete over the one whose members its labels name exactly
-  // (stage 48). Its selector's declared type, when read, decides which; without one, two closed types with the same
+  // (stage 49). Its selector's declared type, when read, decides which; without one, two closed types with the same
   // members leave the switch unattributed rather than credit a type it may not switch over.
   const closed = new Map<string, Set<string>[]>();
   for (const j of read.values()) for (const d of j.declarations) if (d.members !== undefined) closed.set(d.symbol, [...(closed.get(d.symbol) ?? []), new Set(d.members)]);

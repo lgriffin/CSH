@@ -20,7 +20,7 @@ It is the "Command line" container, shown in the [containers diagram](../../docs
 - `diffCommand(project, args, io)`, `DiffIo`: `csh diff <base> <head>`. Each side is a stored run's directory, a commit (its stored run, else a run at that commit), `.` for the working tree (refused in CI when it is dirty) or `unavailable:<reason>`, which the CI job passes when the merge base cannot be run. It finds the paths changed between the two commits with git and hands everything to `@csh/review`; `--json` prints the model, and `--out <dir>` writes `diff.json` and `diff.md`.
 - `parseArgs(argv)`, `Args`: positionals, `--key value` options and flags.
 
-- `csh ladder [--run <dir|commit>] [--json]` (stage 47): every told rule of a run, weakest rung first, with what establishes its rung and the outcomes its entries landed in. It decides nothing; it reads the report and exits 0.
+- `csh ladder [--run <dir|commit>] [--json]` (stage 48): every told rule of a run, weakest rung first, with what establishes its rung and the outcomes its entries landed in. It decides nothing; it reads the report and exits 0.
 ## Depends on and used by
 
 - Depends on: `@csh/kernel`, `csl`, `@csh/emit`, `@csh/print`, `@csh/solver`, `@csh/check`, `@csh/component`, `@csh/ledger`, `@csh/gate`, `@csh/run`, `@csh/review` and `@csh/a3`. External: the `git` executable, through `@csh/run` and `@csh/ledger`.

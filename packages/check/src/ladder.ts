@@ -1,4 +1,4 @@
-// The Assertion Ladder (The Assertion Ladder, stage 47): how strongly the repository asserts each told rule, beside the
+// The Assertion Ladder (The Assertion Ladder, stage 48): how strongly the repository asserts each told rule, beside the
 // outcome its results land in. A rung is the highest one the evidence establishes, a floor and never a guess, and it
 // counts only what stops a wrong change in the repository itself: its tests and scenarios, its compiler, and the
 // obligations of its own specification that a person approved. A candidate obligation is CSH's reading, not the

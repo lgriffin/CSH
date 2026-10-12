@@ -49,7 +49,7 @@ interface FileData {
   uses: UseLeaf[];
   externs: { name: string; line: number }[];
   declarations: { symbol: string; declares: RustDeclares; line: number; base?: string; value?: string; members?: string[] }[];
-  /** Each `match` with no catch-all arm, by the top-level item it sits in: the variants it names and the enums it names them by (stage 48). */
+  /** Each `match` with no catch-all arm, by the top-level item it sits in: the variants it names and the enums it names them by (stage 49). */
   matches: { owner: string; variants: string[]; enums: string[]; scrutinee?: string }[];
   exports: { symbol: string; from?: string }[];
   /** Names the file's top level declares, which a 2018 path may start with. */
@@ -189,7 +189,7 @@ export function readTree(root: Node): FileData {
         d.names.add(alias !== null ? text(alias) : name);
         continue;
       }
-      // The matches of an impl block belong to its type, when the file declares that type at its top level (stage 48).
+      // The matches of an impl block belong to its type, when the file declares that type at its top level (stage 49).
       if (c.type === "impl_item" && inline.length === 0 && n.type === "source_file") {
         const owner = text(c.childForFieldName("type")).replace(/<[\s\S]*$/, "");
         for (const m of matchesIn(c, owner)) d.matches.push({ owner, ...m });
@@ -239,7 +239,7 @@ export function readTree(root: Node): FileData {
 
 /**
  * The variants a pattern names, with the enum it names each by when the path says so; undefined for a pattern that
- * catches anything (`_`, or a binding), which makes a match say nothing of completeness (stage 48).
+ * catches anything (`_`, or a binding), which makes a match say nothing of completeness (stage 49).
  */
 function variantsOf(p: Node): { variant: string; via?: string }[] | undefined {
   switch (p.type) {
@@ -305,7 +305,7 @@ function scrutineeType(m: Node, item: Node, owner: string | undefined): string |
 
 /**
  * Each `match` in an item that has no catch-all arm, by the variants its unguarded arms name, the enums its paths
- * name (`Self` read as the impl's type) and its scrutinee's declared type when known (stage 48).
+ * name (`Self` read as the impl's type) and its scrutinee's declared type when known (stage 49).
  */
 function matchesIn(item: Node, owner?: string): { variants: string[]; enums: string[]; scrutinee?: string }[] {
   const out: { variants: string[]; enums: string[]; scrutinee?: string }[] = [];
@@ -517,7 +517,7 @@ export async function readRust(files: readonly InputFile[], ctx: FactContext): P
     return external(s0, segs.slice(1), written);
   };
 
-  // The enums read, by name; a match is complete over the one whose variants its arms name exactly (stage 48). The
+  // The enums read, by name; a match is complete over the one whose variants its arms name exactly (stage 49). The
   // enum its paths name, else its scrutinee's declared type, decides which; with neither, two enums with the same
   // variants leave the match unattributed rather than credit an enum it may not match on.
   const enums = new Map<string, Set<string>[]>();

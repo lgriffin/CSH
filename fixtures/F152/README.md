@@ -1,6 +1,6 @@
 # F152
 
-Prevention in Java ([15](../../docs/spec/15-assertion-ladder.md), section 4; stage 48). Three closed types:
+Prevention in Java ([15](../../docs/spec/15-assertion-ladder.md), section 4; stage 49). Three closed types:
 `ShopException`, a sealed class whose subclasses are nested in it, with members `NotFound` and `Conflict`; `Shape`, a
 sealed interface that `permits Circle, Square`; and `Status`, an enum of `OPEN` and `CLOSED`.
 

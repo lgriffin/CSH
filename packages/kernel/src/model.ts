@@ -174,7 +174,7 @@ export type ArchSel =
  * value at the pointer. `count`: the value at the pointer has that many entries, less the ones excepted. `script`:
  * package.json names the npm script. `same`: two constants have the same literal value. `total`: the declaration maps
  * every member of the closed type `over` in a construct the language's compiler checks for completeness (The Assertion
- * Ladder, stage 48). `atom`: a named proposition no fact decides, which two sources can still contradict.
+ * Ladder, stage 49). `atom`: a named proposition no fact decides, which two sources can still contradict.
  */
 export type Prop =
   | { k: "file"; path: string }

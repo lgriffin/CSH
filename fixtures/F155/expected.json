@@ -1,7 +1,7 @@
 {
   "fixture": "F155",
   "section": "The Assertion Ladder, section 5",
-  "stage": 49,
+  "stage": 50,
   "expect": {
     "init": {
       "sources": {

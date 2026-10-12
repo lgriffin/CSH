@@ -2,7 +2,7 @@
 
 This directory evaluates the TypeScript receiver of [the Assertion Ladder](https://github.com/lgriffin/AI-Reference-Projects/tree/master/paper),
 `taskboard` in the directory `typescript` of [AI-Reference-Projects](https://github.com/lgriffin/AI-Reference-Projects), from
-outside. It is one of the three profiles of stage 50 ([15](../../docs/spec/15-assertion-ladder.md), section 7), pinned to
+outside. It is one of the three profiles of stage 51 ([15](../../docs/spec/15-assertion-ladder.md), section 7), pinned to
 commit `ce2767cadf01aa9cd664d718d057cd6431a01489`. The subject is only read; nothing is written to it.
 
 ```

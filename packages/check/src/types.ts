@@ -173,7 +173,7 @@ export interface Report {
    */
   edges?: { source: string; from: string; rel: string; to: string; span: string; target?: string; dangling?: true }[];
   /**
-   * Extension: the rung of each told rule on the Assertion Ladder (The Assertion Ladder, stage 47), with the mechanisms
+   * Extension: the rung of each told rule on the Assertion Ladder (The Assertion Ladder, stage 48), with the mechanisms
    * that establish it. Present when the run read a told rule; never entering a verdict or an outcome.
    */
   rungs?: { item: string; rung: "L2" | "L3" | "L4" | "L5"; by: { rung: "L2" | "L3" | "L4" | "L5"; mechanism: string }[] }[];

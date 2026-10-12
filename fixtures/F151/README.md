@@ -1,6 +1,6 @@
 # F151
 
-Prevention in TypeScript ([15](../../docs/spec/15-assertion-ladder.md), section 4; stage 48). `src/codes.ts` declares
+Prevention in TypeScript ([15](../../docs/spec/15-assertion-ladder.md), section 4; stage 49). `src/codes.ts` declares
 three types: `Code`, a union of three string literals, and `Level`, an `enum` of two members, are closed; `Loose`, a
 union of a literal and `string`, is not. `src/maps.ts` declares six constants:
 

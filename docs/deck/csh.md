@@ -26,7 +26,7 @@ style: |
 A static analysis tool for what a codebase *says* about itself:
 what converges, what is a gap, and what cannot be decided.
 
-<span class="small">github.com/lgriffin/CSH · with the Assertion Ladder, stages 46 to 51</span>
+<span class="small">github.com/lgriffin/CSH · with the Assertion Ladder, stages 47 to 52</span>
 
 ---
 

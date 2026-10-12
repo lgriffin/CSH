@@ -1,31 +1,24 @@
-# Stage 50: The taskboard profiles
+# Stage 50: Told
 
-**Exit:** the paper's three receivers, `taskboard` in TypeScript, Java and Python, are profiles with expected results
-written before the first run, and CI runs each ([15](../spec/15-assertion-ladder.md), section 7).
+**Exit:** F155. `csh init --subject` proposes the files an agent reads every session as their own practice, and
+counts two-part identifiers such as `R-FLOW-1` as one family ([15](../spec/15-assertion-ladder.md), section 5).
 
-**Status:** exit reached. At commit `ce2767c` of AI-Reference-Projects, `csh expect` finds every expectation of all
-three met, rungs included.
-
-| Profile | Obligations | Converged | Gap | Indeterminate | L3 | L5 |
-| --- | --- | --- | --- | --- | --- | --- |
-| [taskboard-typescript](../../subjects/taskboard-typescript) | 8 | 8 | 0 | 0 | 9 | 1 (`R-ERR-1`) |
-| [taskboard-java](../../subjects/taskboard-java) | 8 | 8 | 0 | 0 | 9 | 1 (`R-ERR-1`) |
-| [taskboard-python](../../subjects/taskboard-python) | 8 | 7 | 0 | 1 (the `total` claim) | 10 | 0 |
+**Status:** exit reached.
 
 ## Built
 
-- Three profiles, each with a `csh-component/v2` manifest (Requirements, Instructions, Tests, Code), seven layering
-  rules from the "Where things go" table of the receiver's `AGENTS.md`, and the claim `Prevented/ErrorStatusIsTotal`
-  citing `R-ERR-1`. A README per subject.
-- CI: the three join the `polyglot` matrix as `Subject (taskboard-<language>)`.
-- [A-169](../../ASSUMPTIONS.md).
+- `component`: the practice kind `instructions`.
+- `run` (`propose`): `INSTRUCTION_FILES` (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md`)
+  as the source `Instructions`; two-part identifiers counted first, with the family `X-[A-Z]+`; requirement documents
+  found by headings and table rows; instruction files kept out of the other documents.
+- [A-182](../../ASSUMPTIONS.md) and [A-183](../../ASSUMPTIONS.md).
 
-## What the subjects revealed
+## What the fixture revealed
 
-- The first runs put `R-LIST-1` in Java at L2: the contract class `TaskRepositoryContract.java` that cites it was left
-  out by a `*Test.java` include. The profile now reads `src/test/java/**/*.java`. The expectation was right; the
-  profile's reading was wrong.
-- A rule that cites `AGENTS.md` must name it as the item id, `java/AGENTS.md`, a path from the repository root; a
-  path from the source's directory is a dangling citation.
-- The receivers agree with the paper: every rule has a check, so every rule is at least L3, and only the compiled
-  languages reach L5 for V6.
+- Before this stage, the proposal on AI-Reference-Projects guessed the family `FLOW-` from `R-FLOW-1`, and read
+  `AGENTS.md` as one more document. It now guesses `(?:R-[A-Z]+)-[0-9]+`, six instruction files and three
+  requirement documents, which is what the paper's receivers hold.
+
+## Not done
+
+- Paths that a document in a subdirectory writes relative to its own directory ([Q-47](../../QUESTIONS.md)).

@@ -1,6 +1,6 @@
 # F150
 
-Rungs on told rules ([15](../../docs/spec/15-assertion-ladder.md), section 3; stage 47). A small own component (no
+Rungs on told rules ([15](../../docs/spec/15-assertion-ladder.md), section 3; stage 48). A small own component (no
 subject) states six rules as headings in `docs/requirements.md` and two EARS sentences in `docs/ears.md`.
 
 - `R-A-1` is told and nothing checks it: L2, and still the gap `unverified`.

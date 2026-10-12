@@ -211,13 +211,13 @@ export interface DeclareFact extends FactBase {
   value?: string;
   /**
    * For a closed type, its members in source order: a union of literal types or an enum in TypeScript, an enum or a
-   * sealed type in Java, an enum in Rust (The Assertion Ladder, stage 48).
+   * sealed type in Java, an enum in Rust (The Assertion Ladder, stage 49).
    */
   members?: string[];
   /**
    * The closed types, by name as written, that this declaration maps completely in a construct the language's compiler
    * checks: a `Record<K, V>` constant in TypeScript, a `switch` with no `default` in Java, a `match` with no catch-all
-   * arm in Rust (stage 48).
+   * arm in Rust (stage 49).
    */
   total?: string[];
 }
