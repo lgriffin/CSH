@@ -19,3 +19,5 @@ The claims: `total(maps, STATUS, Code)`, `total(maps, LABELS, Level)` and `total
 by the refuted claim on `SOME`: it stays L2, and the claim is violated.
 
 The expected result was written from the documents before the fixture was first run.
+
+The project's `src` is a subject's code, not CSH's: it holds an `enum`, which CSH's own `erasableSyntaxOnly` setting refuses, so `tsconfig.fixtures.json` leaves it out of the fixtures' type check.

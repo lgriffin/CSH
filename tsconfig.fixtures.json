@@ -8,6 +8,7 @@
     "fixtures/F02/**",
     "fixtures/F03/**",
     "fixtures/F04/**",
-    "fixtures/F09/**"
+    "fixtures/F09/**",
+    "fixtures/F141/inputs/project/src/**"
   ]
 }
