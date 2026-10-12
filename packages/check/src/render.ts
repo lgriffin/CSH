@@ -26,7 +26,7 @@ const READINGS = [
  * The line a claim was read from, given the span the claim names and the values it states (From real runs, stage 43):
  * the line at the span, or, when the span opens a block (a table, a list) and the values are on a later line of it,
  * that line. `at` is where the returned text is; `stated` is false when the claim has values and no line of the block
- * states one (stage 47), so the line shown is only where the claim is pinned.
+ * states one (stage 53), so the line shown is only where the claim is pinned.
  */
 export type SentenceAt = (span: string, values?: string[]) => { at: string; text: string; stated?: boolean } | undefined;
 
@@ -44,28 +44,35 @@ const valuesIn = (text: string): string[] => {
  * that span states (stage 46), so that the sentence shown is the one holding them. A claim-conflict's reason has two
  * clauses, either of which may have no span; each span takes its own clause's values.
  */
-export const claimSpans = (f: Finding): { span: string; values: string[] }[] => {
+export const claimSpans = (f: Finding): { span: string; values: string[]; clause: number }[] => {
   if (f.kind !== "fact-conflict" && f.kind !== "claim-conflict") return [];
   const reason = f.reason ?? "";
-  const spanOf = (clause: string) => /^([^\s:]+:\d+): /.exec(clause)?.[1];
   if (f.kind === "fact-conflict") {
     const span = spanOf(reason);
-    return span === undefined ? [] : [{ span, values: valuesIn(/ says (.*?)(?:; |$)/.exec(reason)?.[1] ?? "") }];
+    return span === undefined ? [] : [{ span, values: valuesIn(/ says (.*?)(?:; |$)/.exec(reason)?.[1] ?? ""), clause: 0 }];
   }
-  const m = /^(.*): one says (.*), the other (?:says )?(.*)$/.exec(reason);
-  if (m === null) return [];
-  const clauses = m[1]!.split(" and ");
-  const said = [m[2]!, m[3]!];
-  return [clauses[0] ?? "", clauses.slice(1).join(" and ")].flatMap((c, i) => {
+  const parts = conflictParts(reason);
+  if (parts === undefined) return [];
+  return parts.clauses.flatMap((c, i) => {
     const span = spanOf(c);
-    return span === undefined ? [] : [{ span, values: valuesIn(said[i]!) }];
+    return span === undefined ? [] : [{ span, values: valuesIn(parts.said[i]!), clause: i }];
   });
+};
+
+const spanOf = (clause: string) => /^([^\s:]+:\d+): /.exec(clause)?.[1];
+
+/** A claim-conflict's reason in parts: its two clauses, what each claim says, and the text after the clauses. */
+const conflictParts = (reason: string): { clauses: [string, string]; said: [string, string]; rest: string } | undefined => {
+  const m = /^(.*): one says (.*), the other (?:says )?(.*)$/.exec(reason);
+  if (m === null) return undefined;
+  const split = m[1]!.split(" and ");
+  return { clauses: [split[0] ?? "", split.slice(1).join(" and ")], said: [m[2]!, m[3]!], rest: reason.slice(m[1]!.length) };
 };
 
 const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
 
 /**
- * A value as a line may state it (stage 47): the digits whole (5 is not in 15 or 1.5); a version without its trailing
+ * A value as a line may state it (stage 53): the digits whole (5 is not in 15 or 1.5); a version without its trailing
  * zeros (18.0.0 as 18.0 or 18); or, from two to twenty, the word. "one" is too common a word to mean 1.
  */
 const statedAs = (v: string): RegExp => {
@@ -96,18 +103,24 @@ export function lineHolding(lines: readonly string[], from: number, values: read
 
 /**
  * A claim finding's reason, and its sentences, with each span replaced by the line actually shown, so the headline and
- * the line below it cite the same place (stage 47). A claim whose values no line states shows its span's line, saying so.
+ * the line below it cite the same place (stage 53). A claim whose values no line states shows its span's line, saying so.
  */
 export function claimEvidence(f: Finding, sentenceAt: SentenceAt): { reason: string; lines: string[] } {
-  let reason = f.reason ?? f.query;
+  const reason = f.reason ?? f.query;
   const lines: string[] = [];
-  for (const { span, values } of claimSpans(f)) {
+  const moved = new Map<number, { span: string; at: string }>();
+  for (const { span, values, clause } of claimSpans(f)) {
     const said = sentenceAt(span, values);
     if (said === undefined) continue;
-    if (said.at !== span) reason = reason.replace(`${span}: `, `${said.at}: `);
+    if (said.at !== span) moved.set(clause, { span, at: said.at });
     lines.push(said.stated === false ? `${said.at} (no line from here to the next blank line states ${values.join(" or ")}): "${said.text}"` : `${said.at} says: "${said.text}"`);
   }
-  return { reason, lines };
+  if (moved.size === 0) return { reason, lines };
+  // Each span is replaced where its own clause begins, never by searching the reason for it.
+  const at = (clause: string, i: number) => (moved.has(i) ? `${moved.get(i)!.at}${clause.slice(moved.get(i)!.span.length)}` : clause);
+  if (f.kind === "fact-conflict") return { reason: at(reason, 0), lines };
+  const parts = conflictParts(reason)!;
+  return { reason: `${parts.clauses.map(at).join(" and ")}${parts.rest}`, lines };
 }
 
 function finding(f: Finding, sentenceAt?: SentenceAt): string[] {

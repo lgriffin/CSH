@@ -32,7 +32,7 @@ const runs = (cmd: string, args: string[]): boolean => {
 
 /**
  * Git for Windows' own gpg, `usr/bin` beside its `mingw64/libexec/git-core`, when `git --exec-path` names one there
- * (stage 47): from PowerShell or cmd, gpg is on Git Bash's PATH alone.
+ * (stage 53): from PowerShell or cmd, gpg is on Git Bash's PATH alone.
  */
 export function gitForWindowsGpgDir(gitExecPath: string, exists: (p: string) => boolean = existsSync): string | undefined {
   const dir = resolve(gitExecPath.trim(), "..", "..", "..", "usr", "bin");

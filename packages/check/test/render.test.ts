@@ -6,19 +6,19 @@ const finding = (kind: Finding["kind"], reason: string): Finding => ({ id: "F", 
 
 describe("claim spans", () => {
   it("pairs each span with the values its claim states", () => {
-    expect(claimSpans(finding("fact-conflict", "docs/a.md:3: says count of modules packages/* is 5; 7 are read"))).toEqual([{ span: "docs/a.md:3", values: ["5"] }]);
+    expect(claimSpans(finding("fact-conflict", "docs/a.md:3: says count of modules packages/* is 5; 7 are read"))).toEqual([{ span: "docs/a.md:3", values: ["5"], clause: 0 }]);
     expect(claimSpans(finding("claim-conflict", "docs/a.md:3: A and README.md:9: B: one says package.json engines.node is >=18, the other package.json engines.node is >=22.12"))).toEqual([
-      { span: "docs/a.md:3", values: ["18"] },
-      { span: "README.md:9", values: ["22.12"] },
+      { span: "docs/a.md:3", values: ["18"], clause: 0 },
+      { span: "README.md:9", values: ["22.12"], clause: 1 },
     ]);
   });
 
   it("pairs a span with its own clause when only a later clause carries a span", () => {
-    expect(claimSpans(finding("claim-conflict", "the root README and docs/b.md:4: B: one says engines.node is >=18, the other engines.node is >=22"))).toEqual([{ span: "docs/b.md:4", values: ["22"] }]);
+    expect(claimSpans(finding("claim-conflict", "the root README and docs/b.md:4: B: one says engines.node is >=18, the other engines.node is >=22"))).toEqual([{ span: "docs/b.md:4", values: ["22"], clause: 1 }]);
   });
 
   it("takes no value from a glob, a path or a parenthesis", () => {
-    expect(claimSpans(finding("fact-conflict", "docs/a.md:3: says count of modules packages/v2/* (from 2 globs) is 5; 7 are read"))).toEqual([{ span: "docs/a.md:3", values: ["5"] }]);
+    expect(claimSpans(finding("fact-conflict", "docs/a.md:3: says count of modules packages/v2/* (from 2 globs) is 5; 7 are read"))).toEqual([{ span: "docs/a.md:3", values: ["5"], clause: 0 }]);
   });
 
   it("finds the line of a table or list that holds the value, and keeps the span's line otherwise", () => {
@@ -30,7 +30,7 @@ describe("claim spans", () => {
     expect(lineHolding(lines, 0, ["5"])).toBe(0);
   });
 
-  it("finds a count written as a word, and not one as a word (stage 47)", () => {
+  it("finds a count written as a word, and not one as a word (stage 53)", () => {
     const lines = ["| Decision | Note |", "|---|---|", "| 13 | other row |", "| keep | thirteen mutants survive |"];
     expect(lineStating(["We keep thirteen mutants."], 0, ["13"])).toBe(0);
     expect(lineStating(lines, 0, ["13"])).toBe(2);
@@ -42,14 +42,14 @@ describe("claim spans", () => {
     expect(lineStating(["Pinned at 1.3."], 0, ["1.35.0"])).toBeUndefined();
   });
 
-  it("reads a conflict whose other claim is negated (stage 47)", () => {
+  it("reads a conflict whose other claim is negated (stage 53)", () => {
     expect(claimSpans(finding("claim-conflict", "a.md:3: A and b.md:9: B: one says it is false that X extends Y, the other says X extends Y"))).toEqual([
-      { span: "a.md:3", values: [] },
-      { span: "b.md:9", values: [] },
+      { span: "a.md:3", values: [], clause: 0 },
+      { span: "b.md:9", values: [], clause: 1 },
     ]);
   });
 
-  it("cites the shown line in the headline, and says when no line states the value (stage 47)", () => {
+  it("cites the shown line in the headline, and says when no line states the value (stage 53)", () => {
     const files: Record<string, string[]> = { "d.md": ["## Versions", "", "intro", "Pinned at 1.4.0."], "c.md": ["## jsr/", "- a", "- b"] };
     const at: SentenceAt = (span, values = []) => {
       const [file, n] = span.split(":");
@@ -65,5 +65,15 @@ describe("claim spans", () => {
     const counted = claimEvidence(finding("fact-conflict", "c.md:1: says count of modules jsr is 5; 2 are read"), at);
     expect(counted.reason).toBe("c.md:1: says count of modules jsr is 5; 2 are read");
     expect(counted.lines).toEqual(['c.md:1 (no line from here to the next blank line states 5): "## jsr/"']);
+  });
+
+  it("rewrites each conflict span at its own clause, even when one moves onto the other (stage 53)", () => {
+    const at: SentenceAt = (span) => ({ at: span === "a.md:3" ? "a.md:5" : "a.md:6", text: "t", stated: true });
+    const f = finding("claim-conflict", "a.md:3: A and a.md:5: B: one says x is 18, the other says x is 22");
+    expect(claimEvidence(f, at).reason).toBe("a.md:5: A and a.md:6: B: one says x is 18, the other says x is 22");
+    // A span that ends another's path is not found inside it.
+    const g = finding("claim-conflict", "web.md:9: A and b.md:9: B: one says x is 1, the other says x is 2");
+    const at2: SentenceAt = (span) => ({ at: span === "b.md:9" ? "b.md:10" : span, text: "t", stated: true });
+    expect(claimEvidence(g, at2).reason).toBe("web.md:9: A and b.md:10: B: one says x is 1, the other says x is 2");
   });
 });

@@ -55,7 +55,7 @@ describe("subject warnings", () => {
     expect(calls).toContainEqual(["git", "remote", "get-url", "origin", resolve("/r", "../subject")]);
   });
 
-  it("says on a run what the last fetch learnt, only while the manifest is tracked (stage 47)", () => {
+  it("says on a run what the last fetch learnt, only while the manifest is tracked (stage 53)", () => {
     const root = mkdtempSync(join(tmpdir(), "csh-safety-"));
     try {
       const at = (repo: string) => ({ root, sourceRoot: root, component: { manifest: { subject: { repo, commit: "0".repeat(40) } } } }) as unknown as Project;

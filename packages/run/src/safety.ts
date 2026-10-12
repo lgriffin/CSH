@@ -28,7 +28,7 @@ export function githubSlug(repo: string): string | undefined {
 /** True when `repo` names a directory rather than a URL: no scheme, and not scp-like `user@host:path`. */
 export const isPathRepo = (repo: string): boolean => !/^[a-z][a-z0-9+.-]*:\/\//i.test(repo) && !/^[\w.-]+@[\w.-]+:/.test(repo);
 
-/** Where `csh subject fetch` keeps the visibility GitHub gave, so that a run can say it without asking again (stage 47). */
+/** Where `csh subject fetch` keeps the visibility GitHub gave, so that a run can say it without asking again (stage 53). */
 export const VISIBILITY_PATH = join(CACHE_DIR, "subject-visibility.json");
 
 const tracked = (p: Project, exec: Exec) => exec("git", ["ls-files", "--error-unmatch", "--", COMPONENT_PATH], p.root) !== undefined;
@@ -68,7 +68,7 @@ export function subjectWarnings(p: Project, exec: Exec = defaultExec): string[] 
 }
 
 /**
- * The warnings a run says (stage 47): the local path, and a private subject, but only while the manifest is tracked,
+ * The warnings a run says (stage 53): the local path, and a private subject, but only while the manifest is tracked,
  * which is when committing it would publish the profile. Visibility is what the last `csh subject fetch` recorded: a run
  * never asks GitHub.
  */

@@ -1,4 +1,4 @@
-// Git for Windows' gpg, found when gpg is not on PATH (stage 47).
+// Git for Windows' gpg, found when gpg is not on PATH (stage 53).
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { gitForWindowsGpgDir } from "../src/git.ts";
