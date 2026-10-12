@@ -25,9 +25,10 @@ const READINGS = [
 /**
  * The line a claim was read from, given the span the claim names and the values it states (From real runs, stage 43):
  * the line at the span, or, when the span opens a block (a table, a list) and the values are on a later line of it,
- * that line. `at` is where the returned text is.
+ * that line. `at` is where the returned text is; `stated` is false when the claim has values and no line of the block
+ * states one (stage 47), so the line shown is only where the claim is pinned.
  */
-export type SentenceAt = (span: string, values?: string[]) => { at: string; text: string } | undefined;
+export type SentenceAt = (span: string, values?: string[]) => { at: string; text: string; stated?: boolean } | undefined;
 
 /**
  * The numbers and versions a claim's description states as its value: 5, 22.12, 1.35.0. A number inside what the claim
@@ -51,7 +52,7 @@ export const claimSpans = (f: Finding): { span: string; values: string[] }[] => 
     const span = spanOf(reason);
     return span === undefined ? [] : [{ span, values: valuesIn(/ says (.*?)(?:; |$)/.exec(reason)?.[1] ?? "") }];
   }
-  const m = /^(.*): one says (.*), the other (.*)$/.exec(reason);
+  const m = /^(.*): one says (.*), the other (?:says )?(.*)$/.exec(reason);
   if (m === null) return [];
   const clauses = m[1]!.split(" and ");
   const said = [m[2]!, m[3]!];
@@ -61,27 +62,59 @@ export const claimSpans = (f: Finding): { span: string; values: string[] }[] => 
   });
 };
 
+const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
+
 /**
- * The index of the line a claim's values are on: `from`, or, when `from` opens a block (a table, a list) and the values
- * are on a later line of it, that line, before the block ends at a blank line (stage 46). A value is matched whole: 5
- * is not found in 15 or in 1.5.
+ * A value as a line may state it (stage 47): the digits whole (5 is not in 15 or 1.5); a version without its trailing
+ * zeros (18.0.0 as 18.0 or 18); or, from two to twenty, the word. "one" is too common a word to mean 1.
  */
-export function lineHolding(lines: readonly string[], from: number, values: readonly string[]): number {
-  if (values.length === 0) return from;
-  const res = values.map((v) => new RegExp(`(?<![\\d.])${v.replace(/\./g, "\\.")}(?!\\d|\\.\\d)`));
+const statedAs = (v: string): RegExp => {
+  const forms = [v];
+  for (let f = v; /\.0$/.test(f); ) forms.push((f = f.slice(0, -2)));
+  const digits = forms.map((f) => `(?<![\\d.])${f.replace(/\./g, "\\.")}(?!\\d|\\.\\d)`);
+  const word = /^\d+$/.test(v) && Number(v) >= 2 ? WORDS[Number(v)] : undefined;
+  return new RegExp([...digits, ...(word !== undefined ? [`\\b${word}\\b`] : [])].join("|"), "i");
+};
+
+/**
+ * The index of the line that states one of a claim's values: `from`, or, when `from` opens a block (a table, a list)
+ * and the values are on a later line of it, that line, before the block ends at a blank line (stage 46); undefined when
+ * no line of the block states one. A value is matched whole: 5 is not found in 15 or in 1.5; 13 is found in thirteen.
+ */
+export function lineStating(lines: readonly string[], from: number, values: readonly string[]): number | undefined {
+  const res = values.map(statedAs);
   const holds = (l: string) => res.some((r) => r.test(l));
   if (holds(lines[from] ?? "")) return from;
   for (let i = from + 1; i < Math.min(lines.length, from + 40) && lines[i]!.trim() !== ""; i++) if (holds(lines[i]!)) return i;
-  return from;
+  return undefined;
+}
+
+/** The line to show for a claim: the line stating its values, else the span's own line. */
+export function lineHolding(lines: readonly string[], from: number, values: readonly string[]): number {
+  return values.length === 0 ? from : (lineStating(lines, from, values) ?? from);
+}
+
+/**
+ * A claim finding's reason, and its sentences, with each span replaced by the line actually shown, so the headline and
+ * the line below it cite the same place (stage 47). A claim whose values no line states shows its span's line, saying so.
+ */
+export function claimEvidence(f: Finding, sentenceAt: SentenceAt): { reason: string; lines: string[] } {
+  let reason = f.reason ?? f.query;
+  const lines: string[] = [];
+  for (const { span, values } of claimSpans(f)) {
+    const said = sentenceAt(span, values);
+    if (said === undefined) continue;
+    if (said.at !== span) reason = reason.replace(`${span}: `, `${said.at}: `);
+    lines.push(said.stated === false ? `${said.at} (no line from here to the next blank line states ${values.join(" or ")}): "${said.text}"` : `${said.at} says: "${said.text}"`);
+  }
+  return { reason, lines };
 }
 
 function finding(f: Finding, sentenceAt?: SentenceAt): string[] {
   const lines = [`[${f.kind}] ${f.id}${f.crossSource ? "  (cross-source)" : ""}  from ${f.query}`];
   // A claim reads as the sentence that made it, beside the fact that decides it.
-  for (const { span, values } of sentenceAt !== undefined ? claimSpans(f) : []) {
-    const said = sentenceAt!(span, values);
-    if (said !== undefined) lines.push(`  ${said.at} says: "${said.text}"`);
-  }
+  const evidence = sentenceAt !== undefined ? claimEvidence(f, sentenceAt) : undefined;
+  for (const l of evidence?.lines ?? []) lines.push(`  ${l}`);
   for (const m of f.members) lines.push(`  - ${m.fragment}  source ${m.source}, ${m.authority}`);
   if (f.context.length > 0) lines.push(`  context: ${f.context.join(", ")}`);
   if (f.collisionTerms.length > 0) lines.push(`  collision terms: ${f.collisionTerms.join(", ")}`);
@@ -90,7 +123,7 @@ function finding(f: Finding, sentenceAt?: SentenceAt): string[] {
     const label = f.kind === "joint-conflict" ? "input with no valid outcome" : f.kind === "example-divergence" ? "a shared input" : "counterexample";
     lines.push(`  ${label}: ${Object.entries(f.witness).map(([k, v]) => `${k} = ${v}`).join(", ")}`);
   }
-  if (f.reason !== undefined) lines.push(`  reason: ${f.reason}`);
+  if (f.reason !== undefined) lines.push(`  reason: ${evidence?.reason ?? f.reason}`);
   if (f.incomplete === true) lines.push("  the list of minimal sets is incomplete (limit of 16 reached)");
   if (CONFLICTS.has(f.kind) && f.kind !== "vacuous") lines.push(...READINGS.map((l) => `  ${l}`));
   if (f.kind === "example-divergence") lines.push(...DIVERGENCE_READINGS.map((l) => `  ${l}`));

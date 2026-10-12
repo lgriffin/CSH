@@ -3,9 +3,9 @@
 // deleted afterwards, and is named "(test-only)". Nothing here touches the real
 // repository's keys, commits or csh/maintainers.json.
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { delimiter, dirname, join, resolve } from "node:path";
 import type { Identity, Maintainers, Role } from "@csh/ledger";
 
 export interface TestRepo {
@@ -21,13 +21,38 @@ export interface TestRepo {
   dispose(): void;
 }
 
-export function gpgAvailable(): boolean {
+const runs = (cmd: string, args: string[]): boolean => {
   try {
-    execFileSync("gpg", ["--version"], { stdio: "ignore" });
+    execFileSync(cmd, args, { stdio: "ignore" });
     return true;
   } catch {
     return false;
   }
+};
+
+/**
+ * Git for Windows' own gpg, `usr/bin` beside its `mingw64/libexec/git-core`, when `git --exec-path` names one there
+ * (stage 47): from PowerShell or cmd, gpg is on Git Bash's PATH alone.
+ */
+export function gitForWindowsGpgDir(gitExecPath: string, exists: (p: string) => boolean = existsSync): string | undefined {
+  const dir = resolve(gitExecPath.trim(), "..", "..", "..", "usr", "bin");
+  return exists(join(dir, "gpg.exe")) ? dir : undefined;
+}
+
+/** True when gpg runs; on Windows, Git for Windows' gpg is put on this process's PATH first when no other is on it. */
+export function gpgAvailable(): boolean {
+  if (runs("gpg", ["--version"])) return true;
+  if (process.platform !== "win32") return false;
+  let execPath: string;
+  try {
+    execPath = execFileSync("git", ["--exec-path"], { encoding: "utf8" });
+  } catch {
+    return false;
+  }
+  const dir = gitForWindowsGpgDir(execPath);
+  if (dir === undefined) return false;
+  process.env.PATH = `${dir}${delimiter}${process.env.PATH ?? ""}`;
+  return runs("gpg", ["--version"]);
 }
 
 /**

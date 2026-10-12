@@ -3,13 +3,13 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { a3Dir, readJudgments } from "@csh/a3";
-import { checkExpected, claimSpans, lineHolding, DIVERGENCE_READINGS, type Finding, ladderOf, overviewOf, renderLadder, parseExpected, renderExpect, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report, type SentenceAt } from "@csh/check";
+import { checkExpected, claimEvidence, lineStating, DIVERGENCE_READINGS, type Finding, ladderOf, overviewOf, renderLadder, parseExpected, renderExpect, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report, type SentenceAt } from "@csh/check";
 import { exitCode, formatDecision as formatGate, type GateDecision, type Mode } from "@csh/gate";
 import { digestOf, fragmentsOf, textDigestOf, type Module, stableJson } from "@csh/kernel";
 import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons } from "@csh/ledger";
 import { printFragment } from "@csh/print";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { componentQueue, coverageOf, renderCoverage, componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderQueue, renderStatus, ledgerOf, loadProject, MODEL_PATH, OVERVIEW_PATH, type Project, REPORT_PATH, importResults, runAt, runComponent, type RunResult, fetchSubject, localPathWarning, specPathOf, storedRuns, subjectWarnings } from "@csh/run";
+import { componentQueue, coverageOf, renderCoverage, componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderQueue, renderStatus, ledgerOf, loadProject, MODEL_PATH, OVERVIEW_PATH, type Project, REPORT_PATH, importResults, runAt, runComponent, type RunResult, fetchSubject, runWarnings, specPathOf, storedRuns, subjectWarnings } from "@csh/run";
 import { type Args, parseArgs } from "./args.ts";
 import { init } from "./init.ts";
 import { a3Command, a3Fragment, historyCommand } from "./a3.ts";
@@ -542,10 +542,12 @@ function sentenceAt(p: Project): SentenceAt {
     if (!file.startsWith(resolve(p.sourceRoot)) || !existsSync(file)) return undefined;
     try {
       const lines = readFileSync(file, "utf8").split(/\r?\n/);
-      const at = lineHolding(lines, Number(m[2]) - 1, values);
+      const from = Number(m[2]) - 1;
+      const stating = values.length === 0 ? from : lineStating(lines, from, values);
+      const at = stating ?? from;
       const line = lines[at]?.trim();
       if (line === undefined || line === "") return undefined;
-      return { at: `${m[1]}:${at + 1}`, text: line.length > 200 ? `${line.slice(0, 197)}...` : line };
+      return { at: `${m[1]}:${at + 1}`, text: line.length > 200 ? `${line.slice(0, 197)}...` : line, stated: stating !== undefined };
     } catch {
       return undefined;
     }
@@ -570,8 +572,7 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
   const { record, report, decision } = r;
   const lines = [`run ${record.component} at ${record.snapshot.commit}`];
   if (record.snapshot.subject !== undefined) lines.push(`  subject ${record.snapshot.subject.repo} at ${record.snapshot.subject.commit}`);
-  const local = localPathWarning(p);
-  if (local !== undefined) lines.push(`  warning: ${local}`);
+  for (const w of runWarnings(p)) lines.push(`  warning: ${w}`);
   for (const h of record.harnesses) lines.push(`  harness ${h.practice}: ${h.argv.join(" ")}  exit ${h.exitCode ?? h.error ?? "none"}, ${h.witnesses} witnesses, ${h.executions} executions (not sandboxed)`);
   if (record.harnesses.length === 0) lines.push("  no practice has a harness");
   const conflicts = countOf(report, ["state-conflict", "joint-conflict", "example-conflict", "arch-conflict", "claim-conflict", "fact-conflict", "vacuous"]);
@@ -593,11 +594,8 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
   const claims = report.findings.filter((f) => f.kind === "fact-conflict" || f.kind === "claim-conflict");
   const said = sentenceAt(p);
   for (const f of claims.slice(0, 5)) {
-    lines.push(`  ${f.kind}: ${f.reason ?? f.query}`);
-    for (const { span, values } of claimSpans(f)) {
-      const sentence = said(span, values);
-      if (sentence !== undefined) lines.push(`    ${sentence.at} says: "${sentence.text}"`);
-    }
+    const evidence = claimEvidence(f, said);
+    lines.push(`  ${f.kind}: ${evidence.reason}`, ...evidence.lines.map((l) => `    ${l}`));
   }
   if (claims.length > 5) lines.push(`  and ${claims.length - 5} more claim findings: csh check lists them`);
   // What the profile leaves unread, said on every run of the current snapshot (From real runs, section 1.4).
