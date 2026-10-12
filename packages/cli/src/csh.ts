@@ -119,10 +119,13 @@ function write(path: string, text: string): void {
   writeFileSync(path, text);
 }
 
-function readReport(p: Project, a: Args): Report {
+/** The report a reading command reads: a stored run's, else the last one written; a missing one is said, not thrown. */
+function reportFor(p: Project, a: Args, stored: { report: string } | undefined, cmd: string, io: Io): Report | undefined {
+  if (stored !== undefined) return JSON.parse(readFileSync(stored.report, "utf8")) as Report;
   const path = join(p.root, a.options.report ?? REPORT_PATH);
-  if (!existsSync(path)) throw new Error(`no report at ${path}; run csh check first`);
-  return JSON.parse(readFileSync(path, "utf8")) as Report;
+  if (existsSync(path)) return JSON.parse(readFileSync(path, "utf8")) as Report;
+  io.err(`csh ${cmd}: no report at ${relative(io.cwd, path) || path}; csh run or csh check writes one, and writes none when it fails\n`);
+  return undefined;
 }
 
 /** The report and model files of a stored run: --run names its directory, or a commit whose newest stored run is read. */
@@ -353,7 +356,8 @@ export async function csh(argv: string[], io: Io): Promise<number> {
         io.err(`csh overview: ${stored.error}\n`);
         return 2;
       }
-      const report = stored === undefined ? readReport(p, a) : (JSON.parse(readFileSync(stored.report, "utf8")) as Report);
+      const report = reportFor(p, a, stored, "overview", io);
+      if (report === undefined) return 2;
       const o = overviewOf(report, practiceMap(p));
       const id = a.options.signal;
       if (id !== undefined) {
@@ -387,7 +391,8 @@ export async function csh(argv: string[], io: Io): Promise<number> {
         io.err(`csh expect: ${relative(io.cwd, path)}: ${parsed.problems.join("; ")}\n`);
         return 2;
       }
-      const report = stored === undefined ? readReport(p, a) : (JSON.parse(readFileSync(stored.report, "utf8")) as Report);
+      const report = reportFor(p, a, stored, "expect", io);
+      if (report === undefined) return 2;
       const r = checkExpected(overviewOf(report, practiceMap(p)), parsed.expected);
       io.out(a.flags.has("json") ? stableJson(r) : renderExpect(r));
       return r.mismatches.length === 0 ? 0 : 1;
@@ -399,7 +404,8 @@ export async function csh(argv: string[], io: Io): Promise<number> {
         io.err(`csh explain: ${stored.error}\n`);
         return 2;
       }
-      const report = stored === undefined ? readReport(p, a) : (JSON.parse(readFileSync(stored.report, "utf8")) as Report);
+      const report = reportFor(p, a, stored, "explain", io);
+      if (report === undefined) return 2;
       const f = report.findings.find((x) => x.id === id || (id !== undefined && x.id.startsWith(id)));
       if (f === undefined) {
         // An overview entry names a signal, which is not always a finding: a violated rule, a gap. Say what it is.
