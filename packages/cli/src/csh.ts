@@ -9,7 +9,7 @@ import { digestOf, fragmentsOf, type Module, stableJson } from "@csh/kernel";
 import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons } from "@csh/ledger";
 import { printFragment } from "@csh/print";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
-import { componentQueue, componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderQueue, renderStatus, ledgerOf, loadProject, MODEL_PATH, OVERVIEW_PATH, type Project, REPORT_PATH, importResults, runAt, runComponent, type RunResult, fetchSubject, specPathOf, storedRuns } from "@csh/run";
+import { componentQueue, coverageOf, renderCoverage, componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderQueue, renderStatus, ledgerOf, loadProject, MODEL_PATH, OVERVIEW_PATH, type Project, REPORT_PATH, importResults, runAt, runComponent, type RunResult, fetchSubject, specPathOf, storedRuns } from "@csh/run";
 import { type Args, parseArgs } from "./args.ts";
 import { init } from "./init.ts";
 import { a3Command, a3Fragment, historyCommand } from "./a3.ts";
@@ -27,6 +27,7 @@ const USAGE = `csh: the Composable Specification Harness
                                   Run every check and write the report. Exits 0 when the run completed.
   csh gaps [spec]                 Print the gap view only.
   csh overview [--run <dir|commit>] [--signal <id>] [--out <file>] [--json]
+  csh coverage                            What each source reads, and the tracked files no source reads, by extension
                                   Place every result of the last report in one of three outcomes: gaps (suggestions,
                                   with what would close each), indeterminate (with what would decide it) and
                                   converged. Prints the counts by practice and kind and writes the sheet to
@@ -331,6 +332,15 @@ export async function csh(argv: string[], io: Io): Promise<number> {
       const res = await runCheck(p, a, io);
       if (res === undefined) return 1;
       io.out(`${renderGaps(res.report).join("\n")}\n`);
+      return 0;
+    }
+    case "coverage": {
+      const c = coverageOf(p);
+      if (c === undefined) {
+        io.err("csh coverage: the source root is not a git repository, so there is no list of its files\n");
+        return 1;
+      }
+      io.out(a.flags.has("json") ? stableJson(c) : renderCoverage(c, p.component?.manifest.name ?? relative(io.cwd, p.root)));
       return 0;
     }
     case "overview": {
