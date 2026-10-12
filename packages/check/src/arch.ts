@@ -73,6 +73,8 @@ export function evaluateArchitecture(input: { prepared: Prepared; fragments: Fra
   const facts: ArchFacts = {
     packages: current.flatMap((f) => (f.kind === "package" ? [f.name] : [])),
     depends: current.flatMap((f) => (f.kind === "depends" ? [{ from: f.from, to: f.to, at: f.at, typeOnly: f.typeOnly, via: f.via }] : [])),
+    // A skipped fact at a file, not a line, is a whole file not read (stage 29).
+    unread: current.flatMap((f) => (f.kind === "skipped" && f.at === f.from ? [f.from] : [])).sort(compareCodePoints),
   };
 
   // Claims are judged by any current fact: a claim about a module or a file that was not read stays unknown by itself.
@@ -83,6 +85,7 @@ export function evaluateArchitecture(input: { prepared: Prepared; fragments: Fra
     exports: current.flatMap((f) => (f.kind === "export" ? [{ module: f.module, symbol: f.symbol, at: f.at }] : [])),
     fields: current.flatMap((f) => (f.kind === "field" ? [{ file: f.file, path: f.path, value: f.value, at: f.at }] : [])),
     ...(input.files !== undefined ? { files: new Set(input.files) } : {}),
+    languages: new Map(current.flatMap((f) => (f.kind === "module" && f.language !== undefined ? [[f.name, f.language] as const] : []))),
   };
 
   const out: ArchOutcome = { findings: [], gaps: [], rules: new Map() };

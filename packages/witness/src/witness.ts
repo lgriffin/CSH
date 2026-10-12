@@ -159,6 +159,8 @@ export interface SkippedFact extends FactBase {
 export interface ModuleFact extends FactBase {
   kind: "module";
   name: string;
+  /** The language the module is written in, when it is not TypeScript or JavaScript (stage 29). */
+  language?: string;
 }
 
 /** A name a module exports: a declaration, a renamed or re-exported name, or "*" for `export * from` (version 2). */
@@ -183,11 +185,19 @@ export interface FieldFact extends FactBase {
  * A name a module declares at its top level, exported or not (version 2, stage 24): what it declares, the class it
  * extends as written, and a constant's literal value.
  */
+export type DeclarationKind = (typeof DECLARATION_KINDS)[number];
+
+/**
+ * What a declaration declares. The first nine are TypeScript's; the rest name what Python, Java, Go and Rust declare
+ * that none of those does (stage 29). A constant in any language is a `const`, a class a `class`.
+ */
+export const DECLARATION_KINDS = ["class", "function", "const", "let", "var", "interface", "type", "enum", "namespace", "struct", "trait", "record", "annotation", "method", "static", "module", "macro"] as const;
+
 export interface DeclareFact extends FactBase {
   kind: "declare";
   module: string;
   symbol: string;
-  declares: "class" | "function" | "const" | "let" | "var" | "interface" | "type" | "enum" | "namespace";
+  declares: DeclarationKind;
   /** The base a class extends, as written: a name, or a dotted name. */
   base?: string;
   /** A const's value, when it is a string, number or boolean literal. */

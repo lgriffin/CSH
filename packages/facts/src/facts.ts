@@ -1,6 +1,6 @@
 // The fact format (csh-facts/v1): its reader and writer (Next layers, section 4.2). A fact is evidence, like a witness:
 // it records the commit it was taken at, goes stale when the code changes, and never carries authority.
-import type { Fact } from "@csh/witness";
+import { DECLARATION_KINDS, type Fact } from "@csh/witness";
 
 export const FACTS_SCHEMA = "csh-facts/v1";
 /** Version 2 (Ingesting a codebase, stage 23): module, export and field facts beside version 1's kinds. */
@@ -34,11 +34,10 @@ export function validateFact(v: unknown): string | undefined {
   if (o.kind === "skipped") return str(o.from) && str(o.reason) ? undefined : "a skipped fact needs from and reason";
   if (o.kind === "module" || o.kind === "export" || o.kind === "field" || o.kind === "declare") {
     if (o.schema !== FACTS_SCHEMA_V2) return `a ${o.kind} fact needs ${FACTS_SCHEMA_V2}`;
-    if (o.kind === "module") return str(o.name) ? undefined : "a module fact has no name";
+    if (o.kind === "module") return !str(o.name) ? "a module fact has no name" : o.language !== undefined && !str(o.language) ? "a module fact's language is not a name" : undefined;
     if (o.kind === "export") return str(o.module) && str(o.symbol) && typeof o.typeOnly === "boolean" && (o.from === undefined || str(o.from)) ? undefined : "an export fact needs module, symbol and typeOnly";
     if (o.kind === "declare") {
-      const kinds = ["class", "function", "const", "let", "var", "interface", "type", "enum", "namespace"];
-      return str(o.module) && str(o.symbol) && kinds.includes(o.declares as string) && (o.base === undefined || str(o.base)) && (o.value === undefined || typeof o.value === "string") ? undefined : "a declare fact needs module, symbol and what it declares";
+      return str(o.module) && str(o.symbol) && (DECLARATION_KINDS as readonly string[]).includes(o.declares as string) && (o.base === undefined || str(o.base)) && (o.value === undefined || typeof o.value === "string") ? undefined : "a declare fact needs module, symbol and what it declares";
     }
     return str(o.file) && str(o.path) && typeof o.value === "string" ? undefined : "a field fact needs file, path and value";
   }

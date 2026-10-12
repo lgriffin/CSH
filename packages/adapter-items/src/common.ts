@@ -56,7 +56,7 @@ export function pathToken(token: string): string | undefined {
  */
 export function bareFileToken(token: string): string | undefined {
   const t = token.trim();
-  return /^[\w@-][\w.@-]*\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs|json|ya?ml)$/.test(t) ? t : undefined;
+  return /^[\w@-][\w.@-]*\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs|py|pyi|java|go|rs|json|ya?ml|toml)$/.test(t) ? t : undefined;
 }
 
 /** Every backticked token on a line, with no nesting. */

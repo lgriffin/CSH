@@ -22,6 +22,8 @@ export interface ArchFacts {
   /** Packages of the workspace; the source files a modules selector reads are not among them (stage 23). */
   packages: string[];
   depends: ArchDependency[];
+  /** Source files a reader could not read, such as a file in a language with no reader (stage 29). */
+  unread?: string[];
 }
 
 /** A package name without its scope: "kernel" for "@csh/kernel". */
@@ -128,7 +130,13 @@ export function evaluateRule(rule: ArchRule, facts: ArchFacts, d: ArchDiagram | 
     if (d === undefined) return { result: "unknown", reason: `no-diagram: ${rule.source}` };
     by = [...undrawnDependencies(d, facts).values()].flat();
   }
-  return by.length > 0 ? { result: "violated", by } : { result: "holds" };
+  if (by.length > 0) return { result: "violated", by };
+  // A file that was not read could depend on anything: a rule over it cannot hold, though what was read can violate it.
+  if (rule.k === "forbid" || rule.k === "only") {
+    const unread = (facts.unread ?? []).filter((m) => selects(rule.from, m, d));
+    if (unread.length > 0) return { result: "unknown", reason: `not-read: ${unread.slice(0, 3).join(", ")}${unread.length > 3 ? ` and ${unread.length - 3} more` : ""}` };
+  }
+  return { result: "holds" };
 }
 
 /**
