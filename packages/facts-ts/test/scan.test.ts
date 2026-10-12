@@ -207,3 +207,22 @@ describe("YAML files", () => {
     expect(shown).toContain("field /mutants/1/id = b");
   });
 });
+
+describe("tsconfig path aliases", () => {
+  const files = {
+    "tsconfig.json": "{ // comments are allowed\n \"compilerOptions\": { \"paths\": { \"@core\": [\"packages/core/src\"], \"@shared/*\": [\"src/shared/*\"] } } }\n",
+    "packages/core/src/index.ts": "export const x = 1;\n",
+    "src/shared/types.ts": "export type T = 1;\n",
+    "src/app.ts": "import { x } from \"@core\";\nimport type { T } from \"@shared/types\";\nimport z from \"zod\";\nimport \"@other/missing\";\n",
+  };
+
+  it("resolve to the module they name, and leave a package or an unmatched alias as a package", () => {
+    const shown = (run(input(files)).facts ?? []).map(show).filter((x) => x.includes("src/app.ts ->"));
+    expect(shown).toEqual([
+      "src/app.ts:1 src/app.ts -> packages/core/src/index.ts",
+      "src/app.ts:2 src/app.ts -> src/shared/types.ts (type)",
+      "src/app.ts:3 src/app.ts -> zod",
+      "src/app.ts:4 src/app.ts -> @other/missing",
+    ]);
+  });
+});

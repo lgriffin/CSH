@@ -105,6 +105,42 @@ export function resolveWorkspace(specifier: string, packages: Map<string, { dir:
   return undefined;
 }
 
+/** The path aliases of each tsconfig.json (compilerOptions.paths), deepest directory first. */
+export function pathAliases(files: readonly { path: string; bytes: Uint8Array }[]): { dir: string; base: string; paths: [string, string[]][] }[] {
+  const out: { dir: string; base: string; paths: [string, string[]][] }[] = [];
+  for (const f of files) {
+    if (posix.basename(f.path) !== "tsconfig.json" || f.path.includes("node_modules/")) continue;
+    const parsed = ts.parseConfigFileTextToJson(f.path, new TextDecoder().decode(f.bytes));
+    const co = (parsed.config as { compilerOptions?: { baseUrl?: string; paths?: Record<string, string[]> } } | undefined)?.compilerOptions;
+    if (co?.paths === undefined) continue;
+    const dir = posix.dirname(f.path) === "." ? "" : posix.dirname(f.path);
+    out.push({ dir, base: posix.normalize(posix.join(dir === "" ? "." : dir, co.baseUrl ?? ".")), paths: Object.entries(co.paths) });
+  }
+  return out.sort((a, b) => b.dir.length - a.dir.length);
+}
+
+/** The module a path alias of the nearest tsconfig lands on, among `files`; undefined when no alias matches or its target is not a file read. */
+export function resolveAlias(specifier: string, from: string, aliases: ReturnType<typeof pathAliases>, files: Set<string>): string | undefined {
+  const a = aliases.find((x) => x.dir === "" || from.startsWith(`${x.dir}/`));
+  if (a === undefined) return undefined;
+  for (const [pattern, targets] of a.paths) {
+    const star = pattern.indexOf("*");
+    let rest: string | undefined;
+    if (star < 0) rest = specifier === pattern ? "" : undefined;
+    else {
+      const pre = pattern.slice(0, star);
+      const post = pattern.slice(star + 1);
+      rest = specifier.length >= pre.length + post.length && specifier.startsWith(pre) && specifier.endsWith(post) ? specifier.slice(pre.length, specifier.length - post.length) : undefined;
+    }
+    if (rest === undefined) continue;
+    for (const t of targets) {
+      const found = resolveRelative("x", `./${posix.normalize(posix.join(a.base, t.includes("*") ? t.replace("*", rest) : t))}`, files);
+      if (found !== undefined) return found;
+    }
+  }
+  return undefined;
+}
+
 interface Reference {
   specifier: string;
   line: number;
@@ -241,7 +277,8 @@ export function run(input: AdapterInput): AdapterOutput {
   const diagnostics: Diagnostic[] = [];
   const files = [...input.files].sort((a, b) => compareCodePoints(a.path, b.path));
   const code = new Set(files.filter((f) => CODE.test(f.path)).map((f) => f.path));
-  const workspace = workspacePackages(files);
+  const workspace = workspacePackages(files);
+  const aliases = pathAliases(files);
   if (input.config?.commit === undefined) diagnostics.push({ code: "no-commit", severity: "warning", message: "the harness gave no commit, so these facts are never current" });
   for (const f of files) {
     const text = new TextDecoder().decode(f.bytes);
@@ -274,7 +311,8 @@ export function run(input: AdapterInput): AdapterOutput {
         if (to === undefined) facts.push({ ...base, kind: "skipped", at, from: f.path, reason: `unresolved ${ref.specifier}` });
         else if (to !== f.path) facts.push({ ...base, kind: "depends", at, from: f.path, to, via: "import", typeOnly: ref.typeOnly });
       } else {
-        const local = workspace.size > 0 ? resolveWorkspace(ref.specifier, workspace, code) : undefined;
+        // A tsconfig path alias (@shared/x, @app/domain) lands on a module of the source; then a workspace package; else a package.
+        const local = (aliases.length > 0 ? resolveAlias(ref.specifier, f.path, aliases, code) : undefined) ?? (workspace.size > 0 ? resolveWorkspace(ref.specifier, workspace, code) : undefined);
         facts.push({ ...base, kind: "depends", at, from: f.path, to: local !== undefined && local !== f.path ? local : packageOf(ref.specifier), via: "import", typeOnly: ref.typeOnly });
       }
     }
