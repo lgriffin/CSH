@@ -6,6 +6,7 @@ import { compareCodePoints } from "@csh/kernel";
 import { run as runTs } from "@csh/facts-ts";
 import type { Adapter, AdapterInput, AdapterOutput, Diagnostic, Fact } from "@csh/witness";
 import { languageOf } from "./languages.ts";
+import { rust } from "./rust.ts";
 import { goReader } from "./go.ts";
 import { javaReader } from "./java.ts";
 import { python } from "./python.ts";
@@ -38,7 +39,7 @@ export interface LanguageReader {
 }
 
 /** The readers, by language. Stages 31 to 34 add Python, Java, Go and Rust. */
-export const READERS: LanguageReader[] = [python, javaReader, goReader];
+export const READERS: LanguageReader[] = [python, javaReader, goReader, rust];
 
 export async function run(input: AdapterInput, readers: readonly LanguageReader[] = READERS): Promise<AdapterOutput> {
   const commit = input.config?.commit ?? "unknown";
