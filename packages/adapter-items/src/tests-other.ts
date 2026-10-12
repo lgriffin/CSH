@@ -125,6 +125,8 @@ export interface CiteSource {
 /** What a test file in one of the four languages declares: its tests, those marked skipped, and the texts that cite. */
 export interface Inventory {
   tests: number;
+  /** Each test the runner would collect, by its declared name and the offset of that name, in file order. */
+  declared: { name: string; at: number }[];
   skipped: number;
   sources: CiteSource[];
   strings: Map<number, string>;
@@ -134,7 +136,7 @@ export interface Inventory {
 export function inventory(text: string, lang: Language, path = ""): Inventory {
   const lexed = lexOther(text, lang);
   const found =
-    lang === "python" ? python(lexed) : lang === "java" ? java(lexed) : lang === "go" ? (path.endsWith("_test.go") ? go(lexed) : { tests: 0, skipped: 0, sources: [] }) : rust(text, lexed);
+    lang === "python" ? python(lexed) : lang === "java" ? java(lexed) : lang === "go" ? (path.endsWith("_test.go") ? go(lexed) : { tests: 0, declared: [], skipped: 0, sources: [] }) : rust(text, lexed);
   // Sources in the order they stand in the file, so that edges come out in that order whatever the reader found first.
   const sources = [...found.sources].sort((a, b) => a.at - b.at || compareCodePoints(a.text, b.text));
   return { ...found, sources, strings: lexed.strings };
@@ -197,7 +199,7 @@ interface Block {
  */
 function python({ code, strings }: Lexed): Found {
   // A class's body can rule its tests out after they are read, so each candidate is decided once the file is read.
-  const candidates: { classes: Block[]; skip: boolean; sources: CiteSource[] }[] = [];
+  const candidates: { classes: Block[]; skip: boolean; sources: CiteSource[]; name: string; at: number }[] = [];
   const classes: Block[] = [];
   const stack: Block[] = [];
   let decorators: [number, number][] = [];
@@ -231,7 +233,7 @@ function python({ code, strings }: Lexed): Found {
         const sources = [...nameSources(at, name, /^test_?/), ...marks];
         const doc = docstring(code, strings, at + name.length);
         if (doc !== undefined) sources.push(doc);
-        candidates.push({ classes: [...stack], skip, sources });
+        candidates.push({ classes: [...stack], skip, sources, name, at });
       }
       stack.push({ indent, kind: "def", named: false, testCase: false, hasInit: false, off: false, skip: false, cites: [] });
     }
@@ -239,17 +241,17 @@ function python({ code, strings }: Lexed): Found {
   const collected = (b: Block) => b.named && !b.off && (b.testCase || !b.hasInit);
   const sources: CiteSource[] = [];
   const used = new Set<Block>();
-  let tests = 0;
+  const declared: { name: string; at: number }[] = [];
   let skipped = 0;
   for (const c of candidates) {
     if (!c.classes.every(collected)) continue;
-    tests++;
+    declared.push({ name: c.name, at: c.at });
     if (c.skip || c.classes.some((b) => b.skip)) skipped++;
     for (const b of c.classes) used.add(b);
     sources.push(...c.sources);
   }
   for (const b of classes) if (used.has(b)) sources.push(...b.cites);
-  return { tests, skipped, sources };
+  return { tests: declared.length, declared, skipped, sources };
 }
 
 /** Each logical line of Python code: where its text starts and ends, and its indentation. Bracketed continuations join. */
@@ -386,7 +388,7 @@ function java({ code, strings }: Lexed): Found {
     sources.push(...nameSources(m.at, m.name, /^test_?/), ...cites(m.annotations));
   }
   for (const c of classes) if (c.used) sources.push(...cites(c.annotations));
-  return { tests: methods.length, skipped, sources };
+  return { tests: methods.length, declared: methods.map((m) => ({ name: m.name, at: m.at })), skipped, sources };
 }
 
 /** What a run of annotations ending at `at` annotates: a class (with its body) or a method (with its name), or neither. */
@@ -418,7 +420,7 @@ function javaTarget(code: string, at: number): { kind: "class"; body: [number, n
  */
 function go({ code, strings, comments }: Lexed): Found {
   const sources: CiteSource[] = [];
-  let tests = 0;
+  const declared: { name: string; at: number }[] = [];
   for (const m of code.matchAll(/(?<![\w.])func\s+((Test|Fuzz|Example)(\w*))\s*\(/g)) {
     const name = m[1]!;
     const kind = m[2]!;
@@ -434,7 +436,7 @@ function go({ code, strings, comments }: Lexed): Found {
     if (kind === "Test" && !/^\s*(?:\w+\s+)?\*\s*testing\s*\.\s*T\s*$/.test(params)) continue;
     if (kind === "Fuzz" && !/^\s*(?:\w+\s+)?\*\s*testing\s*\.\s*F\s*$/.test(params)) continue;
     if (kind === "Example" && (params.trim() !== "" || ![...comments].some(([at, c]) => at > body[0] && at < body[1] && /^\/\/\s*(?:Unordered output|Output):/i.test(c)))) continue;
-    tests++;
+    declared.push({ name, at: m.index + m[0].indexOf(name) });
     sources.push(...nameSources(m.index + m[0].indexOf(name), name, /^(?:Test|Fuzz|Example)_?/));
     // The names a *testing.T goes by in this function, its own and each subtest's.
     const ts = new Set([...code.slice(open, body[1]).matchAll(/(\w+)\s+\*\s*testing\s*\.\s*T\b/g)].map((t) => t[1]!));
@@ -445,7 +447,7 @@ function go({ code, strings, comments }: Lexed): Found {
       if (s !== undefined) sources.push({ at, text: s, name: false });
     }
   }
-  return { tests, skipped: 0, sources };
+  return { tests: declared.length, declared, skipped: 0, sources };
 }
 
 // --- Rust -------------------------------------------------------------------------------------------------------
@@ -460,7 +462,7 @@ const RUST_MODIFIERS = new Set(["pub", "async", "unsafe", "const", "extern", "de
  */
 function rust(text: string, { code, comments }: Lexed): Found {
   const sources: CiteSource[] = [];
-  let tests = 0;
+  const declared: { name: string; at: number }[] = [];
   let skipped = 0;
   for (const m of code.matchAll(/(?<![\w#])fn\s+(\w+)/g)) {
     let start = m.index;
@@ -485,7 +487,7 @@ function rust(text: string, { code, comments }: Lexed): Found {
     }
     const paths = attributes.map((a) => /^[\w:]+/.exec(a)?.[0] ?? "");
     if (!paths.some((p) => p === "test" || p === "rstest" || /::test$/.test(p))) continue;
-    tests++;
+    declared.push({ name: m[1]!, at: m.index + m[0].length - m[1]!.length });
     if (paths.includes("ignore")) skipped++;
     sources.push(...nameSources(m.index + m[0].length - m[1]!.length, m[1]!, /^test_?/));
     // Doc comment lines: those among the attributes, and the run of them immediately above the item.
@@ -507,7 +509,7 @@ function rust(text: string, { code, comments }: Lexed): Found {
       if (d !== undefined) sources.push(d);
     }
   }
-  return { tests, skipped, sources };
+  return { tests: declared.length, declared, skipped, sources };
 }
 
 /** The offset of the bracket that opens the one that closes at `at`, counting only brackets in code; -1 if none. */

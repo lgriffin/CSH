@@ -57,7 +57,7 @@ Adapters sit outside the core and produce IR in one neutral envelope ([ADR-12](.
 - `recordWitness` no longer defaults the local result to `passed`. A hand-written record with no outcome stays unknown unless an execution line for its test identity joins it.
 - The subject commit defaults to `CSH_COMMIT`, then `GITHUB_SHA`, then `unknown`; a witness recorded as `unknown` is not an ancestor of any snapshot commit, so `csh check` judges it stale.
 - Runtime observations (deployment identity, interval, sampling) are not part of version 1 records (CSH-012 is out of scope here).
-- Only pytest results join test files; results from Surefire, Gradle, cargo-nextest and Go name a class, crate or package, and are counted as `results-unmatched` until classes and packages are mapped to their files.
+- A result from Surefire, Gradle, cargo-nextest or Go names a class, crate or package rather than a file; the tests adapter joins it by what the test files declare ([A-134](../../ASSUMPTIONS.md)), and counts it as `results-unmatched` when it cannot.
 - Go reports parent tests as well as their subtests, so a failing subtest counts twice in its package.
 - An identifier joined to a word by `_`, as in `TestAdd/CART-1_empty`, is not cited by the default pattern.
 - `csh results import --base` resolves the base to a directory, so a Go module path is not stripped through the command.

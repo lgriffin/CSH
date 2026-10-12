@@ -85,3 +85,35 @@ repository yet has a test source in these languages, so no subject has been read
 ## Effort
 
 About 450 lines of source and 300 lines of tests. Effort was not timed.
+
+## Joining results from other runners
+
+Stage 30 read Surefire, Gradle, cargo-nextest and `go test -json` reports, but each names a class, a crate or a package,
+not a file, so their results were only counted as `results-unmatched`: a failing Surefire test citing `BILL-7` reached
+no requirement. `adapter-items` now joins them in `tests-join.ts`, after the path join has failed, from the bytes of the
+test files the source holds; no path is guessed, and the witness is unchanged ([A-134](../../ASSUMPTIONS.md)).
+
+- **Java** (Surefire, Gradle): the classname `a.b.C`, `a.b.C$Inner` or `a.b.C.Inner` joins the `.java` file whose
+  `package` is `a.b` and which declares the top-level type `C` (the longest package that names one decides), read from
+  code with comments and strings blanked. Failing that, the one file whose path ends `a/b/C.java`.
+- **Go**: the import path names a directory, by the `module` line of a `go.mod` in the source whose module is the
+  longest prefix of it, or else as the longest directory of `_test.go` files it ends with; the test (`TestX` of
+  `TestX/sub`) then picks the one file there that declares it as a test. A package's errored result with no test
+  stays unmatched.
+- **Rust** (cargo-nextest): the binary id is `crate` for the library, `crate::name` for an integration test, and
+  `crate::bin/name`, `crate::example/name` or `crate::bench/name`; the test name is the module path to the function.
+  The crate's directory is that of the `Cargo.toml` in the source naming it (`[package]` or `[lib]` name, `-` and `_`
+  alike); each `.rs` file of the target has a module path by Cargo's default layout (`src/a/b.rs` and `src/a/b/mod.rs`
+  are `a::b`, `tests/name/x.rs` is `x` in test `name`), and inline `mod` blocks extend it. With no `Cargo.toml` in the
+  source, any directory serves, so long as one file fits.
+- A result that two files fit, or two languages' rules each fit, is an ambiguity: it is not joined, and the
+  `results-unmatched` message counts it apart. A result that fits none stays unmatched as before.
+- Once joined, a result's name is read as stage 35 reads a joined result: `com.shop.BillingTest testBILL_7` cites
+  `BILL-7` when the identifier pattern cannot hold an underscore.
+- A `go.mod` or `Cargo.toml` in a test source is read for its layout and is no longer a `test-file` item.
+- TypeScript, Jest, Vitest and pytest results join by path exactly as before; the declaration join runs only for a
+  result no path matches, and reads the source's polyglot files once, when first needed.
+
+What remains: a Surefire phrased class name, Kotlin, a Rust target at a configured path or `#[path]` module, an rstest
+case and a Go module whose `go.mod` is not in the source and whose directories do not end its import path do not join.
+Tests: `packages/adapter-items/test/tests-join.test.ts`.
