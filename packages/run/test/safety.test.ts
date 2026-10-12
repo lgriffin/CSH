@@ -75,4 +75,15 @@ describe("subject warnings", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it("says nothing of a private subject when git ignores the manifest (stage 54)", () => {
+    const calls: string[][] = [];
+    const ignoring: Exec = (cmd, args) => {
+      calls.push([cmd, ...args]);
+      if (cmd === "git") return args[0] === "check-ignore" ? "" : undefined;
+      return cmd === "gh" ? "PRIVATE\n" : undefined;
+    };
+    expect(subjectWarnings(project("https://github.com/a/b"), ignoring)).toEqual([]);
+    expect(calls).toContainEqual(["git", "check-ignore", "-q", "--", "csh/component.json"]);
+  });
 });

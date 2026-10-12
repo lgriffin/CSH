@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { a3Dir, readJudgments } from "@csh/a3";
-import { checkExpected, claimEvidence, lineStating, DIVERGENCE_READINGS, type Finding, ladderOf, overviewOf, renderLadder, parseExpected, renderExpect, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report, type SentenceAt } from "@csh/check";
+import { checkExpected, claimEvidence, lineStating, linesStatingVersion, DIVERGENCE_READINGS, type Finding, ladderOf, overviewOf, renderLadder, parseExpected, renderExpect, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report, type SentenceAt } from "@csh/check";
 import { exitCode, formatDecision as formatGate, type GateDecision, type Mode } from "@csh/gate";
 import { digestOf, fragmentsOf, textDigestOf, type Module, stableJson } from "@csh/kernel";
 import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons } from "@csh/ledger";
@@ -547,7 +547,8 @@ function sentenceAt(p: Project): SentenceAt {
       const at = stating ?? from;
       const line = lines[at]?.trim();
       if (line === undefined || line === "") return undefined;
-      return { at: `${m[1]}:${at + 1}`, text: line.length > 200 ? `${line.slice(0, 197)}...` : line, stated: stating !== undefined };
+      const elsewhere = stating === undefined ? linesStatingVersion(lines, values) : [];
+      return { at: `${m[1]}:${at + 1}`, text: line.length > 200 ? `${line.slice(0, 197)}...` : line, stated: stating !== undefined, ...(elsewhere.length > 0 ? { elsewhere } : {}) };
     } catch {
       return undefined;
     }
@@ -574,7 +575,9 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
   if (record.snapshot.subject !== undefined) lines.push(`  subject ${record.snapshot.subject.repo} at ${record.snapshot.subject.commit}`);
   for (const w of runWarnings(p)) lines.push(`  warning: ${w}`);
   for (const h of record.harnesses) lines.push(`  harness ${h.practice}: ${h.argv.join(" ")}  exit ${h.exitCode ?? h.error ?? "none"}, ${h.witnesses} witnesses, ${h.executions} executions (not sandboxed)`);
-  if (record.harnesses.length === 0) lines.push("  no practice has a harness");
+  // Said with why when results come from files, which is how a profile of someone else's repository reads its tests.
+  const fromFiles = (p.component?.manifest.practices ?? []).filter((x) => x.harness === undefined && x.executions !== undefined).length;
+  if (record.harnesses.length === 0) lines.push(fromFiles > 0 ? `  no practice has a harness: no test runs here; ${plural(fromFiles, "practice")} read${fromFiles === 1 ? "s" : ""} results from a file` : "  no practice has a harness");
   const conflicts = countOf(report, ["state-conflict", "joint-conflict", "example-conflict", "arch-conflict", "claim-conflict", "fact-conflict", "vacuous"]);
   lines.push(`  findings ${report.findings.length} (${plural(conflicts, "conflict")}, ${plural(countOf(report, ["example-divergence"]), "divergence")}, ${report.findings.filter((f) => f.crossSource).length} cross-source); gaps ${report.gapView.gaps.length}; not comparable ${report.notComparable.length}; ${plural(report.errors.filter((e) => e.severity === "error").length, "error")}, ${plural(report.errors.filter((e) => e.severity === "warning").length, "warning")}${report.errors.some((e) => e.severity === "info") ? `, ${plural(report.errors.filter((e) => e.severity === "info").length, "note")}` : ""}`);
   const sev = (x: string) => report.diagnostics.filter((d) => d.severity === x).length;

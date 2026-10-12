@@ -25,10 +25,11 @@ const READINGS = [
 /**
  * The line a claim was read from, given the span the claim names and the values it states (From real runs, stage 43):
  * the line at the span, or, when the span opens a block (a table, a list) and the values are on a later line of it,
- * that line. `at` is where the returned text is; `stated` is false when the claim has values and no line of the block
+ * that line. `at` is where the returned text is; `elsewhere` lists the other lines of the file stating a version the
+ * claim states, when its block does not (stage 54); `stated` is false when the claim has values and no line of the block
  * states one (stage 53), so the line shown is only where the claim is pinned.
  */
-export type SentenceAt = (span: string, values?: string[]) => { at: string; text: string; stated?: boolean } | undefined;
+export type SentenceAt = (span: string, values?: string[]) => { at: string; text: string; stated?: boolean; elsewhere?: number[] } | undefined;
 
 /**
  * The numbers and versions a claim's description states as its value: 5, 22.12, 1.35.0. A number inside what the claim
@@ -96,6 +97,15 @@ export function lineStating(lines: readonly string[], from: number, values: read
   return undefined;
 }
 
+/**
+ * The lines of a file stating one of a claim's versions (values with a dot, such as 1.35.0), for a block that states
+ * none (stage 54). A bare number such as 5 is too common to look for across a file.
+ */
+export function linesStatingVersion(lines: readonly string[], values: readonly string[]): number[] {
+  const res = values.filter((v) => v.includes(".")).map(statedAs);
+  return res.length === 0 ? [] : lines.flatMap((l, i) => (res.some((r) => r.test(l)) ? [i] : []));
+}
+
 /** The line to show for a claim: the line stating its values, else the span's own line. */
 export function lineHolding(lines: readonly string[], from: number, values: readonly string[]): number {
   return values.length === 0 ? from : (lineStating(lines, from, values) ?? from);
@@ -113,7 +123,10 @@ export function claimEvidence(f: Finding, sentenceAt: SentenceAt): { reason: str
     const said = sentenceAt(span, values);
     if (said === undefined) continue;
     if (said.at !== span) moved.set(clause, { span, at: said.at });
-    lines.push(said.stated === false ? `${said.at} (no line from here to the next blank line states ${values.join(" or ")}): "${said.text}"` : `${said.at} says: "${said.text}"`);
+    const file = said.at.replace(/:\d+$/, "");
+    const also = (said.elsewhere ?? []).slice(0, 3).map((i) => `${file}:${i + 1}`);
+    const where = also.length === 0 ? "" : `; ${also.join(", ")}${(said.elsewhere ?? []).length > 3 ? ", …" : ""} ${also.length === 1 ? "does" : "do"}`;
+    lines.push(said.stated === false ? `${said.at} (no line from here to the next blank line states ${values.join(" or ")}${where}): "${said.text}"` : `${said.at} says: "${said.text}"`);
   }
   if (moved.size === 0) return { reason, lines };
   // Each span is replaced where its own clause begins, never by searching the reason for it.

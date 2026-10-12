@@ -33,6 +33,9 @@ export const VISIBILITY_PATH = join(CACHE_DIR, "subject-visibility.json");
 
 const tracked = (p: Project, exec: Exec) => exec("git", ["ls-files", "--error-unmatch", "--", COMPONENT_PATH], p.root) !== undefined;
 
+/** True when git ignores the manifest (.gitignore or .git/info/exclude) and does not track it: it cannot be committed by accident (stage 54). */
+const ignored = (p: Project, exec: Exec) => exec("git", ["check-ignore", "-q", "--", COMPONENT_PATH], p.root) !== undefined;
+
 const privateWarning = (slug: string, visibility: string) =>
   `the subject ${slug} is ${visibility.toLowerCase()}: a profile for it should not be committed to a public repository; keep it out of git with .git/info/exclude (docs/guides/manifest.md)`;
 
@@ -44,7 +47,10 @@ export function localPathWarning(p: Project, exec: Exec = defaultExec): string |
   return `subject.repo is the local path ${repo} in a committed ${COMPONENT_PATH}: the profile works only on this machine; name the repository by its URL`;
 }
 
-/** Every warning about the subject: the local path, and whether GitHub says the repository is private. */
+/**
+ * Every warning about the subject: the local path, and whether GitHub says the repository is private, unless git
+ * ignores the manifest. The visibility is recorded either way, for later runs.
+ */
 export function subjectWarnings(p: Project, exec: Exec = defaultExec): string[] {
   const out: string[] = [];
   const local = localPathWarning(p, exec);
@@ -63,7 +69,7 @@ export function subjectWarnings(p: Project, exec: Exec = defaultExec): string[] 
       // Only a later run's warning is lost.
     }
   }
-  if (slug !== undefined && (visibility === "PRIVATE" || visibility === "INTERNAL")) out.push(privateWarning(slug, visibility));
+  if (slug !== undefined && (visibility === "PRIVATE" || visibility === "INTERNAL") && !ignored(p, exec)) out.push(privateWarning(slug, visibility));
   return out;
 }
 

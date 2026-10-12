@@ -54,6 +54,7 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 51: The taskboard profiles](stage-51.md)
 - [Stage 52: Diagrams and the deck](stage-52.md)
 - [Stage 53: The third round of real runs](stage-53.md)
+- [Stage 54: The fourth round of real runs](stage-54.md)
 
 Stages 10 to 16 build the anchor design ([09](../spec/09-anchor-harness-a3.md)): a component to anchor on, harnesses,
 runs and the A3. Their fixtures, F80 to F96, were written before any of their code, and the fixture runner reports
@@ -67,7 +68,7 @@ code, and are reported as pending until their stage is built.
 Stages 21 to 28 make CSH ingest a real git codebase ([11](../spec/11-ingesting-a-codebase.md)), with ESI.ts as the
 subject throughout. Its profile is [subjects/esi-ts](../../subjects/esi-ts).
 
-Stages 38 to 46, and 53, answer what Leigh's runs over six TypeScript repositories asked for ([13](../spec/13-from-real-runs.md),
+Stages 38 to 46, 53 and 54 answer what Leigh's runs over six TypeScript repositories asked for ([13](../spec/13-from-real-runs.md),
 [issue 66](https://github.com/lgriffin/CSH/issues/66)). Their fixtures start at F130.
 
 Stages 47 to 52 bring [the Assertion Ladder](https://github.com/lgriffin/AI-Reference-Projects/tree/master/paper) into

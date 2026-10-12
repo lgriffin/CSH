@@ -56,9 +56,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
-      # Two workers keep the runner light enough that vitest's own worker messages arrive in time; the starter fixture
-      # also awaits its subprocesses rather than blocking its worker for minutes.
-      - run: pnpm test --maxWorkers=2
+      # vitest.config.ts runs two workers on Windows (A-185), so this job runs the suite as a contributor's machine does.
+      - run: pnpm test
 
   # The gate of a component of the harness itself (Next layers, section 3.2): csh status, then, once the component has a
   # maintainers file, the enforcing run and the decision verified. CSH_ROOT_COMMIT is a repository variable, set by the
