@@ -21,7 +21,9 @@
         { "module": "src/maps.ts", "symbol": "LABELS", "total": ["Level"] },
         { "module": "src/maps.ts", "symbol": "TITLES", "total": ["Code"] },
         { "module": "src/maps.ts", "symbol": "SOME", "total": null },
-        { "module": "src/maps.ts", "symbol": "ANY", "total": null }
+        { "module": "src/maps.ts", "symbol": "ANY", "total": null },
+        { "module": "src/maps.ts", "symbol": "CAST", "total": null },
+        { "module": "src/maps.ts", "symbol": "FROZEN", "total": ["Code"] }
       ],
       "rungs": [
         { "item": "Reqs/R-P-1", "rung": "L5", "byIncludes": ["STATUS", "Code"] },

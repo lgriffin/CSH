@@ -42,8 +42,11 @@ export interface JavaDeclaration {
   public?: boolean;
   /** For an enum or a sealed type, its members by simple name, in source order (stage 47). */
   members?: string[];
-  /** For a top-level type, the case labels of each `switch` in it that Java checks for completeness (stage 47). */
-  switches?: string[][];
+  /**
+   * For a top-level type, each `switch` in it that Java checks for completeness (stage 47): its case labels, and the
+   * simple name of its selector's declared type when the selector is a parameter, local or field declared with one.
+   */
+  switches?: { labels: string[]; selector?: string }[];
 }
 
 /** What one Java file says: its package, imports and top-level declarations, and the line of its first syntax error. */
@@ -170,8 +173,8 @@ const STATEMENT = new Set(["block", "constructor_body", "switch_block_statement_
  * The labels of each `switch` in a type that Java checks for completeness (stage 47): one used as an expression, or one
  * with a pattern label. A switch with a `default` label is never complete over a type, since a new member falls into it.
  */
-function switchesIn(n: Node): string[][] {
-  const out: string[][] = [];
+function switchesIn(n: Node): { labels: string[]; selector?: string }[] {
+  const out: { labels: string[]; selector?: string }[] = [];
   for (const s of n.descendantsOfType("switch_expression")) {
     // Its own labels, not those of a switch nested in it: each sits in a rule or group of this switch's block.
     const body = s.childForFieldName("body");
@@ -192,9 +195,40 @@ function switchesIn(n: Node): string[][] {
         return [];
       }),
     );
-    if (names.length > 0) out.push(names);
+    if (names.length === 0) continue;
+    const selector = selectorType(s);
+    out.push({ labels: names, ...(selector !== undefined ? { selector } : {}) });
   }
   return out;
+}
+
+/**
+ * The declared type of a switch's selector, by simple name, when the selector is a name declared with a type: a
+ * parameter or local of an enclosing method, constructor or lambda, else a field of an enclosing type. `var`, and
+ * any other expression, says nothing.
+ */
+function selectorType(s: Node): string | undefined {
+  const cond = s.childForFieldName("condition");
+  const e = cond?.type === "parenthesized_expression" ? cond.namedChildren[0] : cond;
+  if (e === null || e === undefined || e.type !== "identifier") return undefined;
+  const name = e.text;
+  const typeOf = (t: Node | null): string | undefined => (t === null || t.text === "var" ? undefined : stripType(t.text).split(".").pop()!);
+  for (let a = s.parent; a !== null; a = a.parent) {
+    if (a.type === "method_declaration" || a.type === "constructor_declaration" || a.type === "lambda_expression") {
+      for (const p of a.descendantsOfType(["formal_parameter", "local_variable_declaration"])) {
+        if (p === null) continue;
+        const id = p.type === "formal_parameter" ? p.childForFieldName("name") : p.childForFieldName("declarator")?.childForFieldName("name");
+        if (id?.text === name) return typeOf(p.childForFieldName("type"));
+      }
+    }
+    if (a.type === "class_body" || a.type === "enum_body" || a.type === "interface_body" || a.type === "record_declaration") {
+      for (const fd of a.namedChildren) {
+        if (fd === null || fd.type !== "field_declaration") continue;
+        if (fd.childForFieldName("declarator")?.childForFieldName("name")?.text === name) return typeOf(fd.childForFieldName("type"));
+      }
+    }
+  }
+  return undefined;
 }
 
 /** Every import and top-level declaration of one Java file, as plain data: the tree is freed once read. */
@@ -304,14 +338,17 @@ export async function readJavaFiles(input: readonly InputFile[], ctx: FactContex
     }
     return undefined;
   };
-  // The closed types read, by simple name; a switch is complete over each whose members its labels name exactly (stage 47).
+  // The closed types read, by simple name; a switch is complete over the one whose members its labels name exactly
+  // (stage 47). Its selector's declared type, when read, decides which; without one, two closed types with the same
+  // members leave the switch unattributed rather than credit a type it may not switch over.
   const closed = new Map<string, Set<string>[]>();
   for (const j of read.values()) for (const d of j.declarations) if (d.members !== undefined) closed.set(d.symbol, [...(closed.get(d.symbol) ?? []), new Set(d.members)]);
   const totalOf = (d: JavaDeclaration): string[] => {
     const over = new Set<string>();
-    for (const labels of d.switches ?? []) {
-      const named = new Set(labels);
-      for (const [name, sets] of closed) if (sets.some((m) => m.size === named.size && [...m].every((x) => named.has(x)))) over.add(name);
+    for (const sw of d.switches ?? []) {
+      const named = new Set(sw.labels);
+      const fits = [...closed].filter(([name, sets]) => (sw.selector === undefined || sw.selector === name) && sets.some((m) => m.size === named.size && [...m].every((x) => named.has(x)))).map(([name]) => name);
+      if (fits.length === 1) over.add(fits[0]!);
     }
     return [...over].sort(compareCodePoints);
   };

@@ -19,7 +19,11 @@
         { "module": "src/error.rs", "symbol": "partial", "total": null },
         { "module": "src/error.rs", "symbol": "named", "total": null },
         { "module": "src/error.rs", "symbol": "Mapper", "total": ["ApiError"] },
-        { "module": "src/error.rs", "symbol": "other", "total": ["Level"] }
+        { "module": "src/error.rs", "symbol": "other", "total": ["Level"] },
+        { "module": "src/error.rs", "symbol": "ApiError", "total": ["ApiError"] },
+        { "module": "src/error.rs", "symbol": "by_ref", "total": ["ApiError"] },
+        { "module": "src/error.rs", "symbol": "bare", "total": ["Level"] },
+        { "module": "src/error.rs", "symbol": "unattributed", "total": null }
       ],
       "rungs": [{ "item": "Reqs/R-R-1", "rung": "L5", "byIncludes": ["status", "ApiError"] }]
     }

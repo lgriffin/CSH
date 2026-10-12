@@ -50,7 +50,7 @@ interface FileData {
   externs: { name: string; line: number }[];
   declarations: { symbol: string; declares: RustDeclares; line: number; base?: string; value?: string; members?: string[] }[];
   /** Each `match` with no catch-all arm, by the top-level item it sits in: the variants it names and the enums it names them by (stage 47). */
-  matches: { owner: string; variants: string[]; enums: string[] }[];
+  matches: { owner: string; variants: string[]; enums: string[]; scrutinee?: string }[];
   exports: { symbol: string; from?: string }[];
   /** Names the file's top level declares, which a 2018 path may start with. */
   topLevel: Set<string>;
@@ -192,7 +192,7 @@ export function readTree(root: Node): FileData {
       // The matches of an impl block belong to its type, when the file declares that type at its top level (stage 47).
       if (c.type === "impl_item" && inline.length === 0 && n.type === "source_file") {
         const owner = text(c.childForFieldName("type")).replace(/<[\s\S]*$/, "");
-        for (const m of matchesIn(c)) d.matches.push({ owner, ...m });
+        for (const m of matchesIn(c, owner)) d.matches.push({ owner, ...m });
       }
       const declares = ITEMS[c.type];
       if (declares === undefined) {
@@ -255,6 +255,12 @@ function variantsOf(p: Node): { variant: string; via?: string }[] | undefined {
       }
       return out;
     }
+    case "reference_pattern":
+      // `&Enum::Variant` names the variant through a reference; `&x` still binds anything.
+      return p.namedChildren[0] === null || p.namedChildren[0] === undefined ? undefined : variantsOf(p.namedChildren[0]!);
+    case "captured_pattern":
+      // `x @ Enum::Variant` binds what the pattern after `@` matches.
+      return p.namedChildren.length < 2 || p.namedChildren[p.namedChildren.length - 1] === null ? undefined : variantsOf(p.namedChildren[p.namedChildren.length - 1]!);
     case "tuple_struct_pattern":
     case "struct_pattern":
       return variantsOf(p.childForFieldName("type") ?? p.namedChildren[0]!);
@@ -273,9 +279,36 @@ function variantsOf(p: Node): { variant: string; via?: string }[] | undefined {
   }
 }
 
-/** Each `match` in an item that has no catch-all arm, by the variants its unguarded arms name (stage 47). */
-function matchesIn(item: Node): { variants: string[]; enums: string[] }[] {
-  const out: { variants: string[]; enums: string[] }[] = [];
+/**
+ * The simple name of the type a match's scrutinee is declared with, when the scrutinee is `self` in an impl (its type)
+ * or a name a parameter or `let` of the enclosing item declares with a type; references and paths are stripped.
+ */
+function scrutineeType(m: Node, item: Node, owner: string | undefined): string | undefined {
+  const v = m.childForFieldName("value");
+  if (v === null) return undefined;
+  if (v.type === "self") return owner;
+  if (v.type !== "identifier") return undefined;
+  const named = (t: Node | null): string | undefined => {
+    let x = t;
+    while (x !== null && x.type === "reference_type") x = x.childForFieldName("type");
+    if (x === null) return undefined;
+    if (x.type === "generic_type") x = x.childForFieldName("type");
+    return x === null ? undefined : x.text.split("::").pop()!;
+  };
+  for (const p of item.descendantsOfType(["parameter", "let_declaration"])) {
+    if (p === null || p.childForFieldName("pattern")?.text !== v.text) continue;
+    const t = named(p.childForFieldName("type"));
+    if (t !== undefined) return t;
+  }
+  return undefined;
+}
+
+/**
+ * Each `match` in an item that has no catch-all arm, by the variants its unguarded arms name, the enums its paths
+ * name (`Self` read as the impl's type) and its scrutinee's declared type when known (stage 47).
+ */
+function matchesIn(item: Node, owner?: string): { variants: string[]; enums: string[]; scrutinee?: string }[] {
+  const out: { variants: string[]; enums: string[]; scrutinee?: string }[] = [];
   for (const m of item.descendantsOfType("match_expression")) {
     if (m === null) continue;
     const arms = (m.childForFieldName("body")?.namedChildren ?? []).filter((a): a is Node => a !== null && a.type === "match_arm");
@@ -294,10 +327,11 @@ function matchesIn(item: Node): { variants: string[]; enums: string[] }[] {
       }
       for (const x of v) {
         variants.push(x.variant);
-        if (x.via !== undefined) enums.add(x.via);
+        if (x.via !== undefined) enums.add(x.via === "Self" && owner !== undefined ? owner : x.via);
       }
     }
-    if (!catchAll && variants.length > 0) out.push({ variants, enums: [...enums].sort(compareCodePoints) });
+    const scrutinee = scrutineeType(m, item, owner);
+    if (!catchAll && variants.length > 0) out.push({ variants, enums: [...enums].sort(compareCodePoints), ...(scrutinee !== undefined ? { scrutinee } : {}) });
   }
   return out;
 }
@@ -483,18 +517,20 @@ export async function readRust(files: readonly InputFile[], ctx: FactContext): P
     return external(s0, segs.slice(1), written);
   };
 
-  // The enums read, by name; a match is complete over each whose variants its arms name exactly, by that enum's name
-  // when the arms name one (stage 47).
+  // The enums read, by name; a match is complete over the one whose variants its arms name exactly (stage 47). The
+  // enum its paths name, else its scrutinee's declared type, decides which; with neither, two enums with the same
+  // variants leave the match unattributed rather than credit an enum it may not match on.
   const enums = new Map<string, Set<string>[]>();
   for (const fd of data.values()) for (const x of fd.declarations) if (x.members !== undefined) enums.set(x.symbol, [...(enums.get(x.symbol) ?? []), new Set(x.members)]);
   const totalOf = (fd: FileData, owner: string): string[] => {
     const over = new Set<string>();
     for (const m of fd.matches.filter((y) => y.owner === owner)) {
       const named = new Set(m.variants);
-      for (const [name, sets] of enums) {
-        if (m.enums.length > 0 && !(m.enums.length === 1 && m.enums[0] === name)) continue;
-        if (sets.some((vs) => vs.size === named.size && [...vs].every((v) => named.has(v)))) over.add(name);
-      }
+      const fits = [...enums]
+        .filter(([name]) => (m.enums.length === 0 || (m.enums.length === 1 && m.enums[0] === name)) && (m.scrutinee === undefined || m.scrutinee === name || m.enums.length > 0))
+        .filter(([, sets]) => sets.some((vs) => vs.size === named.size && [...vs].every((v) => named.has(v))))
+        .map(([name]) => name);
+      if (fits.length === 1) over.add(fits[0]!);
     }
     return [...over].sort(compareCodePoints);
   };

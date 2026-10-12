@@ -19,7 +19,10 @@
         { "module": "src/main/java/com/example/shop/Areas.java", "symbol": "Areas", "total": ["Shape"] },
         { "module": "src/main/java/com/example/shop/Labels.java", "symbol": "Labels", "total": ["Status"] },
         { "module": "src/main/java/com/example/shop/Fallback.java", "symbol": "Fallback", "total": null },
-        { "module": "src/main/java/com/example/shop/Legacy.java", "symbol": "Legacy", "total": null }
+        { "module": "src/main/java/com/example/shop/Legacy.java", "symbol": "Legacy", "total": null },
+        { "module": "src/main/java/com/example/shop/Phase.java", "symbol": "Phase", "members": ["OPEN", "CLOSED"] },
+        { "module": "src/main/java/com/example/shop/Phases.java", "symbol": "Phases", "total": ["Phase"] },
+        { "module": "src/main/java/com/example/shop/Either.java", "symbol": "Either", "total": null }
       ],
       "rungs": [{ "item": "Reqs/R-J-1", "rung": "L5", "byIncludes": ["Handler", "ShopException"] }]
     }

@@ -21,3 +21,7 @@ by the refuted claim on `SOME`: it stays L2, and the claim is violated.
 The expected result was written from the documents before the fixture was first run.
 
 The project's `src` is a subject's code, not CSH's: it holds an `enum`, which CSH's own `erasableSyntaxOnly` setting refuses, so `tsconfig.fixtures.json` leaves it out of the fixtures' type check.
+
+Added after review of the first version: `CAST` is annotated `Record<Code, number>` but its initialiser is asserted
+(`{} as Record<Code, number>`), which turns tsc's key check off, so it has no `total`; `FROZEN` ends in `as const`, which
+keeps the check, so it maps `Code`. Both were written before the reader changed.

@@ -239,10 +239,19 @@ function recordKey(t: ts.TypeNode | undefined): string | undefined {
 /** The closed type a constant maps completely: its annotation, else a `satisfies` on its initialiser (stage 47). */
 function totalOver(d: ts.VariableDeclaration): string | undefined {
   const annotated = recordKey(d.type);
-  if (annotated !== undefined) return annotated;
+  // An assertion on the initialiser (`as`, `<T>` or `!`, other than `as const`) turns the key check off, so the
+  // annotation no longer makes tsc reject a key left out.
+  let init = d.initializer;
+  while (init !== undefined && ts.isParenthesizedExpression(init)) init = init.expression;
+  const asserted = init !== undefined && (ts.isTypeAssertionExpression(init) || ts.isNonNullExpression(init) || (ts.isAsExpression(init) && !isAsConst(init)));
+  if (annotated !== undefined && !asserted) return annotated;
   let e = d.initializer;
   while (e !== undefined && (ts.isParenthesizedExpression(e) || ts.isAsExpression(e))) e = e.expression;
   return e !== undefined && ts.isSatisfiesExpression(e) ? recordKey(e.type) : undefined;
+}
+
+function isAsConst(e: ts.AsExpression): boolean {
+  return ts.isTypeReferenceNode(e.type) && ts.isIdentifier(e.type.typeName) && e.type.typeName.text === "const";
 }
 
 /** A literal's value as text: a string, a number, a boolean, or one of these with `as const`. */

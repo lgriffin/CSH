@@ -140,10 +140,11 @@ export function trace(input: TraceInput): TraceResult {
       check(from, `verified by ${r === "file" ? e.to.replace(/^(file|symbol|script):/, "") : r}`);
     }
     // What checks an item, for its rung: a citation or a scenario under it, from a test file or a scenario (stage 46).
+    // A Gherkin rule or feature that cites an item states it again; only its scenarios check anything.
     if ((e.rel === "cites" || e.rel === "exemplifies") && typeof r === "string" && r !== "file") {
       const kind = byQualified.get(from)?.kind;
       if (kind === "test-file") check(r, `test file ${e.from}`);
-      else if (kind === "scenario" || kind === "rule" || kind === "feature") check(r, `${kind} ${from}`);
+      else if (kind === "scenario") check(r, `scenario ${from}`);
     }
     // The command and the script are matched by name, so another script on the same line supports nothing.
     const command = e.rel === "verified-by" && r === null ? /^text:npm run ([\w:.\-]+)(?=$|\s)/.exec(e.to) : null;

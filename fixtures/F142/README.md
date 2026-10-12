@@ -16,3 +16,7 @@ sealed interface that `permits Circle, Square`; and `Status`, an enum of `OPEN` 
 too.
 
 The expected result was written from the documents before the fixture was first run.
+
+Added after review of the first version: `Phase` has the same constants as `Status`. `Phases` switches on a parameter
+declared `Phase`, so it maps `Phase` and not `Status`; `Labels` still maps `Status`, by its parameter's type. `Either`
+switches on a call whose type is not read, so with two closed types fitting its labels it is credited to neither.

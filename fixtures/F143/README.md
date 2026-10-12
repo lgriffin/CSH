@@ -12,3 +12,8 @@ enum `ApiError` with variants `NotFound`, `Conflict` and `Invalid`, and five pla
 `R-R-1` is cited by the holding claim on `status`: L5.
 
 The expected result was written from the documents before the fixture was first run.
+
+Added after review of the first version: `impl ApiError` matches `self` by `Self::Variant` arms, read as `ApiError`;
+`by_ref` matches through `&ApiError::Variant` and `c @ &ApiError::Variant` patterns. Both map `ApiError`. `Light` has
+the same variants as `Level`: `bare` names variants with no path, and its parameter's type `Level` decides; `unattributed`
+matches a call's result, so it is credited to neither.

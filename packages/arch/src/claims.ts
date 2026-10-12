@@ -211,7 +211,8 @@ function totalOf(p: Extract<Prop, { k: "total" }>, f: ClaimFacts): Truth {
   const types = f.declares.filter((x) => x.symbol === p.over && (f.languages?.get(x.module) ?? "javascript") === language);
   const closed = types.filter((x) => x.members !== undefined);
   const mapping = d.find((x) => (x.total ?? []).includes(p.over));
-  if (types.length === 0) return mapping !== undefined ? { reason: `not-read: no closed type ${p.over} was read` } : { value: false, detail: `${d[0]!.at}: ${p.symbol} maps no closed type ${p.over} completely` };
+  // With no declaration of `over` read, nothing says what a complete mapping would cover, so neither way is decided.
+  if (types.length === 0) return { reason: `not-read: no declaration of ${p.over} was read` };
   if (closed.length < types.length) {
     const open = types.find((x) => x.members === undefined)!;
     return { value: false, detail: `${open.at}: ${p.over} is not a closed type, so no mapping over it is complete` };
