@@ -198,3 +198,22 @@ Each is a warning: nothing is refused, since the profile is its owner's to keep 
 - When `subject.repo` names a path (no URL scheme and not `user@host:path`) and `csh/component.json` is tracked in the
   component's repository, `csh subject fetch` and `csh run` warn that the profile works only on this machine.
 - The manifest guide documents keeping a local profile out of git with `.git/info/exclude`.
+
+## 8. The second round (stage 45)
+
+Leigh re-ran the six repositories on Windows after stages 38 to 44. These are the problems that still showed:
+
+- `csh init --subject`, and every run of a subject, walks only directories that hold a tracked file. Before this, a
+  working checkout's `node_modules` was walked in full, which on the three largest repositories never finished, and a
+  link that loops there crashed the walk.
+- A claim's sentence is the line that holds what the claim states. When the span names the first line of a table or
+  list, the line shown is the first one below it, before a blank line, that holds one of the claim's numbers or
+  versions, matched whole. The line's own `path:line` is printed.
+- The run's coverage line names the three largest unread kinds.
+- A subject named by a local path is asked for its checkout's `origin`. A GitHub origin is checked for visibility like
+  a URL subject.
+- `undefined-step` and `unused-step-definition` are gaps, each with what would close it. `steps-undecided` is
+  indeterminate and says to check it by hand.
+- `csh init --subject` names up to eight identifier prefixes. With more than eight, it proposes their common shape,
+  for example `[A-Z]{2,4}-[0-9]{3}`. It takes no test or step definition under a `fixtures` directory or a
+  dot-directory.

@@ -3,6 +3,7 @@
 // installed, since its profile should not be committed to a public repository; and a committed manifest that names its
 // subject by a local path, which works only on the machine that wrote it.
 import { execFileSync } from "node:child_process";
+import { resolve } from "node:path";
 import { COMPONENT_PATH } from "@csh/component";
 import type { Project } from "./project.ts";
 
@@ -39,7 +40,10 @@ export function subjectWarnings(p: Project, exec: Exec = defaultExec): string[] 
   const out: string[] = [];
   const local = localPathWarning(p, exec);
   if (local !== undefined) out.push(local);
-  const slug = githubSlug(p.component?.manifest.subject?.repo ?? "");
+  const repo = p.component?.manifest.subject?.repo ?? "";
+  // A local path is asked for its own origin: the checkout of a private repository is as private (stage 45).
+  const origin = repo !== "" && isPathRepo(repo) ? exec("git", ["remote", "get-url", "origin"], resolve(p.root, repo))?.trim() : undefined;
+  const slug = githubSlug(origin ?? repo);
   const visibility = slug === undefined ? undefined : exec("gh", ["repo", "view", slug, "--json", "visibility", "--jq", ".visibility"])?.trim();
   if (visibility === "PRIVATE" || visibility === "INTERNAL") {
     out.push(`the subject ${slug} is ${visibility.toLowerCase()}: a profile for it should not be committed to a public repository; keep it out of git with .git/info/exclude (docs/guides/manifest.md)`);

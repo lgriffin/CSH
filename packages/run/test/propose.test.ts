@@ -54,10 +54,29 @@ describe("proposeProfile", () => {
     expect(r.manifest.practices.find((p) => p.id === "docs")?.settings).toBeUndefined();
   });
 
-  it("orders identifier families by mentions and keeps at most eight", () => {
-    const text = ["AA", "BB", "DD", "EE", "FF", "GG", "HH", "II", "JJ"].map((p, i) => `${`${p}-1 ${p}-2 `.repeat(i + 1)}`).join("\n");
+  it("orders identifier families by mentions, naming up to eight", () => {
+    const text = ["AA", "BB", "DD", "EE", "FF", "GG", "HH", "II"].map((p, i) => `${`${p}-1 ${p}-2 `.repeat(i + 1)}`).join("\n");
     const r = propose(checkout({ "docs/x.md": `${text}\n` }));
-    expect(r.manifest.practices.find((p) => p.id === "docs")?.settings?.idPattern).toBe("(?:JJ|II|HH|GG|FF|EE|DD|BB)-[0-9]+");
+    expect(r.manifest.practices.find((p) => p.id === "docs")?.settings?.idPattern).toBe("(?:II|HH|GG|FF|EE|DD|BB|AA)-[0-9]+");
+  });
+
+  it("past eight families, proposes their common shape rather than the first eight (stage 45)", () => {
+    const text = ["AUTH", "PERF", "SEC", "DATA", "UX", "OPS", "API", "LOG", "CFG", "NET"].map((p) => `${p}-001 ${p}-002`).join("\n");
+    const r = propose(checkout({ "docs/x.md": `${text}\n` }));
+    expect(r.manifest.practices.find((p) => p.id === "docs")?.settings?.idPattern).toBe("[A-Z]{2,4}-[0-9]{3}");
+    expect(r.guesses.join("\n")).toMatch(/and 2 more prefixes of the same form/);
+  });
+
+  it("takes no step definition or test under a fixtures directory or a dot-directory (stage 45)", () => {
+    const dir = checkout({
+      "features/a.feature": "Feature: A\n  Scenario: S\n    Given a\n",
+      "features/steps/a.steps.js": "Given('a', () => {});\n",
+      "tests/suite-health/fixtures/b.steps.js": "Given('b', () => {});\n",
+      ".claude/skills/x/c.test.js": "test('c', () => {});\n",
+      "src/d.test.js": "test('d', () => {});\n",
+    });
+    const r = propose(dir);
+    expect(reads(dir, r, "Tests")).toEqual(["features/steps/a.steps.js", "src/d.test.js"]);
   });
 
   it("leaves tests and colocated tests out of Code, and names jest's results", () => {

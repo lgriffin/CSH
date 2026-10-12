@@ -22,18 +22,54 @@ const READINGS = [
   "  3. The intent is undecided, and a person must decide it.",
 ];
 
-/** The sentence at a span such as `docs/x.md:12`, when the caller can read the repository (From real runs, stage 43). */
-export type SentenceAt = (span: string) => string | undefined;
+/**
+ * The line a claim was read from, given the span the claim names and the values it states (From real runs, stage 43):
+ * the line at the span, or, when the span opens a block (a table, a list) and the values are on a later line of it,
+ * that line. `at` is where the returned text is.
+ */
+export type SentenceAt = (span: string, values?: string[]) => { at: string; text: string } | undefined;
 
-/** Where a claim finding's sentences are: each `path:line` its reason opens a clause with. */
-export const claimSpans = (f: Finding): string[] => (f.kind === "fact-conflict" || f.kind === "claim-conflict" ? [...(f.reason ?? "").matchAll(/(?:^| and )([^\s:]+:\d+): /g)].map((m) => m[1]!) : []);
+/** The numbers and versions a claim's description states: 5, 22.12, 1.35.0. */
+const valuesIn = (text: string): string[] => [...new Set([...text.matchAll(/\d+(?:\.\d+)*/g)].map((m) => m[0]))];
+
+/**
+ * Where a claim finding's sentences are: each `path:line` its reason opens a clause with, and the values the claim at
+ * that span states (stage 45), so that the sentence shown is the one holding them.
+ */
+export const claimSpans = (f: Finding): { span: string; values: string[] }[] => {
+  if (f.kind !== "fact-conflict" && f.kind !== "claim-conflict") return [];
+  const reason = f.reason ?? "";
+  const spans = [...reason.matchAll(/(?:^| and )([^\s:]+:\d+): /g)].map((m) => m[1]!);
+  const said =
+    f.kind === "fact-conflict"
+      ? [/ says (.*?)(?:; |$)/.exec(reason)?.[1] ?? ""]
+      : (() => {
+          const m = /one says (.*), the other (.*)$/.exec(reason);
+          return m === null ? [] : [m[1]!, m[2]!];
+        })();
+  return spans.map((span, i) => ({ span, values: valuesIn(said[i] ?? "") }));
+};
+
+/**
+ * The index of the line a claim's values are on: `from`, or, when `from` opens a block (a table, a list) and the values
+ * are on a later line of it, that line, before the block ends at a blank line (stage 45). A value is matched whole: 5
+ * is not found in 15 or in 1.5.
+ */
+export function lineHolding(lines: readonly string[], from: number, values: readonly string[]): number {
+  if (values.length === 0) return from;
+  const res = values.map((v) => new RegExp(`(?<![\\d.])${v.replace(/\./g, "\\.")}(?!\\d|\\.\\d)`));
+  const holds = (l: string) => res.some((r) => r.test(l));
+  if (holds(lines[from] ?? "")) return from;
+  for (let i = from + 1; i < Math.min(lines.length, from + 40) && lines[i]!.trim() !== ""; i++) if (holds(lines[i]!)) return i;
+  return from;
+}
 
 function finding(f: Finding, sentenceAt?: SentenceAt): string[] {
   const lines = [`[${f.kind}] ${f.id}${f.crossSource ? "  (cross-source)" : ""}  from ${f.query}`];
   // A claim reads as the sentence that made it, beside the fact that decides it.
-  for (const span of sentenceAt !== undefined ? claimSpans(f) : []) {
-    const said = sentenceAt!(span);
-    if (said !== undefined) lines.push(`  ${span} says: "${said}"`);
+  for (const { span, values } of sentenceAt !== undefined ? claimSpans(f) : []) {
+    const said = sentenceAt!(span, values);
+    if (said !== undefined) lines.push(`  ${said.at} says: "${said.text}"`);
   }
   for (const m of f.members) lines.push(`  - ${m.fragment}  source ${m.source}, ${m.authority}`);
   if (f.context.length > 0) lines.push(`  context: ${f.context.join(", ")}`);

@@ -134,7 +134,21 @@ function inside(root: string, p: string): boolean {
  * The files of a source, read only from inside the project root. A location that is absolute, climbs out
  * of the root, or reaches outside it through a symbolic link is refused (`outside: true`).
  */
-function filesAt(root: string, at: string): { files?: { path: string; abs: string }[]; outside?: true } {
+/** Every directory that holds a tracked file, the root ("") included: a walk need not enter any other. */
+export function trackedDirsOf(tracked: Iterable<string>): Set<string> {
+  const dirs = new Set<string>([""]);
+  for (const f of tracked) {
+    for (let i = f.indexOf("/"); i >= 0; i = f.indexOf("/", i + 1)) dirs.add(f.slice(0, i));
+  }
+  return dirs;
+}
+
+/**
+ * The files under a source's location. With `dirs` (from trackedDirsOf), a directory that holds no tracked file is not
+ * entered: a working checkout's node_modules or build output can hold a hundred times the files the commit does
+ * (From real runs, stage 45).
+ */
+function filesAt(root: string, at: string, dirs?: Set<string>): { files?: { path: string; abs: string }[]; outside?: true } {
   const realRoot = realpathSync(root);
   const abs = resolve(root, at);
   if (isAbsolute(at) || !inside(resolve(root), abs)) return { outside: true };
@@ -151,8 +165,9 @@ function filesAt(root: string, at: string): { files?: { path: string; abs: strin
         if (!inside(realRoot, realpathSync(p))) continue;
         if (statSync(p).isDirectory()) walk(p);
         else add(p);
-      } else if (e.isDirectory()) walk(p);
-      else add(p);
+      } else if (e.isDirectory()) {
+        if (dirs === undefined || dirs.has(relative(root, p).split(sep).join("/"))) walk(p);
+      } else add(p);
     }
   };
   if (statSync(abs).isDirectory()) walk(abs);
@@ -164,8 +179,8 @@ function filesAt(root: string, at: string): { files?: { path: string; abs: strin
  * The files a source reads: those under its location, narrowed by the include and exclude globs of the manifest, which
  * match the path below the location (a source that is one file matches its own name).
  */
-export function selectFiles(root: string, at: string, include?: string[], exclude?: string[]): { path: string; abs: string }[] {
-  const found = filesAt(root, at).files ?? [];
+export function selectFiles(root: string, at: string, include?: string[], exclude?: string[], dirs?: Set<string>): { path: string; abs: string }[] {
+  const found = filesAt(root, at, dirs).files ?? [];
   const inc = include?.map(globRegExp);
   const exc = exclude?.map(globRegExp);
   if (inc === undefined && exc === undefined) return found;
@@ -302,8 +317,9 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
   const tool = opts.cache === undefined ? undefined : toolCodeDigest();
   const shared: { adapter: string; input: AdapterInput; finish: (o: AdapterOutput | Error) => void }[] = [];
   const alone: (() => Promise<void>)[] = [];
+  const dirs = opts.tracked === undefined ? undefined : trackedDirsOf(opts.tracked);
   for (const source of [...module.sources].sort((a, b) => compareCodePoints(a.name, b.name))) {
-    const located = filesAt(opts.root, source.at);
+    const located = filesAt(opts.root, source.at, dirs);
     const base = { source: source.name, kind: source.kind };
     if (located.outside === true) {
       runs.push({ ...base, files: [], output: { diagnostics: [{ code: "source-outside-root", severity: "error", message: `${source.at} is outside the project root; sources are read only from inside it` }] } });

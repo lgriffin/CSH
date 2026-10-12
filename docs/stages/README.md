@@ -45,6 +45,7 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 42: Traceability past the file](stage-42.md)
 - [Stage 43: Clearer output](stage-43.md)
 - [Stage 44: Process and safety](stage-44.md)
+- [Stage 45: The second round of real runs](stage-45.md)
 
 Stages 10 to 16 build the anchor design ([09](../spec/09-anchor-harness-a3.md)): a component to anchor on, harnesses,
 runs and the A3. Their fixtures, F80 to F96, were written before any of their code, and the fixture runner reports
@@ -58,5 +59,5 @@ code, and are reported as pending until their stage is built.
 Stages 21 to 28 make CSH ingest a real git codebase ([11](../spec/11-ingesting-a-codebase.md)), with ESI.ts as the
 subject throughout. Its profile is [subjects/esi-ts](../../subjects/esi-ts).
 
-Stages 38 to 44 answer what Leigh's runs over six TypeScript repositories asked for ([13](../spec/13-from-real-runs.md),
+Stages 38 to 45 answer what Leigh's runs over six TypeScript repositories asked for ([13](../spec/13-from-real-runs.md),
 [issue 66](https://github.com/lgriffin/CSH/issues/66)). Their fixtures start at F130.

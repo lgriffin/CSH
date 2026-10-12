@@ -76,7 +76,7 @@ function globsFor(intended: string[], universe: string[], include?: string[], ex
 }
 
 /** The identifier families of the documents: prefix, how many different identifiers, how many mentions. */
-function families(texts: string[]): { prefix: string; ids: number; mentions: number }[] {
+function families(texts: string[]): { prefix: string; ids: number; mentions: number; widths: number[] }[] {
   const by = new Map<string, { ids: Set<string>; mentions: number }>();
   for (const t of texts) {
     for (const m of t.matchAll(/\b([A-Z]{2,5})-([0-9]+)\b/g)) {
@@ -88,9 +88,23 @@ function families(texts: string[]): { prefix: string; ids: number; mentions: num
   }
   return [...by]
     .filter(([p, f]) => f.ids.size >= 2 && !EXTERNAL_FAMILIES.includes(p))
-    .map(([prefix, f]) => ({ prefix, ids: f.ids.size, mentions: f.mentions }))
-    .sort((a, b) => b.mentions - a.mentions || compareCodePoints(a.prefix, b.prefix))
-    .slice(0, 8);
+    .map(([prefix, f]) => ({ prefix, ids: f.ids.size, mentions: f.mentions, widths: [...new Set([...f.ids].map((id) => id.length - prefix.length - 1))] }))
+    .sort((a, b) => b.mentions - a.mentions || compareCodePoints(a.prefix, b.prefix));
+}
+
+/**
+ * The identifier pattern of the families: each prefix named, or, past eight, their common shape: a repository with a
+ * dozen prefixes of the same form (AUTH-001, PERF-002) means them all, and a list of the first eight would miss the
+ * rest (From real runs, stage 45).
+ */
+export function idPatternOf(fams: { prefix: string; widths: number[] }[]): string | undefined {
+  if (fams.length === 0) return undefined;
+  if (fams.length <= 8) return `(?:${fams.map((f) => f.prefix).join("|")})-[0-9]+`;
+  const lengths = fams.map((f) => f.prefix.length);
+  const widths = [...new Set(fams.flatMap((f) => f.widths))];
+  const lo = Math.min(...lengths);
+  const hi = Math.max(...lengths);
+  return `[A-Z]{${lo === hi ? lo : `${lo},${hi}`}}-[0-9]${widths.length === 1 ? `{${widths[0]}}` : "+"}`;
 }
 
 /** The tags of each Rule, Scenario or Example of a feature file, and of the Feature itself. */
@@ -142,8 +156,9 @@ export function proposeProfile(dir: string): Proposal | { error: string } {
   const featureText = new Map(features.map((p) => [p, read(p)]));
   const mdText = new Map(markdown.map((p) => [p, read(p)]));
   const fams = families([...mdText.values(), ...featureText.values()]);
-  const idPattern = fams.length === 0 ? undefined : `(?:${fams.map((f) => f.prefix).join("|")})-[0-9]+`;
-  if (idPattern !== undefined) guesses.push(`idPattern ${idPattern}: ${fams.map((f) => `${f.prefix} (${f.ids} identifiers, ${f.mentions} mentions)`).join(", ")} in the Markdown and Gherkin files`);
+  const idPattern = idPatternOf(fams);
+  const named = fams.slice(0, 8).map((f) => `${f.prefix} (${f.ids} identifiers, ${f.mentions} mentions)`).join(", ");
+  if (idPattern !== undefined) guesses.push(`idPattern ${idPattern}: ${named}${fams.length > 8 ? ` and ${fams.length - 8} more prefixes of the same form` : ""} in the Markdown and Gherkin files`);
   else guesses.push("no idPattern: no prefix names two or more identifiers in the Markdown and Gherkin files, so each adapter keeps its default");
   const idSettings = idPattern === undefined ? {} : { idPattern };
 
@@ -209,9 +224,10 @@ export function proposeProfile(dir: string): Proposal | { error: string } {
   }
 
   // Tests by their runners' conventions, and step definitions beside features.
-  const fixtures = (p: string) => underAny(p, ["fixtures", "__fixtures__"]);
+  // A fixture, or a file under a dot-directory (.claude, .github), is test data or tooling, not the project's tests.
+  const fixtures = (p: string) => underAny(p, ["fixtures", "__fixtures__"]) || segments(p).slice(0, -1).some((d) => d.startsWith("."));
   const tests = files.filter((p) => testConvention(p) !== undefined && !fixtures(p));
-  const steps = features.length === 0 ? [] : files.filter((p) => testConvention(p) === undefined && stepConvention(p) !== undefined);
+  const steps = features.length === 0 ? [] : files.filter((p) => testConvention(p) === undefined && stepConvention(p) !== undefined && !fixtures(p));
   const testGlobs = [...new Set(tests.map((p) => testConvention(p)!))].sort(compareCodePoints);
   const stepGlobs = [...new Set(steps.map((p) => stepConvention(p)!))].sort(compareCodePoints);
   const deps = files
