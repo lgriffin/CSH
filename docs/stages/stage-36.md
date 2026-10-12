@@ -22,9 +22,10 @@ violation and one expected unknown.
 - Four subject profiles, each with a `csh-component/v2` manifest naming a `Docs` source (the subject's README), a
   `TestFiles` source and a `Code` source, a specification of module rules (`forbid` and `only` over `modules`) and
   structural claims, and `csh/expected.json`. Each rule and claim cites the README as a `Documents` item, and names in a
-  comment the heading and lines it reads, as the ESI.ts profile does for text with no identifier.
+  comment the heading and lines it reads, as the ESI.ts profile does for text with no identifier; hexarch's claims
+  about its doc comments cite nothing, since no source reads a doc comment.
 - The expected results were written from each subject's documents, and from a reading of its source by hand, before CSH
-  was run on any subject, and committed alone first (`e854a61`). No expectation was changed after a run.
+  was run on any subject, and committed alone first (`76b4a93`). No expectation was changed after a run.
 - The expected files give rows and no counts: a count of each outcome cannot be derived from a subject's documents
   before a run, and one recorded after it would be an expectation written from output. This is [A-135](../../ASSUMPTIONS.md).
 - CI: the job `polyglot`, a matrix over the four profiles, with the steps of `Subject (ESI.ts)` but the A3. The ESI.ts
@@ -60,7 +61,8 @@ No code changed: every reader read its subject without a fault this stage could 
 - **Rust documents its architecture in doc comments.** hexarch's README says one line about the design; the ports,
   their purpose and the opacity of the HTTP package are stated in `///` comments. A claim can give such a line as its
   `at`, but a `Documents` source reads only Markdown, so the rules cite the README and name the doc comment's line in a
-  comment.
+  comment, and the claims taken from doc comments cite nothing rather than a README that does not say them (review of
+  #65).
 - **The polyglot test inventory agrees with a count by hand** on every file checked: pytest 77 tests in 15 files, JUnit
   19 in 8, Go 18 in 5, and hexarch's one `#[tokio::test(flavor = "multi_thread")]`. No subject commits results, so no
   outcome is joined and no test cites a requirement: none of the four uses requirement identifiers.

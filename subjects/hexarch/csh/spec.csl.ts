@@ -25,7 +25,7 @@ export default system("Hexarch", (s) => {
     // ports.rs:20-21: the domain is not concerned with the underlying technology. The crates named are the HTTP
     // framework and its middleware, the database toolkit and the async runtime of Cargo.toml's dependencies, by the
     // names Rust code uses for them.
-    i.architecture("DomainBindsToNoTechnology", forbid(modules(DOMAIN), modules(["axum", "sqlx", "tokio", "tower_http", "tower-http", "tower_layer", "tower-layer"])), { cites: Readme });
+    i.architecture("DomainBindsToNoTechnology", forbid(modules(DOMAIN), modules(["axum", "sqlx", "tokio", "tower_http", "tower_layer"])), { cites: Readme });
     // http.rs:31: the HTTP package is opaque to the HTTP module's consumers, so nothing outside the inbound adapter
     // imports it.
     i.architecture("HttpPackageIsOpaque", forbid(modules("src/**", { except: INBOUND }), pkg("axum")), { cites: Readme });
@@ -34,14 +34,15 @@ export default system("Hexarch", (s) => {
     i.architecture("OutboundImportsNoInbound", forbid(modules(OUTBOUND), modules(INBOUND)), { cites: Readme });
   });
 
-  // What the doc comments say about the code, one claim per comment that says it.
+  // What the doc comments say about the code, one claim per comment that says it. A doc comment is no item a source
+  // reads, so these claims cite nothing; `at` names the comment. The README does not say these things.
   s.intent("ProseAboutCode", { owner: "hexarch maintainer", value: "What the documentation says about the code is what the code is", assurance: "Structural" }, (i) => {
     const PORTS = "src/lib/domain/blog/ports.rs";
-    i.claim("BlogServiceIsAPort", exportsName(PORTS, "BlogService"), { at: `${PORTS}:18`, cites: Readme });
-    i.claim("BlogRepositoryIsAPort", exportsName(PORTS, "BlogRepository"), { at: `${PORTS}:34`, cites: Readme });
-    i.claim("BlogMetricsIsAPort", exportsName(PORTS, "BlogMetrics"), { at: `${PORTS}:51`, cites: Readme });
-    i.claim("AuthorNotifierIsAPort", exportsName(PORTS, "AuthorNotifier"), { at: `${PORTS}:61`, cites: Readme });
-    i.claim("ServiceIsTheCanonicalImplementation", declares("src/lib/domain/blog/service.rs", "Service"), { at: "src/lib/domain/blog/service.rs:10", cites: Readme });
-    i.claim("HttpServerIsExported", exportsName("src/lib/inbound/http.rs", "HttpServer"), { at: "src/lib/inbound/http.rs:31", cites: Readme });
+    i.claim("BlogServiceIsAPort", exportsName(PORTS, "BlogService"), { at: `${PORTS}:18` });
+    i.claim("BlogRepositoryIsAPort", exportsName(PORTS, "BlogRepository"), { at: `${PORTS}:34` });
+    i.claim("BlogMetricsIsAPort", exportsName(PORTS, "BlogMetrics"), { at: `${PORTS}:51` });
+    i.claim("AuthorNotifierIsAPort", exportsName(PORTS, "AuthorNotifier"), { at: `${PORTS}:61` });
+    i.claim("ServiceIsTheCanonicalImplementation", declares("src/lib/domain/blog/service.rs", "Service"), { at: "src/lib/domain/blog/service.rs:10" });
+    i.claim("HttpServerIsExported", exportsName("src/lib/inbound/http.rs", "HttpServer"), { at: "src/lib/inbound/http.rs:31" });
   });
 });
