@@ -108,4 +108,27 @@ describe("structural claims", () => {
     const b = { module: "src/d.ts", name: "DATE" };
     expect(claimConflict(claim({ k: "same", a, b }), claim({ k: "same", a: b, b: a }, false))).toBeDefined();
   });
+  it("follow Python classes as the Python reader declares them (stage 31)", () => {
+    // The declare facts facts-py writes for `class DomainError(Exception)`, `class NotFound(DomainError)`,
+    // `class Repo(Generic[T])`, `class Adapter(abc.ABC)` and `class Plain:`.
+    const py: ClaimFacts = {
+      modules: new Set(["src/app/errors.py"]),
+      declares: [
+        { module: "src/app/errors.py", symbol: "DomainError", declares: "class", base: "Exception", at: "src/app/errors.py:1" },
+        { module: "src/app/errors.py", symbol: "NotFound", declares: "class", base: "DomainError", at: "src/app/errors.py:4" },
+        { module: "src/app/errors.py", symbol: "Repo", declares: "class", base: "Generic[T]", at: "src/app/errors.py:7" },
+        { module: "src/app/errors.py", symbol: "Adapter", declares: "class", base: "abc.ABC", at: "src/app/errors.py:9" },
+        { module: "src/app/errors.py", symbol: "Plain", declares: "class", at: "src/app/errors.py:11" },
+      ],
+      exports: [],
+      fields: [],
+      languages: new Map([["src/app/errors.py", "python"]]),
+    };
+    expect(evaluateClaim(claim({ k: "inherits", cls: "NotFound", base: "DomainError" }), py)).toMatchObject({ result: "holds", detail: "NotFound (src/app/errors.py:4) -> DomainError" });
+    expect(evaluateClaim(claim({ k: "inherits", cls: "NotFound", base: "Exception" }), py)).toMatchObject({ result: "holds" });
+    expect(evaluateClaim(claim({ k: "inherits", cls: "NotFound", base: "ValueError" }), py)).toMatchObject({ result: "refuted", detail: expect.stringContaining("ends at Exception") });
+    expect(evaluateClaim(claim({ k: "inherits", cls: "Plain", base: "DomainError" }), py)).toMatchObject({ result: "refuted", detail: expect.stringContaining("extends nothing") });
+    expect(truthOf({ k: "inherits", cls: "Repo", base: "Base" }, py)).toEqual({ reason: "qualified-base: Repo extends Generic[T]" });
+    expect(truthOf({ k: "inherits", cls: "Adapter", base: "Base" }, py)).toEqual({ reason: "qualified-base: Adapter extends abc.ABC" });
+  });
 });

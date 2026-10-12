@@ -1,0 +1,22 @@
+{
+  "fixture": "F123",
+  "section": "Polyglot code, section 4; A-115, A-116, A-129",
+  "stage": 30,
+  "expect": {
+    "run": {
+      "outcomes": [
+        { "item": "PyTests/tests/test_orders.py", "tests": 4, "passed": 1, "failed": 1, "errored": 1, "skipped": 1 },
+        { "item": "Reqs/REQ-1", "tests": 1, "passed": 1, "failed": 0, "errored": 0, "skipped": 0 },
+        { "item": "Reqs/REQ-2", "tests": 1, "passed": 0, "failed": 1, "errored": 0, "skipped": 0 },
+        { "item": "Reqs/REQ-3", "tests": 1, "passed": 0, "failed": 0, "errored": 0, "skipped": 1 },
+        { "item": "Reqs/REQ-4", "tests": 1, "passed": 0, "failed": 0, "errored": 1, "skipped": 0 }
+      ],
+      "gaps": [
+        { "kind": "failing-test", "subject": "PyTests/tests/test_orders.py", "detailIncludes": ["REQ-2", "REQ-4"] }
+      ],
+      "diagnosticsAbsent": [
+        { "source": "PyTests", "code": "results-unmatched" }
+      ]
+    }
+  }
+}

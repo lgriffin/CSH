@@ -4,10 +4,17 @@
 // comments, cite nothing. The file is read as text and never run: a small lexer tells comments, strings and regular
 // expressions from code, so a test written inside a fixture string is not a test. The runner's results, when the
 // practice names a results file (stage 26), are joined to each file and to the identifiers each test's full name cites;
-// they are counted, and never decide anything.
+// they are counted, and never decide anything. Python, Java, Go and Rust test files are read by their runners'
+// conventions (tests-other.ts, stage 35), and their results join by path as these do, or, when the runner names a Java
+// class, a Go package or a Rust test binary instead of a file, by what the source's files declare (tests-join.ts).
 import { digestOf } from "@csh/kernel";
 import { type Adapter, type AdapterInput, type AdapterOutput, type Diagnostic, type ItemEdge, parseTestResults, type SourceItem, type TestOutcome, type TestResult } from "@csh/witness";
 import { decode, idPatternOf, sortedFiles } from "./common.ts";
+import { joiner, type Join } from "./tests-join.ts";
+import { inventory, languageOf, lineIndex, lineStarts, runnerName, underscoreFree } from "./tests-other.ts";
+
+/** A `go.mod` or `Cargo.toml` in a test source is read for its layout, to join results, and is not a test file. */
+const isLayout = (path: string) => /(?:^|\/)(?:go\.mod|Cargo\.toml)$/.test(path);
 
 export const manifest = {
   id: "csh.adapter.items.tests",
@@ -117,27 +124,31 @@ export function declarations(text: string): { line: number; describe: boolean; m
   return out;
 }
 
-/** A Cucumber step definition: Given, When, Then, And, But, Step or defineStep, called with a string or a regular expression. */
-const STEP = /(?<![.\w$])(Given|When|Then|And|But|Step|defineStep)\s*\(/g;
-
-/**
- * Each step definition of a file (Cucumber-js style): its line and its literal text. A regular expression is a step
- * whose text is not kept: the lexer blanks its content, so it cites nothing.
- */
-export function stepDefinitions(text: string): { line: number; title: string }[] {
-  const { code, strings } = lex(text);
-  const out: { line: number; title: string }[] = [];
-  for (const m of code.matchAll(STEP)) {
-    const at = skipSpace(code, m.index + m[0].length);
-    const title = strings.get(at) ?? (code[at] === "/" ? "" : undefined);
-    if (title === undefined) continue;
-    out.push({ line: code.slice(0, at).split("\n").length, title });
-  }
-  return out;
-}
-
+/** A Cucumber step definition: Given, When, Then, And, But, Step or defineStep, called with a string or a regular expression. */
+const STEP = /(?<![.\w$])(Given|When|Then|And|But|Step|defineStep)\s*\(/g;
+
+/**
+ * Each step definition of a file (Cucumber-js style): its line and its literal text. A regular expression is a step
+ * whose text is not kept: the lexer blanks its content, so it cites nothing.
+ */
+export function stepDefinitions(text: string): { line: number; title: string }[] {
+  const { code, strings } = lex(text);
+  const out: { line: number; title: string }[] = [];
+  for (const m of code.matchAll(STEP)) {
+    const at = skipSpace(code, m.index + m[0].length);
+    const title = strings.get(at) ?? (code[at] === "/" ? "" : undefined);
+    if (title === undefined) continue;
+    out.push({ line: code.slice(0, at).split("\n").length, title });
+  }
+  return out;
+}
+
 export function run(input: AdapterInput): AdapterOutput {
-  const id = new RegExp(`\\b(?:${input.config?.citePattern ?? idPatternOf(input)})\\b`, "g");
+  const pattern = input.config?.citePattern ?? idPatternOf(input);
+  const id = new RegExp(`\\b(?:${pattern})\\b`, "g");
+  // In a Python, Java, Go or Rust test's name, an underscore stands for a hyphen (test_REQ_12 cites REQ-12), but only
+  // when the identifier pattern cannot hold an underscore itself; otherwise the name is read as written (A-128).
+  const hyphenate = underscoreFree(pattern);
   const items: SourceItem[] = [];
   const edges: ItemEdge[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -146,7 +157,28 @@ export function run(input: AdapterInput): AdapterOutput {
   const cucumber = input.config?.style === "cucumber";
   const citeBodies = input.config?.citeBodies === "true";
   for (const file of sortedFiles(input)) {
+    if (isLayout(file.path)) continue;
     const text = decode(file.bytes);
+    const lang = languageOf(file.path);
+    if (lang !== undefined) {
+      const found = inventory(text, lang, file.path);
+      const starts = lineStarts(text);
+      const cited = new Set<string>();
+      const cite = (value: string, at: number) => {
+        for (const c of value.matchAll(id)) {
+          if (cited.has(c[0])) continue;
+          cited.add(c[0]);
+          edges.push({ from: file.path, rel: "cites", to: c[0], span: `${file.path}:${lineIndex(starts, at) + 1}` });
+        }
+      };
+      for (const s of found.sources) cite(s.name && hyphenate ? s.text.replace(/_/g, "-") : s.text, s.at);
+      if (citeBodies) for (const [at, value] of found.strings) cite(value, at);
+      const attrs: Record<string, string> = { tests: String(found.tests) };
+      if (found.skipped > 0) attrs.skipped = String(found.skipped);
+      items.push({ id: file.path, kind: "test-file", text: file.path, span: `${file.path}:1`, textDigest: digestOf(text), attrs });
+      if (found.tests === 0) diagnostics.push({ code: "no-tests", severity: "info", message: `${file.path} declares no test its runner would collect`, span: file.path });
+      continue;
+    }
     let steps = 0;
     let tests = 0;
     let skipped = 0;
@@ -188,7 +220,7 @@ export function run(input: AdapterInput): AdapterOutput {
     if (tests === 0 && steps === 0) diagnostics.push({ code: "no-tests", severity: "info", message: `${file.path} declares no it or test call with a literal title`, span: file.path });
   }
   if (input.executions === undefined) return { items, edges, diagnostics };
-  const results = joinResults(input, items, id, diagnostics);
+  const results = joinResults(input, items, id, diagnostics, hyphenate);
   return { items, edges, diagnostics, results };
 }
 
@@ -205,10 +237,18 @@ function fileOf(name: string, paths: string[]): string | undefined {
 }
 
 /** Each test the results files report, joined to its file and to the identifiers its full name cites (A-115). */
-function joinResults(input: AdapterInput, items: SourceItem[], id: RegExp, diagnostics: Diagnostic[]): TestResult[] {
+function joinResults(input: AdapterInput, items: SourceItem[], id: RegExp, diagnostics: Diagnostic[], hyphenate: boolean): TestResult[] {
   const paths = items.map((i) => i.id);
+  // A runner that names a class, a package or a test binary is joined by what the source's files declare (stage 35),
+  // read only when a result names no file of the source by path.
+  let declared: ((runnerFile: string, name: string) => Join) | undefined;
+  const byDeclaration = (runnerFile: string, name: string) => {
+    declared ??= joiner(sortedFiles(input).filter((f) => isLayout(f.path) || languageOf(f.path) !== undefined).map((f) => ({ path: f.path, text: decode(f.bytes) })));
+    return declared(runnerFile, name);
+  };
   const results: TestResult[] = [];
   const unmatched = new Map<string, number>();
+  const ambiguous = new Map<string, number>();
   const counts = new Map<string, Record<TestOutcome, number>>();
   for (const f of input.executions ?? []) {
     const parsed = parseTestResults(decode(f.bytes));
@@ -219,12 +259,19 @@ function joinResults(input: AdapterInput, items: SourceItem[], id: RegExp, diagn
       continue;
     }
     for (const r of parsed.results) {
-      const file = fileOf(r.file, paths);
+      let file = fileOf(r.file, paths);
       if (file === undefined) {
-        unmatched.set(r.file, (unmatched.get(r.file) ?? 0) + 1);
-        continue;
+        const j = byDeclaration(r.file, r.name);
+        if (j !== undefined && "file" in j) file = j.file;
+        else {
+          unmatched.set(r.file, (unmatched.get(r.file) ?? 0) + 1);
+          if (j !== undefined) ambiguous.set(r.file, (ambiguous.get(r.file) ?? 0) + 1);
+          continue;
+        }
       }
-      const cites = r.cites ?? [...new Set([...r.name.matchAll(id)].map((m) => m[0]))].sort();
+      // A Python, Java, Go or Rust runner reports the function's name, so it is read as the inventory reads that name.
+      const names = hyphenate && languageOf(file) !== undefined ? [r.name, runnerName(r.name)] : [r.name];
+      const cites = r.cites ?? [...new Set(names.flatMap((n) => [...n.matchAll(id)].map((m) => m[0])))].sort();
       results.push({ file, outcome: r.outcome, cites, span: /^\d+$/.test(r.at) ? `${f.path}:${r.at}` : `${f.path}#${r.at}` });
       const c = counts.get(file) ?? { passed: 0, failed: 0, errored: 0, skipped: 0 };
       c[r.outcome]++;
@@ -233,7 +280,10 @@ function joinResults(input: AdapterInput, items: SourceItem[], id: RegExp, diagn
   }
   if ((input.executions ?? []).length === 0) diagnostics.push({ code: "no-results", severity: "info", message: "the practice names a results file and none was found: every test's outcome is unknown" });
   // A runner's file outside the source is reported once, by count, never by name: names can be anything.
-  if (unmatched.size > 0) diagnostics.push({ code: "results-unmatched", severity: "info", message: `${[...unmatched.values()].reduce((a, b) => a + b, 0)} results in ${unmatched.size} files name no test file of the source` });
+  // A class, package or test binary that more than one test file declares is not joined to any, and is said apart.
+  const sum = (m: Map<string, number>) => [...m.values()].reduce((a, b) => a + b, 0);
+  const twice = ambiguous.size > 0 ? `; ${sum(ambiguous)} results in ${ambiguous.size} of them name a class, package or test that more than one test file declares, and are not joined` : "";
+  if (unmatched.size > 0) diagnostics.push({ code: "results-unmatched", severity: "info", message: `${sum(unmatched)} results in ${unmatched.size} files name no test file of the source${twice}` });
   let unrun = 0;
   for (const it of items) {
     const c = counts.get(it.id);

@@ -226,3 +226,44 @@ commit, kept under a tag and never merged" that edits `gate.ts` and its probe to
 
 Taken provisionally as A-78. The regression stage of the gate's own A3 is recorded once the owner's approvals exist;
 until then the scratch copy is where the block is shown.
+
+## Q-23 Does a local Go import depend on its package directory or on the package's files?
+
+Raised in stage 33. Section 3 of [12](docs/spec/12-polyglot-code.md) says a local Go import "is the package
+directory". A dependency fact names a module, and a module is a file; a rule's `modules("internal/db/**")` selects the
+files under a directory, not the directory itself, so a dependency on `internal/db` would match no rule.
+
+- **Each non-test file of the package directory (chosen).** A rule over `internal/db/**` sees the import, and an
+  import of a package whose directory holds no file read is a `skipped` fact. One import line becomes several facts.
+- **The directory, as section 3 says, with module globs widened to select a directory.** One fact per import, but
+  the glob semantics of A-101 change for every language.
+
+Taken provisionally as A-132. Section 3 of 12 disagrees with it until the owner decides.
+
+## Q-24 Which directories are a Python project's source roots?
+
+Raised in stage 31. Section 3 of [12](docs/spec/12-polyglot-code.md) names the root, `src` and the parent of every
+top-level package. A test directory without `__init__.py`, which pytest puts on `sys.path` itself, is none of these,
+so `import conftest` or `import helpers` from a test reads as an external package, and a rule about local modules
+does not see it.
+
+- **Section 3's roots only (chosen for now).** No configuration is read; such an import is named as an external
+  package.
+- **Also every directory holding a `.py` file that a sibling imports by a bare name, and `tool.setuptools`/`tool.pytest`
+  paths in `pyproject.toml`.** Closer to how pytest runs, at the cost of reading tool configuration.
+- **A bare import whose name is a `.py` file anywhere in the source is a `skipped` fact.** The cautious option: an
+  ambiguous import is unknown rather than external.
+
+Taken provisionally as A-130. The cautious option is recommended; it is not yet built.
+
+## Q-25 Are Python's `ABC` and `Protocol` built-in bases?
+
+Raised in stage 31. `BUILT_IN_BASES` in `packages/arch` lists Python's built-in exception and object classes, so an
+`inherits` chain ends at `Exception`. A class whose base is a bare `ABC` or `Protocol` (imported from `abc` or
+`typing`) reads as `base-not-read: ABC`, which is unknown.
+
+- **Leave them out (chosen).** Unknown is a correct answer: the base is imported, not built in.
+- **Add `ABC` and `Protocol` as roots.** A chain through them is refuted or holds, but a local class of the same name
+  would be misread.
+
+Taken provisionally as A-130.

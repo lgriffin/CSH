@@ -1,0 +1,27 @@
+{
+  "fixture": "F124",
+  "section": "Polyglot code, section 4; A-115, A-128, A-129, A-134",
+  "stage": 35,
+  "expect": {
+    "run": {
+      "outcomes": [
+        { "item": "JavaTests/src/test/java/com/acme/shop/OrderTest.java", "tests": 2, "passed": 1, "failed": 1, "errored": 0, "skipped": 0 },
+        { "item": "GoTests/domain/order_test.go", "tests": 3, "passed": 1, "failed": 2, "errored": 0, "skipped": 0 },
+        { "item": "Reqs/REQ-1", "tests": 2, "passed": 2, "failed": 0, "errored": 0, "skipped": 0 },
+        { "item": "Reqs/REQ-2", "tests": 1, "passed": 0, "failed": 1, "errored": 0, "skipped": 0 },
+        { "item": "Reqs/REQ-3", "tests": 1, "passed": 0, "failed": 1, "errored": 0, "skipped": 0 }
+      ],
+      "gaps": [
+        { "kind": "failing-test", "subject": "JavaTests/src/test/java/com/acme/shop/OrderTest.java", "detailIncludes": ["REQ-2"] },
+        { "kind": "failing-test", "subject": "GoTests/domain/order_test.go", "detailIncludes": ["REQ-3"] }
+      ],
+      "diagnostics": [
+        { "source": "GoTests", "code": "results-unmatched" },
+        { "source": "GoTests", "spanEndsWith": "go-test.json:1" }
+      ],
+      "diagnosticsAbsent": [
+        { "source": "JavaTests", "code": "results-unmatched" }
+      ]
+    }
+  }
+}

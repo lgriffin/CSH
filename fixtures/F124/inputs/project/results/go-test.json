@@ -1,0 +1,20 @@
+go: downloading github.com/lib/pq v1.10.9
+{"Time":"2026-10-12T09:20:00.101Z","Action":"start","Package":"example.com/shop/domain"}
+{"Time":"2026-10-12T09:20:00.102Z","Action":"run","Package":"example.com/shop/domain","Test":"TestTotal_REQ_1"}
+{"Time":"2026-10-12T09:20:00.102Z","Action":"output","Package":"example.com/shop/domain","Test":"TestTotal_REQ_1","Output":"=== RUN   TestTotal_REQ_1\n"}
+{"Time":"2026-10-12T09:20:00.103Z","Action":"output","Package":"example.com/shop/domain","Test":"TestTotal_REQ_1","Output":"--- PASS: TestTotal_REQ_1 (0.00s)\n"}
+{"Time":"2026-10-12T09:20:00.103Z","Action":"pass","Package":"example.com/shop/domain","Test":"TestTotal_REQ_1","Elapsed":0}
+{"Time":"2026-10-12T09:20:00.103Z","Action":"run","Package":"example.com/shop/domain","Test":"TestRefund"}
+{"Time":"2026-10-12T09:20:00.103Z","Action":"output","Package":"example.com/shop/domain","Test":"TestRefund","Output":"=== RUN   TestRefund\n"}
+{"Time":"2026-10-12T09:20:00.104Z","Action":"run","Package":"example.com/shop/domain","Test":"TestRefund/REQ-3_full_refund"}
+{"Time":"2026-10-12T09:20:00.104Z","Action":"output","Package":"example.com/shop/domain","Test":"TestRefund/REQ-3_full_refund","Output":"    order_test.go:14: a full refund returns every line\n"}
+{"Time":"2026-10-12T09:20:00.104Z","Action":"output","Package":"example.com/shop/domain","Test":"TestRefund/REQ-3_full_refund","Output":"    --- FAIL: TestRefund/REQ-3_full_refund (0.00s)\n"}
+{"Time":"2026-10-12T09:20:00.104Z","Action":"fail","Package":"example.com/shop/domain","Test":"TestRefund/REQ-3_full_refund","Elapsed":0}
+{"Time":"2026-10-12T09:20:00.104Z","Action":"output","Package":"example.com/shop/domain","Test":"TestRefund","Output":"--- FAIL: TestRefund (0.00s)\n"}
+{"Time":"2026-10-12T09:20:00.104Z","Action":"fail","Package":"example.com/shop/domain","Test":"TestRefund","Elapsed":0}
+{"Time":"2026-10-12T09:20:00.105Z","Action":"output","Package":"example.com/shop/domain","Output":"FAIL\n"}
+{"Time":"2026-10-12T09:20:00.105Z","Action":"fail","Package":"example.com/shop/domain","Elapsed":0.004}
+{"Time":"2026-10-12T09:20:00.201Z","Action":"start","Package":"example.com/shop/adapters/sqlstore"}
+{"Time":"2026-10-12T09:20:00.202Z","Action":"output","Package":"example.com/shop/adapters/sqlstore","Output":"panic: sql: unknown driver \"postgres\"\n"}
+{"Time":"2026-10-12T09:20:00.202Z","Action":"output","Package":"example.com/shop/adapters/sqlstore","Output":"FAIL\texample.com/shop/adapters/sqlstore\t0.004s\n"}
+{"Time":"2026-10-12T09:20:00.202Z","Action":"fail","Package":"example.com/shop/adapters/sqlstore","Elapsed":0.004}

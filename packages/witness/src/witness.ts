@@ -1,6 +1,7 @@
 // The witness format (csh-witness/v1 and v2), the execution line (csh-execution/v1) and the adapter contract (Evidence
 // tab, sections 2 and 4; Anchor, harnesses and A3, sections 3.2, 6.2 and 6.3).
 import { canonicalJson, digestOf, type ClaimSet, type Digest, type Binding, type Source, type Vocabulary } from "@csh/kernel";
+import { isGoTestJson, isJUnitXml, parseGoTestJson, parseJUnit } from "./runners.ts";
 
 export type Json = string | number | boolean | null;
 
@@ -356,7 +357,10 @@ export interface RunnerResult {
   file: string;
   name: string;
   outcome: TestOutcome;
-  /** The line of an execution file, or the test's position in a JSON report as `testResults[i].assertionResults[j]`. */
+  /**
+   * The line of an execution file, a JUnit test case or a `go test -json` event, or the test's position in a JSON
+   * report as `testResults[i].assertionResults[j]`.
+   */
   at: string;
   /** The identifiers a reduced results file records the test citing; joined as given, not matched again (stage 28). */
   cites?: string[];
@@ -366,11 +370,14 @@ const RUNNER_STATUS: Record<string, TestOutcome> = { passed: "passed", failed: "
 
 /**
  * A test runner's results (Ingesting a codebase, stage 26): the JSON report Jest's --json and Vitest's json reporter
- * write, or csh-execution/v1 lines. A file of a JSON report that failed to run and reports no test is one errored
- * result for that file, with an empty name. Malformed input is reported, never dropped silently.
+ * write, JUnit XML or `go test -json` events (stage 30, see runners.ts), a csh-results/v1 file, or csh-execution/v1
+ * lines. A file of a JSON report that failed to run and reports no test is one errored result for that file, with an
+ * empty name. Malformed input is reported, never dropped silently.
  */
 export function parseTestResults(text: string): { results: RunnerResult[]; problems: WitnessProblem[]; commit?: string } {
   const trimmed = text.trimStart();
+  if (isJUnitXml(text)) return parseJUnit(text);
+  if (isGoTestJson(text)) return parseGoTestJson(text);
   if (trimmed.startsWith("{") && /"schema"\s*:\s*"csh-results\/v1"/.test(trimmed)) return expandResults(text);
   if (!trimmed.startsWith("{") || !/"testResults"\s*:/.test(trimmed)) {
     const parsed = parseExecutions(text);

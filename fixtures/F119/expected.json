@@ -1,0 +1,16 @@
+{
+  "fixture": "F119",
+  "section": "Polyglot code, sections 1 and 3; A-104, A-127, A-131",
+  "stage": 32,
+  "expect": {
+    "run": {
+      "assessments": [
+        { "fragment": "Shop/Layering/DomainIgnoresAdapters", "verdict": "violated", "reasonsInclude": ["src/main/java/com/acme/shop/domain/Order.java:3", "src/main/java/com/acme/shop/adapters/JdbcOrderRepository.java"] },
+        { "fragment": "Shop/Layering/PortsIgnoreAdapters", "verdict": "satisfied" },
+        { "fragment": "Shop/Layering/PortsSeeOnlyTheDomain", "verdict": "satisfied" },
+        { "fragment": "Shop/Errors/OrderNotFoundIsAnException", "verdict": "satisfied" },
+        { "fragment": "Shop/Errors/JdbcRepositoryIsADaoSupport", "verdict": "unknown", "reasonsInclude": ["JdbcDaoSupport"] }
+      ]
+    }
+  }
+}
