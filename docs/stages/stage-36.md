@@ -26,7 +26,7 @@ violation and one expected unknown.
 - The expected results were written from each subject's documents, and from a reading of its source by hand, before CSH
   was run on any subject, and committed alone first (`e854a61`). No expectation was changed after a run.
 - The expected files give rows and no counts: a count of each outcome cannot be derived from a subject's documents
-  before a run, and one recorded after it would be an expectation written from output. This is a new assumption, to be registered in [ASSUMPTIONS.md](../../ASSUMPTIONS.md).
+  before a run, and one recorded after it would be an expectation written from output. This is [A-135](../../ASSUMPTIONS.md).
 - CI: the job `polyglot`, a matrix over the four profiles, with the steps of `Subject (ESI.ts)` but the A3. The ESI.ts
   job is unchanged.
 - A README per subject, in the shape of [subjects/esi-ts](../../subjects/esi-ts/README.md).

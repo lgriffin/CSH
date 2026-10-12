@@ -134,6 +134,8 @@ node packages/cli/bin/csh.js overview --root subjects/esi-ts        # converged,
 node packages/cli/bin/csh.js expect --root subjects/esi-ts          # compare with the expected results
 ```
 
+Four smaller profiles read one public codebase per language at a pinned commit: [fastapi-clean-example](subjects/fastapi-clean-example) (Python), [spring-hexagonal-poc](subjects/spring-hexagonal-poc) (Java), [go-clean-arch](subjects/go-clean-arch) (Go) and [hexarch](subjects/hexarch) (Rust). Each states what the subject's own documents say about its layering as rules and claims, and CI runs each in the job `Subject (<name>)`, comparing it with its expected results ([stage 36](docs/stages/stage-36.md)).
+
 The A3 and the Lean foundations serve this outcome: the A3 reads the gaps as one problem with candidate causes and
 countermeasures, and the solver decides which rules hold. Nothing a run finds is approved until a person approves it.
 
