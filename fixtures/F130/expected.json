@@ -1,0 +1,41 @@
+{
+  "fixture": "F130",
+  "section": "From real runs, section 1",
+  "stage": 38,
+  "expect": {
+    "init": {
+      "sources": {
+        "Requirements": { "kind": "Documents", "files": ["docs/requirements.md"] },
+        "Documents": { "kind": "Documents", "files": ["README.md", "docs/guide.md"] },
+        "Features": { "kind": "Features", "files": ["features/cart.feature"] },
+        "Tests": { "kind": "TestFiles", "files": ["features/steps/cart.steps.ts", "tests/cart.test.ts"] },
+        "Code": { "kind": "Code", "files": ["package.json", "src/cart.ts", "src/lib/money.ts", "src/order.ts"] },
+        "Issues": { "kind": "Issues", "files": [".beads/issues.jsonl"] }
+      },
+      "practices": [
+        { "sources": ["Requirements"], "kind": "requirements", "adapter": "@csh/adapter-items/markdown", "settings": { "idPattern": "(?:REQ)-[0-9]+" } },
+        { "sources": ["Documents"], "kind": "documents", "settings": { "idPattern": "(?:REQ)-[0-9]+" } },
+        { "sources": ["Features"], "kind": "scenarios", "settings": { "idTag": "(rule-[0-9]+)", "tagCites": "(REQ-[0-9]+)" } },
+        { "sources": ["Tests"], "kind": "tests", "settings": { "idPattern": "(?:REQ)-[0-9]+", "style": "cucumber" }, "executions": "csh/results.json" },
+        { "sources": ["Code"], "kind": "facts" },
+        { "sources": ["Issues"], "kind": "issues", "settings": { "idPattern": "(?:REQ)-[0-9]+" } }
+      ],
+      "implementation": ["src"],
+      "subjectRepoIsPath": true,
+      "guessesInclude": ["(?:REQ)-[0-9]+", "idTag", "tagCites", "cucumber", "vitest", "not portable"],
+      "guessesExclude": ["ABC", "SHA", "UTF"],
+      "coverage": { "tracked": 15, "read": 11, "unread": ["CHANGELOG.md", "dist/cart.js", "scripts/release.sh", "tests/fixtures/sample.test.ts"] },
+      "run": {
+        "items": [
+          { "source": "Requirements", "id": "REQ-1" },
+          { "source": "Requirements", "id": "REQ-2" },
+          { "source": "Tests", "id": "tests/cart.test.ts", "kind": "test-file" }
+        ],
+        "edges": [
+          { "source": "Tests", "from": "tests/cart.test.ts", "rel": "cites", "to": "REQ-2" },
+          { "source": "Features", "from": "rule-1", "rel": "cites", "to": "REQ-1" }
+        ]
+      }
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { csh, csl } from "../src/index.ts";
@@ -141,6 +142,50 @@ describe("csh init and csh run", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   }, 60000);
+
+  it("init --subject proposes a profile, prints its guesses, and run then says what it leaves unread", async () => {
+    const dir = mkdtempSync(join(REPO, ".csh-cache", "init-"));
+    try {
+      const subject = join(dir, "subject");
+      cpSync(join(REPO, "fixtures", "F130", "inputs", "subject"), subject, { recursive: true });
+      const g = (...args: string[]) => execFileSync("git", args, { cwd: subject, stdio: "ignore" });
+      g("init", "-q", "-b", "main");
+      g("add", "-A");
+      g("-c", "user.email=test-only@example.invalid", "-c", "user.name=test-only", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "subject");
+      const root = join(dir, "profile");
+      mkdirSync(root);
+      const { o, io: x } = io(dir);
+      expect(await csh(["init", "--root", root, "--subject", subject], x)).toBe(0);
+      expect(o.out).toMatch(/Every value below is a guess/);
+      expect(o.out).toMatch(/idPattern \(\?:REQ\)-\[0-9\]\+/);
+      expect(o.out).toMatch(/coverage Shop: 11 of 15 tracked files read by 6 sources/);
+      expect(o.out).toMatch(/not portable/);
+      const m = JSON.parse(readFileSync(join(root, "csh", "component.json"), "utf8"));
+      expect(m.sources.map((s: { name: string }) => s.name)).toEqual(["Requirements", "Documents", "Features", "Tests", "Code", "Issues"]);
+      const again = io(dir);
+      expect(await csh(["init", "--root", root, "--subject", subject], again.io)).toBe(2);
+      execFileSync("git", ["init", "-q", "-b", "main"], { cwd: root });
+      const fetched = io(root);
+      expect(await csh(["subject", "fetch", "--root", root], fetched.io)).toBe(0);
+      const r = io(root);
+      expect(await csh(["run", "--root", root], r.io)).toBe(0);
+      expect(r.o.out).toMatch(/\n  coverage: 11 of 15 tracked files read; csh coverage lists the rest\n/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 120000);
+
+  it("init --subject refuses a directory that is not a git checkout and writes nothing", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "csh-init-"));
+    try {
+      const { o, io: x } = io(dir);
+      expect(await csh(["init", "--root", dir, "--subject", dir], x)).toBe(1);
+      expect(o.err).toMatch(/not a git checkout/);
+      expect(existsSync(join(dir, "csh", "component.json"))).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 
   it("init writes nothing when the answers do not make a manifest", async () => {
     const dir = mkdtempSync(join(REPO, ".csh-cache", "init-"));

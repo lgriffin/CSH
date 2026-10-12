@@ -37,6 +37,7 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 33: A Go reader](stage-33.md)
 - [Stage 34: A Rust reader](stage-34.md)
 - [Stage 35: Test inventory for pytest, JUnit, Go and Rust](stage-35.md)
+- [Stage 38: A proposed profile and coverage in every run](stage-38.md)
 
 Stages 10 to 16 build the anchor design ([09](../spec/09-anchor-harness-a3.md)): a component to anchor on, harnesses,
 runs and the A3. Their fixtures, F80 to F96, were written before any of their code, and the fixture runner reports
@@ -49,3 +50,6 @@ code, and are reported as pending until their stage is built.
 
 Stages 21 to 28 make CSH ingest a real git codebase ([11](../spec/11-ingesting-a-codebase.md)), with ESI.ts as the
 subject throughout. Its profile is [subjects/esi-ts](../../subjects/esi-ts).
+
+Stages 38 to 44 answer what Leigh's runs over six TypeScript repositories asked for ([13](../spec/13-from-real-runs.md),
+[issue 66](https://github.com/lgriffin/CSH/issues/66)). Their fixtures start at F130.

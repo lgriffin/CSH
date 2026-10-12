@@ -29,7 +29,7 @@ export default system("Hexagon", (s) => {
   s.policy("Structural", { require: ["FactsCurrent"] });
   s.intent("Layering", { owner: "Owner", value: "Inward", assurance: "Structural" }, (i) => {
     i.architecture("DomainBelowAdapters", forbid(modules("core/src/domain/**"), modules("core/src/adapters/**")), { cites: [{ source: Rules, id: "H-1" }] });
-    i.architecture("PortsBelowAdapters", forbid(modules("core/src/ports/**"), modules("core/src/adapters/**")), { cites: [{ source: Rules, id: "H-2" }] });
+    i.architecture("PortsBelowAdapters", forbid(modules(["core/src/ports.rs", "core/src/ports/**"]), modules("core/src/adapters/**")), { cites: [{ source: Rules, id: "H-2" }] });
   });
 });
 `;

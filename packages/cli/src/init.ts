@@ -5,7 +5,7 @@ import { createInterface } from "node:readline";
 import { dirname, join, resolve } from "node:path";
 import { COMPONENT_PATH, COMPONENT_SCHEMA, type ComponentManifest, type Practice, PRACTICE_KINDS, validateManifest } from "@csh/component";
 import { stableJson } from "@csh/kernel";
-import { projectRoot } from "@csh/run";
+import { coverageOfSources, projectRoot, proposeProfile, renderCoverage } from "@csh/run";
 
 interface Io {
   out: (s: string) => void;
@@ -39,7 +39,7 @@ const list = (s: string) => s.split(",").map((x) => x.trim()).filter((x) => x !=
 /** An argument vector, split on white space. It is never handed to a shell. */
 const words = (s: string) => s.trim().split(/\s+/).filter((x) => x !== "");
 
-export async function init(cwd: string, rootOption: string | undefined, io: Io): Promise<number> {
+export async function init(cwd: string, rootOption: string | undefined, io: Io, subjectOption?: string): Promise<number> {
   // The same root csh run and every other command use, so that a manifest written here is the one they read (#21).
   const root = projectRoot(cwd, rootOption);
   const file = join(root, COMPONENT_PATH);
@@ -47,6 +47,7 @@ export async function init(cwd: string, rootOption: string | undefined, io: Io):
     io.err(`${COMPONENT_PATH} already exists; csh init never overwrites it\n`);
     return 2;
   }
+  if (subjectOption !== undefined) return proposeInit(resolve(cwd, subjectOption), root, file, io);
   const own = io.ask === undefined ? stdinAsker() : undefined;
   const ask = io.ask ?? own!.ask;
   try {
@@ -94,4 +95,28 @@ export async function init(cwd: string, rootOption: string | undefined, io: Io):
   } finally {
     own?.close();
   }
+}
+
+/**
+ * csh init --subject (From real runs, section 1): propose a profile from the checkout's tracked files, write it, and
+ * print every guess it made and what the proposal reads, so that the profile is corrected before its first run.
+ */
+function proposeInit(subject: string, root: string, file: string, io: Io): number {
+  const p = proposeProfile(subject);
+  if ("error" in p) {
+    io.err(`csh init --subject: ${p.error}\n`);
+    return 1;
+  }
+  const problems = validateManifest(p.manifest);
+  if (problems.length > 0) {
+    io.err(`Nothing written; the proposal does not make a manifest:\n${problems.map((x) => `  ${x.code}: ${x.detail}`).join("\n")}\n`);
+    return 1;
+  }
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, stableJson(p.manifest));
+  io.out(`Wrote ${file}: a proposal read from ${subject}. Every value below is a guess; correct the manifest before trusting a run.\n\nGuessed:\n${p.guesses.map((g) => `  ${g}`).join("\n")}\n\n`);
+  const c = coverageOfSources(subject, p.manifest.sources ?? []);
+  if (c !== undefined) io.out(renderCoverage(c, p.manifest.name));
+  io.out(`\nNext: csh subject fetch --root ${root}, then csh run --root ${root}\n`);
+  return 0;
 }

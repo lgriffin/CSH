@@ -5,6 +5,7 @@ import { posix } from "node:path";
 import { compareCodePoints } from "@csh/kernel";
 import { selectFiles, trackedFiles } from "./sources.ts";
 import type { Project } from "./project.ts";
+import type { DeclaredSource } from "@csh/component";
 
 export interface Coverage {
   tracked: number;
@@ -22,9 +23,12 @@ const extOf = (path: string): string => {
 
 /** What the component reads of its source root and what it does not. Undefined when the root is not a git repository. */
 export function coverageOf(p: Project): Coverage | undefined {
-  const root = p.sourceRoot;
+  return coverageOfSources(p.sourceRoot, p.component?.manifest.sources ?? []);
+}
+
+/** What `declared` would read of the git checkout at `root` (csh init --subject shows it before a manifest exists). */
+export function coverageOfSources(root: string, declared: readonly DeclaredSource[]): Coverage | undefined {
   const tracked = trackedFiles(root);
-  const declared = p.component?.manifest.sources ?? [];
   if (tracked === undefined) return undefined;
   const read = new Set<string>();
   const sources: Coverage["sources"] = [];
