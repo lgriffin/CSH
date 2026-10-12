@@ -129,7 +129,9 @@ export function loadProject(cwd: string, rootOverride?: string, o: LoadOptions =
   if (subject !== undefined) {
     const commit = o.subjectCommit ?? subject.commit;
     const dir = resolve(cwd, o.subject ?? subjectCheckout(o.subjectsRoot ?? root, commit));
-    const found = checkoutProblem(dir, commit);
+    // A checkout csh subject fetch made was found clean of ignored files then; asking again walks every ignored
+    // directory (node_modules) on each command (stage 40). A checkout named by --subject is asked in full.
+    const found = checkoutProblem(dir, commit, o.subject !== undefined);
     if (found !== undefined) p.componentProblems.push(found);
     else {
       p.subject = { repo: subject.repo, commit, root: dir, vcs: gitVcs(dir) };
@@ -164,8 +166,8 @@ export function subjectCheckout(root: string, commit: string): string {
 /**
  * Fetch the subject a manifest names into SUBJECTS_DIR, with its whole history, and check out its pinned commit, or
  * `commit` when given (a full commit of the subject). A checkout already there at that commit and clean is kept. The
- * subject's repository is only read. Another commit is cloned from the pinned checkout when there is one, so that a
- * release's checkout needs no network and shares its objects.
+ * subject's repository is only read. Another commit is a worktree of the pinned checkout when there is one, so that a
+ * release's checkout needs no network and no clone of its own (stage 40).
  */
 export function fetchSubject(p: Project, at?: string): { ok: true; dir: string; fetched: boolean } | { ok: false; message: string } {
   const subject = p.component?.manifest.subject;
@@ -180,6 +182,12 @@ export function fetchSubject(p: Project, at?: string): { ok: true; dir: string; 
   // A repository named by a path is a local clone, relative to the component root.
   const pinned = subjectCheckout(p.root, subject.commit);
   const repo = commit !== subject.commit && checkoutProblem(pinned, subject.commit) === undefined ? pinned : /^[a-z][a-z0-9+.-]*:/i.test(subject.repo) || subject.repo.startsWith("/") ? subject.repo : resolve(p.root, subject.repo);
+  // Another commit beside a clean pinned checkout is a worktree of it (stage 40): it shares the clone's objects, so
+  // csh history over many tags clones once. A worktree that cannot be made falls back to a clone.
+  if (repo === pinned) {
+    const made = worktreeOf(pinned, dir, commit);
+    if (made) return { ok: true, dir, fetched: true };
+  }
   // Cloned beside the checkout and checked first, so a failed fetch leaves whatever was there as it was.
   const fresh = `${dir}.fetching-${process.pid}`;
   try {
@@ -202,11 +210,32 @@ export function fetchSubject(p: Project, at?: string): { ok: true; dir: string; 
   return { ok: true, dir, fetched: true };
 }
 
+/** A worktree of the checkout `from` at `dir`, detached at `commit`, checked clean; false when one cannot be made. */
+function worktreeOf(from: string, dir: string, commit: string): boolean {
+  const g = (cwd: string, ...args: string[]) => execFileSync("git", ["-c", "core.longpaths=true", ...args], { cwd, stdio: ["ignore", "ignore", "pipe"] });
+  try {
+    rmSync(dir, { recursive: true, force: true });
+    // A worktree removed by hand is still registered until pruned, and its path cannot be added again until then.
+    g(from, "worktree", "prune");
+    g(from, "-c", "advice.detachedHead=false", "worktree", "add", "--quiet", "--detach", dir, commit);
+  } catch {
+    rmSync(dir, { recursive: true, force: true });
+    return false;
+  }
+  if (checkoutProblem(dir, commit) === undefined) return true;
+  try {
+    g(from, "worktree", "remove", "--force", dir);
+  } catch {
+    rmSync(dir, { recursive: true, force: true });
+  }
+  return false;
+}
+
 /**
  * Why a directory is not the subject at its pinned commit: missing, not a repository, at another commit, or with
  * uncommitted changes. A run reads the subject as that commit holds it, or not at all.
  */
-function checkoutProblem(dir: string, commit: string): ComponentProblem | undefined {
+function checkoutProblem(dir: string, commit: string, ignored = true): ComponentProblem | undefined {
   if (!existsSync(dir)) return { code: "subject-missing", detail: `no checkout of the subject at ${dir}; csh subject fetch makes one` };
   let head: string;
   try {
@@ -216,7 +245,7 @@ function checkoutProblem(dir: string, commit: string): ComponentProblem | undefi
   }
   if (head !== commit) return { code: "subject-commit-differs", detail: `the checkout at ${dir} is at ${head.slice(0, 12)}; the run reads ${commit.slice(0, 12)}` };
   // Ignored files count: a source directory is read whole, so an ignored file in it would enter the run unseen.
-  if (git(dir, "status", "--porcelain", "--ignored").trim() !== "") return { code: "subject-dirty", detail: `the checkout at ${dir} has uncommitted or ignored files; a subject is read as its commit holds it` };
+  if (git(dir, "status", "--porcelain", ...(ignored ? ["--ignored"] : [])).trim() !== "") return { code: "subject-dirty", detail: `the checkout at ${dir} has uncommitted${ignored ? " or ignored" : " or untracked"} files; a subject is read as its commit holds it` };
   return undefined;
 }
 

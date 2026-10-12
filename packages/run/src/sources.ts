@@ -60,6 +60,11 @@ export interface RunSourcesOptions {
    * at all when nothing else changed. Without it a file is known by its digest.
    */
   cache?: { dir: string; pinned?: string };
+  /**
+   * The files git tracks under `root`, for a subject read at its commit: a file a source would read that is not among
+   * them (an ignored or untracked file in the checkout) is left out and reported, never read (stage 40).
+   */
+  tracked?: ReadonlySet<string>;
 }
 
 /** Kept adapter output, by the digest of everything the output depends on. */
@@ -198,16 +203,14 @@ function toolReadable(): string[] {
   return [pkgs, nm].filter(existsSync).map((p) => realpathSync(p));
 }
 
-/** Run one adapter in an isolated subprocess. */
-export function runIsolated(adapterUrl: string, input: AdapterInput, timeoutMs = 30000, readable: string[] = []): Promise<AdapterOutput> {
-  // A project-local adapter may also read its own directory, and nothing else of the project but the files it is given.
-  const own = [...(adapterUrl.startsWith("file:") ? [realpathSync(dirname(fileURLToPath(adapterUrl)))] : []), ...readable];
-  const args = ["--permission", ...[...toolReadable(), ...own].map((p) => `--allow-fs-read=${p}`), "--disable-warning=ExperimentalWarning", "--no-addons", RUNNER];
+/** The isolated subprocess, sent one message and settled by its one reply. */
+function isolatedCall<T>(message: unknown, timeoutMs: number, readable: string[]): Promise<T> {
+  const args = ["--permission", ...[...toolReadable(), ...readable].map((p) => `--allow-fs-read=${p}`), "--disable-warning=ExperimentalWarning", "--no-addons", RUNNER];
   return new Promise((done, fail) => {
     const child = spawn(process.execPath, args, { stdio: ["ignore", "ignore", "pipe", "ipc"], env: {}, serialization: "advanced" });
     let settled = false;
     let stderr = "";
-    const finish = (err: Error | undefined, out?: AdapterOutput) => {
+    const finish = (err: Error | undefined, out?: T) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
@@ -217,15 +220,37 @@ export function runIsolated(adapterUrl: string, input: AdapterInput, timeoutMs =
     };
     const timer = setTimeout(() => finish(new Error(`adapter exceeded ${timeoutMs} ms`)), timeoutMs);
     child.stderr?.on("data", (d: Buffer) => (stderr += d.toString()));
-    child.on("message", (m: { ok: boolean; output?: AdapterOutput; message?: string }) => {
-      if (m.ok && m.output !== undefined) finish(undefined, m.output);
+    child.on("message", (m: { ok: boolean; message?: string } & T) => {
+      if (m.ok) finish(undefined, m);
       else finish(new Error(m.message ?? "adapter failed"));
     });
     child.on("error", (e) => finish(e));
     // "close", not "exit": a reply sent just before the subprocess exits is delivered first.
     child.on("close", (code) => finish(new Error(`adapter process exited with ${code}: ${stderr.slice(0, 1000)}`)));
-    child.send({ adapter: adapterUrl, input });
+    child.send(message as Parameters<typeof child.send>[0]);
   });
+}
+
+/** Run one adapter in an isolated subprocess. */
+export async function runIsolated(adapterUrl: string, input: AdapterInput, timeoutMs = 30000, readable: string[] = []): Promise<AdapterOutput> {
+  // A project-local adapter may also read its own directory, and nothing else of the project but the files it is given.
+  const own = [...(adapterUrl.startsWith("file:") ? [realpathSync(dirname(fileURLToPath(adapterUrl)))] : []), ...readable];
+  return (await isolatedCall<{ output: AdapterOutput }>({ adapter: adapterUrl, input }, timeoutMs, own)).output;
+}
+
+/**
+ * Run several of the tool's own adapters in one isolated subprocess, in turn (From real runs, stage 40). Each result is
+ * the adapter's output or its own error. When the process itself fails, each adapter is run again alone, so that one
+ * adapter's crash or timeout is reported as its own.
+ */
+export async function runIsolatedBatch(jobs: { adapter: string; input: AdapterInput }[], timeoutMs = 30000): Promise<(AdapterOutput | Error)[]> {
+  if (jobs.length === 1) return [await runIsolated(jobs[0]!.adapter, jobs[0]!.input, timeoutMs).catch((e: Error) => e)];
+  try {
+    const r = await isolatedCall<{ results: ({ ok: true; output: AdapterOutput } | { ok: false; message: string })[] }>({ jobs }, timeoutMs * jobs.length, []);
+    return r.results.map((x) => (x.ok ? x.output : new Error(x.message)));
+  } catch {
+    return Promise.all(jobs.map((j) => runIsolated(j.adapter, j.input, timeoutMs).catch((e: Error) => e)));
+  }
 }
 
 function resolveAdapter(spec: string, root: string): string {
@@ -274,6 +299,8 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
   const bindings = module.bindings.map((b) => ({ ...b, authority: opts.bindingAuthority?.(b) ?? "candidate" }));
   // The tool and its dependencies, read once per run (stage 27).
   const tool = opts.cache === undefined ? undefined : toolCodeDigest();
+  const shared: { adapter: string; input: AdapterInput; finish: (o: AdapterOutput | Error) => void }[] = [];
+  const alone: (() => Promise<void>)[] = [];
   for (const source of [...module.sources].sort((a, b) => compareCodePoints(a.name, b.name))) {
     const located = filesAt(opts.root, source.at);
     const base = { source: source.name, kind: source.kind };
@@ -293,7 +320,9 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
     // one file matches its own name.
     const base0 = relative(opts.root, resolve(opts.root, source.at)).split(sep).join("/");
     const below = (p: string) => (base0 === "" ? p : p.startsWith(`${base0}/`) ? p.slice(base0.length + 1) : p.split("/").pop()!);
-    const kept = inc === undefined && exc === undefined ? found : found.filter((f) => (inc === undefined || inc.some((r) => r.test(below(f.path)))) && !(exc ?? []).some((r) => r.test(below(f.path))));
+    const selected = inc === undefined && exc === undefined ? found : found.filter((f) => (inc === undefined || inc.some((r) => r.test(below(f.path)))) && !(exc ?? []).some((r) => r.test(below(f.path))));
+    const kept = opts.tracked === undefined ? selected : selected.filter((f) => opts.tracked!.has(f.path));
+    const untracked = selected.length - kept.length;
     const named = opts.perSource?.[source.name]?.adapter ?? opts.adapters?.[source.kind];
     // A kept output is reused when everything it was made from is the same (stage 27). A project-local adapter is
     // project code that may import anything, so its output is never kept.
@@ -384,29 +413,59 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
     // A witness directory that holds the execution file reads it as executions only, never as witnesses.
     const execPaths = new Set(execFiles.map((f) => f.path));
     input.files = files.filter((f) => !execPaths.has(f.path));
-    let output: AdapterOutput;
+    const failed = (err: unknown): AdapterOutput => ({ diagnostics: [{ code: "adapter-failed", severity: "error", message: (err as Error).message }] });
+    const finish = (output: AdapterOutput): void => {
+      if (output.claims !== undefined) output.claims.source = source.name;
+      // A setting the adapter does not read changes nothing, which looks like one that worked.
+      if (spec !== undefined) {
+        for (const u of unknownSettings(spec, Object.keys(own?.settings ?? {}))) {
+          output.diagnostics.push({ code: "unknown-setting", severity: "warning", message: `${spec} reads no setting ${u.name}${u.hint !== undefined ? `; did you mean ${u.hint}?` : ""}`, span: source.name });
+        }
+      }
+      if (untracked > 0) {
+        const some = selected.filter((f) => !opts.tracked!.has(f.path)).slice(0, 3).map((f) => f.path);
+        output.diagnostics.push({ code: "untracked-file", severity: "warning", message: `${untracked} files in the subject's checkout that its commit does not hold were not read, e.g. ${some.join(", ")}`, span: source.name });
+      }
+      const made: SourceRun = { ...base, adapter: spec, files: [...input.files, ...execFiles].map(({ path, digest }) => ({ path, digest })), output };
+      runs[slot] = made;
+      // An adapter that failed or timed out is asked again next time.
+      if (cacheFile !== undefined && !output.diagnostics.some((d) => d.code === "adapter-failed")) keep(cacheFile, made);
+    };
+    const slot = runs.length;
+    runs.push(undefined as unknown as SourceRun);
+    let url: string;
     try {
-      const url = resolveAdapter(spec, codeRoot);
-      if (opts.isolated === false) {
-        const mod = (await import(url)) as { adapter: { run: (i: AdapterInput) => AdapterOutput | Promise<AdapterOutput> } };
-        output = structuredClone(await mod.adapter.run(input));
-      } else {
-        output = await runIsolated(url, input, opts.timeoutMs, steps === undefined ? [] : [realpathSync(steps)]);
-      }
+      url = resolveAdapter(spec, codeRoot);
     } catch (err) {
-      output = { diagnostics: [{ code: "adapter-failed", severity: "error", message: (err as Error).message }] };
+      finish(failed(err));
+      continue;
     }
-    if (output.claims !== undefined) output.claims.source = source.name;
-    // A setting the adapter does not read changes nothing, which looks like one that worked.
-    if (spec !== undefined) {
-      for (const u of unknownSettings(spec, Object.keys(own?.settings ?? {}))) {
-        output.diagnostics.push({ code: "unknown-setting", severity: "warning", message: `${spec} reads no setting ${u.name}${u.hint !== undefined ? `; did you mean ${u.hint}?` : ""}`, span: source.name });
+    if (opts.isolated === false) {
+      try {
+        const mod = (await import(url)) as { adapter: { run: (i: AdapterInput) => AdapterOutput | Promise<AdapterOutput> } };
+        finish(structuredClone(await mod.adapter.run(input)));
+      } catch (err) {
+        finish(failed(err));
       }
+    } else if (url.startsWith("file:") && !isToolCode(url)) {
+      // A project's own adapter, or one handed a step table, keeps a sandbox of its own.
+      alone.push(() => runIsolated(url, input, opts.timeoutMs, steps === undefined ? [] : [realpathSync(steps)]).then(finish, (e: unknown) => finish(failed(e))));
+    } else if (steps !== undefined) {
+      alone.push(() => runIsolated(url, input, opts.timeoutMs, [realpathSync(steps)]).then(finish, (e: unknown) => finish(failed(e))));
+    } else {
+      shared.push({ adapter: url, input, finish: (o) => (o instanceof Error ? finish(failed(o)) : finish(o)) });
     }
-    const made: SourceRun = { ...base, adapter: spec, files: [...input.files, ...execFiles].map(({ path, digest }) => ({ path, digest })), output };
-    runs.push(made);
-    // An adapter that failed or timed out is asked again next time.
-    if (cacheFile !== undefined && !output.diagnostics.some((d) => d.code === "adapter-failed")) keep(cacheFile, made);
   }
+  // The tool's own adapters share one sandbox; every other adapter has its own (stage 40).
+  const results = await runIsolatedBatch(shared.map(({ adapter, input }) => ({ adapter, input })), opts.timeoutMs);
+  results.forEach((r, i) => shared[i]!.finish(r));
+  for (const job of alone) await job();
   return runs;
+}
+
+/** Whether a module URL is the tool's own code: under its packages or the node_modules it is installed in. */
+function isToolCode(url: string): boolean {
+  if (!url.startsWith("file:")) return true;
+  const path = realpathSync(fileURLToPath(url));
+  return toolReadable().some((r) => path === r || path.startsWith(`${r}${sep}`));
 }

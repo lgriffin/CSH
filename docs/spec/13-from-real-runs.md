@@ -103,11 +103,22 @@ unknown.
 
 ## 3. Speed (stage 40)
 
-- Git calls whose answer cannot change within one command (`rev-parse`, `--show-prefix`, `status --porcelain`) are
-  asked once per command. The ignored-files status over a subject checkout is asked only by `csh subject fetch`.
-- The built-in adapters of one run share one isolated process. A profile's own adapter keeps its own.
-- `csh history` makes one clone per run and checks out each tag in it, rather than one clone per tag.
-- Blame is prefetched for every document item, not only for those reached through a resolved edge.
+Nothing here changes what a run reports; it changes what a run asks git and how many processes it starts.
+
+- `csh run` loads the project once, not once for the command and again for the run.
+- A subject checkout that `csh subject fetch` made is not walked for ignored files on each command: only `csh subject
+  fetch` and a checkout named by `--subject` are asked in full. In its place, a file a source would read from a
+  subject that the subject's commit does not track (an ignored or untracked file) is left out of the run and reported
+  as the warning `untracked-file`, so it can never enter a run unseen.
+- The tool's own adapters for one run share one isolated process, run in turn. A project's own adapter, and one handed
+  a step table, keep their own. One adapter's failure is reported as its own; when the shared process fails as a
+  whole, each adapter is run again alone.
+- The history cache keeps, beside blame, the commits that changed each file and whether a path was ever held, so a
+  warm run asks git almost nothing.
+- Prefetching resolves a bare file name to the one tracked file of that name, as trace does, so it is asked for with
+  the others rather than one at a time later.
+- `csh history` makes each release's checkout a `git worktree` of the pinned checkout, so the subject is cloned once
+  however many tags are read.
 
 ## 4. Cross-platform correctness (stage 41)
 
