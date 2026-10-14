@@ -10,12 +10,27 @@
       }
     ],
     "overview": {
-      "danger": [],
-      "dangerCount": 0,
+      "danger": [
+        {
+          "kind": "no-rule",
+          "subject": "SignInService/@UnitTests/WitnessW2",
+          "structure": "masked",
+          "shape": "test-under-no-rule"
+        }
+      ],
+      "dangerCount": 1,
       "entries": [
         {
           "outcome": "indeterminate",
           "kind": "unknown-obligation",
+          "subject": "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+        }
+      ],
+      "dangerAbsent": [
+        {
+          "kind": "unknown-obligation"
+        },
+        {
           "subject": "SignInService/StopPasswordGuessing/LockOnThirdFailure"
         }
       ]

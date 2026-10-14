@@ -10,9 +10,16 @@
           "structure": "masked",
           "shape": "green-over-refuted",
           "greenIncludes": "allows a third failed attempt"
+        },
+        {
+          "kind": "no-rule",
+          "subject": "SignInService/@UnitTests/WitnessW2",
+          "structure": "masked",
+          "shape": "test-under-no-rule",
+          "greenIncludes": "accepts the correct password"
         }
       ],
-      "dangerCount": 1
+      "dangerCount": 2
     }
   }
 }
