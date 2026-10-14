@@ -5,7 +5,7 @@ import { spawn, spawnSync, type SpawnOptions } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
-import { type Assessment, type AuthorityResolver, cachingSolver, makeRefiner, type Finding, MemoryEvidenceStore, overviewOf, type Report, SolverCache } from "@csh/check";
+import { type Assessment, type AuthorityResolver, cachingSolver, renderAnalysis, makeRefiner, type Finding, MemoryEvidenceStore, overviewOf, type Report, SolverCache } from "@csh/check";
 import { emit, type Lock, readLock, typeCheck } from "@csh/emit";
 import { acceptDecision, gate, type Snapshot, type Waiver } from "@csh/gate";
 import { digestJson, digestOf, type Fragment, fragmentsOf, type Module, stableJson, textDigestOf } from "@csh/kernel";
@@ -13,7 +13,7 @@ import { authorship, formatDecision, gitVcs, LEDGER_PATH, MAINTAINERS_PATH, read
 import { printModule } from "@csh/print";
 import type { SolverPort } from "@csh/solver";
 import { createTestRepo, gpgAvailable, type TestRepo } from "./git.ts";
-import { checkModule, componentQueue, componentStatus, coverageOfSources, emitProject, evaluateProject, evaluateSpec, type FixtureConfig, loadProject, proposeProfile, readConfig, readStoredRun, selectFiles, specPathOf } from "@csh/run";
+import { analyse, writeAnalysis, checkModule, componentQueue, componentStatus, coverageOfSources, emitProject, evaluateProject, evaluateSpec, type FixtureConfig, loadProject, proposeProfile, readConfig, readStoredRun, selectFiles, specPathOf } from "@csh/run";
 import { verifyCounterexample, verifyNoOutcome } from "./verify.ts";
 import { type ComponentProblem, parseComponent, validateManifest } from "@csh/component";
 import { type DiffContext, diffRuns, type ManifestView, renderDiff, type RunSide, type Unavailable } from "@csh/review";
@@ -38,7 +38,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 50;
+export const BUILT_THROUGH_STAGE = 55;
 
 const AGENT_BIN = resolve(import.meta.dirname, "../../agent/bin/csh-agent.js");
 
@@ -131,6 +131,7 @@ export class FixtureRunner {
       else if (e.a3 !== undefined) await this.a3(dir, e.a3, failures);
       else if (e.run !== undefined) await this.project(dir, e.run, failures);
       else if (e.init !== undefined) await this.init(dir, e.init, failures);
+      else if (e.analyse !== undefined) await this.analyseFixture(dir, e.analyse, failures);
       else if (e.starter !== undefined) {
         const skipped = await this.starter(e.starter, failures);
         if (skipped !== undefined) res.skipped = skipped;
@@ -782,6 +783,66 @@ export class FixtureRunner {
         mkdirSync(join(root, "csh"), { recursive: true });
         writeFileSync(join(root, "csh", "component.json"), stableJson(m));
         await this.projectRun(loadProject(root, root, { subject }), x.run, failures);
+      }
+    } finally {
+      rmSync(work, { recursive: true, force: true });
+    }
+  }
+
+  // ---------------------------------------------------------------- csh analyse (stage 55)
+
+  /**
+   * The checkout in inputs/subject, committed to a scratch repository with no remote, analysed as csh analyse analyses
+   * it with no profile (Analyse, danger and grain, section 2). The analysis is written to a directory outside the
+   * subject, and the subject must be exactly as it was: nothing written, nothing ignored added.
+   */
+  private async analyseFixture(dir: string, x: Exp, failures: string[]): Promise<void> {
+    const work = mkdtempSync(join(this.o.workDir, "analyse-"));
+    try {
+      const subject = join(work, "subject");
+      copyDir(join(dir, "inputs", "subject"), subject);
+      const git = (...args: string[]) => {
+        const r = spawnSync("git", args, { cwd: subject, encoding: "utf8" });
+        if (r.status !== 0) throw new Error(`git ${args.join(" ")} failed: ${r.stderr}`);
+        return r.stdout;
+      };
+      git("init", "-q", "-b", "main");
+      git("add", "-A");
+      git("-c", "user.email=test-only@example.invalid", "-c", "user.name=test-only", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "the subject");
+      const r = await analyse({ path: subject, solver: this.o.solver });
+      if (!r.ok) {
+        failures.push(`the analysis failed: ${r.message}`);
+        return;
+      }
+      if (x.exit !== undefined && x.exit !== 0) failures.push(`the analysis completed, expected exit ${x.exit}`);
+      const a = r.analysis;
+      const said = a.guesses.join("\n");
+      for (const g of (x.guessesInclude ?? []) as string[]) if (!said.includes(g)) failures.push(`no guess mentions ${g}; guessed:\n${said}`);
+      for (const t of x.told ?? []) {
+        const got = a.told.find((y) => y.item === t.item);
+        if (got === undefined) failures.push(`no told rule ${t.item}; lifted ${a.told.map((y) => y.item).join(", ") || "none"}`);
+        else if (t.lifted !== undefined && got.lifted !== t.lifted) failures.push(`${t.item} lifted as ${got.lifted}, expected ${t.lifted}`);
+      }
+      for (const item of (x.toldAbsent ?? []) as string[]) if (a.told.some((y) => y.item === item)) failures.push(`${item} should not be a told rule`);
+      const entries = a.overview.entries;
+      const list = () => entries.map((y) => `${y.outcome} ${y.kind} ${y.subject}`).join("; ") || "none";
+      for (const w of x.entries ?? []) if (!entries.some((y) => y.outcome === w.outcome && y.kind === w.kind && y.subject === w.subject)) failures.push(`no ${w.outcome} ${w.kind} for ${w.subject}; entries: ${list()}`);
+      for (const w of x.entriesAbsent ?? []) if (entries.some((y) => y.kind === w.kind && y.subject === w.subject)) failures.push(`${w.kind} for ${w.subject} should be absent`);
+      const rungs = new Map((a.overview.rungs ?? []).map((y) => [y.item, y.rung]));
+      for (const [item, want] of Object.entries((x.rungs ?? {}) as Record<string, string>)) if (rungs.get(item) !== want) failures.push(`${item} is at ${rungs.get(item) ?? "no rung"}, expected ${want}`);
+      if (x.ladder !== undefined && JSON.stringify(a.overview.ladder) !== JSON.stringify(x.ladder)) failures.push(`ladder ${JSON.stringify(a.overview.ladder)}, expected ${JSON.stringify(x.ladder)}`);
+      if (x.sections !== undefined) {
+        const headings = renderAnalysis(a).split("\n").filter((l) => l.startsWith("== ")).map((l) => l.slice(3).split(/[ (:]/)[0]);
+        if (JSON.stringify(headings) !== JSON.stringify(x.sections)) failures.push(`sections ${JSON.stringify(headings)}, expected ${JSON.stringify(x.sections)}`);
+      }
+      if (x.files !== undefined) {
+        const out = join(work, "out");
+        writeAnalysis(out, a);
+        for (const f of x.files as string[]) if (!existsSync(join(out, f))) failures.push(`${f} not written`);
+      }
+      if (x.subjectUntouched === true) {
+        const status = git("status", "--porcelain", "--ignored");
+        if (status.trim() !== "") failures.push(`the subject changed:\n${status}`);
       }
     } finally {
       rmSync(work, { recursive: true, force: true });

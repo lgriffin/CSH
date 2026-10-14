@@ -16,9 +16,9 @@ unknown.
 | See what it does | [See it](#see-it): the lockout A3, then the walkthrough that makes it |
 | Run it on your own code | [Use it](#use-it): the starter, then the adoption steps |
 | Know how it is built, and why | [Understand it](#understand-it): context, containers, a package, a decision |
-| Find the gaps in a codebase you already have | [Analyse it](#analyse-it): converged, gaps and indeterminate, on ESI.ts |
+| Find the gaps in a codebase you already have | [Analyse it](#analyse-it): `csh analyse <path>`, cold, on any repository |
 
-You need Node 22.18 or later, pnpm, git and GnuPG. Every `sh` block in this file is executed in continuous
+You need Node 22.18 or later, pnpm, git and GnuPG (`csh analyse` needs no GnuPG). Every `sh` block in this file is executed in continuous
 integration (`node packages/testkit/src/triangle.ts readme`), so the commands below run as written.
 
 ## See it
@@ -122,6 +122,21 @@ outcomes:
   two documents that disagree, a line older than the file it names, a requirement nothing verifies.
 - **Indeterminate:** what CSH could not decide, with the input that would decide it.
 
+`csh analyse <path>` reads any git repository cold, with no profile: it proposes one, lifts the layering and EARS
+sentences of its documents as told rules, reads its code and tests, checks, and reports danger, then conflicts, gaps,
+indeterminate and converged, then counts ([16](docs/spec/16-analyse-danger-grain.md)). It writes
+`reports/csh-analysis.html` and `.json`, never writes into the repository, never runs its tests and reads no ledger.
+`--profile <dir>` reads a hand-written profile instead, and `--at <commit>` another commit. On a scratch copy of
+[F160](fixtures/F160)'s small Go service:
+
+```sh
+subject=$(mktemp -d)
+cp -r fixtures/F160/inputs/subject/. "$subject"
+git -C "$subject" init -q -b main && git -C "$subject" add -A
+git -C "$subject" -c user.name=you -c user.email=you@example.invalid -c commit.gpgsign=false commit -qm "the subject"
+node packages/cli/bin/csh.js analyse "$subject" --out reports/analysis
+```
+
 [subjects/esi-ts](subjects/esi-ts) evaluates [ESI.ts](https://github.com/lgriffin/ESI.ts), a mature TypeScript client, from
 outside. At its pinned commit CSH reports 114 gaps, 8 indeterminate and 43 converged, and each of the eleven
 disagreements in [11](docs/spec/11-ingesting-a-codebase.md) is reported or listed as unknown with a reason
@@ -194,6 +209,10 @@ csl lock <spec.csl.ts>                      Write csh/lock.json from the packs t
 
 csh init                                    Write csh/component.json by asking for each field. Guesses nothing.
                                             Writes under --root, or the git top level, as every command reads.
+csh analyse <path> [--at <commit>] [--json] [--out <dir>] [--profile <dir>] [--budget ms]
+                                            Read a repository cold: propose a profile, lift told rules from its prose,
+                                            check, and write reports/csh-analysis.html and .json, danger first. Never
+                                            writes into the repository or reads a ledger; exits 0 when it completes.
 csh init --subject <dir>                    Propose csh/component.json from a checkout's tracked files, printing
                                             every guess and what the proposal leaves unread.
 csh run [--at <commit>] [--mode advisory|enforcing] [--budget ms] [--no-cache]
@@ -327,12 +346,12 @@ Its security model is read as a structured trace, its test results are committed
 
 ## Status of the build
 
-Stages 1 to 20 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 109 golden
-fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F125, F130 to F132, F140 to F142, F150 to F155), as do
+Stages 1 to 55 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 110 golden
+fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F125, F130 to F132, F140 to F142, F150 to F155, F160), as do
 the unit, property and fault-injection tests; F118 to F125 cover [polyglot code](docs/spec/12-polyglot-code.md),
 stages 29 to 35, F130 to F132 [what real runs asked for](docs/spec/13-from-real-runs.md), stages 38 to 44, F140
 to F142 [what the Java and Python runs asked for](docs/spec/14-from-the-java-and-python-runs.md), stage 45, and F150 to F155
-[the Assertion Ladder](docs/spec/15-assertion-ladder.md), stages 47 to 52. The composition fixtures
+[the Assertion Ladder](docs/spec/15-assertion-ladder.md), stages 47 to 52, and F160 [the analyse command](docs/spec/16-analyse-danger-grain.md), stage 55. The composition fixtures
 F70 to F78 were written by the implementer and accepted by the owner. [docs/stages](docs/stages) records what each
 stage built and what its fixtures revealed.
 

@@ -8,7 +8,8 @@
 import { classify } from "@csh/adapter-ears-markdown";
 import { digestOf } from "@csh/kernel";
 import type { Adapter, AdapterInput, AdapterOutput, Diagnostic, ItemEdge, SourceItem } from "@csh/witness";
-import { backticked, bareFileToken, decode, idPatternOf, pathToken, sortedFiles } from "./common.ts";
+import { backticked, bareFileToken, decode, idPatternOf, pathToken, sortedFiles, unique } from "./common.ts";
+import { toldSentences } from "./told.ts";
 
 export const manifest = {
   id: "csh.adapter.items.markdown",
@@ -53,6 +54,7 @@ export function run(input: AdapterInput): AdapterOutput {
   // "references": a heading that opens with an identifier is a section about an item another source defines, read as
   // an implements edge from the document rather than as an item of its own.
   const headingsAreItems = input.config?.headings !== "references";
+  const lift = input.config?.told === "sentences";
   // A table row whose first cell is an identifier defines a requirement: `| ING-001 | Event | When ..., the system shall ... |`.
   // The sentence is the first cell that says shall (a pattern or status column often sits between), else the first cell.
   const tableId = new RegExp(`^\\|\\s*(${idPattern})\\s*\\|`);
@@ -224,6 +226,19 @@ export function run(input: AdapterInput): AdapterOutput {
       codeMentions(line, verifying?.item.id ?? fromId(), span);
     });
     close();
+    // Told rules (stage 55): with `told: sentences`, each layering or EARS sentence outside an identified item is an
+    // item of its own, at its line, cited as the sentence.
+    if (lift) {
+      const taken = new Set<string>();
+      const opens = (heading: string) => headingsAreItems && headingId.test(heading);
+      for (const s of toldSentences(lines, opens)) {
+        const id = unique(`${file.path}#L${s.line}`, taken);
+        const item: SourceItem = { id, kind: "requirement", text: s.text, span: `${file.path}:${s.line}`, textDigest: digestOf(s.text), attrs: { lifted: s.told, sentence: s.text } };
+        const pattern = classify(s.text);
+        if (pattern !== undefined) item.pattern = pattern;
+        add(item);
+      }
+    }
   }
   return { items, edges, diagnostics };
 }

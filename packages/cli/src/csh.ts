@@ -14,6 +14,7 @@ import { type Args, parseArgs } from "./args.ts";
 import { init } from "./init.ts";
 import { a3Command, a3Fragment, historyCommand } from "./a3.ts";
 import { diffCommand } from "./diff.ts";
+import { analyseCommand } from "./analyse.ts";
 
 const USAGE = `csh: the Composable Specification Harness
 
@@ -22,6 +23,12 @@ const USAGE = `csh: the Composable Specification Harness
   csh init --subject <dir>        Propose csh/component.json from a checkout's tracked files: sources by directory and
                                   extension, an identifier pattern, tag and test settings, a results file. Prints
                                   every guess and what the proposal leaves unread.
+  csh analyse <path> [--at <commit>] [--json] [--out <dir>] [--profile <dir>] [--budget ms]
+                                  Read a repository cold: propose a profile, lift the layering and EARS sentences of
+                                  its documents as told rules, read its code and tests, check, and place every result,
+                                  danger first, then conflicts, gaps, indeterminate and converged. Writes
+                                  csh-analysis.html and .json under --out (reports). Never writes into the repository,
+                                  runs its tests or reads a ledger. Exits 0 when it completes.
   csh run [--at <commit>] [--mode advisory|enforcing] [--budget ms] [--no-cache]
                                   Run each practice's harness, check and gate one snapshot of the component, and
                                   store the run under .csh-cache/runs/. Exits non-zero only on block in enforcing
@@ -283,6 +290,7 @@ export async function csh(argv: string[], io: Io): Promise<number> {
     return cmd === undefined ? 2 : 0;
   }
   if (cmd === "init") return init(io.cwd, a.options.root, io, a.options.subject);
+  if (cmd === "analyse") return analyseCommand(a, io, io.solver ?? defaultSolver);
   const subject = a.options.subject !== undefined ? resolve(io.cwd, a.options.subject) : undefined;
   const p = loadProject(io.cwd, a.options.root, subject !== undefined ? { subject } : {});
   switch (cmd) {

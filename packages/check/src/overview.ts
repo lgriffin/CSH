@@ -239,10 +239,11 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
  * The overview as one self-contained HTML sheet. Each outcome, practice and kind is a section that opens on demand;
  * each entry has its anchor as id, and opening the sheet at `#<anchor>` opens every section around it.
  */
-export function renderOverviewHtml(o: Overview, title: string): string {
+export function renderOverviewHtml(o: Overview, title: string, extra: { before?: string } = {}): string {
   const body: string[] = [];
   const ladder = o.ladder !== undefined ? `<div class="ladder" aria-label="Assertion Ladder">${RUNGS.map((r) => `<span class="rung ${r}"><b>${o.ladder![r]}</b> ${r} ${RUNG_NAMES[r]}</span>`).join("")}</div>` : "";
   body.push(`<header><h1>${esc(title)}</h1><div class="tiles">${(["gap", "indeterminate", "converged"] as Outcome[]).map((x) => `<a class="tile ${x}" href="#${x}"><b>${o.counts[x]}</b><span>${x === "gap" ? "gaps" : x}</span></a>`).join("")}</div>${ladder}</header>`);
+  if (extra.before !== undefined) body.push(extra.before);
   for (const outcome of ["gap", "indeterminate", "converged"] as Outcome[]) {
     const es = o.entries.filter((e) => e.outcome === outcome);
     body.push(`<details class="outcome ${outcome}" id="${outcome}"${outcome === "gap" ? " open" : ""}><summary><h2>${esc(TITLES[outcome])} <small>${es.length}</small></h2></summary>`);
@@ -275,7 +276,7 @@ details details{margin-left:1rem}.tiles{display:flex;gap:.75rem;flex-wrap:wrap}
 .outcome.gap>summary h2{color:var(--gap)}.outcome.indeterminate>summary h2{color:var(--ind)}.outcome.converged>summary h2{color:var(--conv)}
 .next{color:var(--muted)}ul{margin:.25rem 0 .75rem;padding-left:1.25rem}li{margin:.2rem 0;overflow-wrap:anywhere}
 .subject{font-family:ui-monospace,monospace;font-size:.9em}.sig{color:var(--muted);font-size:.85em}.detail{color:var(--muted);font-size:.9em}
-li:target{background:var(--hl);border-radius:4px}
+li:target{background:var(--hl);border-radius:4px}.outcome.danger>summary h2{color:var(--gap)}.next{color:var(--muted)}section.read{color:var(--muted)}
 .ladder{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem;color:var(--muted)}.rung{border:1px solid var(--line);border-radius:4px;padding:0 .35rem;font-size:.85em}.ladder .rung b{color:var(--fg)}
 </style></head><body>
 ${body.join("\n")}

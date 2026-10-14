@@ -24,7 +24,8 @@ export const EXTERNAL_FAMILIES = ["UTF", "SHA", "ISO", "RFC", "CVE", "AES", "RSA
 
 const CODE_EXT = ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "svelte", "py", "pyi", "java", "go", "rs"];
 const JS_EXT = ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs"];
-const ROOT_MANIFESTS = ["package.json", "pyproject.toml", "pom.xml", "go.mod", "Cargo.toml"];
+/** Language manifests read as code: at the root, and since stage 55 at any depth (a Maven module, a nested Go module). */
+const MANIFESTS = ["package.json", "pyproject.toml", "pom.xml", "go.mod", "Cargo.toml"];
 const TEST_DIRS = ["test", "tests", "__tests__"];
 /** The files an agent's tooling loads at the start of every session, by name, anywhere in the tree (stage 50). */
 export const INSTRUCTION_FILES = ["AGENTS.md", "CLAUDE.md", "GEMINI.md"];
@@ -139,8 +140,16 @@ const git = (dir: string, ...args: string[]): string | undefined => {
   }
 };
 
+export interface ProposeOptions {
+  /**
+   * Lift told rules from the documents (Analyse, danger and grain, stage 55): every Markdown practice reads its layering
+   * and EARS sentences as items, with the setting `told: sentences`. Set by `csh analyse`, never by `csh init`.
+   */
+  lift?: boolean;
+}
+
 /** A profile for the checkout at `dir`, or why there is none. */
-export function proposeProfile(dir: string): Proposal | { error: string } {
+export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | { error: string } {
   const tracked = trackedFiles(dir);
   const commit = git(dir, "rev-parse", "HEAD");
   if (tracked === undefined || commit === undefined) return { error: `${dir} is not a git checkout with a commit` };
@@ -274,17 +283,30 @@ export function proposeProfile(dir: string): Proposal | { error: string } {
 
   // Code: every file CSH reads facts from that is not a test, plus the language manifests at the root.
   const code = files.filter((p) => CODE_EXT.includes(ext(p)) && testConvention(p) === undefined && stepConvention(p) === undefined && !fixtures(p));
-  const manifests = files.filter((p) => ROOT_MANIFESTS.includes(p));
+  // A nested manifest names a module of its own; one in a fixture or a dot-directory is test data or tooling.
+  const manifests = files.filter((p) => MANIFESTS.includes(posix.basename(p)) && !fixtures(p) && (p.includes("/") ? !underAny(p, TEST_DIRS) : true));
   if (code.length > 0) {
     const g = globsFor(code, files, undefined, [...testGlobs, ...stepGlobs, "**/fixtures/**", "**/__fixtures__/**"]);
     add({ name: "Code", kind: "Code", at: ".", include: [...g.include, ...manifests], exclude: g.exclude }, { id: "code", name: "Code facts", kind: "facts", unit: "the module" });
     guesses.push(`Code: ${code.length} source files in ${[...new Set(code.map((p) => ext(p)))].sort(compareCodePoints).join(", ")}${manifests.length > 0 ? `, and ${manifests.join(", ")}` : ""}`);
+  }
+
+  // A Mermaid container diagram in a file of its own (stage 55): the first line that is not blank or a comment says C4Container.
+  const diagrams = files.filter((p) => ext(p) === "mmd" && !fixtures(p) && read(p).split(/\r?\n/).map((l) => l.trim()).find((l) => l !== "" && !l.startsWith("%%")) === "C4Container");
+  if (diagrams.length > 0) {
+    add({ name: "Architecture", kind: "Architecture", at: ".", include: [...diagrams] }, { id: "c4", name: "Container diagram", kind: "architecture", unit: "the relation" });
+    guesses.push(`Architecture: ${diagrams.join(", ")}, a Mermaid C4Container diagram, read against the code's packages`);
   }
   const implementation = [...new Set(code.map((p) => (p.includes("/") ? segments(p)[0]! : p)))].sort(compareCodePoints);
 
   if (tracked.includes(".beads/issues.jsonl")) {
     add({ name: "Issues", kind: "Issues", at: ".beads/issues.jsonl" }, { id: "issues", name: "Issues", kind: "issues", unit: "the issue", settings: { ...idSettings } });
     guesses.push("Issues: .beads/issues.jsonl");
+  }
+  if (o.lift === true) {
+    const reading = practices.filter((p) => p.kind === "documents" || p.kind === "requirements" || p.kind === "instructions");
+    for (const p of reading) p.settings = { ...(p.settings ?? {}), told: "sentences" };
+    if (reading.length > 0) guesses.push(`told sentences: the layering and EARS sentences of ${reading.map((p) => p.name).join(", ")} are read as told rules, each at its line`);
   }
   for (const p of practices) if (p.settings !== undefined && Object.keys(p.settings).length === 0) delete p.settings;
 

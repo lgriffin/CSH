@@ -20,6 +20,11 @@ export interface EvaluateOptions {
   noCache?: boolean;
   /** The specification as emitProject emitted it for these options, reused rather than emitted again. */
   emission?: Emission;
+  /**
+   * False reads no ledger and no signature, so every fragment is a candidate and GnuPG is not needed (csh analyse,
+   * stage 55). The evidence store is not written either.
+   */
+  ledger?: false;
 }
 
 export type Evaluation =
@@ -65,7 +70,7 @@ export async function evaluateProject(p: Project, o: EvaluateOptions): Promise<E
   const evidenceFile = join(p.root, CACHE_DIR, "evidence.json");
   const cache = o.noCache === true ? new SolverCache() : SolverCache.load(cacheFile);
   const evidence = loadEvidenceStore(evidenceFile);
-  const ledger = await ledgerOf(p, spec);
+  const ledger = o.ledger === false ? undefined : await ledgerOf(p, spec);
   const cfg = { ...(budget !== undefined ? { budgetMs: budget } : {}), ...(p.config.requirementIdPattern !== undefined ? { requirementIdPattern: p.config.requirementIdPattern } : {}) };
   const impl = unchangedSince(p);
   const emission = o.emission ?? (spec === undefined ? await emitProject(p, o) : undefined);
@@ -93,14 +98,14 @@ export async function evaluateProject(p: Project, o: EvaluateOptions): Promise<E
   const problem = emissionProblem(r);
   if (problem !== undefined) return { ok: false, message: problem };
   const report = r.checked!.report;
-  const provenanceOf = await fragmentProvenance(p, spec);
+  const provenanceOf = o.ledger === false ? undefined : await fragmentProvenance(p, spec);
   if (provenanceOf !== undefined) for (const a of report.assessments ?? []) a.authoredBy = authoredByOf(provenanceOf(a.fragment, a.digest));
   // The module digest is known only after emission; the snapshot digest is filled in after it.
   const snapshot = snapshotOf(p, report.moduleDigest, ledger, o.solver.id, TOOL_VERSION);
   report.snapshot = { commit: p.commit, ledgerHead: String(ledger?.head ?? 0), digest: snapshotDigest(snapshot) };
   if (p.subject !== undefined) report.subject = { repo: p.subject.repo, commit: p.subject.commit };
   if (o.noCache !== true) cache.save(cacheFile);
-  saveEvidenceStore(evidenceFile, evidence);
+  if (o.ledger !== false) saveEvidenceStore(evidenceFile, evidence);
   return { ok: true, report, model: r.checked!.prepared.module, ledger, snapshot };
 }
 
