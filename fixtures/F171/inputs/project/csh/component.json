@@ -1,0 +1,48 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Shop",
+  "spec": "csh/spec.csl.ts",
+  "implementation": [
+    "core",
+    "db",
+    "web"
+  ],
+  "sources": [
+    {
+      "name": "Code",
+      "kind": "Code",
+      "at": ".",
+      "include": [
+        "**/*.go",
+        "**/go.mod",
+        "go.work"
+      ]
+    }
+  ],
+  "practices": [
+    {
+      "id": "rules",
+      "name": "Rules",
+      "kind": "requirements",
+      "sources": [
+        "Rules"
+      ]
+    },
+    {
+      "id": "c4",
+      "name": "Container diagram",
+      "kind": "architecture",
+      "sources": [
+        "C4"
+      ]
+    },
+    {
+      "id": "code",
+      "name": "Code facts",
+      "kind": "facts",
+      "sources": [
+        "Code"
+      ]
+    }
+  ]
+}

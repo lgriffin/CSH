@@ -35,7 +35,7 @@ It is the "Run" container, shown in the [containers diagram](../../docs/architec
   `csh-analysis.html`.
 - `proposeProfile(dir, { lift })`: since stage 55 language manifests are code at any depth (not in a fixture, a
   dot-directory or a test directory), a Mermaid file whose first line is `C4Container` is an `Architecture` source,
-  and `lift` sets `told: sentences` on every Markdown practice ([A-191](../../ASSUMPTIONS.md)).
+  and `lift` sets `told: sentences` on every Markdown practice ([A-191](../../ASSUMPTIONS.md)). Since stage 58 a `go.work` is a manifest too ([A-199](../../ASSUMPTIONS.md)).
 - `evaluateProject(project, { ledger: false })`: since stage 55, reads no ledger and no signature, and writes no
   evidence store, so every fragment is a candidate and GnuPG is not needed.
 - `importResults(project, practice, report, base?)` (stage 28): a runner's report reduced to `csh-results/v1` at the subject's pinned commit, or HEAD, and written to the practice's `executions` path; a report left with absolute paths is refused ([A-124](../../ASSUMPTIONS.md)).

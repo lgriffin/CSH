@@ -1,0 +1,9 @@
+%% The shop's containers: each names the package that builds it.
+C4Container
+  title Shop: containers
+  System_Boundary(shop, "Shop") {
+    Container(web, "Web", "shop-web", "Pages and the API")
+    Container(core, "Core", "shop-core", "Orders and prices")
+    Container(db, "Database access", "shop-db", "Tables")
+  }
+  Rel(web, core, "Calls")
