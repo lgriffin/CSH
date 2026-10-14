@@ -73,4 +73,14 @@ describe("the Markdown adapter with told: sentences", () => {
     expect(told[0]!.attrs!.sentence).toBe("The domain does not import the store.");
     expect(doc("docs/a.md", text, {}).items!.filter((i) => i.attrs?.lifted !== undefined)).toEqual([]);
   });
+
+  it("marks a sentence that claims something checks it with the phrase that claims it (stage 56)", () => {
+    const text = "# Doc\n\nThe domain is guaranteed not to import the store. The API cannot import the store.\n\n- The store never imports the API, and this is enforced in CI.\n";
+    const told = doc("docs/a.md", text).items!.filter((i) => i.attrs?.lifted !== undefined);
+    expect(told.map((i) => [i.id, i.attrs!.claims])).toEqual([
+      ["docs/a.md#L3", "guaranteed"],
+      ["docs/a.md#L3~2", undefined],
+      ["docs/a.md#L5", "enforced"],
+    ]);
+  });
 });

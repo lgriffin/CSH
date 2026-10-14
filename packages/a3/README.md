@@ -18,7 +18,7 @@ It is the "A3" container, shown in the [containers diagram](../../docs/architect
 - `MEASURES`, `measureValues`: the eight default measures, each with an id so the judgments can override its target.
 - `renderMarkdown(model)`, `renderHtml(model)`, `authorityLine`, `UNWRITTEN`: the two renderings.
 - `skeleton(stage, practices)`: the judgments `csh a3 open` writes.
-- `Problem`, `ProblemKind`, `Authority`, `CountermeasureStatus`, `SheetStage`, `SheetSignal`: the records the model carries.
+- `Problem`, `ProblemKind`, `Authority`, `CountermeasureStatus`, `SheetStage`, `SheetSignal`: the records the model carries. Since stage 56 each `SheetStage` carries `danger` (refuted and masked counts, and each marked entry) from the stage's overview; the sheet shows a Danger tile, a Danger column in the stage table and the entries beneath it, and sums nothing ([A-194](../../ASSUMPTIONS.md)).
 
 ## Depends on and used by
 

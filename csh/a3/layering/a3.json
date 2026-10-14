@@ -308,6 +308,19 @@
   "stages": [
     {
       "conflicts": 0,
+      "danger": {
+        "entries": [
+          {
+            "kind": "violated",
+            "of": "Workspace/Layering/DiagramIsComplete",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "Workspace/Layering/DiagramIsComplete"
+          }
+        ],
+        "masked": 0,
+        "refuted": 1
+      },
       "examples": {
         "citing": 0,
         "total": 0

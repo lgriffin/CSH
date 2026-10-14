@@ -15,4 +15,5 @@ export * from "./results.ts";
 export * from "./overview.ts";
 export * from "./expect.ts";
 export * from "./ladder.ts";
+export * from "./danger.ts";
 export * from "./analysis.ts";

@@ -900,6 +900,44 @@
   "stages": [
     {
       "conflicts": 4,
+      "danger": {
+        "entries": [
+          {
+            "green": "the test test/lockout.test.ts::allows three failed attempts before locking passes",
+            "kind": "example-divergence",
+            "of": "SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount",
+            "shape": "green-over-refuted",
+            "structure": "masked",
+            "subject": "SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsThreeFailedAttemptsBeforeLocking"
+          },
+          {
+            "green": "the test test/lockout.test.ts::allows three failed attempts before locking passes",
+            "kind": "example-conflict",
+            "of": "SignInService/StopPasswordGuessing/LockOnThirdFailure",
+            "shape": "green-over-refuted",
+            "structure": "masked",
+            "subject": "SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsThreeFailedAttemptsBeforeLocking, SignInService/StopPasswordGuessing/LockOnThirdFailure"
+          },
+          {
+            "green": "the test test/lockout.test.ts::refuses a locked account even with the correct password passes",
+            "kind": "example-conflict",
+            "of": "SignInService/StopPasswordGuessing/AcceptCorrectPassword",
+            "shape": "green-over-refuted",
+            "structure": "masked",
+            "subject": "SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eRefusesALockedAccountEvenWithTheCorrectPassword, SignInService/StopPasswordGuessing/AcceptCorrectPassword"
+          },
+          {
+            "green": "the test test/lockout.test.ts::locks on the fourth failed attempt passes",
+            "kind": "no-rule",
+            "of": "SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eLocksOnTheFourthFailedAttempt",
+            "shape": "test-under-no-rule",
+            "structure": "masked",
+            "subject": "SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eLocksOnTheFourthFailedAttempt"
+          }
+        ],
+        "masked": 4,
+        "refuted": 0
+      },
       "examples": {
         "citing": 2,
         "total": 7
@@ -1224,6 +1262,11 @@
     },
     {
       "conflicts": 0,
+      "danger": {
+        "entries": [],
+        "masked": 0,
+        "refuted": 0
+      },
       "examples": {
         "citing": 8,
         "total": 8
@@ -1382,6 +1425,44 @@
     },
     {
       "conflicts": 0,
+      "danger": {
+        "entries": [
+          {
+            "green": "an approval, by the rule's own author",
+            "kind": "satisfied",
+            "of": "SignInService/StopPasswordGuessing/AcceptCorrectPassword",
+            "shape": "self-approved",
+            "structure": "masked",
+            "subject": "SignInService/StopPasswordGuessing/AcceptCorrectPassword"
+          },
+          {
+            "green": "an approval, by the rule's own author",
+            "kind": "satisfied",
+            "of": "SignInService/StopPasswordGuessing/LockHasDuration",
+            "shape": "self-approved",
+            "structure": "masked",
+            "subject": "SignInService/StopPasswordGuessing/LockHasDuration"
+          },
+          {
+            "green": "an approval, by the rule's own author",
+            "kind": "satisfied",
+            "of": "SignInService/StopPasswordGuessing/LockOnThirdFailure",
+            "shape": "self-approved",
+            "structure": "masked",
+            "subject": "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+          },
+          {
+            "green": "an approval, by the rule's own author",
+            "kind": "satisfied",
+            "of": "SignInService/StopPasswordGuessing/RefuseWhileLocked",
+            "shape": "self-approved",
+            "structure": "masked",
+            "subject": "SignInService/StopPasswordGuessing/RefuseWhileLocked"
+          }
+        ],
+        "masked": 4,
+        "refuted": 0
+      },
       "examples": {
         "citing": 8,
         "total": 8
@@ -1564,6 +1645,60 @@
     },
     {
       "conflicts": 1,
+      "danger": {
+        "entries": [
+          {
+            "green": "the test test/lockout.test.ts::allows a third failed attempt passes",
+            "kind": "example-divergence",
+            "of": "SignInService/@Scenarios/ScenarioTheLockLastsFifteenMinutes",
+            "shape": "green-over-refuted",
+            "structure": "masked",
+            "subject": "SignInService/@Scenarios/ScenarioTheLockLastsFifteenMinutes, SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt"
+          },
+          {
+            "green": "the test test/lockout.test.ts::allows a third failed attempt passes",
+            "kind": "example-divergence",
+            "of": "SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount",
+            "shape": "green-over-refuted",
+            "structure": "masked",
+            "subject": "SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt"
+          },
+          {
+            "green": "the test test/lockout.test.ts::allows a third failed attempt passes",
+            "kind": "example-conflict",
+            "of": "SignInService/StopPasswordGuessing/LockOnThirdFailure",
+            "shape": "green-over-refuted",
+            "structure": "masked",
+            "subject": "SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt, SignInService/StopPasswordGuessing/LockOnThirdFailure"
+          },
+          {
+            "green": "an approval, by the rule's own author",
+            "kind": "satisfied",
+            "of": "SignInService/StopPasswordGuessing/AcceptCorrectPassword",
+            "shape": "self-approved",
+            "structure": "masked",
+            "subject": "SignInService/StopPasswordGuessing/AcceptCorrectPassword"
+          },
+          {
+            "green": "an approval, by the rule's own author",
+            "kind": "satisfied",
+            "of": "SignInService/StopPasswordGuessing/LockHasDuration",
+            "shape": "self-approved",
+            "structure": "masked",
+            "subject": "SignInService/StopPasswordGuessing/LockHasDuration"
+          },
+          {
+            "green": "an approval, by the rule's own author",
+            "kind": "satisfied",
+            "of": "SignInService/StopPasswordGuessing/RefuseWhileLocked",
+            "shape": "self-approved",
+            "structure": "masked",
+            "subject": "SignInService/StopPasswordGuessing/RefuseWhileLocked"
+          }
+        ],
+        "masked": 6,
+        "refuted": 0
+      },
       "examples": {
         "citing": 8,
         "total": 8

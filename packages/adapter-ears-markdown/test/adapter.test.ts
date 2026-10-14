@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { digestOf } from "@csh/kernel";
 import type { AdapterInput } from "@csh/witness";
-import { classify, run } from "../src/index.ts";
+import { claimOf, classify, run } from "../src/index.ts";
 
 function input(files: Record<string, string>, config?: Record<string, string>): AdapterInput {
   return {
@@ -97,5 +97,18 @@ describe("what the audit of a real specification set showed", () => {
   it("still reports two table rows that define one identifier", () => {
     const out = run(input({ "r.md": "| A-1 | The system shall a. |\n| A-1 | The system shall b. |\n" }));
     expect(out.diagnostics.map((d) => d.code)).toEqual(["duplicate-id"]);
+  });
+});
+
+describe("claimOf (Analyse, danger and grain, Q-52)", () => {
+  it("finds the phrase that claims something checks a sentence, and nothing in a modal alone", () => {
+    expect(claimOf("The store is covered by tests.")).toBe("covered by tests");
+    expect(claimOf("Layering is enforced by the build.")).toBe("enforced");
+    expect(claimOf("This is unit-tested.")).toBe("unit-tested");
+    expect(claimOf("It is checked by CI.")).toBe("checked by");
+    expect(claimOf("The domain is guaranteed to stay pure.")).toBe("guaranteed");
+    expect(claimOf("The domain cannot import the store.")).toBeUndefined();
+    expect(claimOf("The API must not depend on the driver.")).toBeUndefined();
+    expect(claimOf("WHEN the user signs in, THE SERVICE SHALL accept it.")).toBeUndefined();
   });
 });

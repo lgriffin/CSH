@@ -3,7 +3,7 @@
 // through the bindings read in reverse (key to term). A record with no outcome takes it from the execution line of its
 // test, joined by test identity; without one, its outcome is unknown and it is never a claim.
 import type { Binding, ClaimSet, EventDecl, Example, Expr, Type, Unliftable, Vocabulary } from "@csh/kernel";
-import { type Adapter, type AdapterInput, type AdapterOutput, type Diagnostic, type Json, type LocalResult, outcomeOf, parseExecutions, parseWitnesses, type Witness } from "@csh/witness";
+import { type Adapter, type AdapterInput, type AdapterOutput, type Diagnostic, type Json, type LocalResult, outcomeOf, parseExecutions, parseWitnesses, type Witness, witnessExampleName } from "@csh/witness";
 
 export const manifest = {
   id: "csh.adapter.witness-files",
@@ -29,10 +29,7 @@ export function liftValue(v: Json | undefined, t: Type): Lift {
 }
 
 /** A legal example name derived from a witness id: "w1" becomes "WitnessW1". */
-export function exampleName(id: string): string {
-  const parts = id.split(/[^A-Za-z0-9]+/).filter((p) => p !== "");
-  return `Witness${parts.map((p) => p[0]!.toUpperCase() + p.slice(1)).join("")}`;
-}
+export const exampleName = witnessExampleName;
 
 interface Reverse {
   term: Binding["target"];

@@ -4,7 +4,8 @@
 // gives: danger, conflicts, gaps, indeterminate, converged, then counts. It decides nothing the overview does not.
 import type { ExpectResult } from "./expect.ts";
 import { ladderLine } from "./ladder.ts";
-import { type OverviewEntry, type Overview, renderOverviewHtml } from "./overview.ts";
+import { dangerLine } from "./danger.ts";
+import { dangerHtml, type OverviewEntry, type Overview, renderOverviewHtml } from "./overview.ts";
 
 export interface Analysis {
   schema: "csh-analysis/v1";
@@ -34,12 +35,16 @@ export interface AnalysisSections {
   converged: OverviewEntry[];
 }
 
-/** The entries of an analysis in the order it reports them; each entry is in exactly one section. */
+/**
+ * The entries of an analysis in the order it reports them; each entry is in exactly one section. A dangerous entry is
+ * reported first, under Danger, and keeps its outcome there (stage 56).
+ */
 export function sectionsOf(a: Analysis): AnalysisSections {
-  const es = a.overview.entries;
+  const danger = a.overview.entries.filter((e) => e.danger !== undefined);
+  const es = a.overview.entries.filter((e) => e.danger === undefined);
   const conflict = (e: OverviewEntry) => e.outcome === "gap" && CONFLICT_KINDS.has(e.kind);
   return {
-    danger: [],
+    danger,
     conflicts: es.filter(conflict),
     gaps: es.filter((e) => e.outcome === "gap" && !conflict(e)),
     indeterminate: es.filter((e) => e.outcome === "indeterminate"),
@@ -51,9 +56,10 @@ const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
 /** One entry in full: its kind, subject and id, each part of its evidence, and what would move it. */
 function entryLines(e: OverviewEntry): string[] {
-  const lines = [`  ${e.kind}  ${e.subject}${e.rung !== undefined ? `  (${e.rung})` : ""}  [${e.anchor}]`];
+  const lines = [`  ${e.danger !== undefined ? `${e.outcome} ` : ""}${e.kind}  ${e.subject}${e.rung !== undefined ? `  (${e.rung})` : ""}  [${e.anchor}]`];
+  if (e.danger !== undefined) lines.push(`    danger: ${dangerLine(e.danger)}`);
   for (const part of (e.detail ?? "").split(/;\s+/).filter((x) => x !== "")) lines.push(`    - ${part}`);
-  lines.push(`    next: ${e.next}`);
+  lines.push(`    ${e.danger !== undefined ? `close: ${e.danger.close}` : `next: ${e.next}`}`);
   return lines;
 }
 
@@ -78,15 +84,17 @@ export function renderAnalysis(a: Analysis): string {
   out.push(a.profile.kind === "proposed" ? `  profile: proposed, ${`${a.guesses.length} ${a.guesses.length === 1 ? "guess" : "guesses"}`} (csh analyse --json lists them); nothing is written into the subject` : `  profile: ${a.profile.dir}`);
   if (a.coverage !== undefined) out.push(a.coverage.read === a.coverage.tracked ? `  coverage: all ${a.coverage.tracked} tracked files read` : `  coverage: ${a.coverage.read} of ${a.coverage.tracked} tracked files read; not read: ${a.coverage.unread.slice(0, 3).map((u) => `${u.files} ${u.ext}`).join(", ")}${a.coverage.unread.length > 3 ? ", …" : ""}`);
   out.push(`  told rules lifted from prose: ${a.told.length} (${lifted("layering")} layering, ${lifted("ears")} EARS), each cited as its sentence`, "");
-  out.push(`== Danger (${s.danger.length})`);
-  out.push(s.danger.length === 0 ? "  none established" : "", "");
+  out.push(`== Danger (${s.danger.length}): refuted or masked, never scored; each keeps its outcome`);
+  if (s.danger.length === 0) out.push("  none established");
+  for (const e of s.danger) out.push(...entryLines(e));
+  out.push("");
   out.push(`== Conflicts (${s.conflicts.length})`);
   if (s.conflicts.length === 0) out.push("  none");
   for (const e of s.conflicts) out.push(...entryLines(e));
   out.push("", `== Gaps (${s.gaps.length}): suggestions, each with what would close it`, ...byKind(s.gaps), "");
   out.push(`== Indeterminate (${s.indeterminate.length}): what could not be decided, with what would decide it`, ...byKind(s.indeterminate), "");
   out.push(`== Converged (${s.converged.length}): what the evidence bears out`, ...byKind(s.converged, 2), "");
-  out.push("== Counts", `  ${a.overview.counts.gap} gaps, ${a.overview.counts.indeterminate} indeterminate, ${a.overview.counts.converged} converged`);
+  out.push("== Counts", `  ${a.overview.counts.gap} gaps, ${a.overview.counts.indeterminate} indeterminate, ${a.overview.counts.converged} converged`, `  of these, ${a.overview.danger.refuted} refuted and ${a.overview.danger.masked} masked`);
   if (a.overview.ladder !== undefined) out.push(`  ${ladderLine(a.overview.ladder)}`);
   if (a.expect !== undefined) out.push(`  expected results: ${a.expect.mismatches.length === 0 ? "every expectation met" : plural(a.expect.mismatches.length, "mismatch")}`);
   out.push("");
@@ -101,7 +109,7 @@ export function renderAnalysisHtml(a: Analysis, title: string): string {
   const full = (es: OverviewEntry[]) =>
     es.length === 0
       ? `<p class="none">None.</p>`
-      : `<ul>${es.map((e) => `<li id="${esc(e.anchor)}"><div class="subject"><code>${esc(e.kind)}</code> ${esc(e.subject)}${e.rung !== undefined ? ` <span class="rung ${e.rung}">${e.rung}</span>` : ""}</div><ul class="detail">${(e.detail ?? "").split(/;\s+/).filter((x) => x !== "").map((x) => `<li>${esc(x)}</li>`).join("")}<li class="next">next: ${esc(e.next)}</li></ul></li>`).join("")}</ul>`;
+      : `<ul>${es.map((e) => `<li id="${esc(e.anchor)}"><div class="subject"><code>${esc(e.kind)}</code> ${esc(e.subject)}${e.rung !== undefined ? ` <span class="rung ${e.rung}">${e.rung}</span>` : ""}</div>${e.danger !== undefined ? dangerHtml(e.danger) : ""}<ul class="detail">${(e.detail ?? "").split(/;\s+/).filter((x) => x !== "").map((x) => `<li>${esc(x)}</li>`).join("")}<li class="next">next: ${esc(e.next)}</li></ul></li>`).join("")}</ul>`;
   const before = [
     `<section class="read"><p>${esc(a.subject.repo)} at <code>${esc(a.subject.commit)}</code>; profile ${a.profile.kind === "proposed" ? "proposed for this run" : esc(a.profile.dir)}.</p>`,
     a.guesses.length > 0 ? `<details><summary>${a.guesses.length} guesses</summary><ul>${a.guesses.map((g) => `<li>${esc(g)}</li>`).join("")}</ul></details>` : "",

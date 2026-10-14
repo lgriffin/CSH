@@ -5,7 +5,7 @@
 // implements edges from the document; any other backticked repository path, or bare code file name (stage 25), becomes
 // a mentions-file edge. It reads
 // structure and never meaning: a requirement whose verification is prose alone simply has no verified-by edge.
-import { classify } from "@csh/adapter-ears-markdown";
+import { claimOf, classify } from "@csh/adapter-ears-markdown";
 import { digestOf } from "@csh/kernel";
 import type { Adapter, AdapterInput, AdapterOutput, Diagnostic, ItemEdge, SourceItem } from "@csh/witness";
 import { backticked, bareFileToken, decode, idPatternOf, pathToken, sortedFiles, unique } from "./common.ts";
@@ -236,6 +236,9 @@ export function run(input: AdapterInput): AdapterOutput {
         const item: SourceItem = { id, kind: "requirement", text: s.text, span: `${file.path}:${s.line}`, textDigest: digestOf(s.text), attrs: { lifted: s.told, sentence: s.text } };
         const pattern = classify(s.text);
         if (pattern !== undefined) item.pattern = pattern;
+        // A sentence that says something checks it claims a rung (stage 56); the ladder says whether one stands behind it.
+        const claim = claimOf(s.text);
+        if (claim !== undefined) item.attrs!.claims = claim;
         add(item);
       }
     }

@@ -512,6 +512,32 @@ The gate exits 1. The script does not check that itself: the A3's committed shee
 and `csh a3 build --check` fails if it changes. The verdict names the implementation, not the rule: the rule
 is approved and the evidence is current, so the witness is what disagrees.
 
+The overview reports the regression first, as danger (each entry's `close:` line is left out here):
+
+```
+$ csh overview
+== Danger: refuted or masked, each also under its outcome (0 refuted, 6 masked)
+  gap example-divergence  SignInService/@Scenarios/ScenarioTheLockLastsFifteenMinutes, SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt
+    danger: masked, green over refuted: the test test/lockout.test.ts::allows a third failed attempt passes
+  gap example-divergence  SignInService/@Scenarios/ScenarioThirdFailedAttemptLocksTheAccount, SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt
+    danger: masked, green over refuted: the test test/lockout.test.ts::allows a third failed attempt passes
+  gap example-conflict  SignInService/@UnitTests/WitnessTest0slockout0dtest0dts0eAllowsAThirdFailedAttempt, SignInService/StopPasswordGuessing/LockOnThirdFailure
+    danger: masked, green over refuted: the test test/lockout.test.ts::allows a third failed attempt passes
+  converged satisfied  SignInService/StopPasswordGuessing/AcceptCorrectPassword
+    danger: masked, self approved: an approval, by the rule's own author
+  converged satisfied  SignInService/StopPasswordGuessing/LockHasDuration
+    danger: masked, self approved: an approval, by the rule's own author
+  converged satisfied  SignInService/StopPasswordGuessing/RefuseWhileLocked
+    danger: masked, self approved: an approval, by the rule's own author
+```
+
+Every test passes and an approved rule is violated: masked danger, green over refuted, naming the test that reads as
+assurance. The two scenarios that test now contradicts are masked the same way. The three rules that converge are
+masked too, by another shape: one maintainer approved what they wrote, and a second maintainer would close it. Danger
+is a view: each entry keeps its outcome, nothing is scored, and the gate alone blocks
+([spec 16, section 3](spec/16-analyse-danger-grain.md)). The A3's stage table counts danger per stage; the stage before
+the countermeasures already reads 3 masked, which is the problem the A3 states.
+
 ## 10. Build the A3
 
 After each stage's run the script records it as a stage of the A3, `csh/a3/three-practices/`, and commits the record:

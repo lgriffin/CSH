@@ -1410,6 +1410,164 @@
   "stages": [
     {
       "conflicts": 7,
+      "danger": {
+        "entries": [
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DES-08",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DES-08"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-03",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-03"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-04",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-04"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/GATE-06",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/GATE-06"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/guides/CHARTER.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/guides/CHARTER.md"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/DES-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/DES-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/GATE-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/GATE-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/PROC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/PROC-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/SEC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/SEC-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/TEST-08",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/TEST-08"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/QUALITY-GATES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/QUALITY-GATES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/RELEASE.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/RELEASE.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/TESTING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/TESTING.md"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersInPlace",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersInPlace, EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints, EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersStillToAdd",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints"
+          },
+          {
+            "kind": "violated",
+            "of": "EsiTs/Layering/PipelineTakesResilienceAsParameters",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/Layering/PipelineTakesResilienceAsParameters"
+          }
+        ],
+        "masked": 5,
+        "refuted": 16
+      },
       "examples": {
         "citing": 0,
         "total": 0
@@ -2716,6 +2874,157 @@
     },
     {
       "conflicts": 7,
+      "danger": {
+        "entries": [
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DES-08",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DES-08"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-03",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-03"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-04",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-04"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/guides/CHARTER.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/guides/CHARTER.md"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/DES-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/DES-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/GATE-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/GATE-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/PROC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/PROC-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/SEC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/SEC-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/TEST-08",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/TEST-08"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/QUALITY-GATES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/QUALITY-GATES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/RELEASE.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/RELEASE.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/TESTING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/TESTING.md"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersInPlace",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersInPlace, EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints, EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersStillToAdd",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints"
+          },
+          {
+            "kind": "violated",
+            "of": "EsiTs/Layering/PipelineTakesResilienceAsParameters",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/Layering/PipelineTakesResilienceAsParameters"
+          }
+        ],
+        "masked": 5,
+        "refuted": 15
+      },
       "examples": {
         "citing": 0,
         "total": 0
@@ -3970,6 +4279,157 @@
     },
     {
       "conflicts": 7,
+      "danger": {
+        "entries": [
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DES-08",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DES-08"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-03",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-03"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-04",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-04"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/guides/CHARTER.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/guides/CHARTER.md"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/DES-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/DES-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/GATE-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/GATE-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/PROC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/PROC-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/SEC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/SEC-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/TEST-08",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/TEST-08"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/QUALITY-GATES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/QUALITY-GATES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/RELEASE.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/RELEASE.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/TESTING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/TESTING.md"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersInPlace",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersInPlace, EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints, EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersStillToAdd",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints"
+          },
+          {
+            "kind": "violated",
+            "of": "EsiTs/Layering/PipelineTakesResilienceAsParameters",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/Layering/PipelineTakesResilienceAsParameters"
+          }
+        ],
+        "masked": 5,
+        "refuted": 15
+      },
       "examples": {
         "citing": 0,
         "total": 0
@@ -5212,6 +5672,157 @@
     },
     {
       "conflicts": 7,
+      "danger": {
+        "entries": [
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DES-08",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DES-08"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-03",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-03"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-04",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-04"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/guides/CHARTER.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/guides/CHARTER.md"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/DES-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/DES-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/GATE-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/GATE-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/PROC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/PROC-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/SEC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/SEC-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/TEST-08",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/TEST-08"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/QUALITY-GATES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/QUALITY-GATES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/RELEASE.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/RELEASE.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/TESTING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/TESTING.md"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersInPlace",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersInPlace, EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints, EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersStillToAdd",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints"
+          },
+          {
+            "kind": "violated",
+            "of": "EsiTs/Layering/PipelineTakesResilienceAsParameters",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/Layering/PipelineTakesResilienceAsParameters"
+          }
+        ],
+        "masked": 5,
+        "refuted": 15
+      },
       "examples": {
         "citing": 0,
         "total": 0
@@ -6454,6 +7065,157 @@
     },
     {
       "conflicts": 7,
+      "danger": {
+        "entries": [
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DES-08",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DES-08"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-03",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-03"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-04",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-04"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/guides/CHARTER.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/guides/CHARTER.md"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/DES-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/DES-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/GATE-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/GATE-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/PROC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/PROC-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/SEC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/SEC-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/TEST-08",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/TEST-08"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/QUALITY-GATES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/QUALITY-GATES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/RELEASE.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/RELEASE.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/TESTING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/TESTING.md"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersInPlace",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersInPlace, EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints, EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersStillToAdd",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints"
+          },
+          {
+            "kind": "violated",
+            "of": "EsiTs/Layering/PipelineTakesResilienceAsParameters",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/Layering/PipelineTakesResilienceAsParameters"
+          }
+        ],
+        "masked": 5,
+        "refuted": 15
+      },
       "examples": {
         "citing": 0,
         "total": 0
@@ -7724,6 +8486,157 @@
     },
     {
       "conflicts": 7,
+      "danger": {
+        "entries": [
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DES-08",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DES-08"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-03",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-03"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-04",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-04"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/guides/CHARTER.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/guides/CHARTER.md"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/DES-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/DES-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/GATE-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/GATE-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/PROC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/PROC-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/SEC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/SEC-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/TEST-08",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/TEST-08"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/QUALITY-GATES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/QUALITY-GATES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/RELEASE.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/RELEASE.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/TESTING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/TESTING.md"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersInPlace",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersInPlace, EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints, EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersStillToAdd",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints"
+          },
+          {
+            "kind": "violated",
+            "of": "EsiTs/Layering/PipelineTakesResilienceAsParameters",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/Layering/PipelineTakesResilienceAsParameters"
+          }
+        ],
+        "masked": 5,
+        "refuted": 15
+      },
       "examples": {
         "citing": 0,
         "total": 0
@@ -8982,6 +9895,157 @@
     },
     {
       "conflicts": 7,
+      "danger": {
+        "entries": [
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DES-08",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DES-08"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-03",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-03"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-04",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-04"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/guides/CHARTER.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/guides/CHARTER.md"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/DES-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/DES-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/GATE-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/GATE-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/PROC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/PROC-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/SEC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/SEC-03"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/TEST-08",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/TEST-08"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/QUALITY-GATES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/QUALITY-GATES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/RELEASE.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/RELEASE.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/TESTING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/TESTING.md"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersInPlace",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersInPlace, EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints, EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersStillToAdd",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints"
+          },
+          {
+            "kind": "violated",
+            "of": "EsiTs/Layering/PipelineTakesResilienceAsParameters",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/Layering/PipelineTakesResilienceAsParameters"
+          }
+        ],
+        "masked": 5,
+        "refuted": 15
+      },
       "examples": {
         "citing": 0,
         "total": 0
@@ -10240,6 +11304,167 @@
     },
     {
       "conflicts": 12,
+      "danger": {
+        "entries": [
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-01",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-01"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/guides/CHARTER.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/guides/CHARTER.md"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/PROC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/PROC-03"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/DESIGN-RULES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/DESIGN-RULES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/DOCUMENTATION.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/DOCUMENTATION.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/LOGGING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/LOGGING.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/QUALITY-GATES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/QUALITY-GATES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/RELEASE.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/RELEASE.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/ROADMAP.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/ROADMAP.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/TESTING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/TESTING.md"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersInPlace",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersInPlace, EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints, EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersStillToAdd",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ErrorsSubpathLacksIsCircuitOpen",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ErrorsSubpathLacksIsCircuitOpen"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/NodeFloorIs18",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/NodeFloorIs18"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/OneCompatibilityDate",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/OneCompatibilityDate"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/SixEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/UnitTierHas192Files",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/UnitTierHas192Files"
+          }
+        ],
+        "masked": 1,
+        "refuted": 21
+      },
       "examples": {
         "citing": 0,
         "total": 0
@@ -12050,6 +13275,167 @@
     },
     {
       "conflicts": 12,
+      "danger": {
+        "entries": [
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-01",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-01"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/guides/CHARTER.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/guides/CHARTER.md"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/PROC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/PROC-03"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/DESIGN-RULES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/DESIGN-RULES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/DOCUMENTATION.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/DOCUMENTATION.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/LOGGING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/LOGGING.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/QUALITY-GATES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/QUALITY-GATES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/RELEASE.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/RELEASE.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/ROADMAP.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/ROADMAP.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/TESTING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/TESTING.md"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersInPlace",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersInPlace, EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints, EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersStillToAdd",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ErrorsSubpathLacksIsCircuitOpen",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ErrorsSubpathLacksIsCircuitOpen"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/NodeFloorIs18",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/NodeFloorIs18"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/OneCompatibilityDate",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/OneCompatibilityDate"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/SixEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/UnitTierHas192Files",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/UnitTierHas192Files"
+          }
+        ],
+        "masked": 1,
+        "refuted": 21
+      },
       "examples": {
         "citing": 0,
         "total": 0
@@ -13820,6 +15206,167 @@
     },
     {
       "conflicts": 12,
+      "danger": {
+        "entries": [
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-01",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-01"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/guides/CHARTER.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/guides/CHARTER.md"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/PROC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/PROC-03"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/DESIGN-RULES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/DESIGN-RULES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/DOCUMENTATION.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/DOCUMENTATION.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/LOGGING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/LOGGING.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/QUALITY-GATES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/QUALITY-GATES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/RELEASE.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/RELEASE.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/ROADMAP.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/ROADMAP.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/TESTING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/TESTING.md"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersInPlace",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersInPlace, EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints, EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersStillToAdd",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ErrorsSubpathLacksIsCircuitOpen",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ErrorsSubpathLacksIsCircuitOpen"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/NodeFloorIs18",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/NodeFloorIs18"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/OneCompatibilityDate",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/OneCompatibilityDate"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/SixEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/UnitTierHas192Files",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/UnitTierHas192Files"
+          }
+        ],
+        "masked": 1,
+        "refuted": 21
+      },
       "examples": {
         "citing": 0,
         "total": 0
@@ -15590,6 +17137,167 @@
     },
     {
       "conflicts": 12,
+      "danger": {
+        "entries": [
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-01",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-01"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/guides/CHARTER.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/guides/CHARTER.md"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/PROC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/PROC-03"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/DESIGN-RULES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/DESIGN-RULES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/DOCUMENTATION.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/DOCUMENTATION.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/LOGGING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/LOGGING.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/QUALITY-GATES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/QUALITY-GATES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/RELEASE.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/RELEASE.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/ROADMAP.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/ROADMAP.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/TESTING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/TESTING.md"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersInPlace",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersInPlace, EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints, EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersStillToAdd",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ErrorsSubpathLacksIsCircuitOpen",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ErrorsSubpathLacksIsCircuitOpen"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/NodeFloorIs18",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/NodeFloorIs18"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/OneCompatibilityDate",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/OneCompatibilityDate"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/SixEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/UnitTierHas192Files",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/UnitTierHas192Files"
+          }
+        ],
+        "masked": 1,
+        "refuted": 21
+      },
       "examples": {
         "citing": 0,
         "total": 0
@@ -17432,6 +19140,167 @@
     },
     {
       "conflicts": 12,
+      "danger": {
+        "entries": [
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/DOC-01",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/DOC-01"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Charter/guides/CHARTER.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Charter/guides/CHARTER.md"
+          },
+          {
+            "green": "its stated status is Enforced",
+            "kind": "status-unsupported",
+            "of": "Charter/PROC-03",
+            "shape": "rung-overclaimed",
+            "structure": "masked",
+            "subject": "Charter/PROC-03"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/DESIGN-RULES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/DESIGN-RULES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/DOCUMENTATION.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/DOCUMENTATION.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/LOGGING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/LOGGING.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/QUALITY-GATES.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/QUALITY-GATES.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/RELEASE.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/RELEASE.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/ROADMAP.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/ROADMAP.md"
+          },
+          {
+            "kind": "dangling-reference",
+            "of": "Guides/guides/TESTING.md",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "Guides/guides/TESTING.md"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError, EsiTs/ProseAboutCode/ErrorsCircuitOpenIsAnEsiError"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersInPlace",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersInPlace, EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "claim-conflict",
+            "of": "EsiTs/ProseAboutCode/SevenEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SevenEntryPoints, EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ArchitectureCircuitOpenIsNoEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CharterCircuitOpenIsNoEsiError"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/CodeownersStillToAdd",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/CodeownersStillToAdd"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/ErrorsSubpathLacksIsCircuitOpen",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/ErrorsSubpathLacksIsCircuitOpen"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/NodeFloorIs18",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/NodeFloorIs18"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/OneCompatibilityDate",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/OneCompatibilityDate"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/SixEntryPoints",
+            "shape": "code-refutes-prose",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/SixEntryPoints"
+          },
+          {
+            "kind": "fact-conflict",
+            "of": "EsiTs/ProseAboutCode/UnitTierHas192Files",
+            "shape": "code-breaks-rule",
+            "structure": "refuted",
+            "subject": "EsiTs/ProseAboutCode/UnitTierHas192Files"
+          }
+        ],
+        "masked": 1,
+        "refuted": 21
+      },
       "examples": {
         "citing": 0,
         "total": 0
