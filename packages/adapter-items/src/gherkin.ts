@@ -7,7 +7,7 @@ import { classify } from "@csh/adapter-ears-markdown";
 import { digestOf } from "@csh/kernel";
 import { type Adapter, type AdapterInput, type AdapterOutput, type Diagnostic, type ItemEdge, parseTestResults, type SourceItem, type TestResult } from "@csh/witness";
 import { decode, idPatternOf, slug, sortedFiles, unique } from "./common.ts";
-import { fileOf } from "./tests.ts";
+import { fileOf, observedIn } from "./tests.ts";
 
 export const manifest = {
   id: "csh.adapter.items.gherkin",
@@ -73,6 +73,11 @@ export function run(input: AdapterInput): AdapterOutput {
       if (open !== undefined) {
         const steps = stepsOf(open);
         if (steps.length > 0) open.item.attrs = { ...(open.item.attrs ?? {}), steps: steps.join("\n") };
+        // A scenario's grain (stage 57): the words of its title, its steps (with the background's) and its examples.
+        const words = [open.item.text, ...open.background.map((b) => b.slice(b.indexOf("\t") + 1)), ...open.steps.map((x) => x.text), ...(open.header ?? []), ...open.rows.flatMap((r) => r.cells)].join("\n");
+        const observes = observedIn(words, 0, words.length);
+        const id = open.item.id;
+        for (const e of edges) if (e.from === id && (e.rel === "cites" || e.rel === "exemplifies")) Object.assign(e, { observes, reader: "gherkin" });
       }
       open = undefined;
     };

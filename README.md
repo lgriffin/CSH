@@ -128,6 +128,10 @@ whose own observation breaks a rule, or prose claiming "enforced" for a rule not
 and the one input that would close it. Danger keeps each result's outcome, decides nothing and is never scored
 ([16](docs/spec/16-analyse-danger-grain.md), section 3).
 
+A test that cites a rule is reassurance over what it observes and silence beyond it. CSH compares the terms a told rule
+writes in backticks with the identifiers each citing test's body mentions, in every language it reads, and names the
+terms no citing test observes: a gap, and masked danger ([16](docs/spec/16-analyse-danger-grain.md), section 4).
+
 `csh analyse <path>` reads any git repository cold, with no profile: it proposes one, lifts the layering and EARS
 sentences of its documents as told rules, reads its code and tests, checks, and reports danger, then conflicts, gaps,
 indeterminate and converged, then counts ([16](docs/spec/16-analyse-danger-grain.md)). It writes
@@ -352,12 +356,12 @@ Its security model is read as a structured trace, its test results are committed
 
 ## Status of the build
 
-Stages 1 to 56 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 114 golden
-fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F125, F130 to F132, F140 to F142, F150 to F155, F160 to F164), as do
+Stages 1 to 57 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 115 golden
+fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F125, F130 to F132, F140 to F142, F150 to F155, F160 to F165), as do
 the unit, property and fault-injection tests; F118 to F125 cover [polyglot code](docs/spec/12-polyglot-code.md),
 stages 29 to 35, F130 to F132 [what real runs asked for](docs/spec/13-from-real-runs.md), stages 38 to 44, F140
 to F142 [what the Java and Python runs asked for](docs/spec/14-from-the-java-and-python-runs.md), stage 45, and F150 to F155
-[the Assertion Ladder](docs/spec/15-assertion-ladder.md), stages 47 to 52, and F160 to F164 [the analyse command and danger](docs/spec/16-analyse-danger-grain.md), stages 55 and 56. The composition fixtures
+[the Assertion Ladder](docs/spec/15-assertion-ladder.md), stages 47 to 52, and F160 to F165 [the analyse command, danger and grain](docs/spec/16-analyse-danger-grain.md), stages 55 to 57. The composition fixtures
 F70 to F78 were written by the implementer and accepted by the owner. [docs/stages](docs/stages) records what each
 stage built and what its fixtures revealed.
 

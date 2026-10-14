@@ -5,6 +5,8 @@
 import { compareCodePoints } from "@csh/kernel";
 import type { Fact, ItemEdge } from "@csh/witness";
 import type { Prepared } from "./pool.ts";
+import { type Citation, termsOf, unobserved } from "./grain.ts";
+import { isToldRule } from "./ladder.ts";
 import { stepGaps } from "./steps.ts";
 import type { Gap, HistoryPort, Report } from "./types.ts";
 
@@ -113,6 +115,8 @@ export function trace(input: TraceInput): TraceResult {
   // The decisions a feature or rule names (stage 42): shown on its gap as cited, never counted as verifying it.
   const decided = new Map<string, string[]>();
   const checks = new Map<string, string[]>();
+  // What each item's checking citations observe (stage 57), for its grain.
+  const citations = new Map<string, Citation[]>();
   const check = (item: string, how: string) => {
     const seen = checks.get(item) ?? [];
     if (!seen.includes(how)) checks.set(item, [...seen, how]);
@@ -145,6 +149,7 @@ export function trace(input: TraceInput): TraceResult {
       const kind = byQualified.get(from)?.kind;
       if (kind === "test-file") check(r, `test file ${e.from}`);
       else if (kind === "scenario") check(r, `scenario ${from}`);
+      if (kind === "test-file" || kind === "scenario") citations.set(r, [...(citations.get(r) ?? []), { span: e.span, ...(e.observes !== undefined ? { observes: e.observes } : {}), ...(e.reader !== undefined ? { reader: e.reader } : {}) }]);
     }
     // The command and the script are matched by name, so another script on the same line supports nothing.
     const command = e.rel === "verified-by" && r === null ? /^text:npm run ([\w:.\-]+)(?=$|\s)/.exec(e.to) : null;
@@ -190,6 +195,16 @@ export function trace(input: TraceInput): TraceResult {
   for (const it of items) {
     const q = `${it.source}/${it.id}`;
     const into = incoming.get(q) ?? new Set<string>();
+    // Grain (stage 57): the terms a told rule writes in backticks that no test or scenario citing it observes.
+    const cs = citations.get(q) ?? [];
+    const terms = isToldRule(it) ? termsOf(it.text) : [];
+    const missing = unobserved(terms, cs);
+    if (missing !== undefined && missing.length > 0) {
+      const seen = terms.filter((t) => !missing.includes(t));
+      const readers = [...new Set(cs.map((c) => c.reader!).filter((x) => x !== undefined))].sort(compareCodePoints);
+      const by = cs.map((c) => c.span).sort(compareCodePoints);
+      gaps.push({ kind: "unobserved-terms", subject: q, fragments: [], detail: `${it.span}: constrains ${terms.map((t) => `\`${t}\``).join(", ")}; ${by.length === 1 ? "the test" : `the ${by.length} tests`} citing it (${by.join(", ")}) observe${by.length === 1 ? "s" : ""} ${seen.length === 0 ? "none of them" : `${seen.map((t) => `\`${t}\``).join(", ")} only`}; not observed: ${missing.map((t) => `\`${t}\``).join(", ")}; read by the ${readers.join(", ")} reader${readers.length === 1 ? "" : "s"}` });
+    }
     // A status that says the requirement is checked, while nothing it names as a mechanism resolves (stage 25).
     const status = it.attrs?.status;
     // Judged only with history, as the stage that brought it, and only when the tracked files are known: unknown

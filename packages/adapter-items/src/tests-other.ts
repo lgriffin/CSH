@@ -120,6 +120,8 @@ export interface CiteSource {
   at: number;
   text: string;
   name: boolean;
+  /** The offsets of the declared tests the text is about: its own test, or each test of the class it annotates (stage 57). */
+  of?: number[];
 }
 
 /** What a test file in one of the four languages declares: its tests, those marked skipped, and the texts that cite. */
@@ -248,9 +250,9 @@ function python({ code, strings }: Lexed): Found {
     declared.push({ name: c.name, at: c.at });
     if (c.skip || c.classes.some((b) => b.skip)) skipped++;
     for (const b of c.classes) used.add(b);
-    sources.push(...c.sources);
+    sources.push(...c.sources.map((x) => ({ ...x, of: [c.at] })));
   }
-  for (const b of classes) if (used.has(b)) sources.push(...b.cites);
+  for (const b of classes) if (used.has(b)) sources.push(...b.cites.map((x) => ({ ...x, of: declared.filter((d) => candidates.some((c) => c.at === d.at && c.classes.includes(b))).map((d) => d.at) })));
   return { tests: declared.length, declared, skipped, sources };
 }
 
@@ -385,9 +387,9 @@ function java({ code, strings }: Lexed): Found {
     const enclosing = classes.filter((c) => c.body[0] < m.at && m.at < c.body[1]);
     for (const c of enclosing) c.used = true;
     if (disabled(m.annotations) || enclosing.some((c) => disabled(c.annotations))) skipped++;
-    sources.push(...nameSources(m.at, m.name, /^test_?/), ...cites(m.annotations));
+    sources.push(...[...nameSources(m.at, m.name, /^test_?/), ...cites(m.annotations)].map((x) => ({ ...x, of: [m.at] })));
   }
-  for (const c of classes) if (c.used) sources.push(...cites(c.annotations));
+  for (const c of classes) if (c.used) sources.push(...cites(c.annotations).map((x) => ({ ...x, of: methods.filter((m) => c.body[0] < m.at && m.at < c.body[1]).map((m) => m.at) })));
   return { tests: methods.length, declared: methods.map((m) => ({ name: m.name, at: m.at })), skipped, sources };
 }
 
@@ -439,6 +441,7 @@ function go(text: string, { code, strings, comments }: Lexed): Found {
     if (kind === "Fuzz" && !/^\s*(?:\w+\s+)?\*\s*testing\s*\.\s*F\s*$/.test(params)) continue;
     if (kind === "Example" && (params.trim() !== "" || ![...comments].some(([at, c]) => at > body[0] && at < body[1] && /^\/\/\s*(?:Unordered output|Output):/i.test(c)))) continue;
     declared.push({ name, at: m.index + m[0].indexOf(name) });
+    const own = sources.length;
     sources.push(...nameSources(m.index + m[0].indexOf(name), name, /^(?:Test|Fuzz|Example)_?/));
     // The doc comment: each line above the func that holds only a // comment, up to a blank line or code.
     for (let k = lineIndex(starts, m.index) - 1; k >= 0; k--) {
@@ -455,6 +458,7 @@ function go(text: string, { code, strings, comments }: Lexed): Found {
       const s = strings.get(at);
       if (s !== undefined) sources.push({ at, text: s, name: false });
     }
+    for (let k = own; k < sources.length; k++) sources[k]!.of = [declared.at(-1)!.at];
   }
   return { tests: declared.length, declared, skipped: 0, sources };
 }
@@ -498,6 +502,7 @@ function rust(text: string, { code, comments }: Lexed): Found {
     if (!paths.some((p) => p === "test" || p === "rstest" || /::test$/.test(p))) continue;
     declared.push({ name: m[1]!, at: m.index + m[0].length - m[1]!.length });
     if (paths.includes("ignore")) skipped++;
+    const own = sources.length;
     sources.push(...nameSources(m.index + m[0].length - m[1]!.length, m[1]!, /^test_?/));
     // Doc comment lines: those among the attributes, and the run of them immediately above the item.
     const starts = lineStarts(text);
@@ -517,6 +522,7 @@ function rust(text: string, { code, comments }: Lexed): Found {
       const d = doc(k);
       if (d !== undefined) sources.push(d);
     }
+    for (let k = own; k < sources.length; k++) sources[k]!.of = [declared.at(-1)!.at];
   }
   return { tests: declared.length, declared, skipped, sources };
 }
