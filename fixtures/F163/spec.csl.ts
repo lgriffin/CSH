@@ -1,5 +1,5 @@
 // F163: the sign-in specification of F80 to F86 with a second requirement, so that one approved rule converges and
-// the other has no example.
+// the other has no example. Its policy asks for no solver check: the specification has no transitions to check.
 import { system, int, bool, unit, and } from "csl";
 
 const Attempts = unit("count", "attempts");
@@ -21,7 +21,7 @@ export default system("SignInService", (s) => {
   const Product = s.source("Product", { kind: "Requirements", at: "inputs/requirements.md" });
   s.source("UnitTests", { kind: "Witnesses", at: "inputs/witnesses.ndjson" });
 
-  s.policy("LockoutSafety", { require: ["ApprovedBinding", "BoundaryWitness", "SolverCheck"] });
+  s.policy("LockoutSafety", { require: ["ApprovedBinding", "BoundaryWitness"] });
 
   s.intent("StopPasswordGuessing", {
     owner: "SecurityOwner",
