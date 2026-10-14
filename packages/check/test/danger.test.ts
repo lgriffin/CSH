@@ -58,6 +58,8 @@ describe("danger", () => {
     expect(dangerOf(r("failed"))).toEqual([["gap", "example-conflict", "refuted", "code-breaks-rule", "S/Funds/Floor"]]);
     // Two statements that disagree, with no test behind either, are a conflict and not danger.
     expect(dangerOf({ ...report({}), findings: [finding] } as unknown as Report)).toEqual([]);
+    // A query the solver could not decide names the example beside the rules, and is no danger.
+    expect(dangerOf({ ...r("passed"), findings: [{ ...finding, kind: "unknown" }] } as unknown as Report)).toEqual([]);
   });
 
   it("marks a passing test that no rule constrains, and not a scenario no rule constrains", () => {

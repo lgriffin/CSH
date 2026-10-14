@@ -23,11 +23,30 @@ export interface AnalyseOptions {
   at?: string;
   /** A component root whose csh/component.json names the subject, read instead of a proposal. */
   profile?: string;
+  /**
+   * A csh-expected/v1 file the analysis is compared with (stage 60), whichever profile it read: the expected results of a
+   * cold read, kept outside the repository. Without it, a given profile's own csh/expected.json is used when present.
+   */
+  expected?: string;
   solver: SolverPort;
   budgetMs?: number;
 }
 
 export type AnalyseResult = { ok: true; analysis: Analysis; report: Report } | { ok: false; message: string };
+
+/** A remote URL with any user name and password removed, so that a token in a clone's origin never reaches a report. */
+export function withoutCredentials(url: string | undefined): string | undefined {
+  if (url === undefined || !/^[a-z][a-z0-9+.-]*:\/\//i.test(url)) return url;
+  try {
+    const u = new URL(url);
+    if (u.username === "" && u.password === "") return url;
+    u.username = "";
+    u.password = "";
+    return u.toString();
+  } catch {
+    return url.replace(/\/\/[^/@]*@/, "//");
+  }
+}
 
 const git = (dir: string, ...args: string[]): string => execFileSync("git", args, { cwd: dir, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 const tryGit = (dir: string, ...args: string[]): string | undefined => {
@@ -60,7 +79,7 @@ export async function analyse(o: AnalyseOptions): Promise<AnalyseResult> {
   if (top === undefined) return { ok: false, message: `${o.path} is not inside a git checkout` };
   const commit = tryGit(top, "rev-parse", "--verify", `${o.at ?? "HEAD"}^{commit}`);
   if (commit === undefined) return { ok: false, message: o.at === undefined ? `${top} has no commit to read` : `${o.at} is not a commit of ${top}` };
-  const origin = tryGit(top, "remote", "get-url", "origin");
+  const origin = withoutCredentials(tryGit(top, "remote", "get-url", "origin"));
   const repo = origin === undefined || origin === "" ? top : origin;
   const work = mkdtempSync(join(tmpdir(), "csh-analyse-"));
   try {
@@ -133,11 +152,12 @@ export async function analyse(o: AnalyseOptions): Promise<AnalyseResult> {
       told,
       overview,
     };
-    const expectedFile = analysisProfile.kind === "given" ? (o.profile !== undefined ? join(resolve(o.profile), "csh", "expected.json") : join(clone, "csh", "expected.json")) : undefined;
+    const expectedFile = o.expected !== undefined ? resolve(o.expected) : analysisProfile.kind === "given" ? (o.profile !== undefined ? join(resolve(o.profile), "csh", "expected.json") : join(clone, "csh", "expected.json")) : undefined;
     if (expectedFile !== undefined && existsSync(expectedFile)) {
       const parsed = parseExpected(readFileSync(expectedFile, "utf8"));
       if (parsed.expected !== undefined) analysis.expect = checkExpected(overview, parsed.expected);
-    }
+      else if (o.expected !== undefined) return { ok: false, message: `${o.expected}: ${parsed.problems.join("; ")}` };
+    } else if (o.expected !== undefined) return { ok: false, message: `${o.expected} does not exist` };
     return { ok: true, analysis, report };
   } finally {
     rmSync(work, { recursive: true, force: true });

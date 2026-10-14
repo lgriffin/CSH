@@ -29,9 +29,9 @@ the files the source names.
 | Language | Module | Dependencies resolve against | Declares | Exports | Manifests |
 | --- | --- | --- | --- | --- | --- |
 | Python | each `.py` and `.pyi` file | source roots (the root, `src`, and the parent of every top-level package); relative imports | classes with their first base, functions, constants; classes nested in a class as `Outer.Inner` ([14](14-from-the-java-and-python-runs.md)) | `__all__`, else every public top-level name | `pyproject.toml` |
-| Java | each `.java` file | fully qualified names across source roots, from each file's `package` | classes with their superclass, interfaces, enums, records, annotations, `static final` literals; nested types as `Outer.Inner` ([14](14-from-the-java-and-python-runs.md)) | public top-level types | `pom.xml` |
-| Go | each `.go` file | `go.mod`'s module path; a local import is the package directory | types, structs, interfaces, functions, methods, constants | capitalised names | `go.mod` |
-| Rust | each `.rs` file | `mod` declarations and `crate::`, `self::` and `super::` paths; workspace crates | structs, enums, traits, functions, constants, statics, modules, macros | `pub` items and `pub use` | `Cargo.toml` |
+| Java | each `.java` file | fully qualified names across source roots, from each file's `package` | classes with their superclass and the interfaces they implement, interfaces with those they extend, enums, records, annotations, `static final` literals; nested types as `Outer.Inner` ([14](14-from-the-java-and-python-runs.md)) | public top-level types | `pom.xml` |
+| Go | each `.go` file | the module path of the nearest `go.mod`, or of any module its `go.work` uses; a local import names each non-test file of the package's directory, since a module rule's glob selects files | types, structs and interfaces with what they embed, functions, methods as `Type.Method`, constants | capitalised names | `go.mod`, `go.work` |
+| Rust | each `.rs` file | `mod` declarations and `crate::`, `self::` and `super::` paths; workspace crates | structs, enums, traits with their supertraits, functions, constants, statics, modules, macros | `pub` items and `pub use` | `Cargo.toml` |
 
 An external dependency is named as the ecosystem names it: a Python top-level package, a Java package, a Go import
 path, a Rust crate. A standard library dependency is prefixed with its language (`python:os`, `go:fmt`, `rust:std`),

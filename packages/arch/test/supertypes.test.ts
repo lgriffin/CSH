@@ -36,6 +36,16 @@ describe("inherits over every supertype", () => {
     expect(truthOf({ k: "inherits", cls: "Locked", base: "Memory" }, go)).toEqual({ reason: "qualified-base: Locked extends sync.Mutex" });
   });
 
+  it("leaves the claim unknown for a type whose supertypes are not all read, and never crosses languages", () => {
+    // A Rust struct's traits come from impl blocks, which are not read; a Java enum extends Enum implicitly.
+    const rust = facts([d("lib.rs", "Store", "struct"), d("lib.rs", "Reader", "trait", undefined, undefined, 4)], "rust");
+    expect(truthOf({ k: "inherits", cls: "Store", base: "Reader" }, rust)).toEqual({ reason: "supertypes-not-read: Store is a rust struct, whose supertypes are not all read" });
+    expect(truthOf({ k: "inherits", cls: "Colour", base: "Comparable" }, facts([d("Colour.java", "Colour", "enum")], "java"))).toMatchObject({ reason: expect.stringContaining("supertypes-not-read") });
+    // A Java class extends an R it does not declare; a Rust trait R that reaches the base is not that R.
+    const mixed: ClaimFacts = { modules: new Set(["A.java", "lib.rs"]), declares: [d("A.java", "A", "class", "R"), d("lib.rs", "R", "trait", "Target"), d("lib.rs", "Target", "trait", undefined, undefined, 4)], exports: [], fields: [], languages: new Map([["A.java", "java"], ["lib.rs", "rust"]]) };
+    expect(truthOf({ k: "inherits", cls: "A", base: "Target" }, mixed)).toEqual({ reason: "base-not-read: R" });
+  });
+
   it("reports a cycle rather than following it", () => {
     const loop = facts([d("a.java", "A", "interface", "B"), d("b.java", "B", "interface", "A")], "java");
     expect(truthOf({ k: "inherits", cls: "A", base: "C" }, loop)).toEqual({ reason: "cycle: B" });

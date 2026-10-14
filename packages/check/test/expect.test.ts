@@ -58,6 +58,19 @@ describe("expected results", () => {
     expect(r.rows.map((x) => x.status)).toEqual(["missing", "missing", "missing"]);
   });
 
+  it("needs two entries for an expectation listed twice, while one entry meets two lines of itself", () => {
+    const r = checkExpected(overview, {
+      schema: "csh-expected/v1",
+      counts: { gap: 2 },
+      rows: [
+        { row: 1, title: "t", expect: [{ outcome: "gap", kind: "fact-conflict", subject: "S/Claims/NodeFloor" }, { outcome: "gap", kind: "fact-conflict", subject: "S/Claims/NodeFloor" }] },
+        { row: 2, title: "t", expect: [{ outcome: "gap", kind: "stale-prose", subject: "Charter/doc.md", at: "doc.md:89" }, { outcome: "gap", kind: "stale-prose", subject: "Charter/doc.md", at: "doc.md:896" }] },
+      ],
+    });
+    expect(r.mismatches).toEqual([{ row: 1, message: "no gap fact-conflict for S/Claims/NodeFloor" }]);
+    expect(r.rows.map((x) => x.status)).toEqual(["missing", "reported"]);
+  });
+
   it("refuses a malformed expected file rather than expecting nothing", () => {
     expect(parseExpected("{").problems[0]).toMatch(/^not JSON/);
     expect(parseExpected('{"schema":"other"}').problems).toEqual(["not a csh-expected/v1 file with rows"]);

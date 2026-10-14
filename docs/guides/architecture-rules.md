@@ -197,7 +197,9 @@ selects depends on that package. A nested type is declared under its dotted name
 - A claim reads what a sentence says only as a person writes it; nothing reads a claim out of prose but the two
   mechanical shapes of A-106.
 - `inherits` follows declared names, not resolved imports: two classes of one name in different modules make the claim
-  `unknown` (`ambiguous-class`).
+  `unknown` (`ambiguous-class`). It follows every supertype a declaration names (a superclass, the interfaces a class
+  implements or an interface extends, what a Go struct or interface embeds, a Rust trait's supertraits); Rust's
+  `impl Trait for Type` makes no supertype of the type.
 - npm packages come from `facts-imports`, a harness; Maven modules, Go modules, crates and Python distributions from a
   `Code` source. A source with one such package writes no package fact, so a single-module repository is ruled by
   `modules(...)`. Gradle builds, `setup.cfg`, `setup.py` and `requirements.txt` declare no package yet.

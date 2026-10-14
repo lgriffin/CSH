@@ -1,0 +1,32 @@
+{
+  "schema": "csh-expected/v1",
+  "counts": {
+    "gap": 1,
+    "indeterminate": 1,
+    "converged": 0
+  },
+  "rows": [
+    {
+      "row": 1,
+      "title": "The README's layered architecture (imports point only downwards, the domain imports no framework) names nothing that checks it",
+      "expect": [
+        {
+          "outcome": "gap",
+          "kind": "unverified",
+          "subject": "Documents/README.md#L104"
+        }
+      ]
+    },
+    {
+      "row": 2,
+      "title": "The test practice names a results file that is not committed, so every test's outcome is unknown",
+      "expect": [
+        {
+          "outcome": "indeterminate",
+          "kind": "no-results",
+          "subject": "Tests"
+        }
+      ]
+    }
+  ]
+}

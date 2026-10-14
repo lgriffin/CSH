@@ -12,7 +12,7 @@ describe("step definitions in other languages", () => {
   it("reads behave's parse format, its regular expressions after use_step_matcher, and raw strings", () => {
     const py = ['from behave import given, when, use_step_matcher', '', '@given("a board with {n:d} cards")', "def a(context, n): pass", "", 'use_step_matcher("re")', "", "@when(r'^a card moves to (\\w+)$')", "def b(context, c): pass", "", "@then(name)", "def c(context): pass", ""].join("\n");
     expect(shown(py, "python")).toEqual([
-      [3, "expression", "a board with {n:d} cards"],
+      [3, "regex", "^a board with (.*) cards$"],
       [8, "regex", "^a card moves to (\\w+)$"],
       [11, "unreadable", "@then(name)"],
     ]);
@@ -24,6 +24,18 @@ describe("step definitions in other languages", () => {
       [2, "expression", "a board with {int} cards"],
       [3, "regex", "^a card moves to (\\w+)$"],
       [4, "unreadable", "/^(unclosed$/"],
+    ]);
+  });
+
+  it("reads no step from Hypothesis's @given or Serenity's @Step, and a computed pattern as unreadable (stage 60)", () => {
+    const hypothesis = ["from hypothesis import given, strategies as st", "", "@given(st.integers())", "def test_a(n): pass", ""].join("\n");
+    expect(shown(hypothesis, "python")).toEqual([]);
+    // behave's parse format keeps parentheses and slashes literal.
+    expect(shown('from behave import when\n@when("the card moves to done (archived) and/or {where}")\ndef a(c, where): pass\n', "python")).toEqual([[2, "regex", "^the card moves to done \\(archived\\) and\\/or (.*)$"]]);
+    const java = ["class S {", '  @Step("open the board") void a() {}', '  @Given("a board " + SUFFIX) void b() {}', '  @When("a card moves") void c() {}', "}", ""].join("\n");
+    expect(shown(java, "java")).toEqual([
+      [3, "unreadable", '@Given("a board " + SUFFIX) void b() {}'],
+      [4, "expression", "a card moves"],
     ]);
   });
 
@@ -48,7 +60,7 @@ describe("step definitions in other languages", () => {
     const text = 'from behave import given\n\n@given("a board")\ndef a(context): pass\n';
     const input = (config?: Record<string, string>): AdapterInput => ({ source: { name: "Steps", kind: "TestFiles", at: "." }, vocabulary: { units: [], enums: [], states: [], events: [] }, bindings: [], files: [{ path: "features/steps/s.py", digest: digestOf(new TextEncoder().encode(text)), bytes: new TextEncoder().encode(text) }], ...(config !== undefined ? { config } : {}) });
     const cucumber = tests(input({ style: "cucumber" }));
-    expect(cucumber.items![0]!.attrs).toEqual({ tests: "0", steps: "1", stepDefinitions: "3\texpression\ta board" });
+    expect(cucumber.items![0]!.attrs).toEqual({ tests: "0", steps: "1", stepDefinitions: "3\tregex\t/^a board$" });
     expect(cucumber.diagnostics).toEqual([]);
     const plain = tests(input());
     expect(plain.items![0]!.attrs).toEqual({ tests: "0" });

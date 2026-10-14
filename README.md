@@ -67,7 +67,8 @@ a test with no rule behind it, a requirement sentence nothing cites, and both ob
 
 [examples/starter](examples/starter) is the smallest component: one function, one probe, one sentence, one rule.
 Copy it out of the repository and install the tool beside it, from tarballs packed from this clone. Nothing is
-published ([ADR-32](docs/adr/ADR-32-local-only-distribution.md)).
+published to npm ([ADR-32](docs/adr/ADR-32-local-only-distribution.md)); a tagged release on GitHub carries the same
+tarballs, bundled.
 
 ```sh
 packs=$(mktemp -d) project=$(mktemp -d)
@@ -137,7 +138,7 @@ terms no citing test observes: a gap, and masked danger ([16](docs/spec/16-analy
 sentences of its documents as told rules, reads its code and tests, checks, and reports danger, then conflicts, gaps,
 indeterminate and converged, then counts ([16](docs/spec/16-analyse-danger-grain.md)). It writes
 `reports/csh-analysis.html` and `.json`, never writes into the repository, never runs its tests and reads no ledger.
-`--profile <dir>` reads a hand-written profile instead, and `--at <commit>` another commit. On a scratch copy of
+`--profile <dir>` reads a hand-written profile instead, `--at <commit>` another commit, and `--expected <file>` compares the analysis with a `csh-expected/v1` file, exiting 1 when it does not meet it. On a scratch copy of
 [F160](fixtures/F160)'s small Go service:
 
 ```sh
@@ -161,7 +162,18 @@ node packages/cli/bin/csh.js overview --root subjects/esi-ts        # converged,
 node packages/cli/bin/csh.js expect --root subjects/esi-ts          # compare with the expected results
 ```
 
-Four smaller profiles read one public codebase per language at a pinned commit: [fastapi-clean-example](subjects/fastapi-clean-example) (Python), [spring-hexagonal-poc](subjects/spring-hexagonal-poc) (Java), [go-clean-arch](subjects/go-clean-arch) (Go) and [hexarch](subjects/hexarch) (Rust). Each states what the subject's own documents say about its layering as rules and claims, and CI runs each in the job `Subject (<name>)`, comparing it with its expected results ([stage 36](docs/stages/stage-36.md)).
+Four smaller profiles read one public codebase per language at a pinned commit: [fastapi-clean-example](subjects/fastapi-clean-example) (Python), [spring-hexagonal-poc](subjects/spring-hexagonal-poc) (Java), [go-clean-arch](subjects/go-clean-arch) (Go) and [hexarch](subjects/hexarch) (Rust). Each states what the subject's own documents say about its layering as rules and claims, and CI runs each in the job `Subject (<name>)`, comparing it with its expected results ([stage 36](docs/stages/stage-36.md)). The same job reads each of them, and the taskboard repository, cold, with no profile, and that analysis must meet the subject's `analysis-expected.json`: every gap it reports was checked against the subject's source, so a new one is a false gap until shown otherwise ([stage 60](docs/stages/stage-60.md)).
+
+In another repository's workflow, the Action runs the same read, from a release tag or any ref, and adds the analysis to the job summary:
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0
+- uses: lgriffin/CSH@main   # or a release tag, once one is cut
+  with:
+    path: .
+```
 
 The A3 and the Lean foundations serve this outcome: the A3 reads the gaps as one problem with candidate causes and
 countermeasures, and the solver decides which rules hold. Nothing a run finds is approved until a person approves it.
@@ -349,7 +361,8 @@ Its security model is read as a structured trace, its test results are committed
 - **Predicates are limited.** Linear integer arithmetic, enumerations and booleans, over one state per event. No concurrency, no time, no quantifiers in specifications.
 - **Reserved constructs.** Temporal obligations are carried and reported, but not evaluated. Architectural obligations are evaluated when written with the `forbid`, `only` and `closed` builders, against a container diagram and the imports of TypeScript, JavaScript, Python, Java, Go and Rust code, and the packages their manifests declare ([architecture rules](docs/guides/architecture-rules.md)); a file in a language with no reader is a skipped fact ([12](docs/spec/12-polyglot-code.md)); any other value stays reserved.
 - **Five lifting adapters.** Witness files, EARS requirements in Markdown, Gherkin scenarios through a step table, Mermaid C4 container diagrams, and dependency facts. Scenarios are read, never executed. Anything else must arrive as claim sets in IR form, or it stays unliftable. Documents, feature files, test files and issue exports can also be read as an inventory of items and edges, which gives gaps and no claims.
-- **One test runner.** The probe's outcomes come from a reporter for Node's test runner; other runners have none ([Q-20](QUESTIONS.md), decided: the gate's probe is a second file checked against its unit tests).
+- **Test outcomes are read, never produced.** CSH runs no test. The probe's outcomes come from a reporter for Node's test runner ([Q-20](QUESTIONS.md)); the committed results of Vitest, of JUnit XML (Maven Surefire, Gradle, pytest, cargo-nextest) and of `go test -json` are joined to the tests that cite each item, and never enter a verdict. Results committed at another commit are joined to nothing.
+- **Told rules are a reading.** `csh analyse` lifts a sentence that names a dependency with a restriction beside it, or an EARS sentence, on the words alone ([A-190](ASSUMPTIONS.md), [A-203](ASSUMPTIONS.md)); it is cited as the sentence, never checked as a predicate, and never raises a rung. Five subjects, one per language, hold the expected results of their cold reads, and CI checks each.
 - **Unknown is common.** A solver timeout, a missing binding or an unapproved binding all give unknown. That is a correct answer, not a malfunction.
 - **Protection depends on keys.** It also depends on where the gate runs: CI should pin the root maintainers commit with `CSH_ROOT_COMMIT`, outside the repository ([A-28](ASSUMPTIONS.md)).
 - **SSH signatures are untested.** Their verification is implemented through git but no fixture covers it ([Q-16](QUESTIONS.md)).
@@ -357,12 +370,12 @@ Its security model is read as a structured trace, its test results are committed
 
 ## Status of the build
 
-Stages 1 to 59 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 124 golden
+Stages 1 to 60 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 124 golden
 fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F125, F130 to F132, F140 to F142, F150 to F155, F160 to F165, F170 to F178), as do
 the unit, property and fault-injection tests; F118 to F125 cover [polyglot code](docs/spec/12-polyglot-code.md),
 stages 29 to 35, F130 to F132 [what real runs asked for](docs/spec/13-from-real-runs.md), stages 38 to 44, F140
 to F142 [what the Java and Python runs asked for](docs/spec/14-from-the-java-and-python-runs.md), stage 45, and F150 to F155
-[the Assertion Ladder](docs/spec/15-assertion-ladder.md), stages 47 to 52, and F160 to F165 and F170 to F178 [the analyse command, danger, grain and polyglot evidence](docs/spec/16-analyse-danger-grain.md), stages 55 to 59. The composition fixtures
+[the Assertion Ladder](docs/spec/15-assertion-ladder.md), stages 47 to 52, and F160 to F165 and F170 to F178 [the analyse command, danger, grain and polyglot evidence](docs/spec/16-analyse-danger-grain.md), stages 55 to 59; stage 60 calibrated it on five subjects and added the release and the Action. The composition fixtures
 F70 to F78 were written by the implementer and accepted by the owner. [docs/stages](docs/stages) records what each
 stage built and what its fixtures revealed.
 

@@ -73,3 +73,7 @@ Stages 38 to 46, 53 and 54 answer what Leigh's runs over six TypeScript reposito
 
 Stages 47 to 52 bring [the Assertion Ladder](https://github.com/lgriffin/AI-Reference-Projects/tree/master/paper) into
 CSH as a second axis beside the outcome ([15](../spec/15-assertion-ladder.md)). Their fixtures start at F150.
+
+Stages 55 to 60 add `csh analyse`, a cold read of any repository, with danger, grain, packages and evidence in every
+language, then calibrate it on five subjects and ship it as a release and an Action
+([16](../spec/16-analyse-danger-grain.md)). Their fixtures start at F160.

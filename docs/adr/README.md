@@ -35,7 +35,7 @@ Records ADR-01 to ADR-16 are the rows of the Rationale tab. ADR-17 onward record
 | [ADR-29](ADR-29-refinement-by-solver.md) | Strengthening is accepted only when the solver shows it |
 | [ADR-30](ADR-30-anchor-is-the-gate.md) | The first real component is the gate's own disposition decision |
 | [ADR-31](ADR-31-a3-judgments-through-the-ledger.md) | A3 judgments are approved through the ledger, like an obligation |
-| [ADR-32](ADR-32-local-only-distribution.md) | Distribution is local only; nothing is published |
+| [ADR-32](ADR-32-local-only-distribution.md) | Distribution is local only; nothing is published to npm (a tagged release and an Action since stage 60) |
 | [ADR-33](ADR-33-run-package.md) | The pipeline and the run live in their own package (supersedes ADR-24) |
 | [ADR-34](ADR-34-example-divergence.md) | Examples are compared with examples, and disagreement is a divergence |
 | [ADR-35](ADR-35-a3-package.md) | The A3 is a pure function of files; the command line finds its inputs |

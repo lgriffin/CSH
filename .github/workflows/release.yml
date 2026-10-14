@@ -1,0 +1,67 @@
+name: Release
+
+# A tagged tarball release (stage 60, Q-51, ADR-32 as revisited): pushing a tag v* packs every package into a tarball,
+# installs the tarballs into an empty directory and runs `csh analyse` from there, then attaches the tarballs and one
+# bundle of them to a GitHub release of that tag. Nothing is published to npm. Run by hand, it builds and tests the
+# tarballs and keeps them as a workflow artifact, with no release.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pack:
+    name: Pack and install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - name: Pack every package
+        run: |
+          node packages/testkit/src/pack.ts dist/packages
+          name="csh-${GITHUB_REF_NAME//\//-}"
+          tar -czf "dist/$name.tar.gz" -C dist packages
+          echo "BUNDLE=dist/$name.tar.gz" >> "$GITHUB_ENV"
+      - name: Install the bundle outside the repository and analyse a repository with it
+        run: |
+          project=$(mktemp -d) subject=$(mktemp -d)
+          tar -xzf "$BUNDLE" -C "$project"
+          cp -r fixtures/F160/inputs/subject/. "$subject"
+          git -C "$subject" init -q -b main && git -C "$subject" add -A
+          git -C "$subject" -c user.name=ci -c user.email=ci@example.invalid -c commit.gpgsign=false commit -qm "the subject"
+          cd "$project"
+          npm init -y > /dev/null
+          npm install --save-dev --no-audit --no-fund ./packages/*.tgz
+          npx csh analyse "$subject" --out report
+          test -f report/csh-analysis.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: csh-tarballs
+          path: dist/
+
+  release:
+    name: Release the tag
+    needs: pack
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: csh-tarballs
+          path: dist
+      - name: Create the release with the tarballs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "CSH $GITHUB_REF_NAME" --notes "Every package of CSH, packed. Install with: tar -xzf csh-$GITHUB_REF_NAME.tar.gz && npm install --save-dev ./packages/*.tgz, then npx csh analyse <path>. Needs Node 22.18 or later and git. Nothing is published to npm (ADR-32)." dist/*.tar.gz dist/packages/*.tgz

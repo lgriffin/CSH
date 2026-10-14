@@ -32,6 +32,8 @@ export interface Danger {
 const BREAKS = new Set(["violated", "not-met", "not-preserved"]);
 /** Signal kinds where the code refutes what a statement says of it. */
 const REFUTES_PROSE = new Set(["fact-conflict", "claim-conflict", "arch-conflict", "dangling-reference"]);
+/** Findings that are not a contradiction: what the solver could not decide, or a rule that holds vacuously (A-193). */
+const UNDECIDED = new Set(["unknown", "vacuous"]);
 
 const CLOSE: Record<DangerShape, string> = {
   "code-breaks-rule": "Fix what breaks the rule, or revise the rule",
@@ -78,7 +80,9 @@ export function dangerJudge(report: Report): DangerJudge {
   const make = (structure: DangerStructure, shape: DangerShape, of: string, green?: string): Danger => ({ structure, shape, of, ...(green !== undefined ? { green } : {}), close: CLOSE[shape] });
 
   return {
-    signal(kind, fragments, subject, finding, detail) {
+    signal(kind, fragments, subject, found, detail) {
+      // An undecided finding names the example beside every rule on its event, and says nothing of either.
+      const finding = found && !UNDECIDED.has(kind);
       // A rule the evidence violates, through a witness whose test passed: the lockout regression's shape. Only the
       // signal that reports the violation carries it (the violation, or the finding that names it); a gap about the
       // same rule, such as single-source, says something else.

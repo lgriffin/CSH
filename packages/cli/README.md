@@ -18,11 +18,11 @@ It is the "Command line" container, shown in the [containers diagram](../../docs
 - `historyCommand(project, args, io)`, `stageIdOf(tag)`: `csh history <slug> [--from] [--to] [--match]` (stage 25). It runs a subject at each release tag in the range, oldest first, and records each run as a stage of the A3, opening it when needed; `csh a3 verify` runs such a stage again at its own subject commit ([A-114](../../ASSUMPTIONS.md)). `csh subject fetch --at <tag|commit>` fetches one such checkout by hand.
 - `csh queue [--json]`: what awaits the owner's decision, from `componentQueue` of `@csh/run`; reads only and exits 0.
 - `diffCommand(project, args, io)`, `DiffIo`: `csh diff <base> <head>`. Each side is a stored run's directory, a commit (its stored run, else a run at that commit), `.` for the working tree (refused in CI when it is dirty) or `unavailable:<reason>`, which the CI job passes when the merge base cannot be run. It finds the paths changed between the two commits with git and hands everything to `@csh/review`; `--json` prints the model, and `--out <dir>` writes `diff.json` and `diff.md`.
-- `analyseCommand(args, io, solver)`: `csh analyse <path> [--at] [--json] [--out] [--profile] [--budget]` (stage 55). It
+- `analyseCommand(args, io, solver)`: `csh analyse <path> [--at] [--json] [--out] [--profile] [--expected] [--budget]` (stage 55). It
   hands the path to `analyse` of `@csh/run`, writes `csh-analysis.html` and `csh-analysis.json` under `--out` (default
   `reports`, from the working directory, never the subject's), and prints the analysis, or with `--json` the JSON. Exit
-  0 when the analysis completes, 1 when the repository cannot be read, 2 on a usage error
-  ([16](../../docs/spec/16-analyse-danger-grain.md), section 2).
+  0 when the analysis completes, 1 when the repository cannot be read or (stage 60) when it does not meet the
+  `--expected` file, each mismatch on standard error, 2 on a usage error ([16](../../docs/spec/16-analyse-danger-grain.md), section 2).
 - `parseArgs(argv)`, `Args`: positionals, `--key value` options and flags.
 
 - `csh ladder [--run <dir|commit>] [--json]` (stage 48): every told rule of a run, weakest rung first, with what establishes its rung and the outcomes its entries landed in. It decides nothing; it reads the report and exits 0.
@@ -52,7 +52,7 @@ The pipeline moved to `@csh/run` ([ADR-33](../../docs/adr/ADR-33-run-package.md)
 
 ## How it is tested
 
-- `test/analyse.test.ts` (stage 55): `csh analyse` on scratch repositories: usage and a directory that is not a checkout; a cold read that writes both files and leaves the repository unchanged; `--at` and `--json`; a profile beside the subject read without its ledger, with its expected results compared; a profile that names no subject refused.
+- `test/analyse.test.ts` (stage 55): `csh analyse` on scratch repositories: usage and a directory that is not a checkout; a cold read that writes both files and leaves the repository unchanged; `--at` and `--json`; a profile beside the subject read without its ledger, with its expected results compared; a profile that names no subject refused; since stage 60, a cold read compared with `--expected`, met, missed and absent.
 - `test/cli.test.ts` (in a throwaway git repository): `csh check` exits 0 and writes the report and model; `csh gate` decides for the current snapshot and refuses a decision for a later commit or a forged one; an option without its value is a usage error; `csh approve` drafts a ledger line and commits nothing; a decision with no rationale is refused; `csh run` refuses a project with no manifest and an unknown mode; `csh init` writes the manifest from its answers, never overwrites it, and writes nothing from answers that do not make one; run in a subfolder, it writes at the git top level, where `csh run` from that subfolder finds it, and says so; `csl emit` fails on F07 and prints the digest of a valid specification.
 - `test/history.test.ts` (stage 25, in a throwaway subject with dated commits and two tags, and a profile pinned to it): the history source dates lines, finds a line's first commit, lists the commits since and the untraced changes with their agent mark; a run reports `stale-prose` by line, by a bare file name and for a refuted claim, `status-unsupported` and `untraced-change`; `csh history` records a stage per tag, each the run of its tag's commit, and `csh a3 verify` runs each again at it.
 - F97 to F99 (and F117) run `componentStatus`, the function behind `csh status`, on scratch repositories; `packages/testkit/test/gate-job.test.ts` runs the CI gate job, which prints `csh status`, on a scratch copy of the gate component.
