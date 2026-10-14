@@ -25,7 +25,7 @@ export const EXTERNAL_FAMILIES = ["UTF", "SHA", "ISO", "RFC", "CVE", "AES", "RSA
 const CODE_EXT = ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "svelte", "py", "pyi", "java", "go", "rs"];
 const JS_EXT = ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs"];
 /** Language manifests read as code: at the root, and since stage 55 at any depth (a Maven module, a nested Go module). */
-const MANIFESTS = ["package.json", "pyproject.toml", "pom.xml", "go.mod", "Cargo.toml"];
+const MANIFESTS = ["package.json", "pyproject.toml", "pom.xml", "go.mod", "go.work", "Cargo.toml"];
 const TEST_DIRS = ["test", "tests", "__tests__"];
 /** The files an agent's tooling loads at the start of every session, by name, anywhere in the tree (stage 50). */
 export const INSTRUCTION_FILES = ["AGENTS.md", "CLAUDE.md", "GEMINI.md"];

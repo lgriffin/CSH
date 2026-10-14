@@ -494,3 +494,16 @@ any string of the file cites, so no one test body is the citation's) or where an
   `citeBodies`; no profile in this repository sets it today.
 
 Built as the first on 14 October 2026; the issue for the stage 55 to 60 decisions asks the owner to confirm.
+
+## Q-56 A repository that builds one package
+
+Raised in stage 58. A `Code` source holding a single Maven module, Go module, crate or distribution could write a
+`package` fact for it as an npm workspace of one package does. A container diagram of such a repository usually names its
+directories, not the package, so the package would read as `unplaced-package` on every such subject, and there is no
+dependency between packages to judge.
+
+- **Write package facts only when the source holds two or more (chosen):** a single-module repository is ruled by
+  `modules(...)`, as it is today.
+- **Always write them.** Every single-module repository with a diagram gains a gap naming its one package.
+
+Built as the first on 14 October 2026; the issue for the stage 55 to 60 decisions asks the owner to confirm.

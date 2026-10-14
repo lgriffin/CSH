@@ -9,6 +9,7 @@ import { languageOf } from "./languages.ts";
 import { rust } from "./rust.ts";
 import { goReader } from "./go.ts";
 import { javaReader } from "./java.ts";
+import { packageFacts } from "./packages.ts";
 import { python } from "./python.ts";
 
 export const TOOL = { id: "facts-code", version: "0.1.0" } as const;
@@ -68,6 +69,8 @@ export async function run(input: AdapterInput, readers: readonly LanguageReader[
     facts.push(...out.facts);
     diagnostics.push(...out.diagnostics);
   }
+  // What each Maven module, Go module, crate and distribution builds, and the dependencies between them (stage 58).
+  facts.push(...packageFacts(facts, ctx));
   return { facts, diagnostics };
 }
 

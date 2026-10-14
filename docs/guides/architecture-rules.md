@@ -99,6 +99,30 @@ they are current for a subject at its pinned commit. A modules rule needs no dia
 `unplaced-package`. [`subjects/esi-ts`](../../subjects/esi-ts/csh/spec.csl.ts) states three of ESI.ts's layering
 requirements this way.
 
+## Packages in other languages (stage 58)
+
+A `Code` source that holds two or more Maven modules, Go modules, cargo crates or Python distributions writes a
+`package` fact for each, so `pkg`, `container` and `closed` read them as they read an npm workspace's packages, with no
+harness ([A-199](../../ASSUMPTIONS.md)):
+
+| Manifest | The package's name | Not a package |
+|---|---|---|
+| `pom.xml` | `artifactId` | packaging `pom`, an aggregator |
+| `go.mod` | `module` | `go.work` |
+| `Cargo.toml` | `[package] name`; `shop-core` and `shop_core` are one name | a `[workspace]` manifest with no `[package]` |
+| `pyproject.toml` | `[project] name`, compared as pip compares names | |
+
+A package holds the source files under its manifest's directory that no nearer manifest holds. One package depends on
+another when a file of one imports a file of the other (or, in Go and Rust, a module path or crate name the other
+declares), or when its manifest names the other among its dependencies; a test-scoped Maven dependency and Cargo's
+development dependencies do not count. The diagram's container names the package as its manifest does:
+
+```mermaid
+C4Container
+  Container(core, "Core", "shop-domain", "Orders")
+  Container(db, "Database access", "shop-db", "Tables")
+```
+
 ## Claims about the code (stage 24)
 
 Prose says things about code that are not layering: that a class extends another, that a module exports a name, that
@@ -174,5 +198,6 @@ selects depends on that package. A nested type is declared under its dotted name
   mechanical shapes of A-106.
 - `inherits` follows declared names, not resolved imports: two classes of one name in different modules make the claim
   `unknown` (`ambiguous-class`).
-- TypeScript and JavaScript only. Another language needs its own facts command; the adapter and the evaluation do not
-  change.
+- npm packages come from `facts-imports`, a harness; Maven modules, Go modules, crates and Python distributions from a
+  `Code` source. A source with one such package writes no package fact, so a single-module repository is ruled by
+  `modules(...)`. Gradle builds, `setup.cfg`, `setup.py` and `requirements.txt` declare no package yet.

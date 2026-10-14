@@ -16,7 +16,8 @@ const read = async (files: Record<string, string>) => {
   const out = await run(input(files));
   return { facts: out.facts ?? [], diagnostics: out.diagnostics };
 };
-const deps = (facts: Fact[], from?: string) => facts.flatMap((f) => (f.kind === "depends" && (from === undefined || f.from === from) ? [`${f.at} -> ${f.to}`] : []));
+// Dependencies between files; those between crates as packages are packages.test.ts's (stage 58).
+const deps = (facts: Fact[], from?: string) => facts.flatMap((f) => (f.kind === "depends" && f.tool.id === "facts-rust" && (from === undefined || f.from === from) ? [`${f.at} -> ${f.to}`] : []));
 const skipped = (facts: Fact[]) => facts.flatMap((f) => (f.kind === "skipped" ? [`${f.at} ${f.reason}`] : []));
 const declares = (facts: Fact[], module: string) => facts.flatMap((f) => (f.kind === "declare" && f.module === module ? [[f.symbol, f.declares, f.base ?? null, f.value ?? null]] : []));
 const exportsOf = (facts: Fact[], module: string) => facts.flatMap((f) => (f.kind === "export" && f.module === module ? [f.from !== undefined ? `${f.symbol} from ${f.from}` : f.symbol] : []));
@@ -127,7 +128,7 @@ describe("the module tree and use paths", () => {
     expect(modules.map((f) => (f.kind === "module" ? [f.name, f.language] : []))).toEqual(
       ["adapters/src/db.rs", "adapters/src/lib.rs", "adapters/src/main.rs", "core/src/domain/mod.rs", "core/src/domain/model.rs", "core/src/lib.rs", "core/src/special/odd.rs", "core/src/util.rs", "core/src/util/fmt.rs"].map((p) => [p, "rust"]),
     );
-    expect(facts.every((f) => f.tool.id === "facts-rust" && f.tool.version === "0.1.0" && f.subject.commit === "c1")).toBe(true);
+    expect(facts.every((f) => (f.tool.id === "facts-rust" || (f.tool.id === "facts-code" && (f.kind === "package" || f.kind === "depends"))) && f.tool.version === "0.1.0" && f.subject.commit === "c1")).toBe(true);
   });
 
   it("reads the Cargo.toml tables that say what a crate is, and no others", async () => {

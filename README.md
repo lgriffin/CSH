@@ -346,7 +346,7 @@ Its security model is read as a structured trace, its test results are committed
 ## Limits
 
 - **Predicates are limited.** Linear integer arithmetic, enumerations and booleans, over one state per event. No concurrency, no time, no quantifiers in specifications.
-- **Reserved constructs.** Temporal obligations are carried and reported, but not evaluated. Architectural obligations are evaluated when written with the `forbid`, `only` and `closed` builders, against a container diagram and the imports of TypeScript and JavaScript code ([architecture rules](docs/guides/architecture-rules.md)); Python, Java, Go and Rust files are parsed from stage 31 on, and until their reader lands each is a skipped fact ([12](docs/spec/12-polyglot-code.md)); any other value stays reserved.
+- **Reserved constructs.** Temporal obligations are carried and reported, but not evaluated. Architectural obligations are evaluated when written with the `forbid`, `only` and `closed` builders, against a container diagram and the imports of TypeScript, JavaScript, Python, Java, Go and Rust code, and the packages their manifests declare ([architecture rules](docs/guides/architecture-rules.md)); a file in a language with no reader is a skipped fact ([12](docs/spec/12-polyglot-code.md)); any other value stays reserved.
 - **Five lifting adapters.** Witness files, EARS requirements in Markdown, Gherkin scenarios through a step table, Mermaid C4 container diagrams, and dependency facts. Scenarios are read, never executed. Anything else must arrive as claim sets in IR form, or it stays unliftable. Documents, feature files, test files and issue exports can also be read as an inventory of items and edges, which gives gaps and no claims.
 - **One test runner.** The probe's outcomes come from a reporter for Node's test runner; other runners have none ([Q-20](QUESTIONS.md), decided: the gate's probe is a second file checked against its unit tests).
 - **Unknown is common.** A solver timeout, a missing binding or an unapproved binding all give unknown. That is a correct answer, not a malfunction.
@@ -356,12 +356,12 @@ Its security model is read as a structured trace, its test results are committed
 
 ## Status of the build
 
-Stages 1 to 57 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 115 golden
-fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F125, F130 to F132, F140 to F142, F150 to F155, F160 to F165), as do
+Stages 1 to 58 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 119 golden
+fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F125, F130 to F132, F140 to F142, F150 to F155, F160 to F165, F170 to F173), as do
 the unit, property and fault-injection tests; F118 to F125 cover [polyglot code](docs/spec/12-polyglot-code.md),
 stages 29 to 35, F130 to F132 [what real runs asked for](docs/spec/13-from-real-runs.md), stages 38 to 44, F140
 to F142 [what the Java and Python runs asked for](docs/spec/14-from-the-java-and-python-runs.md), stage 45, and F150 to F155
-[the Assertion Ladder](docs/spec/15-assertion-ladder.md), stages 47 to 52, and F160 to F165 [the analyse command, danger and grain](docs/spec/16-analyse-danger-grain.md), stages 55 to 57. The composition fixtures
+[the Assertion Ladder](docs/spec/15-assertion-ladder.md), stages 47 to 52, and F160 to F165 and F170 to F173 [the analyse command, danger, grain and polyglot containers](docs/spec/16-analyse-danger-grain.md), stages 55 to 58. The composition fixtures
 F70 to F78 were written by the implementer and accepted by the owner. [docs/stages](docs/stages) records what each
 stage built and what its fixtures revealed.
 

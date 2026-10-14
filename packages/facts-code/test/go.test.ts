@@ -276,7 +276,8 @@ describe("the Go reader", () => {
       ["/use/0", "./api"],
       ["/use/1", "./lib"],
     ]);
-    expect(of(facts, "depends").map((d) => [d.from, d.to])).toEqual([
+    // Between files; the dependencies between the modules as packages are packages.test.ts's (stage 58).
+    expect(of(facts, "depends").filter((d) => d.tool.id === "facts-go").map((d) => [d.from, d.to])).toEqual([
       ["api/server.go", "lib/text/text.go"],
       ["api/server.go", "example.com/other"],
       // A module the workspace does not use resolves another module's import path as an external one.

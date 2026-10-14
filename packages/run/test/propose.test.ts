@@ -150,10 +150,10 @@ describe("proposeProfile", () => {
 
 describe("proposals for csh analyse (stage 55)", () => {
   it("reads nested language manifests as code, but none in a fixture, a dot-directory or a test directory", () => {
-    const dir = checkout({ "go.mod": "module a\n", "tools/go.mod": "module a/tools\n", "svc/pom.xml": "<project/>", "tests/data/Cargo.toml": "", "fixtures/x/go.mod": "", ".github/pyproject.toml": "", "main.go": "package main\n", "tools/t.go": "package tools\n" });
+    const dir = checkout({ "go.mod": "module a\n", "go.work": "go 1.22\n\nuse ./tools\n", "tools/go.mod": "module a/tools\n", "svc/pom.xml": "<project/>", "tests/data/Cargo.toml": "", "fixtures/x/go.mod": "", ".github/pyproject.toml": "", "main.go": "package main\n", "tools/t.go": "package tools\n" });
     const r = propose(dir);
-    expect(reads(dir, r, "Code")).toEqual(["go.mod", "main.go", "svc/pom.xml", "tools/go.mod", "tools/t.go"]);
-    expect(r.guesses.join("\n")).toContain("and go.mod, svc/pom.xml, tools/go.mod");
+    expect(reads(dir, r, "Code")).toEqual(["go.mod", "go.work", "main.go", "svc/pom.xml", "tools/go.mod", "tools/t.go"]);
+    expect(r.guesses.join("\n")).toContain("and go.mod, go.work, svc/pom.xml, tools/go.mod");
   });
 
   it("proposes a Mermaid C4Container diagram in a file of its own as an Architecture source", () => {
