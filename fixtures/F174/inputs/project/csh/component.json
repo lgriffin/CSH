@@ -1,0 +1,56 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Board",
+  "spec": "csh/spec.csl.ts",
+  "implementation": [
+    "src"
+  ],
+  "sources": [
+    {
+      "name": "Code",
+      "kind": "Code",
+      "at": ".",
+      "include": [
+        "src/**/*.ts"
+      ]
+    },
+    {
+      "name": "Tests",
+      "kind": "TestFiles",
+      "at": ".",
+      "include": [
+        "tests/**/*.ts"
+      ]
+    }
+  ],
+  "practices": [
+    {
+      "id": "reqs",
+      "name": "Requirements",
+      "kind": "requirements",
+      "sources": [
+        "Reqs"
+      ]
+    },
+    {
+      "id": "code",
+      "name": "Code facts",
+      "kind": "facts",
+      "sources": [
+        "Code"
+      ]
+    },
+    {
+      "id": "tests",
+      "name": "vitest",
+      "kind": "tests",
+      "sources": [
+        "Tests"
+      ],
+      "settings": {
+        "idPattern": "REQ-[0-9]+"
+      },
+      "executions": "results/vitest.json"
+    }
+  ]
+}
