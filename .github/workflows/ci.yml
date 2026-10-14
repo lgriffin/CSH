@@ -170,3 +170,17 @@ jobs:
       - name: Overview
         if: always()
         run: node packages/cli/bin/csh.js overview --root subjects/${{ matrix.subject }} >> "$GITHUB_STEP_SUMMARY"
+      # csh analyse (stage 55): the same checkout read cold, with no profile, then through the profile, which must meet
+      # its expected results. Neither writes into the checkout.
+      - name: Analyse the subject cold
+        run: |
+          checkout="subjects/${{ matrix.subject }}/.csh-cache/subjects/$(jq -r .subject.commit subjects/${{ matrix.subject }}/csh/component.json)"
+          before="$(git -C "$checkout" status --porcelain --ignored)"
+          node packages/cli/bin/csh.js analyse "$checkout" --out reports/analysis-cold > analysis.txt
+          { echo '```'; cat analysis.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          test "$before" = "$(git -C "$checkout" status --porcelain --ignored)"
+      - name: Analyse the subject through its profile
+        run: |
+          checkout="subjects/${{ matrix.subject }}/.csh-cache/subjects/$(jq -r .subject.commit subjects/${{ matrix.subject }}/csh/component.json)"
+          node packages/cli/bin/csh.js analyse "$checkout" --profile subjects/${{ matrix.subject }} --out reports/analysis-profile --json > analysis.json
+          jq -e '.expect.mismatches == []' analysis.json

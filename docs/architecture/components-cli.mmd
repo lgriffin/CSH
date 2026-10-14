@@ -6,6 +6,7 @@ C4Component
     Component(csh, "csh command", "cli/src/csh.ts", "run, check, gaps, coverage, overview, ladder, expect, explain, results import, subject fetch, approve, reject, retire, waive, countersign, gate, status, queue")
     Component(init, "Init", "cli/src/init.ts", "Asks for each manifest field and never overwrites; with --subject, prints a proposed profile beside what each guess was read from")
     Component(diff, "Diff", "cli/src/diff.ts", "csh diff: two sides, each a stored run, a commit or the working tree")
+    Component(analyse, "Analyse", "cli/src/analyse.ts", "csh analyse: a repository read cold, the analysis written under --out")
     Component(a3, "A3 and history", "cli/src/a3.ts", "csh a3 open, stage, build, verify; csh history over release tags")
   }
   Container_Ext(run, "Run", "run", "Project, pipeline, evaluation, run record, proposal")
@@ -18,6 +19,8 @@ C4Component
   Rel(csh, init, "csh init")
   Rel(csh, diff, "csh diff")
   Rel(csh, a3, "csh a3, csh history")
+  Rel(csh, analyse, "csh analyse")
+  Rel(analyse, run, "analyse, writeAnalysis")
   Rel(diff, review, "Two stored runs, the changed paths, the manifest")
   Rel(a3, a3c, "Builds and verifies")
   Rel(init, component, "Validates the answers")

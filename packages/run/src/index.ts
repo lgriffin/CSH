@@ -10,3 +10,4 @@ export * from "./history.ts";
 export * from "./results.ts";
 export * from "./propose.ts";
 export * from "./safety.ts";
+export * from "./analyse.ts";

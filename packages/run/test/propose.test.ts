@@ -147,3 +147,29 @@ describe("proposeProfile", () => {
     expect(proposeProfile(dir)).toEqual({ error: `${dir} is not a git checkout with a commit` });
   });
 });
+
+describe("proposals for csh analyse (stage 55)", () => {
+  it("reads nested language manifests as code, but none in a fixture, a dot-directory or a test directory", () => {
+    const dir = checkout({ "go.mod": "module a\n", "tools/go.mod": "module a/tools\n", "svc/pom.xml": "<project/>", "tests/data/Cargo.toml": "", "fixtures/x/go.mod": "", ".github/pyproject.toml": "", "main.go": "package main\n", "tools/t.go": "package tools\n" });
+    const r = propose(dir);
+    expect(reads(dir, r, "Code")).toEqual(["go.mod", "main.go", "svc/pom.xml", "tools/go.mod", "tools/t.go"]);
+    expect(r.guesses.join("\n")).toContain("and go.mod, svc/pom.xml, tools/go.mod");
+  });
+
+  it("proposes a Mermaid C4Container diagram in a file of its own as an Architecture source", () => {
+    const dir = checkout({ "docs/c4.mmd": "%% the containers\n\nC4Container\nContainer(a, \"A\", \"pkg-a\")\n", "docs/flow.mmd": "flowchart LR\n  a --> b\n", "a.ts": "export {};\n" });
+    const r = propose(dir);
+    expect(reads(dir, r, "Architecture")).toEqual(["docs/c4.mmd"]);
+    expect(r.manifest.practices.find((p) => p.sources.includes("Architecture"))?.kind).toBe("architecture");
+  });
+
+  it("sets told: sentences on every Markdown practice when asked to lift, and never for csh init", () => {
+    const dir = checkout({ "README.md": "# A\n", "AGENTS.md": "# Agents\n", "docs/reqs.md": "## AB-1 x\n\n## AB-2 y\n", "a.ts": "export {};\n" });
+    const lifted = proposeProfile(dir, { lift: true });
+    if ("error" in lifted) throw new Error(lifted.error);
+    const told = lifted.manifest.practices.filter((p) => p.settings?.told === "sentences").map((p) => p.kind).sort();
+    expect(told).toEqual(["documents", "instructions", "requirements"]);
+    expect(lifted.guesses.join("\n")).toContain("told sentences");
+    expect(propose(dir).manifest.practices.some((p) => p.settings?.told !== undefined)).toBe(false);
+  });
+});

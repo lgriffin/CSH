@@ -25,6 +25,19 @@ It is the "Run" container, shown in the [containers diagram](../../docs/architec
     - `Project.subject` and `Project.sourceRoot` say where sources are read from.
     - `specPathOf(project)` is undefined for a component with no specification. Such a component's model is made from its manifest, not emitted.
     - Since stage 25, `subjectCommit` in `LoadOptions` and `RunOptions` reads another commit of the subject than the pinned one, from the checkout `fetchSubject(project, commit)` makes beside the pinned one, cloned from it.
+- `analyse(o)`, `writeAnalysis(dir, analysis)`, `AnalyseOptions`, `AnalyseResult` (stage 55): `csh analyse`
+  ([16](../../docs/spec/16-analyse-danger-grain.md), section 2). It clones the repository privately (`git clone --shared`)
+  at HEAD or `at`, into a temporary directory removed afterwards, so nothing is written into the subject; reads the
+  profile given (`profile`, a component root whose manifest names a subject), else the one beside the subject in its
+  `csh/`, else a proposal made with `lift`; evaluates it with `ledger: false`; and returns a `csh-analysis/v1` analysis:
+  the subject, the profile, every guess, the coverage, the told rules lifted, the overview, and the profile's expected
+  results compared when it has them ([A-189](../../ASSUMPTIONS.md)). `writeAnalysis` writes `csh-analysis.json` and
+  `csh-analysis.html`.
+- `proposeProfile(dir, { lift })`: since stage 55 language manifests are code at any depth (not in a fixture, a
+  dot-directory or a test directory), a Mermaid file whose first line is `C4Container` is an `Architecture` source,
+  and `lift` sets `told: sentences` on every Markdown practice ([A-191](../../ASSUMPTIONS.md)).
+- `evaluateProject(project, { ledger: false })`: since stage 55, reads no ledger and no signature, and writes no
+  evidence store, so every fragment is a candidate and GnuPG is not needed.
 - `importResults(project, practice, report, base?)` (stage 28): a runner's report reduced to `csh-results/v1` at the subject's pinned commit, or HEAD, and written to the practice's `executions` path; a report left with absolute paths is refused ([A-124](../../ASSUMPTIONS.md)).
 - `gitHistory(root, { since, implementation, cache })`, `TEST_FILE`, `PREVIOUS_TAG`: the history source ([11](../../docs/spec/11-ingesting-a-codebase.md), stage 25), a `HistoryPort` over git in the checkout sources are read from, read when the manifest sets `history`. Blame, `git log -L`, rev-list and the pickaxe date lines and values; commit trailers give the untraced changes since `history.since` and mark those an agent co-authored. Only hashes, dates and counts leave it ([A-109](../../ASSUMPTIONS.md), [A-113](../../ASSUMPTIONS.md)). A start that names nothing is the report warning `history-since-unknown`. Since stage 27, with `cache`, its answers are kept by HEAD and `since`, and `save()` writes them; a commit made before a line on a branch merged after it, and a merge, are not changes since the line ([A-118](../../ASSUMPTIONS.md), [A-119](../../ASSUMPTIONS.md)).
 - `loadProject(cwd, root)`, `projectRoot(cwd, root)` (the root every command defaults to, `csh init` included), `Project`, `ProjectConfig`, `specOf`, `ledgerOf`, `snapshotOf`, `unchangedSince`, `readConfig`, `fixtureRoot`, and the paths `CONFIG_PATH`, `LOCK_PATH`, `REPORT_PATH`, `MODEL_PATH`, `CACHE_DIR`.

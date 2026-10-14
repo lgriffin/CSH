@@ -4,3 +4,4 @@ export * as gherkin from "./gherkin.ts";
 export * as tests from "./tests.ts";
 export * as jsonl from "./jsonl.ts";
 export * as yaml from "./yaml.ts";
+export * as told from "./told.ts";

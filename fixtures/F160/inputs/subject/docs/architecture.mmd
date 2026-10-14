@@ -1,0 +1,7 @@
+C4Container
+title Stockroom
+Container(api, "HTTP API", "internal/httpapi")
+Container(domain, "Domain", "internal/domain")
+Container(store, "Store", "internal/store")
+Rel(api, domain, "calls")
+Rel(store, domain, "implements its port")

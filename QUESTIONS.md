@@ -402,3 +402,64 @@ Raised in stage 51. The taskboard receivers each sit in a directory of one repos
   own tree. Could resolve a path the author did not mean.
 
 Decided by Leigh on 12 October 2026: leave them unchecked.
+
+## Q-48 Waiving a danger finding
+
+Raised in [16](docs/spec/16-analyse-danger-grain.md), section 7. A danger finding is a view over a gap, a finding or an
+obligation that already has its own id and, for an obligation, its own digest.
+
+- **Through what is beneath it (chosen).** A view never gains authority of its own.
+- **Its own fragment digest**, so that it can be waived like a violation.
+
+Built as proposed on 14 October 2026, when Leigh asked for spec 16 to be realised; [issue 78](https://github.com/lgriffin/CSH/issues/78)
+asks the owner to confirm.
+
+## Q-49 A citation whose test body cannot be read
+
+Raised in 16, section 7. A test cites a rule, and CSH cannot read the test's body (an unknown runner, a language it does
+not parse), so the test's grain is unknown.
+
+- **Indeterminate, naming the file (chosen).** A reader's limit is never reported as the repository's fault.
+- **Masked**, since nothing shows the test observes the rule's terms.
+
+Built as proposed on 14 October 2026; issue 78 asks the owner to confirm.
+
+## Q-50 Where a told rule lifted by analyse lives
+
+Raised in 16, section 7. `csh analyse` lifts layering and EARS sentences from a repository's documents as told rules.
+
+- **In the run only, unless `--profile` is given (chosen).** Analyse writes nothing into a subject.
+- **A candidate in the profile's `csh/claims.json`.**
+
+Built as proposed on 14 October 2026; issue 78 asks the owner to confirm.
+
+## Q-51 Distribution
+
+Raised in 16, section 7. Nothing is published ([ADR-32](docs/adr/ADR-32-local-only-distribution.md)), so a stranger
+needs a clone, pnpm and Node 22.18 to run CSH.
+
+- **A tagged tarball release on GitHub, plus an Action, first (chosen);** npm when a second maintainer joins.
+- **Publish to npm under a scope.**
+
+Built as proposed on 14 October 2026; issue 78 asks the owner to confirm. Cutting a release tag is the owner's.
+
+## Q-52 Which phrases claim a rung
+
+Raised in 16, section 7. The masked shape "rung claimed above rung established" needs to know when prose claims that a
+rule is checked or prevented.
+
+- **A short list in the EARS adapter's vocabulary (chosen):** "tested", "enforced", "guaranteed", "cannot", and their
+  forms; cited, never translated; extended by fixture.
+- **Any modal of necessity.** Would read every "must" as a claim of enforcement.
+
+Built as proposed on 14 October 2026; issue 78 asks the owner to confirm.
+
+## Q-53 A masked case for each taskboard receiver
+
+Raised in 16, section 7. Q-45 decided not to read the paper's violation seeding. A seeded mistake that the receivers'
+tests stay green on is the canonical masked case.
+
+- **Yes, in stage 56 (chosen):** one masked case per receiver, as a danger fixture.
+- **No.**
+
+Built as proposed on 14 October 2026; issue 78 asks the owner to confirm.
