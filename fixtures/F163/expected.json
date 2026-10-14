@@ -1,0 +1,24 @@
+{
+  "fixture": "F163",
+  "section": "Analyse, danger and grain, section 3",
+  "stage": 56,
+  "expect": {
+    "overview": {
+      "danger": [
+        {
+          "kind": "no-example",
+          "of": "SignInService/StopPasswordGuessing/LockOnThirdFailure",
+          "structure": "masked",
+          "shape": "silence-beside-rule"
+        },
+        {
+          "kind": "satisfied",
+          "of": "SignInService/StopPasswordGuessing/AcceptCorrectPassword",
+          "structure": "masked",
+          "shape": "self-approved"
+        }
+      ],
+      "dangerCount": 2
+    }
+  }
+}

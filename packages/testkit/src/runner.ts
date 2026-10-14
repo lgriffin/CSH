@@ -38,7 +38,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 55;
+export const BUILT_THROUGH_STAGE = 56;
 
 const AGENT_BIN = resolve(import.meta.dirname, "../../agent/bin/csh-agent.js");
 
@@ -92,12 +92,14 @@ function lockOf(dir: string): Lock | undefined {
 function standIn(dir: string): AuthorityResolver | undefined {
   const p = join(dir, "inputs", "authority.json");
   if (!existsSync(p)) return undefined;
-  const a = JSON.parse(readFileSync(p, "utf8")) as { approve?: string | string[]; except?: string[] };
+  const a = JSON.parse(readFileSync(p, "utf8")) as { approve?: string | string[]; except?: string[]; selfApproved?: string[] };
   return (f) => {
     const lifted = f.name.includes("/@");
     const listed = a.approve === "all" ? !lifted : Array.isArray(a.approve) && a.approve.includes(f.name);
     const excepted = (a.except ?? []).some((e) => f.name.includes(e));
-    return { authority: listed && !excepted ? "approved" : "candidate" };
+    // A fragment listed as self-approved stands for an approval the ledger marks as its author's own (stage 56).
+    const self = (a.selfApproved ?? []).includes(f.name);
+    return { authority: listed && !excepted ? "approved" : "candidate", ...(self ? { selfApproved: true } : {}) };
   };
 }
 
@@ -169,7 +171,7 @@ export class FixtureRunner {
       }
       if (e.emit?.ok === false) return;
     }
-    const needsCheck = ["check", "assessments", "executions", "items", "noneSatisfied", "gate", "gateReplay", "composition", "absent", "present", "component"].some((k) => e[k] !== undefined);
+    const needsCheck = ["check", "assessments", "executions", "items", "noneSatisfied", "gate", "gateReplay", "composition", "absent", "present", "component", "overview"].some((k) => e[k] !== undefined);
     if (!needsCheck && e.roundTrip === undefined) return;
     const cfg = readConfig(dir);
     const authority = standIn(dir);
@@ -218,6 +220,24 @@ export class FixtureRunner {
     for (const n of e.absent ?? []) if (checked.prepared.fragments.some((f) => f.name === n)) failures.push(`${n} should not be in the model`);
     for (const n of e.present ?? []) if (!checked.prepared.fragments.some((f) => f.name === n)) failures.push(`${n} should be in the model; got ${checked.prepared.fragments.map((f) => f.name).join(", ")}`);
     if (e.gate !== undefined || e.gateReplay !== undefined) this.gateExpect(dir, cfg, report, checked.prepared.fragments, e, failures);
+    if (e.overview !== undefined) {
+      const o = overviewOf(report);
+      this.dangerExpect(o.entries, e.overview, failures);
+      const list = () => o.entries.map((y) => `${y.outcome} ${y.kind} ${y.subject}`).join("; ") || "none";
+      for (const w of e.overview.entries ?? []) if (!o.entries.some((y) => y.outcome === w.outcome && y.kind === w.kind && y.subject === w.subject)) failures.push(`no ${w.outcome} ${w.kind} for ${w.subject}; entries: ${list()}`);
+    }
+  }
+
+  /** Danger on overview entries (Analyse, danger and grain, section 3): each expected one, none unexpected. */
+  private dangerExpect(entries: ReturnType<typeof overviewOf>["entries"], x: Exp, failures: string[]): void {
+    const dangerous = entries.filter((y) => y.danger !== undefined);
+    const list = () => dangerous.map((y) => `${y.kind} ${y.subject} (${y.danger!.structure} ${y.danger!.shape} of ${y.danger!.of}${y.danger!.green !== undefined ? `: ${y.danger!.green}` : ""})`).join("; ") || "none";
+    for (const w of x.danger ?? []) {
+      const hit = dangerous.some((y) => (w.kind === undefined || y.kind === w.kind) && (w.subject === undefined || y.subject === w.subject) && (w.of === undefined || y.danger!.of === w.of) && y.danger!.structure === w.structure && y.danger!.shape === w.shape && (w.greenIncludes === undefined || (y.danger!.green ?? "").includes(w.greenIncludes)));
+      if (!hit) failures.push(`no danger ${w.structure} ${w.shape} on ${w.kind ?? ""} ${w.subject ?? w.of ?? ""}; danger: ${list()}`);
+    }
+    for (const w of x.dangerAbsent ?? []) if (dangerous.some((y) => (w.kind === undefined || y.kind === w.kind) && (w.subject === undefined || y.subject === w.subject))) failures.push(`${w.kind ?? ""} ${w.subject ?? ""} should not be dangerous; danger: ${list()}`);
+    if (x.dangerCount !== undefined && dangerous.length !== x.dangerCount) failures.push(`${dangerous.length} dangerous entries, expected ${x.dangerCount}; danger: ${list()}`);
   }
 
   private compile(spec: string, exp: { ok: boolean; rule?: string; markedLine?: boolean }, failures: string[]): void {
@@ -831,6 +851,7 @@ export class FixtureRunner {
       const rungs = new Map((a.overview.rungs ?? []).map((y) => [y.item, y.rung]));
       for (const [item, want] of Object.entries((x.rungs ?? {}) as Record<string, string>)) if (rungs.get(item) !== want) failures.push(`${item} is at ${rungs.get(item) ?? "no rung"}, expected ${want}`);
       if (x.ladder !== undefined && JSON.stringify(a.overview.ladder) !== JSON.stringify(x.ladder)) failures.push(`ladder ${JSON.stringify(a.overview.ladder)}, expected ${JSON.stringify(x.ladder)}`);
+      this.dangerExpect(entries, x, failures);
       if (x.sections !== undefined) {
         const headings = renderAnalysis(a).split("\n").filter((l) => l.startsWith("== ")).map((l) => l.slice(3).split(/[ (:]/)[0]);
         if (JSON.stringify(headings) !== JSON.stringify(x.sections)) failures.push(`sections ${JSON.stringify(headings)}, expected ${JSON.stringify(x.sections)}`);

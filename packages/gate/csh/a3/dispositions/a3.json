@@ -493,6 +493,11 @@
   "stages": [
     {
       "conflicts": 13,
+      "danger": {
+        "entries": [],
+        "masked": 0,
+        "refuted": 0
+      },
       "examples": {
         "citing": 17,
         "total": 17
@@ -909,6 +914,11 @@
     },
     {
       "conflicts": 0,
+      "danger": {
+        "entries": [],
+        "masked": 0,
+        "refuted": 0
+      },
       "examples": {
         "citing": 17,
         "total": 17

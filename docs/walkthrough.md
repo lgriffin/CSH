@@ -171,7 +171,29 @@ Three readings, and the harness chooses none:
 `csh explain` renders each member through the canonical printer, so the person reads what was emitted, not what the
 source file looked like. A lifted example prints with generated names for unit constants (`u_minor_EUR`).
 
-## 5. Gate
+## 5. Danger
+
+```text
+$ csh overview   (its Danger section)
+== Danger: refuted or masked, each also under its outcome (0 refuted, 3 masked)
+  gap example-conflict  AccountService/@UnitTests/WitnessTest0saccount0dtest0dts0eLetsAPremiumAccountOverdraw, AccountService/ProtectFunds/MinimumBalance
+    danger: masked, green over refuted: the test test/account.test.ts::lets a premium account overdraw passes
+    close: Fix the implementation so what the test observes meets the statement, or revise the statement: the test passing is not the statement holding
+  gap example-conflict  AccountService/@UnitTests/WitnessTest0saccount0dtest0dts0eLetsAPremiumAccountOverdraw, AccountService/ProtectFunds/RejectInsufficientFunds
+    danger: masked, green over refuted: the test test/account.test.ts::lets a premium account overdraw passes
+    close: Fix the implementation so what the test observes meets the statement, or revise the statement: the test passing is not the statement holding
+  gap example-divergence  AccountService/@UnitTests/WitnessTest0saccount0dtest0dts0eLetsAPremiumAccountOverdraw, AccountService/ProtectFunds/RejectAtBoundary
+    danger: masked, green over refuted: the test test/account.test.ts::lets a premium account overdraw passes
+    close: Fix the implementation so what the test observes meets the statement, or revise the statement: the test passing is not the statement holding
+```
+
+Every test passes, and one of them, "lets a premium account overdraw", observes the code doing what two rules forbid
+and what a third statement says otherwise. Each practice alone reads green. The overview reports these first, as masked danger
+of the shape green over refuted: a view across the outcomes, so each stays a gap as well, and nothing is scored
+([spec 16, section 3](spec/16-analyse-danger-grain.md)). The rules are candidates, so the gate below still allows; danger
+never decides the gate.
+
+## 6. Gate
 
 ```text
 $ csh gate
@@ -186,7 +208,7 @@ them as never blocking. An agent cannot make the gate block, or pass, by writing
 `reports/csh-gate.json` and bound to the snapshot digest. `csh gate --verify` recomputes it and refuses a decision
 for a later commit, or one that was edited.
 
-## 6. Draft an approval
+## 7. Draft an approval
 
 ```text
 $ csh approve AccountService/ProtectFunds/MinimumBalance --actor Leigh --rationale "The floor protects customer funds."

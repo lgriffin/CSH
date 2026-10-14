@@ -140,6 +140,20 @@ step csh run --mode enforcing
 run --mode enforcing || true
 stage regression
 
+# Danger (docs/spec/16-analyse-danger-grain.md, section 3): every test still passes and an approved rule is violated, so
+# the overview reports that violation first, as masked danger: green over refuted, naming the passing test (and so are
+# the scenarios that test now contradicts). The other approved rules converge, and their approvals are masked too: one
+# maintainer approved what they wrote.
+step csh overview
+csh overview > .csh-cache/overview.out
+sed -n '/^== Danger/,/^$/p' .csh-cache/overview.out
+node -e '
+const o = JSON.parse(require("child_process").execFileSync(process.execPath, [process.argv[1], "overview", "--json"], { encoding: "utf8" }));
+const d = o.entries.filter((e) => e.danger !== undefined);
+const green = d.filter((e) => e.danger.shape === "green-over-refuted");
+if (!green.some((e) => e.danger.of.endsWith("/LockOnThirdFailure")) || d.some((e) => e.danger.shape !== "green-over-refuted" && e.danger.shape !== "self-approved")) { console.error("expected masked danger, green over refuted, on LockOnThirdFailure, and nothing but that shape and self-approvals; got " + JSON.stringify(d.map((e) => e.danger))); process.exit(1); }
+' "$REPO/packages/cli/bin/csh.js"
+
 # The A3 is built from the four stage records and the judgments in csh/a3/three-practices/judgments.json.
 printf '\n== The A3\n'
 if [ "$UPDATE" = 1 ]; then

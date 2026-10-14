@@ -5,6 +5,7 @@ import { checkExpected, CONVERGED_NEXT, GAP_NEXT, type Overview, parseExpected, 
 const overview: Overview = {
   schema: "csh-overview/v1",
   counts: { gap: 2, indeterminate: 0, converged: 1 },
+  danger: { refuted: 0, masked: 0 },
   entries: [
     { outcome: "gap", kind: "stale-prose", practice: "charter", subject: "Charter/doc.md", detail: "doc.md:89 names a.ts, changed in 1 commit since the line; doc.md:896 names b.ts, changed", next: "", anchor: "a" },
     { outcome: "gap", kind: "fact-conflict", practice: "specification", subject: "S/Claims/NodeFloor", next: "", anchor: "b" },

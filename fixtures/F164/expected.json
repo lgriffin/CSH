@@ -1,0 +1,39 @@
+{
+  "fixture": "F164",
+  "section": "Analyse, danger and grain, section 3",
+  "stage": 56,
+  "expect": {
+    "executions": [
+      {
+        "witness": "w1",
+        "localResult": "failed"
+      }
+    ],
+    "overview": {
+      "danger": [
+        {
+          "kind": "no-rule",
+          "subject": "SignInService/@UnitTests/WitnessW2",
+          "structure": "masked",
+          "shape": "test-under-no-rule"
+        }
+      ],
+      "dangerCount": 1,
+      "entries": [
+        {
+          "outcome": "indeterminate",
+          "kind": "unknown-obligation",
+          "subject": "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+        }
+      ],
+      "dangerAbsent": [
+        {
+          "kind": "unknown-obligation"
+        },
+        {
+          "subject": "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+        }
+      ]
+    }
+  }
+}

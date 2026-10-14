@@ -1,0 +1,25 @@
+{
+  "fixture": "F161",
+  "section": "Analyse, danger and grain, section 3",
+  "stage": 56,
+  "expect": {
+    "overview": {
+      "danger": [
+        {
+          "of": "SignInService/StopPasswordGuessing/LockOnThirdFailure",
+          "structure": "masked",
+          "shape": "green-over-refuted",
+          "greenIncludes": "allows a third failed attempt"
+        },
+        {
+          "kind": "no-rule",
+          "subject": "SignInService/@UnitTests/WitnessW2",
+          "structure": "masked",
+          "shape": "test-under-no-rule",
+          "greenIncludes": "accepts the correct password"
+        }
+      ],
+      "dangerCount": 2
+    }
+  }
+}

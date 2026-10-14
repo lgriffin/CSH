@@ -99,6 +99,8 @@ export interface SheetStage {
   conflicts: number;
   rules: { fragment: string; name: string; verdict: string; authority: string; selfApproved: boolean; disposition: string }[];
   examples: { total: number; citing: number };
+  /** Refuted and masked entries of the stage's overview (stage 56): a view, never a score. */
+  danger: { refuted: number; masked: number; entries: { kind: string; subject: string; structure: string; shape: string; of: string; green?: string }[] };
 }
 
 export interface A3Model {

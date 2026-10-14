@@ -530,3 +530,12 @@ export function reduceTestResults(text: string, opts: { cite: RegExp; base?: str
   for (const f of files) f.cited.sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
   return { reduced: { schema: "csh-results/v1", ...(opts.commit !== undefined ? { commit: opts.commit } : {}), files }, problems: parsed.problems };
 }
+
+/**
+ * The name of the example lifted from a witness: "w1" becomes "WitnessW1". The witness adapter names its examples so,
+ * and the check reads it back to say which test a lifted example came from (stage 56).
+ */
+export function witnessExampleName(id: string): string {
+  const parts = id.split(/[^A-Za-z0-9]+/).filter((p) => p !== "");
+  return `Witness${parts.map((p) => p[0]!.toUpperCase() + p.slice(1)).join("")}`;
+}

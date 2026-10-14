@@ -14,6 +14,7 @@ It belongs to the "Adapters" container, with `@csh/witness` and `@csh/adapter-wi
 - `manifest`: id `csh.adapter.ears-markdown`, version, `csh-ir/v1`, produces `items`, input kind `Requirements`.
 - `run(input)`: reads the files in path order and returns items, diagnostics and, for optional-feature sentences, unliftable claims.
 - `classify(text)`, `EarsPattern`: the EARS pattern of a sentence by its keywords (ubiquitous, event-driven, state-driven, unwanted-behaviour, complex, optional-feature).
+- `claimOf(text)` (stage 56): the phrase by which a sentence claims that something checks it ("tested", "covered by tests", "enforced", "guaranteed", "verified", "checked by", "asserted by"), or undefined; a modal alone claims nothing ([A-192](../../ASSUMPTIONS.md), Q-52).
 - `clausesOf(pattern)`: which clauses (while, if) a pattern carries, for the shape check.
 - `DEFAULT_ID_PATTERN`: `[A-Z][A-Z0-9]*-[0-9]+`; `requirementIdPattern` in the adapter configuration overrides it.
 

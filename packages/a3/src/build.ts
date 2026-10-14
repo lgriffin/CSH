@@ -1,7 +1,7 @@
 // The A3 model (Anchor, harnesses and A3, section 5.2): every number is counted from the stage records and every
 // judgment comes from the judgments file. Nothing here reads the clock, a commit hash or the ledger; authority and
 // file contents at a commit arrive as inputs, so the same inputs always give the same model.
-import { matches, type Match, type Report, type Signal, signalsOf } from "@csh/check";
+import { matches, type Match, overviewOf, type Report, type Signal, signalsOf } from "@csh/check";
 import type { Practice } from "@csh/component";
 import { A3_SCHEMA, type A3Model, type Authority, type CountermeasureStatus, type Judgments, type Pointer, type Problem, type SheetSignal, type SheetStage, type StageRecord } from "./types.ts";
 import { measureValues } from "./measures.ts";
@@ -71,6 +71,9 @@ function sheetStage(j: Judgments, rec: StageRecord, def: Judgments["stages"][num
   const owned = new Set(Object.keys(Object.keys(sources).length > 0 ? sources : (report.component?.sources ?? {})));
   const items = new Set((report.items ?? []).map((i) => `${i.source}/${i.id}`));
   const examples = (report.examples ?? []).filter((e) => owned.has(e.source));
+  // Danger (stage 56): the overview's view across the outcomes, counted and listed; it changes no signal and no count.
+  const overview = overviewOf(report, practices.length > 0 ? { sources } : undefined);
+  const dangerous = overview.entries.flatMap((e) => (e.danger !== undefined ? [{ kind: e.kind, subject: e.subject, structure: e.danger.structure, shape: e.danger.shape, of: e.danger.of, ...(e.danger.green !== undefined ? { green: e.danger.green } : {}) }] : []));
   return {
     id: def.id,
     name: def.name,
@@ -81,6 +84,7 @@ function sheetStage(j: Judgments, rec: StageRecord, def: Judgments["stages"][num
     conflicts: signals.filter((s) => s.kind.endsWith("-conflict")).length,
     rules: (report.assessments ?? []).map((a) => ({ fragment: a.fragment, name: short(a.fragment), verdict: a.verdict, authority: a.authority, selfApproved: a.selfApproved === true, disposition: disposition.get(a.fragment) ?? "candidate" })),
     examples: { total: examples.length, citing: examples.filter((e) => e.cites.some((c) => items.has(c))).length },
+    danger: { refuted: overview.danger.refuted, masked: overview.danger.masked, entries: dangerous },
   };
 }
 

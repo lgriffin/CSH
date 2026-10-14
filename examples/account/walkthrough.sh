@@ -30,6 +30,9 @@ FIRST="$(node -e 'const r=require("./reports/csh-report.json");console.log(r.fin
 step csh explain "$FIRST"
 csh explain "$FIRST" || true
 
+step "csh overview   (its Danger section)"
+csh overview | sed -n '/^== Danger/,/^$/p'
+
 step csh gate
 csh gate || true
 

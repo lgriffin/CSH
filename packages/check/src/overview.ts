@@ -4,6 +4,7 @@
 // Every signal of the report is an entry, so a sheet built from the overview opens on any signal; a kind no rule
 // places is indeterminate, never dropped. The overview reads the report and decides nothing new.
 import { compareCodePoints, digestJson } from "@csh/kernel";
+import { type Danger, dangerCounts, dangerJudge, dangerLine, type DangerStructure } from "./danger.ts";
 import { ladderCounts, ladderLine, type Rung, RUNGS, RUNG_NAMES } from "./ladder.ts";
 import { type PracticeMap, signalsOf } from "./signals.ts";
 import type { Report } from "./types.ts";
@@ -25,11 +26,15 @@ export interface OverviewEntry {
   anchor: string;
   /** When the subject is a told rule, its rung on the Assertion Ladder (stage 48): a second axis, never an outcome. */
   rung?: Rung;
+  /** When the entry is refuted or masked (stage 56): a view across the outcomes, never an outcome and never a score. */
+  danger?: Danger;
 }
 
 export interface Overview {
   schema: "csh-overview/v1";
   counts: Record<Outcome, number>;
+  /** How many entries are refuted and how many masked (stage 56); each is also counted under its outcome. */
+  danger: Record<DangerStructure, number>;
   /** How many told rules sit at each rung of the Assertion Ladder (stage 48); absent when the run read none. */
   ladder?: Record<Rung, number>;
   /** Each told rule's rung, weakest first. */
@@ -107,6 +112,8 @@ export function overviewOf(report: Report, manifest?: PracticeMap): Overview {
   const practiceOf = manifest?.sources ?? report.component?.sources ?? {};
   const entries: OverviewEntry[] = [];
   const signals = signalsOf(report, manifest);
+  const judge = dangerJudge(report);
+  const findingIds = new Set((report.findings ?? []).map((f) => f.id));
   // A violated obligation that a finding already names is one suggestion, not two: the finding says why.
   const inFindings = new Set(signals.filter((s) => s.kind !== "violated" && report.findings.some((f) => f.id === s.id)).flatMap((s) => s.fragments));
   for (const s of signals) {
@@ -118,6 +125,7 @@ export function overviewOf(report: Report, manifest?: PracticeMap): Overview {
     // obligation's reasons carry the edge or the fact.
     const why = s.kind === "violated" || s.kind.endsWith("-conflict") ? reasonsOf(report, s.fragments) : [];
     const detail = s.kind === "violated" && why.length > 0 ? why.join("; ") : [s.detail ?? "", ...why].filter((x) => x !== "").join("; ");
+    const danger = judge.signal(s.kind, s.fragments, subject, findingIds.has(s.id));
     entries.push({
       outcome: gap !== undefined ? "gap" : converged !== undefined ? "converged" : "indeterminate",
       kind: s.kind,
@@ -127,6 +135,7 @@ export function overviewOf(report: Report, manifest?: PracticeMap): Overview {
       next: gap ?? converged ?? INDETERMINATE_NEXT[s.kind] ?? OTHER_NEXT,
       signal: s.id,
       anchor: s.id,
+      ...(danger !== undefined ? { danger } : {}),
     });
   }
   // Obligations: satisfied converge; unknown ones are indeterminate (a violated one is already a signal above).
@@ -136,7 +145,10 @@ export function overviewOf(report: Report, manifest?: PracticeMap): Overview {
     // it: a mistyped target and a package that is legitimately absent read the same (A-173).
     const vacuous = a.reasons.filter((r) => r.startsWith("target-selects-nothing:"));
     if (a.verdict === "satisfied" && vacuous.length > 0) entries.push({ outcome: "converged", kind: "target-selects-nothing", practice, subject: a.fragment, detail: vacuous.join("; "), next: "Holds because nothing its target names is there: check that the target is spelt as the facts name it", anchor: anchorOf("target-selects-nothing", a.fragment) });
-    else if (a.verdict === "satisfied") entries.push({ outcome: "converged", kind: "satisfied", practice, subject: a.fragment, next: "The evidence bears the obligation out", anchor: anchorOf("satisfied", a.fragment) });
+    else if (a.verdict === "satisfied") {
+      const danger = judge.obligation(a.fragment, a.verdict);
+      entries.push({ outcome: "converged", kind: "satisfied", practice, subject: a.fragment, next: "The evidence bears the obligation out", anchor: anchorOf("satisfied", a.fragment), ...(danger !== undefined ? { danger } : {}) });
+    }
     else if (a.verdict === "unknown") entries.push({ outcome: "indeterminate", kind: "unknown-obligation", practice, subject: a.fragment, ...(a.reasons.length > 0 ? { detail: a.reasons.join("; ") } : {}), next: "Supply the evidence its reasons name, or approve what it waits on", anchor: anchorOf("unknown-obligation", a.fragment) });
   }
   // Test results (stage 26): a cited item whose every run test passed converges; a test file that ran nothing it
@@ -183,15 +195,18 @@ export function overviewOf(report: Report, manifest?: PracticeMap): Overview {
   const counts = { converged: 0, gap: 0, indeterminate: 0 };
   for (const e of entries) counts[e.outcome]++;
   const rungs = report.rungs ?? [];
-  if (rungs.length === 0) return { schema: "csh-overview/v1", counts, entries };
+  const danger = dangerCounts(entries);
+  if (rungs.length === 0) return { schema: "csh-overview/v1", counts, danger, entries };
   const rungOf = new Map(rungs.map((r) => [r.item, r.rung]));
   for (const e of entries) {
     const r = rungOf.get(e.subject);
     if (r !== undefined) e.rung = r;
   }
   const ordered = [...rungs].sort((a, b) => RUNGS.indexOf(a.rung) - RUNGS.indexOf(b.rung) || compareCodePoints(a.item, b.item)).map((r) => ({ item: r.item, rung: r.rung }));
-  return { schema: "csh-overview/v1", counts, ladder: ladderCounts(rungs), rungs: ordered, entries };
+  return { schema: "csh-overview/v1", counts, danger, ladder: ladderCounts(rungs), rungs: ordered, entries };
 }
+
+const DANGER_TITLE = "Danger: refuted or masked, each also under its outcome";
 
 const TITLES: Record<Outcome, string> = { gap: "Gaps: suggestions to address", indeterminate: "Indeterminate: what could not be decided", converged: "Converged: what the evidence bears out" };
 
@@ -211,6 +226,13 @@ function groups(entries: OverviewEntry[]): { practice: string; kinds: { kind: st
 /** The overview as text: counts by outcome, then by practice and kind, each kind with what would move it. */
 export function renderOverview(o: Overview): string {
   const out = [`CSH overview: ${o.counts.gap} gaps, ${o.counts.indeterminate} indeterminate, ${o.counts.converged} converged`, ...(o.ladder !== undefined ? [ladderLine(o.ladder)] : []), ""];
+  // Danger first (stage 56): each dangerous entry in full; it is counted again under its own outcome below.
+  const dangerous = o.entries.filter((e) => e.danger !== undefined);
+  if (dangerous.length > 0) {
+    out.push(`== ${DANGER_TITLE} (${o.danger.refuted} refuted, ${o.danger.masked} masked)`);
+    for (const e of dangerous) out.push(`  ${e.outcome} ${e.kind}  ${e.subject}`, `    danger: ${dangerLine(e.danger!)}`, `    close: ${e.danger!.close}`);
+    out.push("");
+  }
   for (const outcome of ["gap", "indeterminate", "converged"] as Outcome[]) {
     const es = o.entries.filter((e) => e.outcome === outcome);
     if (es.length === 0) continue;
@@ -229,11 +251,17 @@ export function renderOverview(o: Overview): string {
 export function renderEntry(e: OverviewEntry): string {
   const lines = [`${e.outcome} ${e.kind}  ${e.subject}`, `  practice ${e.practice}${e.signal !== undefined ? `; signal ${e.signal}` : ""}${e.rung !== undefined ? `; rung ${e.rung} ${RUNG_NAMES[e.rung]}` : ""}`];
   for (const part of (e.detail ?? "").split(/;\s+/).filter((x) => x !== "")) lines.push(`  - ${part}`);
+  if (e.danger !== undefined) lines.push(`  danger: ${dangerLine(e.danger)}`, `  close: ${e.danger.close}`);
   lines.push(`  next: ${e.next}`, "");
   return lines.join("\n");
 }
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/** A dangerous entry's structure, shape, green and close, as HTML. */
+export function dangerHtml(d: Danger): string {
+  return `<ul class="detail danger"><li><span class="flag ${d.structure}">${d.structure}</span> ${esc(d.shape.replace(/-/g, " "))}${d.green !== undefined ? `: ${esc(d.green)}` : ""}</li><li class="next">close: ${esc(d.close)}</li></ul>`;
+}
 
 /**
  * The overview as one self-contained HTML sheet. Each outcome, practice and kind is a section that opens on demand;
@@ -244,6 +272,12 @@ export function renderOverviewHtml(o: Overview, title: string, extra: { before?:
   const ladder = o.ladder !== undefined ? `<div class="ladder" aria-label="Assertion Ladder">${RUNGS.map((r) => `<span class="rung ${r}"><b>${o.ladder![r]}</b> ${r} ${RUNG_NAMES[r]}</span>`).join("")}</div>` : "";
   body.push(`<header><h1>${esc(title)}</h1><div class="tiles">${(["gap", "indeterminate", "converged"] as Outcome[]).map((x) => `<a class="tile ${x}" href="#${x}"><b>${o.counts[x]}</b><span>${x === "gap" ? "gaps" : x}</span></a>`).join("")}</div>${ladder}</header>`);
   if (extra.before !== undefined) body.push(extra.before);
+  const dangerous = o.entries.filter((e) => e.danger !== undefined);
+  if (dangerous.length > 0) {
+    body.push(`<details class="outcome danger" id="danger" open><summary><h2>${esc(DANGER_TITLE)} <small>${dangerous.length}</small></h2></summary><ul>`);
+    for (const e of dangerous) body.push(`<li><div class="subject"><code>${esc(e.kind)}</code> <a href="#${esc(e.anchor)}">${esc(e.subject)}</a></div>${dangerHtml(e.danger!)}</li>`);
+    body.push(`</ul></details>`);
+  }
   for (const outcome of ["gap", "indeterminate", "converged"] as Outcome[]) {
     const es = o.entries.filter((e) => e.outcome === outcome);
     body.push(`<details class="outcome ${outcome}" id="${outcome}"${outcome === "gap" ? " open" : ""}><summary><h2>${esc(TITLES[outcome])} <small>${es.length}</small></h2></summary>`);
@@ -254,7 +288,7 @@ export function renderOverviewHtml(o: Overview, title: string, extra: { before?:
         body.push(`<details class="kind"><summary><code>${esc(k.kind)}</code> <small>${k.entries.length}</small> <span class="next">${esc(k.next)}</span></summary><ul>`);
         for (const e of k.entries) {
           const parts = (e.detail ?? "").split(/;\s+/).filter((x) => x !== "");
-          body.push(`<li id="${esc(e.anchor)}"><div class="subject">${esc(e.subject)}${e.rung !== undefined ? ` <span class="rung ${e.rung}">${e.rung}</span>` : ""}${e.signal !== undefined ? ` <a class="sig" href="#${esc(e.anchor)}">${esc(e.signal)}</a>` : ""}</div>${parts.length > 0 ? `<ul class="detail">${parts.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}</li>`);
+          body.push(`<li id="${esc(e.anchor)}"><div class="subject">${esc(e.subject)}${e.rung !== undefined ? ` <span class="rung ${e.rung}">${e.rung}</span>` : ""}${e.danger !== undefined ? ` <span class="flag ${e.danger.structure}">${e.danger.structure}</span>` : ""}${e.signal !== undefined ? ` <a class="sig" href="#${esc(e.anchor)}">${esc(e.signal)}</a>` : ""}</div>${parts.length > 0 ? `<ul class="detail">${parts.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}</li>`);
         }
         body.push(`</ul></details>`);
       }
@@ -277,6 +311,7 @@ details details{margin-left:1rem}.tiles{display:flex;gap:.75rem;flex-wrap:wrap}
 .next{color:var(--muted)}ul{margin:.25rem 0 .75rem;padding-left:1.25rem}li{margin:.2rem 0;overflow-wrap:anywhere}
 .subject{font-family:ui-monospace,monospace;font-size:.9em}.sig{color:var(--muted);font-size:.85em}.detail{color:var(--muted);font-size:.9em}
 li:target{background:var(--hl);border-radius:4px}.outcome.danger>summary h2{color:var(--gap)}.next{color:var(--muted)}section.read{color:var(--muted)}
+.flag{border-radius:4px;padding:0 .35rem;font-size:.8em;color:#fff;background:var(--gap)}.flag.masked{background:var(--ind)}
 .ladder{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem;color:var(--muted)}.rung{border:1px solid var(--line);border-radius:4px;padding:0 .35rem;font-size:.85em}.ladder .rung b{color:var(--fg)}
 </style></head><body>
 ${body.join("\n")}

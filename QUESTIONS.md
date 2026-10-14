@@ -452,7 +452,10 @@ rule is checked or prevented.
   forms; cited, never translated; extended by fixture.
 - **Any modal of necessity.** Would read every "must" as a claim of enforcement.
 
-Built as proposed on 14 October 2026; issue 78 asks the owner to confirm.
+Built as proposed on 14 October 2026; issue 78 asks the owner to confirm. Stage 56 left "cannot" out of the list: on its
+own it states the rule ("the domain cannot import the store") rather than claiming that something checks it, so it
+would mark every such rule. The list is "tested", "covered by tests", "enforced", "guaranteed", "verified", "checked
+by", "asserted by" ([A-192](ASSUMPTIONS.md)).
 
 ## Q-53 A masked case for each taskboard receiver
 
@@ -462,4 +465,19 @@ tests stay green on is the canonical masked case.
 - **Yes, in stage 56 (chosen):** one masked case per receiver, as a danger fixture.
 - **No.**
 
-Built as proposed on 14 October 2026; issue 78 asks the owner to confirm.
+Built as proposed on 14 October 2026; issue 78 asks the owner to confirm. The cases moved to stage 59: a receiver's
+masked case comes from its own test results (JUnit XML, pytest, vitest), which that stage joins, so they are among
+F174 to F178.
+
+## Q-54 Self-approval in a repository with one maintainer
+
+Raised in stage 56. The masked shape "authority that is not authority" marks an approved rule that converges when its
+approval is self-approved. In a repository whose maintainers file names one person, every approval is self-approved,
+so every convergence is masked (the lockout walkthrough shows three).
+
+- **Mark it whatever the maintainers file says (chosen):** the authority runbook asks for a second maintainer, and the
+  close line says so; a single-maintainer repository sees the cost of having one.
+- **Mark it only when the maintainers file names two or more people.** Quieter, and silent about the case the shape
+  exists for.
+
+Built as the first on 14 October 2026; issue 78 asks the owner to confirm.

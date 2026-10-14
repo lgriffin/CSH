@@ -1,0 +1,2 @@
+{"schema":"csh-execution/v1","test":"test/signin.test.ts::locks on the third failure","outcome":"failed"}
+{"schema":"csh-execution/v1","test":"test/signin.test.ts::accepts the correct password","outcome":"passed"}

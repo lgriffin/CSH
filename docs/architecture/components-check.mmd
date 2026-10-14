@@ -17,6 +17,8 @@ C4Component
     Component(report, "Report writer and renderer", "check/src/check.ts, render.ts", "csh-report/v1 and its text rendering")
     Component(signals, "Signals", "check/src/signals.ts", "Every item of a report as a signal with fragments, sources and practices; structured matching")
     Component(overview, "Overview", "check/src/overview.ts", "Every result placed converged, gap or indeterminate with what would move it; the ladder counts and each entry's rung; text and HTML")
+    Component(danger, "Danger", "check/src/danger.ts", "Refuted or masked: a view across the outcomes, each entry with its shape, what reads green and what would close it; never scored")
+    Component(analysis, "Analysis", "check/src/analysis.ts", "csh-analysis/v1: what an analyse run read, then danger, conflicts, gaps, indeterminate and converged; text and HTML")
     Component(expect, "Expected results", "check/src/expect.ts", "csh-expected/v1 against an overview: rows, counts and rungs")
     Component(refine, "Refiner", "check/src/refine.ts", "Strengthening check for composition")
   }
@@ -45,3 +47,6 @@ C4Component
   Rel(report, signals, "Report and component")
   Rel(signals, overview, "Every signal")
   Rel(overview, expect, "Entries, counts and rungs")
+  Rel(danger, overview, "Each entry's danger")
+  Rel(report, danger, "Assessments, executions, items and rungs")
+  Rel(overview, analysis, "Entries in report order")

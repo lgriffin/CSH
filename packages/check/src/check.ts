@@ -5,7 +5,7 @@ import type { SolverPort } from "@csh/solver";
 import { currentFacts, evaluateArchitecture } from "./arch.ts";
 import { assess, toolDigest } from "./assess.ts";
 import { type EvidenceStore, MemoryEvidenceStore } from "./evidence.ts";
-import { outcomeOf } from "@csh/witness";
+import { outcomeOf, witnessExampleName } from "@csh/witness";
 import { gapView } from "./gaps.ts";
 import { prepare, type Prepared, type SourceRun } from "./pool.ts";
 import { buildPool, runQueries, sortFindings } from "./run.ts";
@@ -87,6 +87,7 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
   if (opts.snapshot !== undefined) assessInput.snapshotCommit = opts.snapshot.commit;
   if (opts.unchangedSince !== undefined) assessInput.unchangedSince = opts.unchangedSince;
   const assessments = assess(assessInput);
+  const exampleOf = new Map(prepared.fragments.filter((f) => f.kind === "example").map((f) => [`${f.source}\u0000${f.local}`, f.name]));
   const report: Report = {
     schema: "csh-report/v1",
     moduleDigest: opts.moduleDigest,
@@ -102,6 +103,9 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
       const e: Report["executions"][number] = { witness: w.witness.id, source: w.source, event: w.witness.event, localResult: outcomeOf(w.witness) };
       if (w.witness.execution.test !== undefined) e.test = w.witness.execution.test;
       if (w.span !== undefined) e.span = w.span;
+      // The example lifted from the witness, when there is one: a finding that names it names what the test observed.
+      const example = exampleOf.get(`${w.source}\u0000${witnessExampleName(w.witness.id)}`);
+      if (example !== undefined) e.example = example;
       return e;
     }),
     examples: prepared.fragments.filter((f) => f.kind === "example").map((f) => ({ fragment: f.name, source: f.source, cites: f.cites.map((c) => `${c.source}/${c.id}`) })),

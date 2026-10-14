@@ -159,7 +159,7 @@ export interface Report {
    */
   verifiedBy?: { item: string; files: number; unreported: number; tests: number; passed: number; failed: number; errored: number; skipped: number }[];
   /** Extension: test executions, stored and reported, never entering a verdict (P2). */
-  executions: { witness: string; source: string; event: string; localResult: string; test?: string; span?: string }[];
+  executions: { witness: string; source: string; event: string; localResult: string; test?: string; span?: string; example?: string }[];
   /**
    * Extension: every example in the pool, with its source and the items it cites as source/id (Anchor, harnesses and
    * A3, section 12: the measure "examples that cite a requirement").

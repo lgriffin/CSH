@@ -25,6 +25,18 @@ export function classify(text: string): EarsPattern | undefined {
   return undefined;
 }
 
+/**
+ * The phrase by which a sentence claims that something checks it (Analyse, danger and grain, Q-52): "tested", "covered
+ * by tests", "enforced", "guaranteed", "verified", "checked by". It is cited, never translated: the claim is the words, and
+ * whether a mechanism stands behind them is the Assertion Ladder's to say. A modal alone ("cannot", "must not") states
+ * the rule and claims nothing more (A-192).
+ */
+const CLAIM = /\b(?:(?:unit[- ])?tested|covered\s+by\s+(?:the\s+)?(?:unit\s+)?tests?|enforced|guaranteed|guarantees?|verified|checked\s+(?:by|in|at)|asserted\s+by)\b/i;
+
+export function claimOf(text: string): string | undefined {
+  return CLAIM.exec(text)?.[0];
+}
+
 /** Which EARS clauses a pattern carries, for the shape check. */
 export function clausesOf(pattern: string | undefined): { while: boolean; ifClause: boolean } {
   return {

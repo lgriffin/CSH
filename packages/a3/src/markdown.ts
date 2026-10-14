@@ -1,5 +1,5 @@
 // The A3 as Markdown, rendered from the model alone (Anchor, harnesses and A3, section 5.1).
-import type { A3Model } from "./types.ts";
+import type { A3Model, SheetStage } from "./types.ts";
 
 export const UNWRITTEN = "Not yet written.";
 const pct = (x: number) => `${Math.round(x * 100)}%`;
@@ -26,12 +26,20 @@ export function renderMarkdown(m: A3Model): string {
   out.push(`**Component.** ${md(m.component)}. **Authority.** ${authorityLine(m)}.${m.authoredBy !== undefined ? ` **Authored by.** ${m.authoredBy}.` : ""} **Judgments.** \`${m.judgmentsDigest}\`.`, "");
   out.push(`**Problem.** ${md(or(m.problem))}`, "");
 
+  const dangerCell = (st: SheetStage) => (st.danger.refuted + st.danger.masked === 0 ? "none" : [st.danger.refuted > 0 ? `${st.danger.refuted} refuted` : "", st.danger.masked > 0 ? `${st.danger.masked} masked` : ""].filter((x) => x !== "").join(", "));
   out.push("## The run, stage by stage", "");
   if (stages.length === 0) out.push("No stage records.", "");
   else {
-    out.push(row(["Stage", "What happens", "Tests", "Signals", "Conflicts", "Rules satisfied", "Gate"]), row(["---", "---", "---:", "---:", "---:", "---:", "---"]));
-    for (const st of stages) out.push(row([stageName(st), or(st.what), `${st.tests.passed} of ${st.tests.total}`, String(st.signals.length), String(st.conflicts), `${st.rules.filter((r) => r.verdict === "satisfied").length} of ${st.rules.length}`, `${st.gate.overall} (${st.gate.mode})`]));
+    out.push(row(["Stage", "What happens", "Tests", "Signals", "Conflicts", "Danger", "Rules satisfied", "Gate"]), row(["---", "---", "---:", "---:", "---:", "---", "---:", "---"]));
+    for (const st of stages) out.push(row([stageName(st), or(st.what), `${st.tests.passed} of ${st.tests.total}`, String(st.signals.length), String(st.conflicts), dangerCell(st), `${st.rules.filter((r) => r.verdict === "satisfied").length} of ${st.rules.length}`, `${st.gate.overall} (${st.gate.mode})`]));
     out.push("");
+    const last = stages[stages.length - 1]!;
+    if (stages.some((st) => st.danger.entries.length > 0)) {
+      out.push("Danger is a view across the outcomes: refuted, where a statement and the code cannot both hold, or masked, where something reads as assurance the evidence does not bear out. It is never scored.", "");
+      out.push(last.danger.entries.length === 0 ? `No danger at the last stage, ${md(stageName(last))}.` : `Danger at the last stage, ${md(stageName(last))}:`, "");
+      for (const d of last.danger.entries) out.push(`- ${d.structure}, ${d.shape.replace(/-/g, " ")}, ${md(d.of)}${d.green !== undefined ? `: ${md(d.green)}` : ""}`);
+      if (last.danger.entries.length > 0) out.push("");
+    }
   }
 
   out.push("## 1. Background", "", ...(m.background.length === 0 ? [`_${UNWRITTEN}_`] : m.background.flatMap((p) => [md(p), ""])));
