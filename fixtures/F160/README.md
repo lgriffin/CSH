@@ -7,7 +7,7 @@ Mermaid container diagram, and one test.
 
 - The proposal names the nested manifest, the diagram as an `Architecture` source, and the identifier family `STK`.
 - The three layering sentences of the README's list are told rules, each an item of `Documents` at its line, and so is
-  the EARS sentence of the guide. "Nothing here depends on luck" says no layering (no negation of a dependency),
+  the EARS sentence of the guide. "Deployment depends on Docker" says no layering (nothing restricts the dependency),
   "Imports are sorted with goimports" neither, and the sentence inside the code fence is not prose.
 - Nothing checks the lifted rules, so each is a gap `unverified` at L2; `STK-1` is cited by the test, at L3; `STK-2` is
   cited by nothing.

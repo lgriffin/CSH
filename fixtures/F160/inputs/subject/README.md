@@ -8,7 +8,7 @@ A small reservation service, written to show its layering.
 - Handlers must never depend on the database driver.
 - The store is independent of the HTTP layer.
 
-Nothing here depends on luck. Imports are sorted with goimports.
+Deployment depends on Docker. Imports are sorted with goimports.
 
 ```text
 The domain does not import anything in this block; it is an example, not a rule.
