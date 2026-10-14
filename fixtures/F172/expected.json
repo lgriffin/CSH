@@ -1,0 +1,55 @@
+{
+  "fixture": "F172",
+  "section": "Analyse, danger and grain, section 5; A-199",
+  "stage": 58,
+  "expect": {
+    "run": {
+      "assessments": [
+        {
+          "fragment": "Shop/Layering/CoreIgnoresDb",
+          "verdict": "violated",
+          "reasonsInclude": [
+            "crates/shop-core/src/lib.rs:2"
+          ]
+        },
+        {
+          "fragment": "Shop/Layering/WebSeesOnlyCore",
+          "verdict": "satisfied"
+        },
+        {
+          "fragment": "Shop/Layering/DiagramIsComplete",
+          "verdict": "violated",
+          "reasonsInclude": [
+            "crates/shop-core/src/lib.rs:2"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "kind": "undrawn-dependency",
+          "subject": "core->db",
+          "detailIncludes": [
+            "crates/shop-core/src/lib.rs:2"
+          ]
+        },
+        {
+          "kind": "unplaced-package",
+          "subject": "shop-tools",
+          "detailIncludes": [
+            "crates/shop-tools/Cargo.toml"
+          ]
+        }
+      ],
+      "gapsAbsent": [
+        {
+          "kind": "unobserved-relation",
+          "subject": "web->core"
+        },
+        {
+          "kind": "undrawn-dependency",
+          "subject": "web->core"
+        }
+      ]
+    }
+  }
+}

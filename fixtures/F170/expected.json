@@ -1,0 +1,59 @@
+{
+  "fixture": "F170",
+  "section": "Analyse, danger and grain, section 5; A-199",
+  "stage": 58,
+  "expect": {
+    "run": {
+      "assessments": [
+        {
+          "fragment": "Shop/Layering/CoreIgnoresDb",
+          "verdict": "violated",
+          "reasonsInclude": [
+            "shop-domain/src/main/java/com/acme/shop/domain/Order.java:3"
+          ]
+        },
+        {
+          "fragment": "Shop/Layering/WebSeesOnlyCore",
+          "verdict": "satisfied"
+        },
+        {
+          "fragment": "Shop/Layering/DiagramIsComplete",
+          "verdict": "violated",
+          "reasonsInclude": [
+            "shop-domain/src/main/java/com/acme/shop/domain/Order.java:3"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "kind": "undrawn-dependency",
+          "subject": "core->db",
+          "detailIncludes": [
+            "shop-domain/src/main/java/com/acme/shop/domain/Order.java:3"
+          ]
+        },
+        {
+          "kind": "unplaced-package",
+          "subject": "shop-tools",
+          "detailIncludes": [
+            "shop-tools/pom.xml"
+          ]
+        }
+      ],
+      "gapsAbsent": [
+        {
+          "kind": "unobserved-relation",
+          "subject": "web->core"
+        },
+        {
+          "kind": "undrawn-dependency",
+          "subject": "web->core"
+        },
+        {
+          "kind": "unplaced-package",
+          "subject": "shop-parent"
+        }
+      ]
+    }
+  }
+}
