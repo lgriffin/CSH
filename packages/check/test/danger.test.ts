@@ -67,6 +67,13 @@ describe("danger", () => {
     expect(dangerOf(report({ gaps: [{ kind: "dangling-reference", subject: "Docs/README.md", detail: "names what does not exist: a.ts" }] }))).toEqual([["gap", "dangling-reference", "refuted", "code-refutes-prose", "Docs/README.md"]]);
   });
 
+  it("marks a told rule whose citing tests do not observe its terms as citation without observation", () => {
+    const detail = "docs/r.md:3: constrains `window`, `floor`; the test citing it (tests/a.test.ts:4) observes `window` only; not observed: `floor`; read by the typescript reader";
+    const r = report({ gaps: [{ kind: "unobserved-terms", subject: "Req/R-1", fragments: [], detail }] });
+    expect(dangerOf(r)).toEqual([["gap", "unobserved-terms", "masked", "citation-without-observation", "Req/R-1"]]);
+    expect(overviewOf(r).entries[0]!.danger!.green).toBe("cited by tests/a.test.ts:4");
+  });
+
   it("marks a told rule that claims a rung the ladder does not find, and only then", () => {
     const item = (id: string, claims?: string) => ({ source: "Docs", id, span: `README.md:${id}`, textDigest: "t", kind: "requirement", attrs: { lifted: "layering", ...(claims !== undefined ? { claims } : {}) } });
     const r = report({

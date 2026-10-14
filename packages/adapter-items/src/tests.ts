@@ -12,7 +12,7 @@ import { compareCodePoints, digestOf } from "@csh/kernel";
 import { type Adapter, type AdapterInput, type AdapterOutput, type Diagnostic, type ItemEdge, parseTestResults, type SourceItem, type TestOutcome, type TestResult } from "@csh/witness";
 import { decode, idPatternOf, sortedFiles } from "./common.ts";
 import { joiner, type Join } from "./tests-join.ts";
-import { inventory, languageOf, lineIndex, lineStarts, runnerName, underscoreFree } from "./tests-other.ts";
+import { inventory, languageOf, lexOther, lineIndex, lineStarts, runnerName, underscoreFree } from "./tests-other.ts";
 
 /** A `go.mod` or `Cargo.toml` in a test source is read for its layout, to join results, and is not a test file. */
 const isLayout = (path: string) => /(?:^|\/)(?:go\.mod|Cargo\.toml)$/.test(path);
@@ -139,9 +139,9 @@ function tagsAfter(code: string, strings: Map<number, string>, after: number): s
  * Each test declaration of a file: its line, whether it is a describe, its modifiers, its literal title and the tags of
  * its options. Playwright's `test.describe` is a describe (stage 42).
  */
-export function declarations(text: string): { line: number; describe: boolean; modifiers: string; title: string; tags: string[] }[] {
+export function declarations(text: string): { line: number; at: number; describe: boolean; modifiers: string; title: string; tags: string[] }[] {
   const { code, strings } = lex(text);
-  const out: { line: number; describe: boolean; modifiers: string; title: string; tags: string[] }[] = [];
+  const out: { line: number; at: number; describe: boolean; modifiers: string; title: string; tags: string[] }[] = [];
   for (const m of code.matchAll(CALL)) {
     let at = m.index + m[0].length;
     // A table first, as each(rows)(title, ...) or each`table`(title, ...): the title is in the call that follows.
@@ -159,7 +159,7 @@ export function declarations(text: string): { line: number; describe: boolean; m
     at = skipSpace(code, at);
     const title = strings.get(at);
     if (title === undefined) continue;
-    out.push({ line: code.slice(0, at).split("\n").length, describe: m[1] === "describe" || /^\.describe\b/.test(m[2]!), modifiers: m[2]!, title, tags: tagsAfter(code, strings, at + title.length + 2) });
+    out.push({ line: code.slice(0, at).split("\n").length, at, describe: m[1] === "describe" || /^\.describe\b/.test(m[2]!), modifiers: m[2]!, title, tags: tagsAfter(code, strings, at + title.length + 2) });
   }
   return out;
 }
@@ -236,6 +236,40 @@ function encodeStep(d: { line: number; pattern: StepPattern }): string {
   return `${d.line}\t${p.k}\t${body.replace(/[\t\n\r]/g, " ")}`;
 }
 
+const IDENTIFIER = /[A-Za-z_$][A-Za-z0-9_$]*/g;
+
+/**
+ * The grain of a test (Analyse, danger and grain, section 4; stage 57): the identifiers its body mentions, from the
+ * code with comments and strings blanked, and each string literal in the body that is itself a single identifier (a
+ * value such as `"in_progress"` that the test compares, where prose such as a title is not). A TypeScript test's body is
+ * its call, to the parenthesis that closes it, so a describe's body holds its tests; in the other languages a body runs
+ * from where the test is named to where the next test is declared, or to the end of the file (A-196).
+ */
+export function observedIn(code: string, from: number, to: number, strings?: Map<number, string>): string[] {
+  const out = new Set(code.slice(from, to).match(IDENTIFIER) ?? []);
+  for (const [at, value] of strings ?? []) if (at >= from && at < to && VALUE.test(value)) out.add(value);
+  return [...out].sort(compareCodePoints);
+}
+
+/** A string literal that is a single identifier: a value, not prose. */
+const VALUE = /^[A-Za-z_][\w-]*$/;
+
+/** The offset where the body of the test named at `at` ends: the next declaration after it, or the end of the file. */
+function bodyEnd(declared: number[], at: number, end: number): number {
+  return declared.find((d) => d > at) ?? end;
+}
+
+/** Add a test's citation, or widen the grain of the file's citation of the same item when another test cites it. */
+function citeWith(edges: ItemEdge[], byTarget: Map<string, ItemEdge>, edge: ItemEdge): void {
+  const seen = byTarget.get(edge.to);
+  if (seen === undefined) {
+    byTarget.set(edge.to, edge);
+    edges.push(edge);
+    return;
+  }
+  if (seen.observes !== undefined && edge.observes !== undefined) seen.observes = [...new Set([...seen.observes, ...edge.observes])].sort(compareCodePoints);
+}
+
 export function run(input: AdapterInput): AdapterOutput {
   const pattern = input.config?.citePattern ?? idPatternOf(input);
   const id = new RegExp(`\\b(?:${pattern})\\b`, "g");
@@ -256,15 +290,18 @@ export function run(input: AdapterInput): AdapterOutput {
     if (lang !== undefined) {
       const found = inventory(text, lang, file.path);
       const starts = lineStarts(text);
-      const cited = new Set<string>();
-      const cite = (value: string, at: number) => {
+      const { code, strings: literals } = lexOther(text, lang);
+      const declared = found.declared.map((d) => d.at).sort((a, b) => a - b);
+      const byTarget = new Map<string, ItemEdge>();
+      // A text's grain is the body of each test it is about: its own, or each test of the class it annotates (A-196).
+      const grainOf = (at: number, of?: number[]) => [...new Set((of ?? [at]).flatMap((d) => observedIn(code, d, bodyEnd(declared, d, code.length), literals)))].sort(compareCodePoints);
+      const cite = (value: string, at: number, of?: number[]) => {
         for (const c of value.matchAll(id)) {
-          if (cited.has(c[0])) continue;
-          cited.add(c[0]);
-          edges.push({ from: file.path, rel: "cites", to: c[0], span: `${file.path}:${lineIndex(starts, at) + 1}` });
+          const observes = grainOf(at, of);
+          citeWith(edges, byTarget, { from: file.path, rel: "cites", to: c[0], span: `${file.path}:${lineIndex(starts, at) + 1}`, observes, reader: lang });
         }
       };
-      for (const s of found.sources) cite(s.name && hyphenate ? s.text.replace(/_/g, "-") : s.text, s.at);
+      for (const s of found.sources) cite(s.name && hyphenate ? s.text.replace(/_/g, "-") : s.text, s.at, s.of);
       if (citeBodies) for (const [at, value] of found.strings) cite(value, at);
       const attrs: Record<string, string> = { tests: String(found.tests) };
       if (found.skipped > 0) attrs.skipped = String(found.skipped);
@@ -276,7 +313,10 @@ export function run(input: AdapterInput): AdapterOutput {
     let tests = 0;
     let skipped = 0;
     const cited = new Set<string>();
-    for (const d of declarations(text)) {
+    const byTarget = new Map<string, ItemEdge>();
+    const decls = declarations(text);
+    const { code: tsCode, strings: tsStrings } = lex(text);
+    for (const d of decls) {
       if (!d.describe) tests++;
       if (/\.(skip|todo)\b/.test(d.modifiers)) skipped++;
       // A tag is matched as written and, when that finds nothing, upper-cased: `@rule-0001` cites RULE-0001 (A-152).
@@ -285,9 +325,8 @@ export function run(input: AdapterInput): AdapterOutput {
         return as.length > 0 ? as : [...t.toUpperCase().matchAll(id)].map((c) => c[0]);
       });
       for (const c of [...[...d.title.matchAll(id)].map((x) => x[0]), ...tagged]) {
-        if (cited.has(c)) continue;
         cited.add(c);
-        edges.push({ from: file.path, rel: "cites", to: c, span: `${file.path}:${d.line}` });
+        citeWith(edges, byTarget, { from: file.path, rel: "cites", to: c, span: `${file.path}:${d.line}`, observes: observedIn(tsCode, d.at, pastClose(tsCode, d.at), tsStrings), reader: "typescript" });
       }
     }
     // citeBodies: an identifier in any string literal of the file cites, not only one in a title (a test that loops over a

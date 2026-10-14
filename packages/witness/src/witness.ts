@@ -65,6 +65,13 @@ export interface ItemEdge {
   /** An item identifier, bare or as Source/id, or "file:" and a path relative to the repository root. */
   to: string;
   span: string;
+  /**
+   * For a test's citation (stage 57): the identifiers the citing test's body mentions, its grain, sorted; absent when
+   * the reader does not read bodies.
+   */
+  observes?: string[];
+  /** Which reader read `observes`: typescript, python, java, go or rust. */
+  reader?: string;
 }
 
 export interface AdapterManifest {

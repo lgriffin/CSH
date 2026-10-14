@@ -57,6 +57,7 @@ export const GAP_NEXT: Record<string, string> = {
   violated: "The evidence violates the obligation: fix the implementation, or revise the obligation",
   "dangling-reference": "Fix or remove the reference to what does not exist",
   unverified: "Name the mechanism that verifies it, or cite its identifier in a test title",
+  "unobserved-terms": "Observe the terms it names in a test that cites it, or narrow what it constrains",
   "status-unsupported": "Point the stated status at a mechanism the repository holds, or lower the status",
   "stale-prose": "Re-read each line against the file changed since it was written, and update it",
   "untraced-change": "Add a test with the change, or a Refs: trailer naming what it implements",
@@ -125,7 +126,7 @@ export function overviewOf(report: Report, manifest?: PracticeMap): Overview {
     // obligation's reasons carry the edge or the fact.
     const why = s.kind === "violated" || s.kind.endsWith("-conflict") ? reasonsOf(report, s.fragments) : [];
     const detail = s.kind === "violated" && why.length > 0 ? why.join("; ") : [s.detail ?? "", ...why].filter((x) => x !== "").join("; ");
-    const danger = judge.signal(s.kind, s.fragments, subject, findingIds.has(s.id));
+    const danger = judge.signal(s.kind, s.fragments, subject, findingIds.has(s.id), s.detail);
     entries.push({
       outcome: gap !== undefined ? "gap" : converged !== undefined ? "converged" : "indeterminate",
       kind: s.kind,

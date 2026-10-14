@@ -153,7 +153,10 @@ describe("the Gherkin inventory adapter", () => {
     // A scenario keeps its steps, its background's first (stage 42); an outline with no rows has only those.
     expect(out.items![3]!.attrs).toEqual({ outline: "true", steps: "6\ta provider" });
     expect(out.edges!.filter((e) => e.rel === "exemplifies").map((e) => e.to)).toEqual([out.items![1]!.id, out.items![1]!.id, out.items![4]!.id]);
-    expect(out.edges!.filter((e) => e.rel === "cites")).toEqual([{ from: out.items![2]!.id, rel: "cites", to: "P5", span: "f/a.feature:10" }]);
+    expect(out.edges!.filter((e) => e.rel === "cites").map(({ observes, reader, ...e }) => e)).toEqual([{ from: out.items![2]!.id, rel: "cites", to: "P5", span: "f/a.feature:10" }]);
+    // A scenario's citations carry its grain: the words of its title, steps and examples (stage 57).
+    expect(out.edges!.find((e) => e.rel === "cites")!.reader).toBe("gherkin");
+    expect(out.edges!.find((e) => e.rel === "cites")!.observes!.length).toBeGreaterThan(0);
     expect(out.diagnostics.map((d) => [d.code, d.span])).toEqual([["no-pattern", "f/a.feature:18"]]);
   });
 
@@ -459,5 +462,67 @@ describe("requirements written as table rows", () => {
   it("are left alone when the practice reads its identifiers as references", () => {
     const out = markdown(input({ "req.md": spec }, { headings: "references" }));
     expect((out.items ?? []).filter((i) => i.kind === "requirement")).toEqual([]);
+  });
+});
+
+describe("the grain of a citing test (stage 57)", () => {
+  const cite = (out: ReturnType<typeof tests>, to: string) => out.edges!.find((e) => e.rel === "cites" && e.to === to)!;
+
+  it("reads a TypeScript test's call, and a describe's whole block, with single-identifier strings as values", () => {
+    const file = [
+      'describe("REQ-1 the board", () => {',
+      '  it("moves a card", () => {',
+      '    const card = moveCard(board, "in_progress");',
+      '    expect(card.status).toBe("done"); // windowSize in a comment',
+      '    expect(log).toContain("a sentence, not a value");',
+      "  });",
+      "});",
+      'it("REQ-2 elsewhere", () => { check(floorLimit); });',
+      "",
+    ].join("\n");
+    const out = tests(input({ "tests/a.test.ts": file }, undefined, "TestFiles"));
+    const one = cite(out, "REQ-1");
+    expect(one.reader).toBe("typescript");
+    expect(one.observes).toEqual(expect.arrayContaining(["moveCard", "board", "in_progress", "done", "status", "expect"]));
+    expect(one.observes).not.toContain("windowSize");
+    expect(one.observes).not.toContain("floorLimit");
+    expect(one.observes!.some((o) => o.includes(" "))).toBe(false);
+    expect(cite(out, "REQ-2").observes).toEqual(expect.arrayContaining(["check", "floorLimit"]));
+    expect(cite(out, "REQ-2").observes).not.toContain("moveCard");
+  });
+
+  it("widens a file's citation when a second test cites the same item", () => {
+    const file = ['it("REQ-1 a", () => { first(); });', 'it("REQ-1 b", () => { second(); });', ""].join("\n");
+    const out = tests(input({ "tests/a.test.ts": file }, undefined, "TestFiles"));
+    expect(out.edges!.filter((e) => e.rel === "cites")).toHaveLength(1);
+    expect(cite(out, "REQ-1").observes).toEqual(expect.arrayContaining(["first", "second"]));
+  });
+
+  it("reads a Java test from its annotation, and a class annotation over each test of the class", () => {
+    const file = [
+      "@Tag(\"REQ-9\")",
+      "class LockTest {",
+      "  @Test",
+      "  @DisplayName(\"REQ-1 locks\")",
+      "  void locks() { assertTrue(lockWindow()); }",
+      "  @Test",
+      "  void unlocks() { assertFalse(floorLimit()); }",
+      "}",
+      "",
+    ].join("\n");
+    const out = tests(input({ "src/test/java/LockTest.java": file }, undefined, "TestFiles"));
+    expect(cite(out, "REQ-1").reader).toBe("java");
+    expect(cite(out, "REQ-1").observes).toContain("lockWindow");
+    expect(cite(out, "REQ-1").observes).not.toContain("floorLimit");
+    expect(cite(out, "REQ-9").observes).toEqual(expect.arrayContaining(["lockWindow", "floorLimit"]));
+  });
+
+  it("reads a Python test's body to the next test", () => {
+    const file = ["def test_REQ_1_window():", '    assert retry_window("ttl") == 3', "", "def test_REQ_2():", "    assert backoff()", ""].join("\n");
+    const out = tests(input({ "tests/test_a.py": file }, undefined, "TestFiles"));
+    const one = cite(out, "REQ-1");
+    expect(one.reader).toBe("python");
+    expect(one.observes).toEqual(expect.arrayContaining(["retry_window", "ttl"]));
+    expect(one.observes).not.toContain("backoff");
   });
 });

@@ -481,3 +481,16 @@ so every convergence is masked (the lockout walkthrough shows three).
   exists for.
 
 Built as the first on 14 October 2026; issue 78 asks the owner to confirm.
+
+## Q-55 A citation whose grain CSH cannot read
+
+Raised in stage 57. Spec 16, section 4, says that where a citing test's grain cannot be read the finding is
+indeterminate, with the file named. A citation with no grain arises where a practice sets `citeBodies` (an identifier in
+any string of the file cites, so no one test body is the citation's) or where an adapter has no reader for the file.
+
+- **Skip the comparison for that rule (chosen):** no entry; the rule keeps whatever else is said of it. No subject in
+  CI has such a citation beside a rule with terms, so nothing is hidden today.
+- **An indeterminate entry naming the file.** What the spec says; it adds an entry per such rule in profiles that set
+  `citeBodies`; no profile in this repository sets it today.
+
+Built as the first on 14 October 2026; the issue for the stage 55 to 60 decisions asks the owner to confirm.

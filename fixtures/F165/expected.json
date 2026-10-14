@@ -1,0 +1,30 @@
+{
+  "fixture": "F165",
+  "section": "Analyse, danger and grain, section 4",
+  "stage": 57,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "entries": [
+        { "outcome": "gap", "kind": "unobserved-terms", "subject": "Requirements/GRN-1", "detailIncludes": ["`window`", "typescript"] },
+        { "outcome": "gap", "kind": "unobserved-terms", "subject": "Requirements/GRN-2", "detailIncludes": ["`floor`", "python"] },
+        { "outcome": "gap", "kind": "unobserved-terms", "subject": "Requirements/GRN-3", "detailIncludes": ["`period`", "java"] },
+        { "outcome": "gap", "kind": "unobserved-terms", "subject": "Requirements/GRN-4", "detailIncludes": ["`backoff`", "go"] },
+        { "outcome": "gap", "kind": "unobserved-terms", "subject": "Requirements/GRN-5", "detailIncludes": ["`ttl`", "rust"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "unobserved-terms", "subject": "Requirements/GRN-6" },
+        { "kind": "unverified", "subject": "Requirements/GRN-1" }
+      ],
+      "danger": [
+        { "kind": "unobserved-terms", "subject": "Requirements/GRN-1", "structure": "masked", "shape": "citation-without-observation", "greenIncludes": "ts/test/lock.test.ts" },
+        { "kind": "unobserved-terms", "subject": "Requirements/GRN-2", "structure": "masked", "shape": "citation-without-observation", "greenIncludes": "py/tests/test_funds.py" },
+        { "kind": "unobserved-terms", "subject": "Requirements/GRN-3", "structure": "masked", "shape": "citation-without-observation", "greenIncludes": "QuotaTest.java" },
+        { "kind": "unobserved-terms", "subject": "Requirements/GRN-4", "structure": "masked", "shape": "citation-without-observation", "greenIncludes": "go/retry_test.go" },
+        { "kind": "unobserved-terms", "subject": "Requirements/GRN-5", "structure": "masked", "shape": "citation-without-observation", "greenIncludes": "rust/tests/cache.rs" }
+      ],
+      "rungs": { "Requirements/GRN-1": "L3", "Requirements/GRN-6": "L3" },
+      "subjectUntouched": true
+    }
+  }
+}

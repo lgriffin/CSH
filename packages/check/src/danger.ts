@@ -10,11 +10,12 @@ export type DangerStructure = "refuted" | "masked";
 /**
  * The shapes established in stage 56. Refuted: the code breaks a rule (`code-breaks-rule`), or refutes what prose says
  * of it (`code-refutes-prose`). Masked: a passing test whose own witness violates a rule (`green-over-refuted`); a
- * passing test whose observation no rule constrains (`test-under-no-rule`); a
+ * passing test whose observation no rule constrains (`test-under-no-rule`); a test citing a rule whose terms it does
+ * not observe (`citation-without-observation`); a
  * sentence or stated status claiming a rung the ladder does not find (`rung-overclaimed`); an approved rule no example
  * exercises (`silence-beside-rule`); a convergence whose approval is its author's own (`self-approved`).
  */
-export type DangerShape = "code-breaks-rule" | "code-refutes-prose" | "green-over-refuted" | "test-under-no-rule" | "rung-overclaimed" | "silence-beside-rule" | "self-approved";
+export type DangerShape = "code-breaks-rule" | "code-refutes-prose" | "green-over-refuted" | "test-under-no-rule" | "citation-without-observation" | "rung-overclaimed" | "silence-beside-rule" | "self-approved";
 
 export interface Danger {
   structure: DangerStructure;
@@ -37,6 +38,7 @@ const CLOSE: Record<DangerShape, string> = {
   "code-refutes-prose": "Correct the statement the code refutes, or the code if the statement is the intent",
   "green-over-refuted": "Fix the implementation so what the test observes meets the statement, or revise the statement: the test passing is not the statement holding",
   "test-under-no-rule": "State the rule the test observes, or cite the one it exercises",
+  "citation-without-observation": "Observe the terms it names in a test that cites it, or narrow what it constrains",
   "rung-overclaimed": "Name the mechanism the claim rests on (a test that cites it, a rule the check can decide), or state it without the claim",
   "silence-beside-rule": "Add a boundary example that exercises the approved rule",
   "self-approved": "Have a second maintainer approve it",
@@ -47,7 +49,7 @@ const RUNG_ORDER = ["L2", "L3", "L4", "L5"];
 /** The danger judgements for one report, by the kind of thing an overview entry is made from. */
 export interface DangerJudge {
   /** A signal: its kind, its fragments, its subject, and whether it is a finding (which carries its members' verdicts). */
-  signal(kind: string, fragments: string[], subject: string, finding: boolean): Danger | undefined;
+  signal(kind: string, fragments: string[], subject: string, finding: boolean, detail?: string): Danger | undefined;
   /** An obligation the overview reads from its assessment (satisfied or unknown). */
   obligation(fragment: string, verdict: string): Danger | undefined;
 }
@@ -66,7 +68,7 @@ export function dangerJudge(report: Report): DangerJudge {
   const make = (structure: DangerStructure, shape: DangerShape, of: string, green?: string): Danger => ({ structure, shape, of, ...(green !== undefined ? { green } : {}), close: CLOSE[shape] });
 
   return {
-    signal(kind, fragments, subject, finding) {
+    signal(kind, fragments, subject, finding, detail) {
       // A rule the evidence violates, through a witness whose test passed: the lockout regression's shape. Only the
       // signal that reports the violation carries it (the violation, or the finding that names it); a gap about the
       // same rule, such as single-source, says something else.
@@ -89,6 +91,10 @@ export function dangerJudge(report: Report): DangerJudge {
       }
       if (violated.length > 0 || BREAKS.has(kind)) return make("refuted", "code-breaks-rule", violated[0]?.fragment ?? fragments[0] ?? subject);
       if (REFUTES_PROSE.has(kind)) return make("refuted", "code-refutes-prose", fragments[0] ?? subject);
+      if (kind === "unobserved-terms") {
+        const by = /citing it \(([^)]*)\)/.exec(detail ?? "")?.[1];
+        return make("masked", "citation-without-observation", subject, by !== undefined ? `cited by ${by}` : "a test cites it");
+      }
       if (kind === "status-unsupported") {
         const status = items.get(subject)?.attrs?.status;
         return make("masked", "rung-overclaimed", subject, status !== undefined ? `its stated status is ${status}` : "its stated status");
