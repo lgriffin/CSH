@@ -23,6 +23,11 @@ export interface AnalyseOptions {
   at?: string;
   /** A component root whose csh/component.json names the subject, read instead of a proposal. */
   profile?: string;
+  /**
+   * A csh-expected/v1 file the analysis is compared with (stage 60), whichever profile it read: the expected results of a
+   * cold read, kept outside the repository. Without it, a given profile's own csh/expected.json is used when present.
+   */
+  expected?: string;
   solver: SolverPort;
   budgetMs?: number;
 }
@@ -133,11 +138,12 @@ export async function analyse(o: AnalyseOptions): Promise<AnalyseResult> {
       told,
       overview,
     };
-    const expectedFile = analysisProfile.kind === "given" ? (o.profile !== undefined ? join(resolve(o.profile), "csh", "expected.json") : join(clone, "csh", "expected.json")) : undefined;
+    const expectedFile = o.expected !== undefined ? resolve(o.expected) : analysisProfile.kind === "given" ? (o.profile !== undefined ? join(resolve(o.profile), "csh", "expected.json") : join(clone, "csh", "expected.json")) : undefined;
     if (expectedFile !== undefined && existsSync(expectedFile)) {
       const parsed = parseExpected(readFileSync(expectedFile, "utf8"));
       if (parsed.expected !== undefined) analysis.expect = checkExpected(overview, parsed.expected);
-    }
+      else if (o.expected !== undefined) return { ok: false, message: `${o.expected}: ${parsed.problems.join("; ")}` };
+    } else if (o.expected !== undefined) return { ok: false, message: `${o.expected} does not exist` };
     return { ok: true, analysis, report };
   } finally {
     rmSync(work, { recursive: true, force: true });

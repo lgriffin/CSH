@@ -106,6 +106,25 @@ describe("csh analyse", () => {
     expect(status(dir)).toBe("");
   });
 
+  it("compares a cold read with --expected, and exits 1 when it does not meet it (stage 60)", async () => {
+    const { dir } = repo(BASE);
+    const out = mkdtempSync(join(tmpdir(), "csh-analyse-out-"));
+    dirs.push(out);
+    const meets = { schema: "csh-expected/v1", counts: { gap: 1, indeterminate: 0, converged: 0 }, rows: [{ row: 1, title: "the told rule is unverified", expect: [{ outcome: "gap", kind: "unverified", subject: "Documents/README.md#L3" }] }] };
+    writeFileSync(join(out, "meets.json"), JSON.stringify(meets));
+    writeFileSync(join(out, "misses.json"), JSON.stringify({ ...meets, counts: { gap: 2 } }));
+    const ok = io(dir);
+    expect(await csh(["analyse", ".", "--out", out, "--json", "--expected", join(out, "meets.json")], ok.io), ok.o.err).toBe(0);
+    expect(JSON.parse(ok.o.out).expect.mismatches).toEqual([]);
+    const bad = io(dir);
+    expect(await csh(["analyse", ".", "--out", out, "--expected", join(out, "misses.json")], bad.io)).toBe(1);
+    expect(bad.o.err).toContain("1 gap entries, expected 2");
+    const none = io(dir);
+    expect(await csh(["analyse", ".", "--out", out, "--expected", join(out, "absent.json")], none.io)).toBe(1);
+    expect(none.o.err).toContain("does not exist");
+    expect(status(dir)).toBe("");
+  });
+
   it("refuses a profile that names no subject, since such a profile sits beside its repository", async () => {
     const { dir } = repo(BASE);
     const profile = mkdtempSync(join(tmpdir(), "csh-analyse-profile-"));

@@ -16,10 +16,20 @@ describe("toldKind", () => {
     ["Your business rules simply don't know anything at all about the outside world.", "layering"],
     ["Business rules are not bound to the database.", "layering"],
     ["The UI is decoupled from persistence.", "layering"],
+    ["Outer layers depend on inner layers, never the reverse.", "layering"],
+    ["Ports import nothing.", "layering"],
+    ["Nothing in the pipeline imports a concrete middleware.", "layering"],
+    ["The lint forbids any import of the global logger.", "layering"],
     ["When a reservation exceeds the stock, the service shall reject it.", "ears"],
     ["The service shall log every refusal.", "ears"],
   ])("%s is %s", (s, kind) => expect(toldKind(s)).toBe(kind));
-  it.each(["Deployment depends on Docker.", "Imports are sorted with goimports.", "The service keeps no state between requests.", "Nothing is cached.", "Run the tests with make."])("%s is no told rule", (s) => expect(toldKind(s)).toBeUndefined());
+  it.each(["Deployment depends on Docker.", "Imports are sorted with goimports.", "The service keeps no state between requests.", "Nothing is cached.", "Run the tests with make.",
+    // Stage 60: a restriction far from the dependency, a hyphenated "only", a hedge and a question restrict nothing.
+    "Components in any outer layer can depend on components in any inner layer, not necessarily the one closest to them.",
+    "At first glance, based on imports, it might seem that the Dependency Rule isn't violated.",
+    "Imports therefore carry the `.ts` extension, type-only imports say `import type`, and `enum` and constructor parameter properties are not available.",
+    "Does the domain not import the store?",
+  ])("%s is no told rule", (s) => expect(toldKind(s)).toBeUndefined());
 });
 
 describe("sentencesOf", () => {

@@ -1,0 +1,58 @@
+name: CSH analyse
+description: Read a repository cold with CSH and report danger, gaps, indeterminate and converged, never changing it.
+author: lgriffin
+
+# The Action (stage 60, Q-51): runs `csh analyse` from the Action's own source, at the ref it is used at, on a checkout
+# of the calling workflow. It writes the analysis under `out`, adds the text to the job summary, and fails only when the
+# repository cannot be read or, with `expected`, when the analysis does not meet that csh-expected/v1 file. Check out
+# with fetch-depth: 0 so that the history CSH reads (prose older than the code it names) is there.
+inputs:
+  path:
+    description: The repository to analyse, a git checkout or a directory inside one.
+    default: "."
+  profile:
+    description: A component root whose csh/component.json names the subject, read instead of a proposal.
+    default: ""
+  expected:
+    description: A csh-expected/v1 file the analysis must meet.
+    default: ""
+  out:
+    description: Where csh-analysis.html and csh-analysis.json are written.
+    default: csh-analysis
+  node-version:
+    description: The Node version to run CSH with (22.18 or later).
+    default: "22"
+outputs:
+  json:
+    description: The path of csh-analysis.json.
+    value: ${{ steps.analyse.outputs.json }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 10.28.0
+    - name: Install CSH
+      shell: bash
+      run: pnpm install --frozen-lockfile --dir "$GITHUB_ACTION_PATH"
+    - name: Analyse
+      id: analyse
+      shell: bash
+      env:
+        CSH_PATH: ${{ inputs.path }}
+        CSH_PROFILE: ${{ inputs.profile }}
+        CSH_EXPECTED: ${{ inputs.expected }}
+        CSH_OUT: ${{ inputs.out }}
+      run: |
+        args=(analyse "$CSH_PATH" --out "$CSH_OUT")
+        if [ -n "$CSH_PROFILE" ]; then args+=(--profile "$CSH_PROFILE"); fi
+        if [ -n "$CSH_EXPECTED" ]; then args+=(--expected "$CSH_EXPECTED"); fi
+        status=0
+        node "$GITHUB_ACTION_PATH/packages/cli/bin/csh.js" "${args[@]}" > "$RUNNER_TEMP/csh-analysis.txt" || status=$?
+        { echo '```'; cat "$RUNNER_TEMP/csh-analysis.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+        cat "$RUNNER_TEMP/csh-analysis.txt"
+        echo "json=$CSH_OUT/csh-analysis.json" >> "$GITHUB_OUTPUT"
+        exit "$status"

@@ -441,7 +441,10 @@ needs a clone, pnpm and Node 22.18 to run CSH.
 - **A tagged tarball release on GitHub, plus an Action, first (chosen);** npm when a second maintainer joins.
 - **Publish to npm under a scope.**
 
-Built as proposed on 14 October 2026; issue 78 asks the owner to confirm. Cutting a release tag is the owner's.
+Built as proposed on 14 October 2026; issue 78 asks the owner to confirm. Cutting a release tag is the owner's. Stage 60
+built it: `.github/workflows/release.yml` packs every package on a tag `v*`, installs the bundle outside the repository,
+runs `csh analyse` from it and attaches the tarballs to the tag's release; `action.yml` runs `csh analyse` from the
+Action's own source. [ADR-32](docs/adr/ADR-32-local-only-distribution.md) records it.
 
 ## Q-52 Which phrases claim a rung
 

@@ -1,0 +1,32 @@
+{
+  "schema": "csh-expected/v1",
+  "counts": {
+    "gap": 2,
+    "indeterminate": 0,
+    "converged": 0
+  },
+  "rows": [
+    {
+      "row": 1,
+      "title": "The README's Dependency Rule (abstract components must not depend on concrete ones) names nothing that checks it",
+      "expect": [
+        {
+          "outcome": "gap",
+          "kind": "unverified",
+          "subject": "Documents/README.md#L146"
+        }
+      ]
+    },
+    {
+      "row": 2,
+      "title": "The README's aim of an application independent of external systems names nothing that checks it",
+      "expect": [
+        {
+          "outcome": "gap",
+          "kind": "unverified",
+          "subject": "Documents/README.md#L51"
+        }
+      ]
+    }
+  ]
+}

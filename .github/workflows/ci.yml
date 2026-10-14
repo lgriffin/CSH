@@ -170,17 +170,47 @@ jobs:
       - name: Overview
         if: always()
         run: node packages/cli/bin/csh.js overview --root subjects/${{ matrix.subject }} >> "$GITHUB_STEP_SUMMARY"
-      # csh analyse (stage 55): the same checkout read cold, with no profile, then through the profile, which must meet
+      # csh analyse (stage 55): the same checkout read cold, with no profile, then through the profile; each must meet
       # its expected results. Neither writes into the checkout.
       - name: Analyse the subject cold
         run: |
           checkout="subjects/${{ matrix.subject }}/.csh-cache/subjects/$(jq -r .subject.commit subjects/${{ matrix.subject }}/csh/component.json)"
           before="$(git -C "$checkout" status --porcelain --ignored)"
-          node packages/cli/bin/csh.js analyse "$checkout" --out reports/analysis-cold > analysis.txt
+          # Stage 60: a subject's analysis-expected.json is what the cold read must report, entry for entry and in count.
+          expected=()
+          if [ -f subjects/${{ matrix.subject }}/analysis-expected.json ]; then expected=(--expected subjects/${{ matrix.subject }}/analysis-expected.json); fi
+          status=0
+          node packages/cli/bin/csh.js analyse "$checkout" --out reports/analysis-cold "${expected[@]}" > analysis.txt || status=$?
           { echo '```'; cat analysis.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           test "$before" = "$(git -C "$checkout" status --porcelain --ignored)"
+          exit "$status"
       - name: Analyse the subject through its profile
         run: |
           checkout="subjects/${{ matrix.subject }}/.csh-cache/subjects/$(jq -r .subject.commit subjects/${{ matrix.subject }}/csh/component.json)"
           node packages/cli/bin/csh.js analyse "$checkout" --profile subjects/${{ matrix.subject }} --out reports/analysis-profile --json > analysis.json
           jq -e '.expect.mismatches == []' analysis.json
+
+  action:
+    # The Action (stage 60): this repository's action.yml, used as a workflow outside it would use it, on go-clean-arch
+    # read cold, which must meet its analysis-expected.json.
+    name: Action
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Fetch the subject at the pinned commit
+        run: |
+          node packages/cli/bin/csh.js subject fetch --root subjects/go-clean-arch
+          echo "SUBJECT=subjects/go-clean-arch/.csh-cache/subjects/$(jq -r .subject.commit subjects/go-clean-arch/csh/component.json)" >> "$GITHUB_ENV"
+      - id: csh
+        uses: ./
+        with:
+          path: ${{ env.SUBJECT }}
+          expected: subjects/go-clean-arch/analysis-expected.json
+          out: reports/action
+      - run: jq -e '.schema == "csh-analysis/v1"' "${{ steps.csh.outputs.json }}"

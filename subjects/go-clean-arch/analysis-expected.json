@@ -1,0 +1,69 @@
+{
+  "schema": "csh-expected/v1",
+  "counts": {
+    "gap": 7,
+    "indeterminate": 0,
+    "converged": 0
+  },
+  "rows": [
+    {
+      "row": 1,
+      "title": "Independent of Frameworks, and the sentence that explains it, name nothing that checks them",
+      "expect": [
+        {
+          "outcome": "gap",
+          "kind": "unverified",
+          "subject": "Documents/README.md#L37"
+        },
+        {
+          "outcome": "gap",
+          "kind": "unverified",
+          "subject": "Documents/README.md#L37~2"
+        }
+      ]
+    },
+    {
+      "row": 2,
+      "title": "Independent of UI names nothing that checks it",
+      "expect": [
+        {
+          "outcome": "gap",
+          "kind": "unverified",
+          "subject": "Documents/README.md#L39"
+        }
+      ]
+    },
+    {
+      "row": 3,
+      "title": "Independent of Database, and business rules not bound to it, name nothing that checks them",
+      "expect": [
+        {
+          "outcome": "gap",
+          "kind": "unverified",
+          "subject": "Documents/README.md#L40"
+        },
+        {
+          "outcome": "gap",
+          "kind": "unverified",
+          "subject": "Documents/README.md#L40~2"
+        }
+      ]
+    },
+    {
+      "row": 4,
+      "title": "Independent of any external agency, and business rules that know nothing of the outside world, name nothing that checks them",
+      "expect": [
+        {
+          "outcome": "gap",
+          "kind": "unverified",
+          "subject": "Documents/README.md#L41"
+        },
+        {
+          "outcome": "gap",
+          "kind": "unverified",
+          "subject": "Documents/README.md#L41~2"
+        }
+      ]
+    }
+  ]
+}

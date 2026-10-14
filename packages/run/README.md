@@ -31,7 +31,8 @@ It is the "Run" container, shown in the [containers diagram](../../docs/architec
   profile given (`profile`, a component root whose manifest names a subject), else the one beside the subject in its
   `csh/`, else a proposal made with `lift`; evaluates it with `ledger: false`; and returns a `csh-analysis/v1` analysis:
   the subject, the profile, every guess, the coverage, the told rules lifted, the overview, and the profile's expected
-  results compared when it has them ([A-189](../../ASSUMPTIONS.md)). `writeAnalysis` writes `csh-analysis.json` and
+  results compared when it has them ([A-189](../../ASSUMPTIONS.md)); since stage 60, `expected` names a csh-expected/v1
+  file compared instead, whatever profile was read, and one that is missing or malformed fails the analysis. `writeAnalysis` writes `csh-analysis.json` and
   `csh-analysis.html`.
 - `proposeProfile(dir, { lift })`: since stage 55 language manifests are code at any depth (not in a fixture, a
   dot-directory or a test directory), a Mermaid file whose first line is `C4Container` is an `Architecture` source,
