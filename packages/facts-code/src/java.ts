@@ -37,6 +37,8 @@ export interface JavaDeclaration {
   declares: "class" | "interface" | "enum" | "record" | "annotation" | "const";
   line: number;
   base?: string;
+  /** The interfaces a class, enum or record implements, and an interface's further supertypes (stage 59). */
+  bases?: string[];
   value?: string;
   /** For a type: whether it is declared `public`. */
   public?: boolean;
@@ -265,10 +267,13 @@ function declareType(n: Node, outer: string, out: JavaDeclaration[]): void {
   if (declares === "class") base = n.childForFieldName("superclass")?.namedChildren[0];
   else if (declares === "interface") base = n.namedChildren.find((c) => c.type === "extends_interfaces")?.namedChildren[0]?.namedChildren[0];
   const stripped = base !== null && base !== undefined ? stripType(base.text) : "";
+  // The interfaces it implements, or, for an interface, those it extends after the first (stage 59).
+  const listed = (declares === "interface" ? n.namedChildren.find((c) => c.type === "extends_interfaces") : n.childForFieldName("interfaces"))?.namedChildren.find((c) => c.type === "type_list")?.namedChildren ?? [];
+  const bases = listed.slice(declares === "interface" ? 1 : 0).flatMap((t) => (t === null ? [] : [stripType(t.text)])).filter((t) => t !== "");
   const members = closedMembersOf(n, declares, id.text);
   // A switch belongs to the top-level type that holds it, nested types' included (stage 49).
   const switches = outer === "" ? switchesIn(n) : [];
-  out.push({ symbol, declares, line: lineOf(id), ...(stripped !== "" ? { base: stripped } : {}), public: modifiersOf(n).has("public"), ...(outer !== "" ? { nested: true } : {}), ...(members !== undefined ? { members } : {}), ...(switches.length > 0 ? { switches } : {}) });
+  out.push({ symbol, declares, line: lineOf(id), ...(stripped !== "" ? { base: stripped } : {}), ...(bases.length > 0 ? { bases } : {}), public: modifiersOf(n).has("public"), ...(outer !== "" ? { nested: true } : {}), ...(members !== undefined ? { members } : {}), ...(switches.length > 0 ? { switches } : {}) });
   out.push(...constantsOf(n, symbol));
   for (const m of membersOf(n)) if (Object.hasOwn(TYPES, m.type)) declareType(m, symbol, out);
 }
@@ -397,7 +402,7 @@ export async function readJavaFiles(input: readonly InputFile[], ctx: FactContex
     }
     for (const d of j.declarations) {
       const total = totalOf(d);
-      facts.push({ ...base, kind: "declare", at: `${f.path}:${d.line}`, module: f.path, symbol: d.symbol, declares: d.declares, ...(d.base !== undefined ? { base: d.base } : {}), ...(d.value !== undefined ? { value: d.value } : {}), ...(d.members !== undefined ? { members: d.members } : {}), ...(total.length > 0 ? { total } : {}) });
+      facts.push({ ...base, kind: "declare", at: `${f.path}:${d.line}`, module: f.path, symbol: d.symbol, declares: d.declares, ...(d.base !== undefined ? { base: d.base } : {}), ...(d.bases !== undefined ? { bases: d.bases } : {}), ...(d.value !== undefined ? { value: d.value } : {}), ...(d.members !== undefined ? { members: d.members } : {}), ...(total.length > 0 ? { total } : {}) });
     }
     for (const d of j.declarations) if (d.public === true && d.nested !== true) facts.push({ ...base, kind: "export", at: `${f.path}:${d.line}`, module: f.path, symbol: d.symbol, typeOnly: false });
   }

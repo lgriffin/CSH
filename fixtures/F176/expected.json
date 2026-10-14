@@ -1,0 +1,43 @@
+{
+  "fixture": "F176",
+  "section": "Analyse, danger and grain, sections 3 and 5; A-200 to A-202",
+  "stage": 59,
+  "expect": {
+    "run": {
+      "assessments": [
+        {
+          "fragment": "Board/Layering/DomainIgnoresHttp",
+          "verdict": "violated",
+          "reasonsInclude": [
+            "src/board/domain/cards.py:2"
+          ]
+        }
+      ],
+      "danger": [
+        {
+          "of": "Board/Layering/DomainIgnoresHttp",
+          "structure": "masked",
+          "shape": "green-over-refuted",
+          "greenIncludes": "Reqs/REQ-2"
+        }
+      ],
+      "dangerCount": 1,
+      "gaps": [
+        {
+          "kind": "undefined-step",
+          "detailIncludes": [
+            "the move is logged"
+          ]
+        }
+      ],
+      "gapsAbsent": [
+        {
+          "kind": "unused-step-definition"
+        },
+        {
+          "kind": "steps-undecided"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Board",
+  "spec": "csh/spec.csl.ts",
+  "implementation": [
+    "store"
+  ],
+  "sources": [
+    {
+      "name": "Code",
+      "kind": "Code",
+      "at": ".",
+      "include": [
+        "store/store.go",
+        "go.mod"
+      ]
+    },
+    {
+      "name": "Tests",
+      "kind": "TestFiles",
+      "at": ".",
+      "include": [
+        "store/**/*_test.go"
+      ]
+    },
+    {
+      "name": "Features",
+      "kind": "Features",
+      "at": "features"
+    },
+    {
+      "name": "Steps",
+      "kind": "TestFiles",
+      "at": ".",
+      "include": [
+        "features/**/*_test.go"
+      ]
+    }
+  ],
+  "practices": [
+    {
+      "id": "reqs",
+      "name": "Requirements",
+      "kind": "requirements",
+      "sources": [
+        "Reqs"
+      ]
+    },
+    {
+      "id": "code",
+      "name": "Code facts",
+      "kind": "facts",
+      "sources": [
+        "Code"
+      ]
+    },
+    {
+      "id": "tests",
+      "name": "go test",
+      "kind": "tests",
+      "sources": [
+        "Tests"
+      ],
+      "settings": {
+        "idPattern": "REQ-[0-9]+"
+      },
+      "executions": "results/go-test.json"
+    },
+    {
+      "id": "bdd",
+      "name": "Behaviour",
+      "kind": "scenarios",
+      "sources": [
+        "Features"
+      ],
+      "settings": {
+        "tagCites": "(REQ-[0-9]+)"
+      }
+    },
+    {
+      "id": "steps",
+      "name": "Step definitions",
+      "kind": "tests",
+      "sources": [
+        "Steps"
+      ],
+      "settings": {
+        "idPattern": "REQ-[0-9]+",
+        "style": "cucumber"
+      }
+    }
+  ]
+}

@@ -5,6 +5,8 @@ import { type Analysis, overviewOf, renderAnalysis, renderOverview, type Report,
 
 interface Parts {
   assessments?: unknown[];
+  cites?: { fragment: string; cites: string[] }[];
+  outcomes?: { item: string; tests: number; passed: number; failed: number; errored: number; skipped: number }[];
   gaps?: { kind: string; subject: string; fragments?: string[]; detail?: string }[];
   executions?: unknown[];
   items?: unknown[];
@@ -21,7 +23,8 @@ const report = (p: Parts): Report =>
     items: p.items ?? [],
     executions: p.executions ?? [],
     rungs: p.rungs,
-    outcomes: [],
+    outcomes: p.outcomes ?? [],
+    ...(p.cites !== undefined ? { cites: p.cites } : {}),
     diagnostics: [],
     unliftable: [],
     edges: [],
@@ -65,6 +68,20 @@ describe("danger", () => {
 
   it("marks prose the file tree refutes as refuted", () => {
     expect(dangerOf(report({ gaps: [{ kind: "dangling-reference", subject: "Docs/README.md", detail: "names what does not exist: a.ts" }] }))).toEqual([["gap", "dangling-reference", "refuted", "code-refutes-prose", "Docs/README.md"]]);
+  });
+
+  it("marks a rule the code breaks, or a claim it refutes, as masked when the tests citing it pass in the runner's results", () => {
+    const outcome = (failed: number) => ({ item: "Reqs/REQ-2", tests: 2, passed: 2 - failed, failed, errored: 0, skipped: 0 });
+    const cites = [{ fragment: "S/Lockout/LockOnThird", cites: ["Reqs/REQ-2"] }];
+    const broken = (failed: number) => report({ assessments: [rule({ verdict: "violated", kind: "architecture", scope: "implementation" })], gaps: [], cites, outcomes: [outcome(failed)] });
+    expect(dangerOf(broken(0))).toEqual([["gap", "violated", "masked", "green-over-refuted", "S/Lockout/LockOnThird"]]);
+    expect(overviewOf(broken(0)).entries.find((e) => e.danger !== undefined)!.danger!.green).toBe("the 2 tests citing Reqs/REQ-2 pass in the runner's results");
+    // One test citing it failed: the results do not read green.
+    expect(dangerOf(broken(1))).toEqual([["gap", "violated", "refuted", "code-breaks-rule", "S/Lockout/LockOnThird"]]);
+    // A claim the code refutes reads the same; two statements that disagree are no test's business.
+    const finding = (kind: string) => ({ ...report({ cites, outcomes: [outcome(0)] }), findings: [{ id: "f1", kind, members: [{ fragment: "S/Lockout/LockOnThird", source: "intent", authority: "candidate" }], scope: "implementation", crossSource: false, collisionTerms: [], context: [] }] }) as unknown as Report;
+    expect(dangerOf(finding("fact-conflict"))).toEqual([["gap", "fact-conflict", "masked", "green-over-refuted", "S/Lockout/LockOnThird"]]);
+    expect(dangerOf(finding("claim-conflict"))).toEqual([["gap", "claim-conflict", "refuted", "code-refutes-prose", "S/Lockout/LockOnThird"]]);
   });
 
   it("marks a told rule whose citing tests do not observe its terms as citation without observation", () => {

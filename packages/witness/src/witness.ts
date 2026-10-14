@@ -214,6 +214,11 @@ export interface DeclareFact extends FactBase {
   declares: DeclarationKind;
   /** The base a class extends, as written: a name, or a dotted name. */
   base?: string;
+  /**
+   * The other supertypes, as written (stage 59): the interfaces a Java class implements or an interface extends after
+   * its first, a Rust trait's supertraits after its first, and what a Go struct or interface embeds.
+   */
+  bases?: string[];
   /** A const's value, when it is a string, number or boolean literal. */
   value?: string;
   /**

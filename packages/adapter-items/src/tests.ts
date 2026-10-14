@@ -12,6 +12,7 @@ import { compareCodePoints, digestOf } from "@csh/kernel";
 import { type Adapter, type AdapterInput, type AdapterOutput, type Diagnostic, type ItemEdge, parseTestResults, type SourceItem, type TestOutcome, type TestResult } from "@csh/witness";
 import { decode, idPatternOf, sortedFiles } from "./common.ts";
 import { joiner, type Join } from "./tests-join.ts";
+import { stepDefinitionsOther } from "./steps-other.ts";
 import { inventory, languageOf, lexOther, lineIndex, lineStarts, runnerName, underscoreFree } from "./tests-other.ts";
 
 /** A `go.mod` or `Cargo.toml` in a test source is read for its layout, to join results, and is not a test file. */
@@ -305,8 +306,22 @@ export function run(input: AdapterInput): AdapterOutput {
       if (citeBodies) for (const [at, value] of found.strings) cite(value, at);
       const attrs: Record<string, string> = { tests: String(found.tests) };
       if (found.skipped > 0) attrs.skipped = String(found.skipped);
+      // style: "cucumber" reads behave, Cucumber-JVM, godog and cucumber-rs step definitions too (stage 59).
+      const defs = cucumber ? stepDefinitionsOther(text, lang) : [];
+      if (defs.length > 0) {
+        attrs.steps = String(defs.length);
+        attrs.stepDefinitions = defs.map(encodeStep).join("\n");
+        const cited = new Set(edges.filter((e) => e.from === file.path).map((e) => e.to));
+        for (const d of defs) {
+          for (const c of d.title.matchAll(id)) {
+            if (cited.has(c[0])) continue;
+            cited.add(c[0]);
+            edges.push({ from: file.path, rel: "cites", to: c[0], span: `${file.path}:${d.line}` });
+          }
+        }
+      }
       items.push({ id: file.path, kind: "test-file", text: file.path, span: `${file.path}:1`, textDigest: digestOf(text), attrs });
-      if (found.tests === 0) diagnostics.push({ code: "no-tests", severity: "info", message: `${file.path} declares no test its runner would collect`, span: file.path });
+      if (found.tests === 0 && defs.length === 0) diagnostics.push({ code: "no-tests", severity: "info", message: `${file.path} declares no test its runner would collect`, span: file.path });
       continue;
     }
     let steps = 0;

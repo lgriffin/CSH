@@ -1,0 +1,47 @@
+{
+  "fixture": "F177",
+  "section": "Analyse, danger and grain, sections 3 and 5; A-200 to A-202",
+  "stage": 59,
+  "expect": {
+    "run": {
+      "assessments": [
+        {
+          "fragment": "Board/Stores/AuditedIsAMemoryStore",
+          "verdict": "satisfied",
+          "reasonsInclude": [
+            "MemoryStore"
+          ]
+        },
+        {
+          "fragment": "Board/Stores/CachedIsAMemoryStore",
+          "verdict": "violated"
+        }
+      ],
+      "danger": [
+        {
+          "of": "Board/Stores/CachedIsAMemoryStore",
+          "structure": "masked",
+          "shape": "green-over-refuted",
+          "greenIncludes": "Reqs/REQ-2"
+        }
+      ],
+      "dangerCount": 1,
+      "gaps": [
+        {
+          "kind": "undefined-step",
+          "detailIncludes": [
+            "the move is logged"
+          ]
+        }
+      ],
+      "gapsAbsent": [
+        {
+          "kind": "unused-step-definition"
+        },
+        {
+          "kind": "steps-undecided"
+        }
+      ]
+    }
+  }
+}

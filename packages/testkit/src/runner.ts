@@ -38,7 +38,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 58;
+export const BUILT_THROUGH_STAGE = 59;
 
 const AGENT_BIN = resolve(import.meta.dirname, "../../agent/bin/csh-agent.js");
 
@@ -920,6 +920,8 @@ export class FixtureRunner {
           for (const s of (want.byIncludes ?? []) as string[]) if (!said.includes(s)) failures.push(`${want.item}: no mechanism mentions ${s}; by ${JSON.stringify(got.by)}`);
         }
       }
+      // Danger from the run's overview (stage 59).
+      if (x.danger !== undefined || x.dangerAbsent !== undefined || x.dangerCount !== undefined) this.dangerExpect(overviewOf(report).entries, x, failures);
       if (x.ladder !== undefined) {
         const o = overviewOf(report);
         if (JSON.stringify(o.ladder) !== JSON.stringify(x.ladder)) failures.push(`ladder ${JSON.stringify(o.ladder)}, expected ${JSON.stringify(x.ladder)}`);

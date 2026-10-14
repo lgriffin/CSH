@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.acme.board.CardStoreTest" time="0.021" tests="2" errors="0" skipped="0" failures="0">
+  <testcase name="memoryStoreKeepsCards_REQ_1" classname="com.acme.board.CardStoreTest" time="0.004"/>
+  <testcase name="jdbcStoreKeepsCards_REQ_2" classname="com.acme.board.CardStoreTest" time="0.003"/>
+</testsuite>

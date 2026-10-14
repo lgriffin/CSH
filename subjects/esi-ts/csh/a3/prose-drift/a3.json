@@ -19263,10 +19263,11 @@
             "subject": "EsiTs/ProseAboutCode/CodeownersStillToAdd"
           },
           {
+            "green": "the 11 tests citing Charter/ARCH-07 pass in the runner's results",
             "kind": "fact-conflict",
             "of": "EsiTs/ProseAboutCode/ErrorsSubpathLacksIsCircuitOpen",
-            "shape": "code-breaks-rule",
-            "structure": "refuted",
+            "shape": "green-over-refuted",
+            "structure": "masked",
             "subject": "EsiTs/ProseAboutCode/ErrorsSubpathLacksIsCircuitOpen"
           },
           {
@@ -19298,8 +19299,8 @@
             "subject": "EsiTs/ProseAboutCode/UnitTierHas192Files"
           }
         ],
-        "masked": 1,
-        "refuted": 21
+        "masked": 2,
+        "refuted": 20
       },
       "examples": {
         "citing": 0,

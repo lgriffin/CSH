@@ -8,7 +8,7 @@ import { type Claim, compareCodePoints, matchesGlobs, type Prop } from "@csh/ker
 export interface ClaimFacts {
   /** Every module read, by path. */
   modules: Set<string>;
-  declares: { module: string; symbol: string; declares: string; base?: string; value?: string; members?: string[]; total?: string[]; at: string }[];
+  declares: { module: string; symbol: string; declares: string; base?: string; bases?: string[]; value?: string; members?: string[]; total?: string[]; at: string }[];
   exports: { module: string; symbol: string; at: string }[];
   fields: { file: string; path: string; value: string; at: string }[];
   /** The files the repository tracks; undefined when not known. */
@@ -39,6 +39,9 @@ type Truth = { value: boolean; detail: string; evidence?: ClaimEvidence[] } | { 
  * A name is built in only for the language of the class that extends it, so a TypeScript class extending an imported
  * `Exception` is not taken for Python's (stage 29).
  */
+/** What declares supertypes: classes, interfaces, traits, structs, records and enums. */
+const SUPERTYPED = new Set(["class", "interface", "trait", "struct", "record", "enum"]);
+
 const BUILT_IN_BASES: Record<string, Record<string, string | null>> = {
   javascript: { Object: null, Error: "Object", TypeError: "Error", RangeError: "Error", SyntaxError: "Error", ReferenceError: "Error", AggregateError: "Error", Array: "Object", Map: "Object", Set: "Object", Promise: "Object", EventTarget: "Object" },
   python: {
@@ -103,39 +106,65 @@ export function truthOf(p: Prop, f: ClaimFacts): Truth {
       return { value: false, detail: `${p.module} exports no ${p.symbol}` };
     }
     case "inherits": {
-      const classes = new Map<string, { base?: string; at: string; module: string }[]>();
-      for (const d of f.declares.filter((x) => x.declares === "class")) classes.set(d.symbol, [...(classes.get(d.symbol) ?? []), { ...(d.base !== undefined ? { base: d.base } : {}), at: d.at, module: d.module }]);
-      const chain: string[] = [];
-      const seen: string[] = [];
-      let name = p.cls;
-      let language = "javascript";
-      for (;;) {
-        const found = classes.get(name);
+      // Every supertype is followed (stage 59): a class's base, the interfaces it implements, an interface's or a
+      // trait's supertypes, what a Go struct embeds (A-201). A path that reaches the base decides it; else a path that
+      // could not be read leaves it unknown; else none does.
+      const types = new Map<string, { base?: string; bases?: string[]; at: string; module: string }[]>();
+      for (const d of f.declares.filter((x) => SUPERTYPED.has(x.declares))) types.set(d.symbol, [...(types.get(d.symbol) ?? []), { ...(d.base !== undefined ? { base: d.base } : {}), ...(d.bases !== undefined ? { bases: d.bases } : {}), at: d.at, module: d.module }]);
+      if (!types.has(p.cls)) return { reason: `no-class: ${p.cls}` };
+      const held: { value: boolean; detail: string; evidence: string[] }[] = [];
+      const reasons: string[] = [];
+      let decided = false;
+      const walk = (name: string, chain: string[], seen: string[], language: string, path: Set<string>): void => {
+        if (decided) return;
+        const found = types.get(name);
         if (found === undefined) {
-          if (name === p.cls) return { reason: `no-class: ${p.cls}` };
           const builtIns = BUILT_IN_BASES[language] ?? {};
-          if (!Object.hasOwn(builtIns, name)) return { reason: `base-not-read: ${name}` };
-          const evidence = seen.map((at) => ({ at }));
+          if (!Object.hasOwn(builtIns, name)) {
+            reasons.push(`base-not-read: ${name}`);
+            return;
+          }
           const ancestors: string[] = [];
           for (let b: string | null = name; b !== null; b = builtIns[b] ?? null) {
             ancestors.push(b);
-            if (b === p.base) return { value: true, detail: [...chain, ...ancestors].join(" -> "), evidence };
+            if (b === p.base) {
+              held.push({ value: true, detail: [...chain, ...ancestors].join(" -> "), evidence: seen });
+              decided = true;
+              return;
+            }
           }
-          return { value: false, detail: `${chain.join(" -> ")} ends at ${ancestors.join(" -> ")}`, evidence };
+          held.push({ value: false, detail: `${chain.join(" -> ")} ends at ${ancestors.join(" -> ")}`, evidence: seen });
+          return;
         }
-        // Declarations are matched by name, not by binding: a name declared twice could be either class.
-        if (found.length > 1) return { reason: `ambiguous-class: ${name} is declared ${found.length} times` };
-        chain.push(`${name} (${found[0]!.at})`);
-        seen.push(found[0]!.at);
-        language = f.languages?.get(found[0]!.module) ?? "javascript";
-        const base = found[0]!.base;
-        if (base === undefined) return { value: false, detail: `${chain.join(" -> ")} extends nothing`, evidence: seen.map((at) => ({ at })) };
-        // A qualified or computed base names a class through a binding that is not followed.
-        if (!/^[A-Za-z_$][\w$]*$/.test(base)) return { reason: `qualified-base: ${name} extends ${base}` };
-        if (base === p.base) return { value: true, detail: `${chain.join(" -> ")} -> ${base}`, evidence: seen.map((at) => ({ at })) };
-        if (chain.length > 64) return { reason: `cycle: ${name}` };
-        name = base;
-      }
+        // Declarations are matched by name, not by binding: a name declared twice could be either type.
+        if (found.length > 1) {
+          reasons.push(`ambiguous-class: ${name} is declared ${found.length} times`);
+          return;
+        }
+        const d = found[0]!;
+        const here = [...chain, `${name} (${d.at})`];
+        const at = [...seen, d.at];
+        const supers = [...(d.base !== undefined ? [d.base] : []), ...(d.bases ?? [])];
+        if (supers.length === 0) {
+          held.push({ value: false, detail: `${here.join(" -> ")} extends nothing`, evidence: at });
+          return;
+        }
+        for (const base of supers) {
+          // A qualified or computed base names a type through a binding that is not followed.
+          if (!/^[A-Za-z_$][\w$]*$/.test(base)) reasons.push(`qualified-base: ${name} extends ${base}`);
+          else if (base === p.base) {
+            held.push({ value: true, detail: `${here.join(" -> ")} -> ${base}`, evidence: at });
+            decided = true;
+          } else if (path.has(base) || here.length > 64) reasons.push(`cycle: ${name}`);
+          else walk(base, here, at, f.languages?.get(d.module) ?? "javascript", new Set([...path, base]));
+          if (decided) return;
+        }
+      };
+      walk(p.cls, [], [], "javascript", new Set([p.cls]));
+      const yes = held.find((h) => h.value);
+      if (yes !== undefined) return { value: true, detail: yes.detail, evidence: yes.evidence.map((at) => ({ at })) };
+      if (reasons.length > 0) return { reason: reasons[0]! };
+      return { value: false, detail: held.map((h) => h.detail).join("; "), evidence: [...new Set(held.flatMap((h) => h.evidence))].map((at) => ({ at })) };
     }
     case "field": {
       const in_ = f.fields.filter((x) => x.file === p.file);

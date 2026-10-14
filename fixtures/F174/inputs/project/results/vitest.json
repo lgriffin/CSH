@@ -1,0 +1,26 @@
+{
+  "numTotalTests": 2,
+  "numPassedTests": 2,
+  "numFailedTests": 0,
+  "success": true,
+  "testResults": [
+    {
+      "name": "/home/runner/work/board/tests/board.test.ts",
+      "status": "passed",
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "REQ-1 keeps a card that moves",
+          "status": "passed",
+          "title": "REQ-1 keeps a card that moves"
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "REQ-2 the domain answers without the HTTP layer",
+          "status": "passed",
+          "title": "REQ-2 the domain answers without the HTTP layer"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "schema": "csh-component/v2",
+  "name": "Board",
+  "spec": "csh/spec.csl.ts",
+  "implementation": [
+    "src"
+  ],
+  "sources": [
+    {
+      "name": "Code",
+      "kind": "Code",
+      "at": ".",
+      "include": [
+        "src/main/java/**/*.java"
+      ]
+    },
+    {
+      "name": "Tests",
+      "kind": "TestFiles",
+      "at": ".",
+      "include": [
+        "src/test/java/com/acme/board/*.java"
+      ]
+    },
+    {
+      "name": "Features",
+      "kind": "Features",
+      "at": "features"
+    },
+    {
+      "name": "Steps",
+      "kind": "TestFiles",
+      "at": ".",
+      "include": [
+        "src/test/java/com/acme/board/steps/**/*.java"
+      ]
+    }
+  ],
+  "practices": [
+    {
+      "id": "reqs",
+      "name": "Requirements",
+      "kind": "requirements",
+      "sources": [
+        "Reqs"
+      ]
+    },
+    {
+      "id": "code",
+      "name": "Code facts",
+      "kind": "facts",
+      "sources": [
+        "Code"
+      ]
+    },
+    {
+      "id": "tests",
+      "name": "JUnit",
+      "kind": "tests",
+      "sources": [
+        "Tests"
+      ],
+      "settings": {
+        "idPattern": "REQ-[0-9]+"
+      },
+      "executions": "results/TEST-com.acme.board.CardStoreTest.xml"
+    },
+    {
+      "id": "bdd",
+      "name": "Behaviour",
+      "kind": "scenarios",
+      "sources": [
+        "Features"
+      ],
+      "settings": {
+        "tagCites": "(REQ-[0-9]+)"
+      }
+    },
+    {
+      "id": "steps",
+      "name": "Step definitions",
+      "kind": "tests",
+      "sources": [
+        "Steps"
+      ],
+      "settings": {
+        "idPattern": "REQ-[0-9]+",
+        "style": "cucumber"
+      }
+    }
+  ]
+}

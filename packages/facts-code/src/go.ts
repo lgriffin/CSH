@@ -8,7 +8,8 @@
 // `internal/db/**` selects the files under a directory and not the directory itself. A local import whose directory
 // holds no file read is a skipped fact. A standard library import is `go:<path>`, any other the import path as written.
 // One declaration per top-level name, with a method named `Type.Method`; one export per capitalised name. Go has no
-// inheritance, so a struct's embedded fields are no `base`.
+// inheritance; what a struct or an interface embeds is recorded as its `bases`, since the embedded type's methods are
+// promoted (stage 59).
 import { posix } from "node:path";
 import { compareCodePoints } from "@csh/kernel";
 import type { Diagnostic, Fact } from "@csh/witness";
@@ -156,6 +157,8 @@ function literalValue(n: Node): string | undefined {
 export interface GoDeclaration {
   symbol: string;
   declares: "function" | "method" | "struct" | "interface" | "type" | "const" | "var";
+  /** A struct's embedded fields and an interface's embedded interfaces, as written without `*` (stage 59). */
+  bases?: string[];
   line: number;
   value?: string;
   exported: boolean;
@@ -171,12 +174,39 @@ function receiverType(method: Node): string | undefined {
   return t?.type === "type_identifier" ? t.text : undefined;
 }
 
+/**
+ * What a struct or an interface embeds (stage 59): each field with a type and no name, and each interface element that
+ * is a lone type name, as written without `*` or type arguments. Its methods are promoted, so a claim that the type
+ * is what it embeds follows it (A-201).
+ */
+function embeddedIn(type: Node): string[] {
+  const out: string[] = [];
+  const named = (t: Node | null): string | undefined => {
+    while (t !== null && (t.type === "pointer_type" || t.type === "generic_type")) t = t.type === "generic_type" ? t.childForFieldName("type") : (t.namedChildren[0] ?? null);
+    return t !== null && (t.type === "type_identifier" || t.type === "qualified_type") ? t.text : undefined;
+  };
+  if (type.type === "struct_type") {
+    for (const f of type.namedChildren.find((c) => c?.type === "field_declaration_list")?.namedChildren ?? []) {
+      if (f === null || f.type !== "field_declaration" || f.childForFieldName("name") !== null) continue;
+      const b = named(f.childForFieldName("type"));
+      if (b !== undefined) out.push(b);
+    }
+  } else if (type.type === "interface_type") {
+    for (const e of type.namedChildren) {
+      if (e === null || e.type !== "type_elem" || e.namedChildren.length !== 1) continue;
+      const b = named(e.namedChildren[0]!);
+      if (b !== undefined) out.push(b);
+    }
+  }
+  return out;
+}
+
 /** The import specs and top-level declarations of one parsed file, as plain data: no node outlives the call. */
 export function readGoFile(root: Node): { imports: { path: string; line: number }[]; declarations: GoDeclaration[] } {
   const imports: { path: string; line: number }[] = [];
   const declarations: GoDeclaration[] = [];
-  const declare = (symbol: string, declares: GoDeclaration["declares"], n: Node, extra: { value?: string; exported?: boolean } = {}) =>
-    declarations.push({ symbol, declares, line: lineOf(n), ...(extra.value !== undefined ? { value: extra.value } : {}), exported: extra.exported ?? exported(symbol) });
+  const declare = (symbol: string, declares: GoDeclaration["declares"], n: Node, extra: { value?: string; exported?: boolean; bases?: string[] } = {}) =>
+    declarations.push({ symbol, declares, line: lineOf(n), ...(extra.value !== undefined ? { value: extra.value } : {}), ...(extra.bases !== undefined && extra.bases.length > 0 ? { bases: extra.bases } : {}), exported: extra.exported ?? exported(symbol) });
   for (const n of root.namedChildren) {
     if (n === null) continue;
     if (n.type === "import_declaration") {
@@ -195,8 +225,9 @@ export function readGoFile(root: Node): { imports: { path: string; line: number 
       for (const spec of n.namedChildren) {
         const name = spec?.childForFieldName("name");
         if (spec == null || name == null) continue;
-        const t = spec.childForFieldName("type")?.type;
-        declare(name.text, spec.type === "type_spec" && t === "struct_type" ? "struct" : spec.type === "type_spec" && t === "interface_type" ? "interface" : "type", spec);
+        const type = spec.childForFieldName("type");
+        const t = type?.type;
+        declare(name.text, spec.type === "type_spec" && t === "struct_type" ? "struct" : spec.type === "type_spec" && t === "interface_type" ? "interface" : "type", spec, { bases: spec.type === "type_spec" && type != null ? embeddedIn(type) : [] });
       }
     } else if (n.type === "const_declaration" || n.type === "var_declaration") {
       const specs = n.type === "var_declaration" ? n.descendantsOfType("var_spec") : n.namedChildren.filter((c) => c?.type === "const_spec");
@@ -277,7 +308,7 @@ export async function readGo(files: readonly InputFile[], ctx: FactContext): Pro
         facts.push({ ...ctx.base(TOOL), kind: "depends", at, from: f.path, to, via: "import", typeOnly: false });
       }
     }
-    for (const d of r.declarations) facts.push({ ...ctx.base(TOOL), kind: "declare", at: `${f.path}:${d.line}`, module: f.path, symbol: d.symbol, declares: d.declares, ...(d.value !== undefined ? { value: d.value } : {}) });
+    for (const d of r.declarations) facts.push({ ...ctx.base(TOOL), kind: "declare", at: `${f.path}:${d.line}`, module: f.path, symbol: d.symbol, declares: d.declares, ...(d.value !== undefined ? { value: d.value } : {}), ...(d.bases !== undefined ? { bases: d.bases } : {}) });
     for (const d of r.declarations) if (d.exported) facts.push({ ...ctx.base(TOOL), kind: "export", at: f.path, module: f.path, symbol: d.symbol, typeOnly: d.declares === "struct" || d.declares === "interface" || d.declares === "type" });
   }
   return { facts, diagnostics };
