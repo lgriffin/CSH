@@ -7,6 +7,7 @@ describe("grain", () => {
   it("reads a statement's terms from its backticked identifiers, a dotted path as its last segment, and no file name", () => {
     expect(termsOf("The `retryWindow` of `Policy.floor` is kept; see `src/a.ts` and `a b` and `x()`")).toEqual(["retryWindow", "floor"]);
     expect(termsOf("No backticks at all")).toEqual([]);
+    expect(termsOf("`schema.sql`, `index.html` and `go.mod` are files, not terms; `process.env` and `mutex.lock` are")).toEqual(["env", "lock"]);
   });
 
   it("splits an identifier into its words", () => {

@@ -41,6 +41,18 @@ type Truth = { value: boolean; detail: string; evidence?: ClaimEvidence[] } | { 
  */
 /** What declares supertypes: classes, interfaces, traits, structs, records and enums. */
 const SUPERTYPED = new Set(["class", "interface", "trait", "struct", "record", "enum"]);
+/**
+ * The declarations whose readers record every supertype they name, by language, so that one with none extends nothing.
+ * Any other (a TypeScript interface or enum, a Rust struct or enum, whose `impl Trait for` is not read, a Java enum or
+ * record) with no supertype recorded leaves an `inherits` claim unknown (A-201).
+ */
+const COMPLETE: Record<string, Set<string>> = {
+  javascript: new Set(["class"]),
+  python: new Set(["class"]),
+  java: new Set(["class", "interface"]),
+  go: new Set(["struct", "interface"]),
+  rust: new Set(["trait"]),
+};
 
 const BUILT_IN_BASES: Record<string, Record<string, string | null>> = {
   javascript: { Object: null, Error: "Object", TypeError: "Error", RangeError: "Error", SyntaxError: "Error", ReferenceError: "Error", AggregateError: "Error", Array: "Object", Map: "Object", Set: "Object", Promise: "Object", EventTarget: "Object" },
@@ -109,16 +121,20 @@ export function truthOf(p: Prop, f: ClaimFacts): Truth {
       // Every supertype is followed (stage 59): a class's base, the interfaces it implements, an interface's or a
       // trait's supertypes, what a Go struct embeds (A-201). A path that reaches the base decides it; else a path that
       // could not be read leaves it unknown; else none does.
-      const types = new Map<string, { base?: string; bases?: string[]; at: string; module: string }[]>();
-      for (const d of f.declares.filter((x) => SUPERTYPED.has(x.declares))) types.set(d.symbol, [...(types.get(d.symbol) ?? []), { ...(d.base !== undefined ? { base: d.base } : {}), ...(d.bases !== undefined ? { bases: d.bases } : {}), at: d.at, module: d.module }]);
+      const languageOf = (module: string) => f.languages?.get(module) ?? "javascript";
+      const types = new Map<string, { declares: string; base?: string; bases?: string[]; at: string; module: string }[]>();
+      for (const d of f.declares.filter((x) => SUPERTYPED.has(x.declares))) types.set(d.symbol, [...(types.get(d.symbol) ?? []), { declares: d.declares, ...(d.base !== undefined ? { base: d.base } : {}), ...(d.bases !== undefined ? { bases: d.bases } : {}), at: d.at, module: d.module }]);
       if (!types.has(p.cls)) return { reason: `no-class: ${p.cls}` };
       const held: { value: boolean; detail: string; evidence: string[] }[] = [];
       const reasons: string[] = [];
       let decided = false;
-      const walk = (name: string, chain: string[], seen: string[], language: string, path: Set<string>): void => {
+      const walk = (name: string, chain: string[], seen: string[], language: string | undefined, path: Set<string>): void => {
         if (decided) return;
-        const found = types.get(name);
-        if (found === undefined) {
+        // A supertype is a declaration of the referring type's own language: a Rust trait is no Java class's base.
+        const all = types.get(name);
+        const found = language === undefined ? all : all?.filter((t) => languageOf(t.module) === language);
+        if (found === undefined || found.length === 0) {
+          language ??= "javascript";
           const builtIns = BUILT_IN_BASES[language] ?? {};
           if (!Object.hasOwn(builtIns, name)) {
             reasons.push(`base-not-read: ${name}`);
@@ -146,7 +162,8 @@ export function truthOf(p: Prop, f: ClaimFacts): Truth {
         const at = [...seen, d.at];
         const supers = [...(d.base !== undefined ? [d.base] : []), ...(d.bases ?? [])];
         if (supers.length === 0) {
-          held.push({ value: false, detail: `${here.join(" -> ")} extends nothing`, evidence: at });
+          if (COMPLETE[languageOf(d.module)]?.has(d.declares) !== true) reasons.push(`supertypes-not-read: ${name} is a ${languageOf(d.module)} ${d.declares}, whose supertypes are not all read`);
+          else held.push({ value: false, detail: `${here.join(" -> ")} extends nothing`, evidence: at });
           return;
         }
         for (const base of supers) {
@@ -156,11 +173,11 @@ export function truthOf(p: Prop, f: ClaimFacts): Truth {
             held.push({ value: true, detail: `${here.join(" -> ")} -> ${base}`, evidence: at });
             decided = true;
           } else if (path.has(base) || here.length > 64) reasons.push(`cycle: ${name}`);
-          else walk(base, here, at, f.languages?.get(d.module) ?? "javascript", new Set([...path, base]));
+          else walk(base, here, at, languageOf(d.module), new Set([...path, base]));
           if (decided) return;
         }
       };
-      walk(p.cls, [], [], "javascript", new Set([p.cls]));
+      walk(p.cls, [], [], undefined, new Set([p.cls]));
       const yes = held.find((h) => h.value);
       if (yes !== undefined) return { value: true, detail: yes.detail, evidence: yes.evidence.map((at) => ({ at })) };
       if (reasons.length > 0) return { reason: reasons[0]! };

@@ -34,6 +34,20 @@ export interface AnalyseOptions {
 
 export type AnalyseResult = { ok: true; analysis: Analysis; report: Report } | { ok: false; message: string };
 
+/** A remote URL with any user name and password removed, so that a token in a clone's origin never reaches a report. */
+export function withoutCredentials(url: string | undefined): string | undefined {
+  if (url === undefined || !/^[a-z][a-z0-9+.-]*:\/\//i.test(url)) return url;
+  try {
+    const u = new URL(url);
+    if (u.username === "" && u.password === "") return url;
+    u.username = "";
+    u.password = "";
+    return u.toString();
+  } catch {
+    return url.replace(/\/\/[^/@]*@/, "//");
+  }
+}
+
 const git = (dir: string, ...args: string[]): string => execFileSync("git", args, { cwd: dir, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 const tryGit = (dir: string, ...args: string[]): string | undefined => {
   try {
@@ -65,7 +79,7 @@ export async function analyse(o: AnalyseOptions): Promise<AnalyseResult> {
   if (top === undefined) return { ok: false, message: `${o.path} is not inside a git checkout` };
   const commit = tryGit(top, "rev-parse", "--verify", `${o.at ?? "HEAD"}^{commit}`);
   if (commit === undefined) return { ok: false, message: o.at === undefined ? `${top} has no commit to read` : `${o.at} is not a commit of ${top}` };
-  const origin = tryGit(top, "remote", "get-url", "origin");
+  const origin = withoutCredentials(tryGit(top, "remote", "get-url", "origin"));
   const repo = origin === undefined || origin === "" ? top : origin;
   const work = mkdtempSync(join(tmpdir(), "csh-analyse-"));
   try {

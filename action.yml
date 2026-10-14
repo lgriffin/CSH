@@ -17,8 +17,8 @@ inputs:
     description: A csh-expected/v1 file the analysis must meet.
     default: ""
   out:
-    description: Where csh-analysis.html and csh-analysis.json are written.
-    default: csh-analysis
+    description: Where csh-analysis.html and csh-analysis.json are written; by default a directory under RUNNER_TEMP, outside the checkout.
+    default: ""
   node-version:
     description: The Node version to run CSH with (22.18 or later).
     default: "22"
@@ -32,12 +32,10 @@ runs:
     - uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
-    - uses: pnpm/action-setup@v4
-      with:
-        version: 10.28.0
+    # pnpm runs through npx, at the version CSH pins, so the job's PATH and the caller's own pnpm pin are left alone.
     - name: Install CSH
       shell: bash
-      run: pnpm install --frozen-lockfile --dir "$GITHUB_ACTION_PATH"
+      run: npx -y pnpm@10.28.0 install --frozen-lockfile --dir "$GITHUB_ACTION_PATH"
     - name: Analyse
       id: analyse
       shell: bash
@@ -47,6 +45,7 @@ runs:
         CSH_EXPECTED: ${{ inputs.expected }}
         CSH_OUT: ${{ inputs.out }}
       run: |
+        if [ -z "$CSH_OUT" ]; then CSH_OUT="$RUNNER_TEMP/csh-analysis"; fi
         args=(analyse "$CSH_PATH" --out "$CSH_OUT")
         if [ -n "$CSH_PROFILE" ]; then args+=(--profile "$CSH_PROFILE"); fi
         if [ -n "$CSH_EXPECTED" ]; then args+=(--expected "$CSH_EXPECTED"); fi

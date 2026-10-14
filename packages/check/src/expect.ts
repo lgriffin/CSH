@@ -76,8 +76,18 @@ export function checkExpected(overview: Overview, expected: Expected): ExpectRes
   const rows: ExpectResult["rows"] = [];
   for (const r of expected.rows) {
     let met = 0;
+    // A row that lists the same expectation twice needs two entries that meet it; one entry may still meet different
+    // expectations, such as two lines of one stale document.
+    const used = new Map<string, Set<number>>();
     for (const x of r.expect) {
-      if (overview.entries.some((e) => meets(e, x))) met++;
+      const key = JSON.stringify([x.outcome, x.kind, x.subject, x.at]);
+      const taken = used.get(key) ?? new Set<number>();
+      used.set(key, taken);
+      const i = overview.entries.findIndex((e, k) => !taken.has(k) && meets(e, x));
+      if (i >= 0) {
+        taken.add(i);
+        met++;
+      }
       else mismatches.push({ row: r.row, message: `no ${x.outcome} ${x.kind} for ${x.subject}${x.at !== undefined ? ` at ${x.at}` : ""}` });
     }
     const unknown = r.unknown?.length ?? 0;

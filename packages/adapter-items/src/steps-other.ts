@@ -36,6 +36,17 @@ const compiles = (source: string): boolean => {
 const regex = (source: string): StepPattern => (compiles(source) ? { k: "regex", source, flags: "" } : { k: "unreadable", text: `/${source}/` });
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
 
+/**
+ * A behave `parse` pattern as a regular expression: each `{name}` or `{name:type}` field matches anything, `{{` and
+ * `}}` are braces, and everything else is literal, parentheses and slashes included (a Cucumber expression would read
+ * those as optional text and alternatives).
+ */
+function parseFormat(text: string): StepPattern {
+  const parts = text.split(/(\{\{|\}\}|\{[^{}]*\})/);
+  const source = parts.map((p) => (p === "{{" ? "\\{" : p === "}}" ? "\\}" : p.startsWith("{") && p.endsWith("}") ? "(.*)" : escapeRegex(p))).join("");
+  return regex(`^${source}$`);
+}
+
 const skipSpace = (code: string, at: number): number => {
   while (at < code.length && /\s/.test(code[at]!)) at++;
   return at;
@@ -43,10 +54,12 @@ const skipSpace = (code: string, at: number): number => {
 
 /**
  * The step definitions of a file:
- * - behave: `@given`, `@when`, `@then`, `@step` (and the capitalised aliases), in its default `parse` format, read as a
- *   Cucumber expression whose `{name:type}` matches anything; after `use_step_matcher("re")`, a regular expression.
- * - Cucumber-JVM: `@Given`, `@When`, `@Then`, `@And`, `@But`, `@Step`; a string that starts with `^` or ends with `$` is
- *   a regular expression, any other a Cucumber expression, as Cucumber-JVM decides.
+ * - behave, in a file that imports it (Hypothesis has a `@given` too): `@given`, `@when`, `@then`, `@step` (and the
+ *   capitalised aliases), in its default `parse` format, read as a regular expression whose `{name:type}` matches
+ *   anything and whose other characters are literal; after `use_step_matcher("re")`, a regular expression.
+ * - Cucumber-JVM: `@Given`, `@When`, `@Then`, `@And`, `@But` (`@Step` is Serenity's or Allure's, not a step); a
+ *   string that starts with `^` or ends with `$` is a regular expression, any other a Cucumber expression, as
+ *   Cucumber-JVM decides.
  * - godog: `.Step`, `.Given`, `.When`, `.Then` called with a string, always a regular expression.
  * - cucumber-rs: `#[given]`, `#[when]`, `#[then]` with `expr = "…"` (a Cucumber expression), `regex = "…"`, or a plain
  *   string, matched exactly.
@@ -62,7 +75,11 @@ export function stepDefinitionsOther(text: string, lang: Language): StepDefiniti
     return text.slice(at, end < 0 ? text.length : end).trim();
   };
   const unreadable = (at: number, what: string) => out.push({ line: line(at), title: "", pattern: { k: "unreadable", text: what } });
+  // A literal is the whole pattern only when the argument ends with it: `"a" + B` is computed, and could be anything.
+  // The lexer blanks a string's content, so the literal ends at the first character that is no space, quote or `#`.
+  const whole = (at: number) => /^[\s"'`#]*[,)]/.test(code.slice(at + 1));
   if (lang === "python") {
+    if (!/^\s*(?:from\s+behave(?:\.\w+)*\s+import|import\s+behave)\b/m.test(code)) return [];
     // use_step_matcher switches the matcher for the definitions after it in the file.
     const switches = [...code.matchAll(/(?<![\w.])use_step_matcher\s*\(/g)].map((m) => {
       const at = skipSpace(code, m.index + m[0].length);
@@ -73,22 +90,22 @@ export function stepDefinitionsOther(text: string, lang: Language): StepDefiniti
       const prefix = /^[rRuU]{0,2}/.exec(code.slice(at, at + 2))![0];
       at += prefix.length;
       const raw = strings.get(at);
-      if (raw === undefined) {
+      if (raw === undefined || !whole(at)) {
         unreadable(m.index, lineFrom(m.index));
         continue;
       }
       const value = /[rR]/.test(prefix) ? raw : unescape(raw);
       const matcher = switches.filter((s) => s.at < m.index).pop()?.matcher ?? "parse";
-      out.push({ line: line(at), title: value, pattern: matcher === "re" ? regex(value) : { k: "expression", text: value } });
+      out.push({ line: line(at), title: value, pattern: matcher === "re" ? regex(value) : parseFormat(value) });
     }
   } else if (lang === "java") {
-    for (const m of code.matchAll(/@(?:Given|When|Then|And|But|Step)\s*\(/g)) {
+    for (const m of code.matchAll(/@(?:Given|When|Then|And|But)\s*\(/g)) {
       let at = skipSpace(code, m.index + m[0].length);
       // The annotation's value, written alone or as value = "…".
       const named = /^value\s*=\s*/.exec(code.slice(at));
       if (named !== null) at = skipSpace(code, at + named[0].length);
       const raw = strings.get(at);
-      if (raw === undefined) {
+      if (raw === undefined || !whole(at)) {
         unreadable(m.index, lineFrom(m.index));
         continue;
       }
@@ -99,7 +116,7 @@ export function stepDefinitionsOther(text: string, lang: Language): StepDefiniti
     for (const m of code.matchAll(/\.(?:Step|Given|When|Then)\s*\(/g)) {
       const at = skipSpace(code, m.index + m[0].length);
       const raw = strings.get(at);
-      if (raw === undefined) {
+      if (raw === undefined || !whole(at)) {
         unreadable(m.index, lineFrom(m.index));
         continue;
       }
@@ -113,7 +130,7 @@ export function stepDefinitionsOther(text: string, lang: Language): StepDefiniti
       const rawPrefix = /^r#*/.exec(code.slice(at))?.[0] ?? "";
       at += rawPrefix.length;
       const raw = strings.get(at);
-      if (raw === undefined) {
+      if (raw === undefined || !whole(at)) {
         unreadable(m.index, lineFrom(m.index));
         continue;
       }

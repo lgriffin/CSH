@@ -49,8 +49,31 @@ repository, none from spring-hexagonal-poc or hexarch, and 65 from ESI.ts. Each 
 The expected files were written from the cold reads after each entry was checked against the subject's source, not
 before the code: they hold the calibration, while the fixtures of stages 55 to 59 hold the behaviour.
 
+## Review findings on stages 55 to 59, fixed here
+
+The review bot's findings on the earlier stage pull requests arrived after each was merged. Those that could give a false
+gap or false danger, or leak a secret, are fixed in this stage, each with a test:
+
+- An undecided solver query (`unknown`, `vacuous`) named a passing example beside the rules of its event, and read as
+  masked danger; it is now no danger, as A-193 says.
+- `inherits` decided "extends nothing" for a TypeScript interface, a Rust struct or a Java enum, whose supertypes no
+  reader records all of; it is now unknown, and a supertype is looked for in the referring type's own language (A-201).
+- Hypothesis's `@given` was read as a behave step and made every undefined step undecided; Serenity's `@Step` was read
+  as a Cucumber-JVM step; a concatenated pattern was read by its first literal; behave's `parse` format took `(…)` and
+  `/` for Cucumber syntax (A-202).
+- A backticked `schema.sql` or `index.html` was a term (A-197).
+- A token in the subject's origin URL reached the report; it is now removed.
+- An expected file that listed one gap twice in a row was met by one such gap; it now needs two.
+- The Action wrote its report inside the caller's checkout by default, and installed pnpm into the caller's job; it now
+  writes under `RUNNER_TEMP` unless `out` is given, and runs the pinned pnpm through `npx`.
+
+Left as they are, each a limit rather than a false result: the command's default `--out` is relative to the working
+directory, which can be inside the subject when run from its checkout; Maven dependencies are matched by artifact alone; Cargo
+aliases, Go `replace` directives and Python extras are not followed between packages.
+
 ## Not done
 
 - No tag is cut; cutting one is the owner's, and the release runs then.
-- The Action installs from source with pnpm, so it needs no release but takes an install's time.
+- The Action installs from source with pnpm, so it needs no release but takes an install's time. It sets up the Node
+  version it is given, which later steps of the job then use.
 - Over-report per language is measured on one repository each; a larger corpus would measure it better.
