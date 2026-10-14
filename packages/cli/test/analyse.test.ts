@@ -1,6 +1,6 @@
 // csh analyse (Analyse, danger and grain, stage 55): a cold read of a repository, through the command.
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
@@ -99,7 +99,8 @@ describe("csh analyse", () => {
     const { o, io: x } = io(dir);
     expect(await csh(["analyse", ".", "--out", out, "--json"], x), o.err).toBe(0);
     const a = JSON.parse(o.out);
-    expect(a.profile).toEqual({ kind: "given", dir: join(dir, "csh") });
+    // git names the top level by its long path, where a temporary directory may carry a short (8.3) one on Windows.
+    expect(a.profile).toEqual({ kind: "given", dir: join(realpathSync.native(dir), "csh") });
     expect(a.told).toEqual([]);
     expect(a.expect.mismatches).toEqual([]);
     expect(status(dir)).toBe("");

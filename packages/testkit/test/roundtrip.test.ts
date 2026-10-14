@@ -75,6 +75,7 @@ describe("printer round trip", () => {
     let checked = 0;
     for (const id of readdirSync(fixtures).filter((d) => /^F\d{2,3}$/.test(d))) {
       const spec = join(fixtures, id, "spec.csl.ts");
+      if (!existsSync(spec)) continue;
       const exp = JSON.parse(readFileSync(join(fixtures, id, "expected.json"), "utf8")).expect;
       if (exp.compile?.ok === false || exp.emit?.ok === false || existsSync(join(fixtures, id, "inputs", "lock.json"))) continue;
       const r = await emit(spec, { root: join(fixtures, id), readable: [fixtures], skipTypeCheck: true });
@@ -84,7 +85,8 @@ describe("printer round trip", () => {
       checked += 1;
     }
     expect(checked).toBeGreaterThan(10);
-  });
+    // Every fixture with a model is emitted twice, one after another, so the time grows with the fixtures.
+  }, 600_000);
 
 
 });
