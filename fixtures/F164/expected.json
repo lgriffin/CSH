@@ -1,0 +1,24 @@
+{
+  "fixture": "F164",
+  "section": "Analyse, danger and grain, section 3",
+  "stage": 56,
+  "expect": {
+    "executions": [
+      {
+        "witness": "w1",
+        "localResult": "failed"
+      }
+    ],
+    "overview": {
+      "danger": [],
+      "dangerCount": 0,
+      "entries": [
+        {
+          "outcome": "indeterminate",
+          "kind": "unknown-obligation",
+          "subject": "SignInService/StopPasswordGuessing/LockOnThirdFailure"
+        }
+      ]
+    }
+  }
+}

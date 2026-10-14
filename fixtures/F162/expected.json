@@ -1,0 +1,30 @@
+{
+  "fixture": "F162",
+  "section": "Analyse, danger and grain, section 3",
+  "stage": 56,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "told": [
+        { "item": "Documents/README.md#L7", "lifted": "layering" },
+        { "item": "Documents/README.md#L8", "lifted": "layering" },
+        { "item": "Documents/README.md#L9", "lifted": "layering" }
+      ],
+      "entries": [
+        { "outcome": "gap", "kind": "unverified", "subject": "Documents/README.md#L7" },
+        { "outcome": "gap", "kind": "unverified", "subject": "Documents/README.md#L8" },
+        { "outcome": "gap", "kind": "unverified", "subject": "Documents/README.md#L9" },
+        { "outcome": "gap", "kind": "dangling-reference", "subject": "Documents/README.md" }
+      ],
+      "danger": [
+        { "kind": "dangling-reference", "subject": "Documents/README.md", "structure": "refuted", "shape": "code-refutes-prose" },
+        { "kind": "unverified", "subject": "Documents/README.md#L8", "structure": "masked", "shape": "rung-overclaimed", "greenIncludes": "guaranteed" },
+        { "kind": "unverified", "subject": "Documents/README.md#L9", "structure": "masked", "shape": "rung-overclaimed", "greenIncludes": "enforced" }
+      ],
+      "dangerAbsent": [{ "subject": "Documents/README.md#L7" }],
+      "dangerCount": 3,
+      "sections": ["Danger", "Conflicts", "Gaps", "Indeterminate", "Converged", "Counts"],
+      "subjectUntouched": true
+    }
+  }
+}

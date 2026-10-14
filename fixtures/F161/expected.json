@@ -1,0 +1,18 @@
+{
+  "fixture": "F161",
+  "section": "Analyse, danger and grain, section 3",
+  "stage": 56,
+  "expect": {
+    "overview": {
+      "danger": [
+        {
+          "of": "SignInService/StopPasswordGuessing/LockOnThirdFailure",
+          "structure": "masked",
+          "shape": "green-over-refuted",
+          "greenIncludes": "allows a third failed attempt"
+        }
+      ],
+      "dangerCount": 1
+    }
+  }
+}
