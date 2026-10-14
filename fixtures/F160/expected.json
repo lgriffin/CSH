@@ -1,0 +1,32 @@
+{
+  "fixture": "F160",
+  "section": "Analyse, danger and grain, section 2",
+  "stage": 55,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["tools/go.mod", "Architecture", "docs/architecture.mmd", "STK"],
+      "told": [
+        { "item": "Documents/README.md#L7", "lifted": "layering" },
+        { "item": "Documents/README.md#L8", "lifted": "layering" },
+        { "item": "Documents/README.md#L9", "lifted": "layering" },
+        { "item": "Documents/docs/guide.md#L3", "lifted": "ears" }
+      ],
+      "toldAbsent": ["Documents/README.md#L11", "Documents/README.md#L14", "Documents/docs/guide.md#L5"],
+      "entries": [
+        { "outcome": "gap", "kind": "unverified", "subject": "Requirements/STK-2" },
+        { "outcome": "gap", "kind": "unverified", "subject": "Documents/README.md#L7" },
+        { "outcome": "gap", "kind": "unverified", "subject": "Documents/README.md#L8" },
+        { "outcome": "gap", "kind": "unverified", "subject": "Documents/README.md#L9" },
+        { "outcome": "gap", "kind": "unverified", "subject": "Documents/docs/guide.md#L3" },
+        { "outcome": "gap", "kind": "dangling-reference", "subject": "Documents/README.md" }
+      ],
+      "entriesAbsent": [{ "kind": "unverified", "subject": "Requirements/STK-1" }],
+      "rungs": { "Requirements/STK-1": "L3", "Requirements/STK-2": "L2", "Documents/README.md#L7": "L2" },
+      "ladder": { "L2": 5, "L3": 1, "L4": 0, "L5": 0 },
+      "sections": ["Danger", "Conflicts", "Gaps", "Indeterminate", "Converged", "Counts"],
+      "files": ["csh-analysis.json", "csh-analysis.html"],
+      "subjectUntouched": true
+    }
+  }
+}
