@@ -6,9 +6,9 @@
 // Facts: one module per file; a dependency per `mod foo;` on the file it loads, and per `use` leaf and `extern crate`
 // on the file that defines the deepest module the path names, on another workspace crate, on `rust:std` (and core,
 // alloc, proc_macro, test) or on an external crate by name; one declaration per top-level item, with a trait's first
-// supertrait and a constant's or static's literal value; one export per plain `pub` item and per `pub use` leaf. A
+// supertrait as its base and the rest as its bases (stage 59), and a constant's or static's literal value; one export per plain `pub` item and per `pub use` leaf. A
 // `mod` that loads no file, and a `crate::`, `self::` or `super::` path that names nothing the tree knows, is a
-// skipped fact at its line, never dropped. `impl` blocks declare nothing; a trait's base is its supertrait alone.
+// skipped fact at its line, never dropped. `impl` blocks declare nothing.
 import { posix } from "node:path";
 import { parse as parseToml } from "smol-toml";
 import { compareCodePoints } from "@csh/kernel";
@@ -48,7 +48,7 @@ interface FileData {
   inlineMods: string[][];
   uses: UseLeaf[];
   externs: { name: string; line: number }[];
-  declarations: { symbol: string; declares: RustDeclares; line: number; base?: string; value?: string; members?: string[] }[];
+  declarations: { symbol: string; declares: RustDeclares; line: number; base?: string; bases?: string[]; value?: string; members?: string[] }[];
   /** Each `match` with no catch-all arm, by the top-level item it sits in: the variants it names and the enums it names them by (stage 49). */
   matches: { owner: string; variants: string[]; enums: string[]; scrutinee?: string }[];
   exports: { symbol: string; from?: string }[];
@@ -214,10 +214,11 @@ export function readTree(root: Node): FileData {
       } else if (c.type === "function_item" || c.type === "trait_item" || c.type === "macro_definition") walkUses(c, inline);
       if (!top) continue;
       d.topLevel.add(symbol);
-      const base = c.type === "trait_item" ? firstBound(c) : undefined;
+      const bounds = c.type === "trait_item" ? boundsOf(c) : [];
+      const base = bounds[0];
       const value = c.type === "const_item" || c.type === "static_item" ? literalValue(c.childForFieldName("value")) : undefined;
       const members = c.type === "enum_item" ? (c.childForFieldName("body")?.namedChildren ?? []).flatMap((v) => (v !== null && v.type === "enum_variant" ? [text(v.childForFieldName("name"))] : [])) : undefined;
-      d.declarations.push({ symbol, declares, line: lineOf(c), ...(base !== undefined ? { base } : {}), ...(value !== undefined ? { value } : {}), ...(members !== undefined ? { members } : {}) });
+      d.declarations.push({ symbol, declares, line: lineOf(c), ...(base !== undefined ? { base } : {}), ...(bounds.length > 1 ? { bases: bounds.slice(1) } : {}), ...(value !== undefined ? { value } : {}), ...(members !== undefined ? { members } : {}) });
       if (c.type === "function_item") for (const m of matchesIn(c)) d.matches.push({ owner: symbol, ...m });
       const exported = c.type === "macro_definition" ? attributesOf(c).some((a) => a.name === "macro_export") : visibility(c) === "pub";
       if (exported) d.exports.push({ symbol });
@@ -336,13 +337,14 @@ function matchesIn(item: Node, owner?: string): { variants: string[]; enums: str
   return out;
 }
 
-/** A trait's first supertrait as written, without its type arguments. */
-function firstBound(trait: Node): string | undefined {
+/** A trait's supertraits as written, without their type arguments; `?Sized` and lifetimes are no supertrait. */
+function boundsOf(trait: Node): string[] {
   const bounds = trait.childForFieldName("bounds");
-  const first = bounds?.namedChildren.find((c) => c !== null && c.type !== "lifetime" && !isComment(c));
-  if (first === undefined || first === null) return undefined;
-  const t = first.type === "generic_type" ? text(first.childForFieldName("type")) : first.text;
-  return t.replace(/^\?/, "");
+  return (bounds?.namedChildren ?? []).flatMap((c) => {
+    if (c === null || c.type === "lifetime" || c.type === "removed_trait_bound" || isComment(c)) return [];
+    const t = c.type === "generic_type" ? text(c.childForFieldName("type")) : c.text;
+    return t === "" ? [] : [t.replace(/^\?/, "")];
+  });
 }
 
 interface Crate {
@@ -563,7 +565,7 @@ export async function readRust(files: readonly InputFile[], ctx: FactContext): P
     }
     for (const x of d.declarations) {
       const total = totalOf(d, x.symbol);
-      facts.push({ ...base, kind: "declare", at: `${f.path}:${x.line}`, module: f.path, symbol: x.symbol, declares: x.declares, ...(x.base !== undefined ? { base: x.base } : {}), ...(x.value !== undefined ? { value: x.value } : {}), ...(x.members !== undefined ? { members: x.members } : {}), ...(total.length > 0 ? { total } : {}) });
+      facts.push({ ...base, kind: "declare", at: `${f.path}:${x.line}`, module: f.path, symbol: x.symbol, declares: x.declares, ...(x.base !== undefined ? { base: x.base } : {}), ...(x.bases !== undefined ? { bases: x.bases } : {}), ...(x.value !== undefined ? { value: x.value } : {}), ...(x.members !== undefined ? { members: x.members } : {}), ...(total.length > 0 ? { total } : {}) });
     }
     for (const e of d.exports) facts.push({ ...base, kind: "export", at: f.path, module: f.path, symbol: e.symbol, ...(e.from !== undefined ? { from: e.from } : {}), typeOnly: false });
   }

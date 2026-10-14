@@ -118,6 +118,8 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
     }),
   };
   if (traced.edges.length > 0) report.edges = traced.edges;
+  const cites = prepared.fragments.filter((f) => f.kind !== "example" && f.cites.length > 0).map((f) => ({ fragment: f.name, cites: f.cites.map((c) => `${c.source}/${c.id}`) }));
+  if (cites.length > 0) report.cites = cites;
   const rungs = rungsOf({ items: report.items, checks: traced.checks, fragments: prepared.fragments, assessments, examples: report.examples ?? [] });
   if (rungs.length > 0) report.rungs = rungs;
   if (tested.outcomes.length > 0) report.outcomes = tested.outcomes;

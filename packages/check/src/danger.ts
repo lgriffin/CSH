@@ -63,6 +63,16 @@ export function dangerJudge(report: Report): DangerJudge {
   const observed = new Map<string, { test: string; passed: boolean }>();
   for (const e of report.executions ?? []) if (e.example !== undefined) observed.set(e.example, { test: e.test ?? e.witness, passed: e.localResult === "passed" });
   const items = new Map((report.items ?? []).map((i) => [`${i.source}/${i.id}`, i]));
+  // What a runner said of the items each fragment cites (stage 59): an item every test citing it passed is green.
+  const citesOf = new Map((report.cites ?? []).map((c) => [c.fragment, c.cites]));
+  const outcomeOf = new Map((report.outcomes ?? []).map((o) => [o.item, o]));
+  const greenResults = (fragment: string): string | undefined => {
+    const green = (citesOf.get(fragment) ?? []).flatMap((item) => {
+      const o = outcomeOf.get(item);
+      return o !== undefined && o.passed > 0 && o.failed + o.errored === 0 ? [`${o.passed === 1 ? "the test" : `the ${o.passed} tests`} citing ${item} ${o.passed === 1 ? "passes" : "pass"} in the runner's results`] : [];
+    });
+    return green.length > 0 ? green.join("; ") : undefined;
+  };
   const rungOf = new Map((report.rungs ?? []).map((r) => [r.item, r.rung]));
   const approved = (f: string) => byFragment.get(f)?.authority === "approved";
   const make = (structure: DangerStructure, shape: DangerShape, of: string, green?: string): Danger => ({ structure, shape, of, ...(green !== undefined ? { green } : {}), close: CLOSE[shape] });
@@ -88,6 +98,13 @@ export function dangerJudge(report: Report): DangerJudge {
           const green = seen.find((f) => observed.get(f)!.passed);
           return green !== undefined ? make("masked", "green-over-refuted", told[0]!, `the test ${observed.get(green)!.test} passes`) : make("refuted", "code-breaks-rule", told[0]!);
         }
+      }
+      // A rule the code breaks, or a claim the code refutes, cited by tests whose committed results passed: green over
+      // refuted, from results (A-200). Two statements that disagree, or prose about files, are no test's business.
+      if (violated.length > 0 || BREAKS.has(kind) || kind === "fact-conflict") {
+        const of = violated[0]?.fragment ?? fragments[0] ?? subject;
+        const green = greenResults(of);
+        if (green !== undefined) return make("masked", "green-over-refuted", of, green);
       }
       if (violated.length > 0 || BREAKS.has(kind)) return make("refuted", "code-breaks-rule", violated[0]?.fragment ?? fragments[0] ?? subject);
       if (REFUTES_PROSE.has(kind)) return make("refuted", "code-refutes-prose", fragments[0] ?? subject);

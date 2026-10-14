@@ -165,6 +165,11 @@ export interface Report {
    * A3, section 12: the measure "examples that cite a requirement").
    */
   examples?: { fragment: string; source: string; cites: string[] }[];
+  /**
+   * Extension: the items each fragment that is not an example cites, as source/id (stage 59), so that what a test
+   * runner said of those items can be read beside the fragment's verdict.
+   */
+  cites?: { fragment: string; cites: string[] }[];
   /** Extension: identified source items (adapter B). */
   items: { source: string; id: string; pattern?: string; span: string; textDigest: string; kind?: string; attrs?: Record<string, string> }[];
   /**

@@ -466,8 +466,8 @@ tests stay green on is the canonical masked case.
 - **No.**
 
 Built as proposed on 14 October 2026; issue 78 asks the owner to confirm. The cases moved to stage 59: a receiver's
-masked case comes from its own test results (JUnit XML, pytest, vitest), which that stage joins, so they are among
-F174 to F178.
+masked case comes from its own test results, so they are F174 (Vitest), F175 (Surefire JUnit XML) and F176 (pytest's
+JUnit XML), each a rule or claim the code refutes whose citing test passed.
 
 ## Q-54 Self-approval in a repository with one maintainer
 
