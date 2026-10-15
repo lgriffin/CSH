@@ -38,6 +38,32 @@ const DESCRIBING = new Set(["mentions-file", "verified-by", "mentions-symbol"]);
 const ASSERTED = new Set(["Enforced"]);
 const DOCUMENT = /\.(md|markdown)$/i;
 
+/** A path read from the directory of the file a span names, or undefined when that file is at the root. */
+function relativeTo(span: string, path: string): string | undefined {
+  const file = span.slice(0, span.lastIndexOf(":"));
+  const cut = file.lastIndexOf("/");
+  if (cut < 0) return undefined;
+  const parts: string[] = [];
+  for (const seg of `${file.slice(0, cut)}/${path}`.split("/")) {
+    if (seg === "" || seg === ".") continue;
+    if (seg === "..") {
+      if (parts.length === 0) return undefined;
+      parts.pop();
+    } else parts.push(seg);
+  }
+  return parts.join("/");
+}
+
+/** The titles of the tests a test file declares (section 2), each trimmed. */
+function titlesOf(items: Prepared["items"]): Map<string, string[]> {
+  const out = new Map<string, string[]>();
+  for (const i of items) {
+    if (i.kind !== "test-file" || i.attrs?.titles === undefined) continue;
+    for (const t of i.attrs.titles.split("\n").map((x) => x.trim()).filter((x) => x !== "")) out.set(t, [...(out.get(t) ?? []), `${i.source}/${i.id}`]);
+  }
+  return out;
+}
+
 export function trace(input: TraceInput): TraceResult {
   const { items, edges } = input.prepared;
   const gaps: Gap[] = [];
@@ -46,6 +72,10 @@ export function trace(input: TraceInput): TraceResult {
   const byQualified = new Map(items.map((i) => [`${i.source}/${i.id}`, i]));
   const byId = new Map<string, string[]>();
   for (const i of items) byId.set(i.id, [...(byId.get(i.id) ?? []), `${i.source}/${i.id}`]);
+  // An identifier that names no item as written names the one item it matches with case ignored, when only one does
+  // (From the tutors run, section 1): a test tag `@rule-0056` cites RULE-0056, and the Rule's own tag is rule-0056.
+  const byFolded = new Map<string, string[]>();
+  for (const i of items) if (i.kind !== "document" && i.kind !== "test-file" && i.kind !== "baseline") byFolded.set(i.id.toLowerCase(), [...(byFolded.get(i.id.toLowerCase()) ?? []), `${i.source}/${i.id}`]);
   const files = input.files === undefined ? undefined : new Set(input.files);
   // A path counts as one of the repository's only when its first segment is a top-level entry of it (A-96): prose
   // writes application/json and CJS/ESM in backticks too.
@@ -93,16 +123,24 @@ export function trace(input: TraceInput): TraceResult {
     if (e.to.startsWith("file:")) {
       if (files === undefined) return null;
       const p = e.to.slice(5).replace(/\/$/, "");
+      // From the directory of the file that mentions it, when it names nothing from the root (section 5).
+      const near = relativeTo(e.span, p);
+      if (near !== undefined && (files.has(near) || dirs.has(near)) && !files.has(p) && !dirs.has(p)) return "file";
       // A bare name that is not a top-level file resolves when it is unique, and is unchecked otherwise: never dangling.
       if (!p.includes("/") && !files.has(p)) return byBase.get(p)?.length === 1 ? "file" : null;
       if (!top.has(p.split("/")[0]!)) return null;
-      return files.has(p) || dirs.has(p) ? "file" : undefined;
+      if (files.has(p) || dirs.has(p)) return "file";
+      // Missing, in a sentence that says it is absent, or that names another repository: unchecked, not dangling.
+      if (e.absent === true || (e.repos ?? []).some((r) => !top.has(r.split("/")[0]!))) return null;
+      return undefined;
     }
     const head = e.to.split("/")[0]!;
     if (sources.has(head) && byQualified.has(e.to)) return e.to;
     if (byQualified.has(`${source}/${e.to}`)) return `${source}/${e.to}`;
     const any = byId.get(e.to);
-    return any !== undefined ? [...any].sort(compareCodePoints)[0] : undefined;
+    if (any !== undefined) return [...any].sort(compareCodePoints)[0];
+    const folded = byFolded.get(e.to.toLowerCase());
+    return folded?.length === 1 ? folded[0] : undefined;
   };
 
   const incoming = new Map<string, Set<string>>();
@@ -192,8 +230,19 @@ export function trace(input: TraceInput): TraceResult {
   for (const [subject, refs] of stale) {
     gaps.push({ kind: "stale-prose", subject, fragments: [], detail: [...refs.keys()].sort(compareCodePoints).map((k) => refs.get(k)!).join("; ") });
   }
+  // A scenario, or a scenario of specification prose, that a test carries the title of is checked by that test (section 2).
+  const titled = titlesOf(items);
   for (const it of items) {
     const q = `${it.source}/${it.id}`;
+    const by = it.kind === "scenario" || it.attrs?.gherkin === "prose" ? titled.get(it.text.trim()) : undefined;
+    for (const t of by ?? []) check(q, `test file ${t.slice(t.indexOf("/") + 1)}, by its title`);
+    if (by !== undefined && it.attrs?.gherkin === "prose") (incoming.get(q) ?? incoming.set(q, new Set()).get(q)!).add("cites");
+    // A baseline the repository says may only shrink (section 6): each entry is a gap it already records.
+    if (it.kind === "baseline") {
+      const n = Number(it.attrs?.entries ?? "0");
+      if (n > 0) gaps.push({ kind: "baselined", subject: q, fragments: [], detail: `${it.span}: ${n} ${n === 1 ? "entry" : "entries"} the repository records as known and still open, in a file that may only shrink: ${(it.attrs?.first ?? "").split("\n").join("; ")}${n > 5 ? `; and ${n - 5} more` : ""}` });
+      continue;
+    }
     const into = incoming.get(q) ?? new Set<string>();
     // Grain (stage 57): the terms a told rule writes in backticks that no test or scenario citing it observes.
     const cs = citations.get(q) ?? [];

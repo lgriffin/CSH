@@ -30,6 +30,24 @@ const TEST_DIRS = ["test", "tests", "__tests__"];
 /** The files an agent's tooling loads at the start of every session, by name, anywhere in the tree (stage 50). */
 export const INSTRUCTION_FILES = ["AGENTS.md", "CLAUDE.md", "GEMINI.md"];
 
+/** A dependency-cruiser configuration, by its file name. */
+const DEPENDENCY_CRUISER = /^\.dependency-cruiser\.(?:c?js|mjs|json)$/;
+
+/**
+ * Whether a text file is a shrink-only baseline (From the tutors run, section 6): one of the comment lines before its
+ * first entry says it "may only shrink".
+ */
+export function isBaseline(text: string): boolean {
+  const header: string[] = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const l = raw.trim();
+    if (l === "") continue;
+    if (!l.startsWith("#")) break;
+    header.push(l.replace(/^#+\s*/, ""));
+  }
+  return /\bmay\s+only\s+shrink\b/i.test(header.join(" "));
+}
+
 const segments = (p: string) => p.split("/");
 const ext = (p: string) => {
   const b = posix.basename(p);
@@ -166,8 +184,12 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   if (origin === undefined || origin === "") guesses.push(`subject.repo ${dir}: the checkout has no origin remote, so the manifest names a local path and is not portable`);
   else guesses.push(`subject.repo ${origin}: the checkout's origin remote; subject.commit is its HEAD`);
 
+  // A fixture, or a file under a dot-directory (.claude, .github), is test data or tooling, not the project's own.
+  const fixtures = (p: string) => underAny(p, ["fixtures", "__fixtures__"]) || segments(p).slice(0, -1).some((d) => d.startsWith("."));
   const markdown = files.filter((p) => ext(p) === "md");
-  const features = files.filter((p) => ext(p) === "feature");
+  // A feature file in a fixture is test data for the subject's own tooling (From the tutors run, section 3).
+  const allFeatures = files.filter((p) => ext(p) === "feature");
+  const features = allFeatures.filter((p) => !fixtures(p));
   const featureText = new Map(features.map((p) => [p, read(p)]));
   const mdText = new Map(markdown.map((p) => [p, read(p)]));
   const fams = families([...mdText.values(), ...featureText.values()]);
@@ -203,9 +225,20 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   // Documents: every other Markdown file, less changelogs and those in test directories.
   const changelog = (p: string) => /^(CHANGELOG|HISTORY)/i.test(posix.basename(p));
   const documents = markdown.filter((p) => !requirements.includes(p) && !instructions.includes(p) && !changelog(p) && !underAny(p, TEST_DIRS));
+  // A dependency-cruiser configuration names the checks the documents may cite (From the tutors run, section 6).
+  const cruisers = files.filter((p) => DEPENDENCY_CRUISER.test(posix.basename(p)) && !underAny(p, ["fixtures", "__fixtures__"]));
   if (documents.length > 0) {
-    add({ name: "Documents", kind: "Documents", at: ".", ...globsFor(documents, files, undefined, ["**/CHANGELOG*", "**/HISTORY*", ...TEST_DIRS.map((d) => `**/${d}/**`), ...requirements, ...instructions]) }, { id: "docs", name: "Documents", kind: "documents", unit: "the document", settings: { ...idSettings } });
+    const g = globsFor(documents, files, undefined, ["**/CHANGELOG*", "**/HISTORY*", ...TEST_DIRS.map((d) => `**/${d}/**`), ...requirements, ...instructions]);
+    add({ name: "Documents", kind: "Documents", at: ".", include: [...g.include, ...cruisers], exclude: g.exclude }, { id: "docs", name: "Documents", kind: "documents", unit: "the document", settings: { ...idSettings } });
     guesses.push(`Documents: ${documents.length} other Markdown files, leaving out changelogs and test directories`);
+    if (cruisers.length > 0) guesses.push(`Documents: ${cruisers.join(", ")}, a dependency-cruiser configuration, read for the names of the checks it defines`);
+    // Baselines: text files a repository says may only shrink, the gaps it already records (section 6).
+    const baselines = files.filter((p) => ext(p) === "txt" && !fixtures(p) && isBaseline(read(p)));
+    if (baselines.length > 0) {
+      sources.push({ name: "Baselines", kind: "Documents", at: ".", include: [...baselines] });
+      practices.find((p) => p.id === "docs")!.sources.push("Baselines");
+      guesses.push(`Baselines: ${baselines.join(", ")}, ${baselines.length === 1 ? "a file that says" : "files that say"} it may only shrink, each entry a gap the repository records`);
+    }
   }
 
   // Features, with their tags read by family.
@@ -242,13 +275,12 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
       settings.tagCites = w.length === 1 ? `(${w[0]}-[0-9]+)` : `((?:${w.join("|")})-[0-9]+)`;
       guesses.push(`tagCites ${settings.tagCites}: the documents' identifiers appear as scenario tags`);
     }
-    add({ name: "Features", kind: "Features", at: ".", include: ["**/*.feature"], exclude: [...NEVER_GLOBS] }, { id: "bdd", name: "BDD", kind: "scenarios", unit: "the rule", ...(Object.keys(settings).length > 0 ? { settings } : {}) });
-    guesses.push(`Features: ${features.length} .feature files`);
+    const left = allFeatures.filter((p) => fixtures(p));
+    add({ name: "Features", kind: "Features", at: ".", include: ["**/*.feature"], exclude: [...NEVER_GLOBS, ...(left.length > 0 ? ["**/fixtures/**", "**/__fixtures__/**", "**/.*/**"] : [])] }, { id: "bdd", name: "BDD", kind: "scenarios", unit: "the rule", ...(Object.keys(settings).length > 0 ? { settings } : {}) });
+    guesses.push(`Features: ${features.length} .feature files${left.length > 0 ? `, leaving out ${left.length} in fixtures or dot-directories, which are test data` : ""}`);
   }
 
   // Tests by their runners' conventions, and step definitions beside features.
-  // A fixture, or a file under a dot-directory (.claude, .github), is test data or tooling, not the project's tests.
-  const fixtures = (p: string) => underAny(p, ["fixtures", "__fixtures__"]) || segments(p).slice(0, -1).some((d) => d.startsWith("."));
   const tests = files.filter((p) => testConvention(p) !== undefined && !fixtures(p));
   const steps = features.length === 0 ? [] : files.filter((p) => testConvention(p) === undefined && stepConvention(p) !== undefined && !fixtures(p));
   const testGlobs = [...new Set(tests.map((p) => testConvention(p)!))].sort(compareCodePoints);

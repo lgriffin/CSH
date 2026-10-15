@@ -5,7 +5,7 @@ import type { Module } from "@csh/kernel";
 import { type HistoryPort, prepare, type SourceRun, trace } from "../src/index.ts";
 
 const module: Module = { schema: "csh-ir/v1", system: "S", uses: [], vocabulary: { units: [], enums: [], states: [], events: [] }, transitions: [], policies: [], intents: [], sources: [], claims: [], bindings: [] };
-const item = (id: string, kind: "requirement" | "rule" | "scenario" | "test-file" | "document" | "property", attrs?: Record<string, string>) => ({ id, kind, text: id, span: `${id}:1`, textDigest: "sha256:0", ...(attrs !== undefined ? { attrs } : {}) });
+const item = (id: string, kind: "requirement" | "rule" | "scenario" | "test-file" | "document" | "property" | "baseline", attrs?: Record<string, string>) => ({ id, kind, text: id, span: `${id}:1`, textDigest: "sha256:0", ...(attrs !== undefined ? { attrs } : {}) });
 
 const runs: SourceRun[] = [
   {
@@ -218,5 +218,38 @@ describe("structured trace entries (stage 28)", () => {
       { kind: "justified-gap", subject: "Security/P3", fragments: [], detail: "P3:1: no scenario or test cites it, and it records rule as none, with a reason" },
       { kind: "unverified", subject: "Security/P4", fragments: [], detail: "P4:1: no scenario or test cites it; it records rule as none, with no reason" },
     ]);
+  });
+});
+
+describe("references the tutors run taught (From the tutors run, sections 1, 5 and 6)", () => {
+  const run = (items: ReturnType<typeof item>[], edges: NonNullable<SourceRun["output"]["edges"]>, source = "Docs"): SourceRun => ({ source, kind: "Documents", files: [], output: { diagnostics: [], items, edges } });
+  const gapsOf = (rs: SourceRun[], files: string[]) => trace({ prepared: prepare(module, rs), files }).gaps.map((g) => `${g.kind} ${g.subject}`);
+
+  it("resolves an identifier with case ignored when exactly one item matches", () => {
+    const rs = [run([item("rule-0056", "rule")], [], "Features"), run([item("e2e/search.spec.ts", "test-file")], [{ from: "e2e/search.spec.ts", rel: "cites", to: "RULE-0056", span: "e2e/search.spec.ts:14" }], "Tests")];
+    expect(gapsOf(rs, [])).not.toContain("dangling-reference Tests/e2e/search.spec.ts");
+    const twice = [run([item("rule-1", "rule"), item("RULE-1", "rule")], [], "Features"), run([item("t.ts", "test-file")], [{ from: "t.ts", rel: "cites", to: "Rule-1", span: "t.ts:1" }], "Tests")];
+    expect(gapsOf(twice, [])).toContain("dangling-reference Tests/t.ts");
+  });
+
+  it("reads a path from the mentioning file's directory, and leaves absent and elsewhere paths unchecked", () => {
+    const files = ["apps/reader/README.md", "apps/reader/tests/e2e/a.spec.ts", "docs/a.md", "docs/b.md", "docs/c.md", "scripts/build.sh"];
+    const rs = [
+      run([item("apps/reader/README.md", "document"), item("docs/a.md", "document"), item("docs/b.md", "document"), item("docs/c.md", "document")], [
+        { from: "apps/reader/README.md", rel: "mentions-file", to: "file:tests/e2e/", span: "apps/reader/README.md:3" },
+        { from: "docs/a.md", rel: "mentions-file", to: "file:docs/old.feature", span: "docs/a.md:3", absent: true },
+        { from: "docs/b.md", rel: "mentions-file", to: "file:scripts/fetch.sh", span: "docs/b.md:3", repos: ["tutors-sdk/tutors-release-harness"] },
+        { from: "docs/c.md", rel: "mentions-file", to: "file:scripts/publish.sh", span: "docs/c.md:3", repos: ["scripts/build.sh"] },
+      ]),
+    ];
+    expect(gapsOf(rs, files).filter((g) => g.startsWith("dangling-reference"))).toEqual(["dangling-reference Docs/docs/c.md"]);
+  });
+
+  it("reports a baseline with entries as baselined, and an empty one as nothing", () => {
+    const rs = [run([item("known.txt", "baseline", { entries: "6", first: "a\nb\nc\nd\ne" }), item("empty.txt", "baseline", { entries: "0", first: "" })], [])];
+    const g = trace({ prepared: prepare(module, rs), files: [] }).gaps;
+    expect(g.map((x) => `${x.kind} ${x.subject}`)).toEqual(["baselined Docs/known.txt"]);
+    expect(g[0]!.detail).toContain("6 entries");
+    expect(g[0]!.detail).toContain("and 1 more");
   });
 });

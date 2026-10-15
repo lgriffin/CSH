@@ -296,11 +296,11 @@
         14,
         14,
         14,
+        27,
         28,
-        29,
-        29,
-        31,
-        32
+        28,
+        30,
+        31
       ],
       "id": "guides-prose",
       "practice": "guides",
@@ -1078,29 +1078,29 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.616822429906542,
+          "cumulative": 0.6226415094339622,
           "n": 66,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.7663551401869159,
+          "cumulative": 0.7735849056603774,
           "n": 16,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.8504672897196262,
+          "cumulative": 0.8584905660377359,
           "n": 9,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
           "vital": true
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9345794392523364,
-          "n": 9,
+          "cumulative": 0.9339622641509434,
+          "n": 8,
           "name": "Names outlive the files and symbols they name",
           "vital": false
         },
@@ -1118,29 +1118,29 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.6601941747572816,
+          "cumulative": 0.6666666666666666,
           "n": 68,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.8155339805825242,
+          "cumulative": 0.8235294117647058,
           "n": 16,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.9029126213592233,
+          "cumulative": 0.9117647058823529,
           "n": 9,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
           "vital": false
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9902912621359223,
-          "n": 9,
+          "cumulative": 0.9901960784313726,
+          "n": 8,
           "name": "Names outlive the files and symbols they name",
           "vital": false
         },
@@ -1158,29 +1158,29 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.6601941747572816,
+          "cumulative": 0.6666666666666666,
           "n": 68,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.8155339805825242,
+          "cumulative": 0.8235294117647058,
           "n": 16,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.9029126213592233,
+          "cumulative": 0.9117647058823529,
           "n": 9,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
           "vital": false
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9902912621359223,
-          "n": 9,
+          "cumulative": 0.9901960784313726,
+          "n": 8,
           "name": "Names outlive the files and symbols they name",
           "vital": false
         },
@@ -1198,29 +1198,29 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.6574074074074074,
+          "cumulative": 0.6635514018691588,
           "n": 71,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.8055555555555556,
+          "cumulative": 0.8130841121495327,
           "n": 16,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.8888888888888888,
+          "cumulative": 0.897196261682243,
           "n": 9,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
           "vital": false
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9722222222222222,
-          "n": 9,
+          "cumulative": 0.9719626168224299,
+          "n": 8,
           "name": "Names outlive the files and symbols they name",
           "vital": false
         },
@@ -1238,35 +1238,35 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.6776859504132231,
+          "cumulative": 0.6833333333333333,
           "n": 82,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.8099173553719008,
+          "cumulative": 0.8166666666666667,
           "n": 16,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.8842975206611571,
+          "cumulative": 0.8916666666666667,
           "n": 9,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
           "vital": false
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9586776859504132,
-          "n": 9,
+          "cumulative": 0.9583333333333334,
+          "n": 8,
           "name": "Names outlive the files and symbols they name",
           "vital": false
         },
         {
           "cause": "recorded-silence",
-          "cumulative": 0.9834710743801653,
+          "cumulative": 0.9833333333333333,
           "n": 3,
           "name": "A silence recorded with its reason",
           "vital": false
@@ -3276,7 +3276,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -4681,7 +4681,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -6074,7 +6074,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -7467,7 +7467,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -8888,7 +8888,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -10297,7 +10297,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:140 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:140 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:208 mentions-file docs-site/public/api/ (never tracked); guides/QUALITY-GATES.md:318 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:657 mentions-file docs-site/public/api (never tracked); guides/QUALITY-GATES.md:730 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -11344,13 +11344,6 @@
           },
           {
             "kind": "dangling-reference",
-            "of": "Guides/guides/LOGGING.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/LOGGING.md"
-          },
-          {
-            "kind": "dangling-reference",
             "of": "Guides/guides/QUALITY-GATES.md",
             "shape": "code-refutes-prose",
             "structure": "refuted",
@@ -11463,7 +11456,7 @@
           }
         ],
         "masked": 1,
-        "refuted": 21
+        "refuted": 20
       },
       "examples": {
         "citing": 0,
@@ -11664,7 +11657,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:164 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:164 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:827 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:827 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -11712,22 +11705,6 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/LOGGING.md:317 mentions-file src/core/logger/logger.ts (deleted)",
-          "fragments": [],
-          "id": "71dd5168744c414f",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: LOGGING.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/LOGGING.md"
-        },
-        {
-          "cause": "names-outlive-files",
           "detail": "names what does not exist: guides/DESIGN-RULES.md:297 mentions-file src/adapters/PipelineTransport (never tracked)",
           "fragments": [],
           "id": "8a009a13a50cbec9",
@@ -11744,7 +11721,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:35 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:66 mentions-file src/core/logger/logger.ts (deleted); guides/CHARTER.md:68 mentions-file docs-site/guide/ (deleted); guides/CHARTER.md:195 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:613 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:615 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:871 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:873 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:876 mentions-file docs-site/guide/ (deleted)",
+          "detail": "names what does not exist: guides/CHARTER.md:195 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:613 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:615 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:871 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:873 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:876 mentions-file docs-site/guide/ (deleted)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -11776,7 +11753,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/ROADMAP.md:68 mentions-file src/adapters/PipelineTransport (never tracked); guides/ROADMAP.md:89 mentions-file src/core/ClientRegistry.ts (deleted); guides/ROADMAP.md:155 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:155 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:159 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:159 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:224 mentions-file src/sde/SdeTestDataFactory.ts (deleted); guides/ROADMAP.md:235 mentions-file tests/bdd/step-definitions/sde/ (deleted); guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:308 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
+          "detail": "names what does not exist: guides/ROADMAP.md:68 mentions-file src/adapters/PipelineTransport (never tracked); guides/ROADMAP.md:155 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:155 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:159 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:224 mentions-file src/sde/SdeTestDataFactory.ts (deleted); guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:308 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
           "fragments": [],
           "id": "ea7d42ac158e5b74",
           "kind": "dangling-reference",
@@ -13315,13 +13292,6 @@
           },
           {
             "kind": "dangling-reference",
-            "of": "Guides/guides/LOGGING.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/LOGGING.md"
-          },
-          {
-            "kind": "dangling-reference",
             "of": "Guides/guides/QUALITY-GATES.md",
             "shape": "code-refutes-prose",
             "structure": "refuted",
@@ -13434,7 +13404,7 @@
           }
         ],
         "masked": 1,
-        "refuted": 21
+        "refuted": 20
       },
       "examples": {
         "citing": 0,
@@ -13635,7 +13605,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:164 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:164 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:827 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:827 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -13683,22 +13653,6 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/LOGGING.md:317 mentions-file src/core/logger/logger.ts (deleted)",
-          "fragments": [],
-          "id": "71dd5168744c414f",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: LOGGING.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/LOGGING.md"
-        },
-        {
-          "cause": "names-outlive-files",
           "detail": "names what does not exist: guides/DESIGN-RULES.md:297 mentions-file src/adapters/PipelineTransport (never tracked)",
           "fragments": [],
           "id": "8a009a13a50cbec9",
@@ -13715,7 +13669,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:35 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:66 mentions-file src/core/logger/logger.ts (deleted); guides/CHARTER.md:68 mentions-file docs-site/guide/ (deleted); guides/CHARTER.md:195 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:613 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:615 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:871 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:873 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:876 mentions-file docs-site/guide/ (deleted)",
+          "detail": "names what does not exist: guides/CHARTER.md:195 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:613 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:615 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:871 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:873 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:876 mentions-file docs-site/guide/ (deleted)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -13747,7 +13701,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/ROADMAP.md:68 mentions-file src/adapters/PipelineTransport (never tracked); guides/ROADMAP.md:89 mentions-file src/core/ClientRegistry.ts (deleted); guides/ROADMAP.md:155 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:155 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:159 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:159 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:224 mentions-file src/sde/SdeTestDataFactory.ts (deleted); guides/ROADMAP.md:235 mentions-file tests/bdd/step-definitions/sde/ (deleted); guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:308 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
+          "detail": "names what does not exist: guides/ROADMAP.md:68 mentions-file src/adapters/PipelineTransport (never tracked); guides/ROADMAP.md:155 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:155 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:159 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:224 mentions-file src/sde/SdeTestDataFactory.ts (deleted); guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:308 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
           "fragments": [],
           "id": "ea7d42ac158e5b74",
           "kind": "dangling-reference",
@@ -15246,13 +15200,6 @@
           },
           {
             "kind": "dangling-reference",
-            "of": "Guides/guides/LOGGING.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/LOGGING.md"
-          },
-          {
-            "kind": "dangling-reference",
             "of": "Guides/guides/QUALITY-GATES.md",
             "shape": "code-refutes-prose",
             "structure": "refuted",
@@ -15365,7 +15312,7 @@
           }
         ],
         "masked": 1,
-        "refuted": 21
+        "refuted": 20
       },
       "examples": {
         "citing": 0,
@@ -15566,7 +15513,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:164 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:164 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:827 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:827 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -15614,22 +15561,6 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/LOGGING.md:317 mentions-file src/core/logger/logger.ts (deleted)",
-          "fragments": [],
-          "id": "71dd5168744c414f",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: LOGGING.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/LOGGING.md"
-        },
-        {
-          "cause": "names-outlive-files",
           "detail": "names what does not exist: guides/DESIGN-RULES.md:297 mentions-file src/adapters/PipelineTransport (never tracked)",
           "fragments": [],
           "id": "8a009a13a50cbec9",
@@ -15646,7 +15577,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:35 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:66 mentions-file src/core/logger/logger.ts (deleted); guides/CHARTER.md:68 mentions-file docs-site/guide/ (deleted); guides/CHARTER.md:195 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:613 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:615 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:871 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:873 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:876 mentions-file docs-site/guide/ (deleted)",
+          "detail": "names what does not exist: guides/CHARTER.md:195 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:613 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:615 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:871 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:873 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:876 mentions-file docs-site/guide/ (deleted)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -15678,7 +15609,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/ROADMAP.md:68 mentions-file src/adapters/PipelineTransport (never tracked); guides/ROADMAP.md:89 mentions-file src/core/ClientRegistry.ts (deleted); guides/ROADMAP.md:155 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:155 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:159 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:159 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:224 mentions-file src/sde/SdeTestDataFactory.ts (deleted); guides/ROADMAP.md:235 mentions-file tests/bdd/step-definitions/sde/ (deleted); guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:308 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
+          "detail": "names what does not exist: guides/ROADMAP.md:68 mentions-file src/adapters/PipelineTransport (never tracked); guides/ROADMAP.md:155 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:155 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:159 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:224 mentions-file src/sde/SdeTestDataFactory.ts (deleted); guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:308 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
           "fragments": [],
           "id": "ea7d42ac158e5b74",
           "kind": "dangling-reference",
@@ -17177,13 +17108,6 @@
           },
           {
             "kind": "dangling-reference",
-            "of": "Guides/guides/LOGGING.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/LOGGING.md"
-          },
-          {
-            "kind": "dangling-reference",
             "of": "Guides/guides/QUALITY-GATES.md",
             "shape": "code-refutes-prose",
             "structure": "refuted",
@@ -17296,7 +17220,7 @@
           }
         ],
         "masked": 1,
-        "refuted": 21
+        "refuted": 20
       },
       "examples": {
         "citing": 0,
@@ -17497,7 +17421,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:164 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:164 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:827 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:827 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -17545,22 +17469,6 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/LOGGING.md:336 mentions-file src/core/logger/logger.ts (deleted)",
-          "fragments": [],
-          "id": "71dd5168744c414f",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: LOGGING.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/LOGGING.md"
-        },
-        {
-          "cause": "names-outlive-files",
           "detail": "names what does not exist: guides/DESIGN-RULES.md:297 mentions-file src/adapters/PipelineTransport (never tracked)",
           "fragments": [],
           "id": "8a009a13a50cbec9",
@@ -17577,7 +17485,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:35 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:66 mentions-file src/core/logger/logger.ts (deleted); guides/CHARTER.md:68 mentions-file docs-site/guide/ (deleted); guides/CHARTER.md:195 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:613 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:615 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:871 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:873 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:876 mentions-file docs-site/guide/ (deleted)",
+          "detail": "names what does not exist: guides/CHARTER.md:195 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:613 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:615 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:871 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:873 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:876 mentions-file docs-site/guide/ (deleted)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -17609,7 +17517,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/ROADMAP.md:68 mentions-file src/adapters/PipelineTransport (never tracked); guides/ROADMAP.md:89 mentions-file src/core/ClientRegistry.ts (deleted); guides/ROADMAP.md:155 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:155 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:159 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:159 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:224 mentions-file src/sde/SdeTestDataFactory.ts (deleted); guides/ROADMAP.md:235 mentions-file tests/bdd/step-definitions/sde/ (deleted); guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:308 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
+          "detail": "names what does not exist: guides/ROADMAP.md:68 mentions-file src/adapters/PipelineTransport (never tracked); guides/ROADMAP.md:155 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:155 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:159 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:224 mentions-file src/sde/SdeTestDataFactory.ts (deleted); guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:308 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
           "fragments": [],
           "id": "ea7d42ac158e5b74",
           "kind": "dangling-reference",
@@ -19180,13 +19088,6 @@
           },
           {
             "kind": "dangling-reference",
-            "of": "Guides/guides/LOGGING.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/LOGGING.md"
-          },
-          {
-            "kind": "dangling-reference",
             "of": "Guides/guides/QUALITY-GATES.md",
             "shape": "code-refutes-prose",
             "structure": "refuted",
@@ -19300,7 +19201,7 @@
           }
         ],
         "masked": 2,
-        "refuted": 20
+        "refuted": 19
       },
       "examples": {
         "citing": 0,
@@ -19501,7 +19402,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:168 mentions-file scripts/seed-sde-test-db.ts (deleted); guides/QUALITY-GATES.md:168 mentions-file examples/sde-cross-reference.ts (deleted); guides/QUALITY-GATES.md:395 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:847 mentions-file docs-site/public/api (never tracked)",
+          "detail": "names what does not exist: guides/QUALITY-GATES.md:395 mentions-file docs-site/.vitepress/dist (never tracked); guides/QUALITY-GATES.md:847 mentions-file docs-site/public/api (never tracked)",
           "fragments": [],
           "id": "4347b749ff6629c9",
           "kind": "dangling-reference",
@@ -19549,22 +19450,6 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/LOGGING.md:336 mentions-file src/core/logger/logger.ts (deleted)",
-          "fragments": [],
-          "id": "71dd5168744c414f",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: LOGGING.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/LOGGING.md"
-        },
-        {
-          "cause": "names-outlive-files",
           "detail": "names what does not exist: guides/DESIGN-RULES.md:297 mentions-file src/adapters/PipelineTransport (never tracked)",
           "fragments": [],
           "id": "8a009a13a50cbec9",
@@ -19581,7 +19466,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:41 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:72 mentions-file src/core/logger/logger.ts (deleted); guides/CHARTER.md:74 mentions-file docs-site/guide/ (deleted); guides/CHARTER.md:201 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:651 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:653 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:909 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:911 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:914 mentions-file docs-site/guide/ (deleted)",
+          "detail": "names what does not exist: guides/CHARTER.md:201 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:651 mentions-file docs-site/public/api/ (never tracked); guides/CHARTER.md:653 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:909 mentions-file docs-site/public/api (never tracked); guides/CHARTER.md:911 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:914 mentions-file docs-site/guide/ (deleted)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -19613,7 +19498,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/ROADMAP.md:68 mentions-file src/adapters/PipelineTransport (never tracked); guides/ROADMAP.md:89 mentions-file src/core/ClientRegistry.ts (deleted); guides/ROADMAP.md:155 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:155 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:159 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:159 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:224 mentions-file src/sde/SdeTestDataFactory.ts (deleted); guides/ROADMAP.md:235 mentions-file tests/bdd/step-definitions/sde/ (deleted); guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:308 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
+          "detail": "names what does not exist: guides/ROADMAP.md:68 mentions-file src/adapters/PipelineTransport (never tracked); guides/ROADMAP.md:155 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:155 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:159 mentions-file docs-site/guide/ (deleted); guides/ROADMAP.md:224 mentions-file src/sde/SdeTestDataFactory.ts (deleted); guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:308 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file docs-site/guide/sde.md (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
           "fragments": [],
           "id": "ea7d42ac158e5b74",
           "kind": "dangling-reference",

@@ -45,7 +45,7 @@ export interface SourceItem {
   attrs?: Record<string, string>;
 }
 
-export type ItemKind = "requirement" | "rule" | "scenario" | "feature" | "test-file" | "document" | "issue" | "property";
+export type ItemKind = "requirement" | "rule" | "scenario" | "feature" | "test-file" | "document" | "issue" | "property" | "baseline";
 
 /**
  * How one item refers to another, or to a file of the repository (stage 22). `implements`: a document says it
@@ -72,6 +72,13 @@ export interface ItemEdge {
   observes?: string[];
   /** Which reader read `observes`: typescript, python, java, go or rust. */
   reader?: string;
+  /**
+   * For a file a document mentions (From the tutors run, section 5): the sentence says the file is absent (retired,
+   * optional, removed), so its being missing is no gap.
+   */
+  absent?: boolean;
+  /** The `owner/repo` tokens of the sentence that mentions the file: one that names no top-level entry is elsewhere. */
+  repos?: string[];
 }
 
 export interface AdapterManifest {

@@ -3,7 +3,7 @@ import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import type { Module } from "@csh/kernel";
 import { prepare, type SourceRun } from "../src/index.ts";
-import { cucumberExpression, stepGaps } from "../src/steps.ts";
+import { cucumberExpression, stepGaps, vitestExpression } from "../src/steps.ts";
 
 describe("Cucumber expressions", () => {
   it("reads parameters, optional text and alternatives", () => {
@@ -50,5 +50,39 @@ describe("step gaps", () => {
 
   it("says nothing when the run reads no definitions", () => {
     expect(stepGaps(prepare(module, runs("")))).toEqual([]);
+  });
+});
+
+describe("vitest-cucumber expressions (From the tutors run, section 4)", () => {
+  const m = (e: string, s: string) => vitestExpression(e).test(s);
+  it("reads its parameters and keeps every other character literal", () => {
+    expect(m("the SLO file committed at release/slo.yaml", "the SLO file committed at release/slo.yaml")).toBe(true);
+    expect(m("the SLO file committed at release/slo.yaml", "the SLO file committed at release")).toBe(false);
+    expect(m("{number} objectives are listed", "3 objectives are listed")).toBe(true);
+    expect(m("{number} objectives are listed", "three objectives are listed")).toBe(false);
+    expect(m("generator {string} wrote", 'generator "4.1.0" wrote')).toBe(true);
+    expect(m("the flag is {boolean}", "the flag is true")).toBe(true);
+    expect(m("the flag is {boolean}", "the flag is maybe")).toBe(false);
+    expect(m("a cucumber(s)", "a cucumbers")).toBe(false);
+    expect(m("a cucumber(s)", "a cucumber(s)")).toBe(true);
+    expect(m('generator "<release>" wrote', 'generator "<release>" wrote')).toBe(true);
+    expect(m("days {list}", "days a, b")).toBe(true);
+  });
+
+  it("matches any literal text with no braces as itself", () => {
+    fc.assert(fc.property(fc.string({ unit: fc.constantFrom("a", " ", ".", "*", "?", "[", "$", "^", "|", "/", "(", ")", "<", ">") }), (t) => vitestExpression(t).test(t)));
+  });
+});
+
+describe("outline templates and title binding (From the tutors run, sections 2 and 4)", () => {
+  const scenario = (attrs: Record<string, string>, text = "s") => ({ source: "F", kind: "Features", files: [], output: { diagnostics: [], edges: [], items: [{ id: "f#/s", kind: "scenario" as const, text, span: "f.feature:3", textDigest: "sha256:0", attrs }] } });
+  const steps = (defs: string, extra: Record<string, string> = {}) => ({ source: "T", kind: "TestFiles", files: [], output: { diagnostics: [], edges: [], items: [{ id: "t.steps.ts", kind: "test-file" as const, text: "t.steps.ts", span: "t.steps.ts:1", textDigest: "sha256:0", attrs: { tests: "0", stepDefinitions: defs, ...extra } }] } });
+  it("matches an outline's step as written when its expansion matches nothing", () => {
+    const p = prepare(module, [scenario({ steps: "4\tthe course \"4.1.0\" loads\n4\tthe course \"5.0.0\" loads", templates: "4\tthe course \"<release>\" loads" }), steps('9\tvitest\tthe course "<release>" loads')]);
+    expect(stepGaps(p)).toEqual([]);
+  });
+  it("binds a scenario a test carries the title of, and still counts the definitions it matches as used", () => {
+    const p = prepare(module, [scenario({ steps: "4\tthe course is open\n5\tnothing defines this" }, "Search matches every word"), steps("9\tvitest\tthe course is open", { titles: "Search matches every word" })]);
+    expect(stepGaps(p)).toEqual([]);
   });
 });

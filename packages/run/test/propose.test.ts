@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { proposeProfile, selectFiles } from "../src/index.ts";
+import { isBaseline } from "../src/propose.ts";
 
 let dirs: string[] = [];
 afterEach(() => {
@@ -171,5 +172,26 @@ describe("proposals for csh analyse (stage 55)", () => {
     expect(told).toEqual(["documents", "instructions", "requirements"]);
     expect(lifted.guesses.join("\n")).toContain("told sentences");
     expect(propose(dir).manifest.practices.some((p) => p.settings?.told !== undefined)).toBe(false);
+  });
+});
+
+describe("proposals the tutors run taught (From the tutors run, sections 3 and 6)", () => {
+  it("leaves feature files in a fixture or a dot-directory out of Features and out of the idTag guess", () => {
+    const rule = (n: string) => `Feature: F\n  @rule-${n}\n  Rule: The reader shall do ${n}.\n    Scenario: s ${n}\n      Given a\n`;
+    const dir = checkout({ "features/a.feature": rule("0001"), "features/b.feature": rule("0002"), "tests/fixtures/bad.feature": `${rule("0009")}${rule("0009").replace("Feature: F\n", "")}`, ".claude/x.feature": rule("0001") });
+    const r = propose(dir);
+    expect(reads(dir, r, "Features")).toEqual(["features/a.feature", "features/b.feature"]);
+    expect(r.manifest.practices.find((p) => p.id === "bdd")?.settings?.idTag).toBe("(rule-[0-9]+)");
+    expect(r.guesses.join("\n")).toContain("leaving out 2 in fixtures or dot-directories");
+  });
+
+  it("reads a dependency-cruiser configuration with the documents, and shrink-only baselines as a source of their own", () => {
+    const dir = checkout({ "README.md": "# A\n", ".dependency-cruiser.cjs": "module.exports = {};\n", "tests/arch/known.txt": "# Known.\n# This file may only\n# shrink.\nrule: a -> b\n", "tests/arch/notes.txt": "# Notes\nrule: a -> b\n", "tests/fixtures/known.txt": "# This file may only shrink.\nx\n", "a.ts": "export {};\n" });
+    const r = propose(dir);
+    expect(reads(dir, r, "Documents")).toEqual([".dependency-cruiser.cjs", "README.md"]);
+    expect(reads(dir, r, "Baselines")).toEqual(["tests/arch/known.txt"]);
+    expect(r.manifest.practices.find((p) => p.id === "docs")?.sources).toEqual(["Documents", "Baselines"]);
+    expect(isBaseline("\n# may only shrink\n")).toBe(true);
+    expect(isBaseline("entry\n# may only shrink\n")).toBe(false);
   });
 });

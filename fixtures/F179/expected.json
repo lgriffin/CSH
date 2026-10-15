@@ -1,0 +1,26 @@
+{
+  "fixture": "F179",
+  "section": "From the tutors-mono-repo run, sections 1 to 3; A-204 to A-206",
+  "stage": 61,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["idTag (rule-[0-9]+)", "fixtures"],
+      "entries": [
+        { "outcome": "gap", "kind": "undefined-step", "subject": "Features/rule-0002/clearing-the-box-empties-the-list", "detailIncludes": ["the student clears the box", "nothing is listed"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "dangling-reference", "subject": "Tests/apps/reader/tests/e2e/search.spec.ts" },
+        { "kind": "undefined-step", "subject": "Features/rule-0001/search-matches-every-word" },
+        { "kind": "steps-undecided", "subject": "Features/rule-0001/search-matches-every-word" },
+        { "kind": "undefined-step", "subject": "Features/rule-0003/opening-shows-the-title" },
+        { "kind": "unused-step-definition", "subject": "Tests/tests/bdd/steps/course.steps.ts" },
+        { "kind": "undefined-step", "subject": "Features/rule-0009/unbound-on-purpose" },
+        { "kind": "undefined-step", "subject": "Features/tests/suite-health/fixtures/bad.feature#the-reader-shall-do-one-thing/unbound-on-purpose" },
+        { "kind": "unverified", "subject": "Features/tests/suite-health/fixtures/bad.feature#the-reader-shall-do-one-thing" },
+        { "kind": "unverified", "subject": "Features/rule-0009" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

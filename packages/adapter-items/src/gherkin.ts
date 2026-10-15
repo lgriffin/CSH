@@ -73,6 +73,8 @@ export function run(input: AdapterInput): AdapterOutput {
       if (open !== undefined) {
         const steps = stepsOf(open);
         if (steps.length > 0) open.item.attrs = { ...(open.item.attrs ?? {}), steps: steps.join("\n") };
+        // An outline's steps as written, placeholders and all, which a definition may match (From the tutors run, section 4).
+        if (open.outline && open.steps.some((st) => /<[^<>]+>/.test(st.text))) open.item.attrs = { ...(open.item.attrs ?? {}), templates: open.steps.map((st) => `${st.line}\t${st.text}`).join("\n") };
         // A scenario's grain (stage 57): the words of its title, its steps (with the background's) and its examples.
         const words = [open.item.text, ...open.background.map((b) => b.slice(b.indexOf("\t") + 1)), ...open.steps.map((x) => x.text), ...(open.header ?? []), ...open.rows.flatMap((r) => r.cells)].join("\n");
         const observes = observedIn(words, 0, words.length);
