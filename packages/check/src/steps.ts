@@ -75,6 +75,34 @@ export function cucumberExpression(text: string): RegExp {
   return new RegExp(`^${out.join("")}$`);
 }
 
+/** vitest-cucumber's parameters (From the tutors run, section 4); any other `{name}` matches anything. */
+const VITEST_PARAMETERS: Record<string, string> = {
+  string: "(\"[^\"]*\"|'[^']*')",
+  int: "(-?\\d+)",
+  float: NUMBER,
+  number: NUMBER,
+  boolean: "(true|false)",
+  word: "([^\\s]+)",
+  char: "(.)",
+};
+
+/**
+ * A vitest-cucumber step as a regular expression over a whole step: its `{name}` parameters, and every other character
+ * literal, `/`, parentheses and `<placeholders>` included (A-207).
+ */
+export function vitestExpression(text: string): RegExp {
+  let out = "";
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]!;
+    const end = c === "{" ? text.indexOf("}", i) : -1;
+    if (end > i && /^[\w-]*$/.test(text.slice(i + 1, end))) {
+      out += VITEST_PARAMETERS[text.slice(i + 1, end)] ?? "(.*)";
+      i = end;
+    } else out += escape(c);
+  }
+  return new RegExp(`^${out}$`);
+}
+
 interface Definition {
   file: string;
   span: string;
@@ -88,9 +116,9 @@ function definitionsOf(source: string, file: string, encoded: string): (Definiti
     const [line, kind, text] = row.split("\t");
     if (line === undefined || kind === undefined || text === undefined) return [];
     const span = `${file}:${line}`;
-    if (kind === "expression") {
+    if (kind === "expression" || kind === "vitest") {
       try {
-        return [{ item: `${source}/${file}`, file, span, shown: `"${text}"`, match: cucumberExpression(text) }];
+        return [{ item: `${source}/${file}`, file, span, shown: `"${text}"`, match: kind === "vitest" ? vitestExpression(text) : cucumberExpression(text) }];
       } catch {
         return [{ item: `${source}/${file}`, file, span, shown: `"${text}"` }];
       }
@@ -109,7 +137,32 @@ function definitionsOf(source: string, file: string, encoded: string): (Definiti
   });
 }
 
+/**
+ * The scenarios, and scenarios of specification prose, that a test binds by its title (From the tutors run, section 2),
+ * each with the test files that carry it. A title two of them share binds neither: which one a test means is unknown,
+ * so both are left to their steps and citations (A-205).
+ */
+export function boundByTitle(items: Prepared["items"]): Map<string, string[]> {
+  const key = (t: string) => t.trim().replace(/\s+/g, " ");
+  const tests = new Map<string, string[]>();
+  for (const i of items) {
+    if (i.kind !== "test-file" || i.attrs?.titles === undefined) continue;
+    for (const t of i.attrs.titles.split("\n").map(key).filter((x) => x !== "")) tests.set(t, [...(tests.get(t) ?? []), `${i.source}/${i.id}`]);
+  }
+  const named = new Map<string, string[]>();
+  for (const i of items) {
+    if (i.kind !== "scenario" && i.attrs?.gherkin !== "prose") continue;
+    const t = key(i.text);
+    if (tests.has(t)) named.set(t, [...(named.get(t) ?? []), `${i.source}/${i.id}`]);
+  }
+  const out = new Map<string, string[]>();
+  for (const [t, scenarios] of named) if (scenarios.length === 1) out.set(scenarios[0]!, tests.get(t)!);
+  return out;
+}
+
 export function stepGaps(prepared: Prepared): Gap[] {
+  // A scenario a test carries the title of is bound by that test, not by step definitions (From the tutors run, section 2).
+  const bound = boundByTitle(prepared.items);
   const scenarios = prepared.items.filter((i) => i.kind === "scenario" && i.attrs?.steps !== undefined);
   const defs = prepared.items.flatMap((i) => (i.attrs?.stepDefinitions !== undefined ? definitionsOf(i.source, i.id, i.attrs.stepDefinitions) : []));
   if (scenarios.length === 0 || defs.length === 0) return [];
@@ -120,14 +173,18 @@ export function stepGaps(prepared: Prepared): Gap[] {
   for (const sc of scenarios) {
     const file = sc.span.slice(0, sc.span.lastIndexOf(":"));
     const missing: string[] = [];
+    // An outline's step as written, by line: a definition that matches it matches every row (A-208).
+    const templates = new Map((sc.attrs!.templates ?? "").split("\n").filter((r) => r !== "").map((r) => [r.slice(0, r.indexOf("\t")), r.slice(r.indexOf("\t") + 1)]));
     for (const row of sc.attrs!.steps!.split("\n")) {
       const tab = row.indexOf("\t");
       const text = row.slice(tab + 1);
-      const hits = readable.filter((d) => d.match!.test(text));
+      const template = templates.get(row.slice(0, tab));
+      const hits = readable.filter((d) => d.match!.test(text) || (template !== undefined && d.match!.test(template)));
       for (const d of hits) used.add(d);
       if (hits.length === 0) missing.push(`${file}:${row.slice(0, tab)} "${text}"`);
     }
-    if (missing.length === 0) continue;
+    // Its definitions still count as used; only a step none matches is not a gap of it.
+    if (missing.length === 0 || bound.has(`${sc.source}/${sc.id}`)) continue;
     const subject = `${sc.source}/${sc.id}`;
     if (unreadable.length === 0) gaps.push({ kind: "undefined-step", subject, fragments: [], detail: `no step definition matches ${missing.join("; ")}` });
     else gaps.push({ kind: "steps-undecided", subject, fragments: [], detail: `no step definition CSH can read matches ${missing.join("; ")}; ${unreadable.length} it cannot read could: ${unreadable.map((d) => `${d.span} ${d.shown}`).join("; ")}` });

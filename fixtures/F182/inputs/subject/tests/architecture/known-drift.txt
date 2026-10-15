@@ -1,0 +1,2 @@
+# Manifest drift that predates the check.
+# This file may only shrink.

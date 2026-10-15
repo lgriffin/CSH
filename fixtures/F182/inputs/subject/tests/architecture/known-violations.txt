@@ -1,0 +1,6 @@
+# Architecture violations that predate the check (rules in .dependency-cruiser.cjs).
+# This file may only shrink: the test fails on new violations and on entries
+# that no longer occur. Format: `rule: from -> to`.
+
+layer-core: packages/a/x.ts -> packages/b/y.ts
+layer-ui: packages/c/z.ts -> packages/d/w.ts

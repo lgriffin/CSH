@@ -8,8 +8,8 @@
 import { claimOf, classify } from "@csh/adapter-ears-markdown";
 import { digestOf } from "@csh/kernel";
 import type { Adapter, AdapterInput, AdapterOutput, Diagnostic, ItemEdge, SourceItem } from "@csh/witness";
-import { backticked, bareFileToken, decode, idPatternOf, pathToken, sortedFiles, unique } from "./common.ts";
-import { toldSentences } from "./told.ts";
+import { backticked, bareFileToken, decode, idPatternOf, pathToken, slug, sortedFiles, unique } from "./common.ts";
+import { sentencesOf, toldSentences } from "./told.ts";
 
 export const manifest = {
   id: "csh.adapter.items.markdown",
@@ -45,6 +45,95 @@ interface Open {
 
 const CODE_FILE = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|py|pyi|java|go|rs)$/;
 
+/** A dependency-cruiser configuration, by its file name (From the tutors run, section 6). */
+const DEPENDENCY_CRUISER = /(?:^|\/)\.dependency-cruiser\.(?:c?js|mjs|json)$/;
+
+/**
+ * A sentence that says the file it names is absent (From the tutors run, section 5): retired, removed, optional, a
+ * leftover, or none committed. It is read with its backticked tokens left out, so `api/delete.ts` says nothing, and
+ * "used to" is the past ("two scripts used to point at"), not a purpose ("is used to configure").
+ */
+const ABSENT = /\b(?:retired|removed|deleted|no longer|leftover|optional|none is|formerly|(?<!\b(?:is|are|was|were|be|been|being|gets?|got)\s+)used to|absent)\b/i;
+
+/**
+ * An `owner/repo` token: exactly two segments, the last with no file extension, and one of them holding a digit, `-`,
+ * `_` or `.` as repository names do, so words such as and/or or client/server are not read as one.
+ */
+const REPO = /(?<![\w./@:-])([A-Za-z0-9][\w.-]*\/[A-Za-z0-9][\w-]*)(?![\w/.-])/g;
+const REPO_NAME = /[\d_.-]/;
+/** Media types are written as two segments too, and never name a repository. */
+const MEDIA = /^(?:application|text|image|audio|video|multipart|font|message|model)\//;
+
+/** The `owner/repo` tokens of a sentence, backticked or not, that are not media types. */
+export function repoTokens(sentence: string): string[] {
+  return [...new Set([...sentence.replace(/`/g, " ").matchAll(REPO)].map((m) => m[1]!).filter((t) => !MEDIA.test(t) && REPO_NAME.test(t)))];
+}
+
+/**
+ * The paragraph each prose line of a Markdown file sits in: its lines joined by a space, and where in that text the line
+ * starts, so a sentence that runs over a line break is read whole. Fences, headings, tables and blank lines end one,
+ * and each list item starts one.
+ */
+function paragraphsOf(lines: string[]): Map<number, { text: string; start: number; length: number }> {
+  const out = new Map<number, { text: string; start: number; length: number }>();
+  let group: { i: number; line: string }[] = [];
+  let fence = false;
+  const flush = () => {
+    const text = group.map((g) => g.line).join(" ");
+    let at = 0;
+    for (const g of group) {
+      out.set(g.i, { text, start: at, length: g.line.length });
+      at += g.line.length + 1;
+    }
+    group = [];
+  };
+  lines.forEach((raw, i) => {
+    const line = raw.trim();
+    if (/^(`{3,}|~{3,})/.test(line)) {
+      flush();
+      fence = !fence;
+      return;
+    }
+    if (fence || line === "" || line.startsWith("#") || line.startsWith("|")) {
+      flush();
+      return;
+    }
+    if (/^(?:[-*+]|\d+[.)])\s/.test(line)) flush();
+    group.push({ i, line });
+  });
+  flush();
+  return out;
+}
+
+/**
+ * Whether a document's prose, outside fences and headings, says its scenarios are not executed (section 7): one of its
+ * sentences says "not executed", "specification prose" or "are not run" and names a scenario.
+ */
+function saysNotExecuted(lines: string[]): boolean {
+  const said = /\b(?:not executed|specification prose|(?:are|is) not run)\b/i;
+  return [...new Set([...paragraphsOf(lines).values()].map((p) => p.text))].some((text) => sentencesOf(text).some((x) => said.test(x.text) && /\bscenarios?\b/i.test(x.text)));
+}
+
+/**
+ * Whether a text file is a baseline (section 6): one of the comment lines before its first entry says the file may only
+ * shrink. A header comment may wrap, so its lines are read together.
+ */
+export function isBaseline(text: string): boolean {
+  const header: string[] = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (line === "") continue;
+    if (!line.startsWith("#")) break;
+    header.push(line.replace(/^#+\s*/, ""));
+  }
+  return /\bmay\s+only\s+shrink\b/i.test(header.join(" "));
+}
+
+/** The names of the checks a dependency-cruiser configuration defines: each `name: "…"` of its text, never run. */
+export function cruiserChecks(text: string): string[] {
+  return [...new Set([...text.matchAll(/["']?\bname["']?\s*:\s*(["'`])([^"'`\n]+)\1/g)].map((m) => m[2]!))];
+}
+
 export function run(input: AdapterInput): AdapterOutput {
   const idPattern = idPatternOf(input);
   const headingId = new RegExp(`^(?<id>(?:${idPattern}))(?=$|[\\s·:—–-])\\s*[·:—–-]?\\s*(?<rest>.*)$`);
@@ -77,7 +166,18 @@ export function run(input: AdapterInput): AdapterOutput {
   // token must match, such as `src/x\\.ts|<[^>]+>`.
   const placeholder = input.config?.placeholders !== undefined ? new RegExp(`^(?:${input.config.placeholders})$`) : undefined;
   const pathOf = (t: string) => (placeholder?.test(t.trim()) === true ? undefined : (pathToken(t) ?? bareFileToken(t)));
+  // The checks the source's dependency-cruiser configurations define, by name, and the file that defines each.
+  const checks = new Map<string, string>();
+  for (const file of sortedFiles(input)) if (DEPENDENCY_CRUISER.test(file.path)) for (const n of cruiserChecks(decode(file.bytes))) if (!checks.has(n)) checks.set(n, file.path);
   for (const file of sortedFiles(input)) {
+    // A baseline (section 6): a text file that says it may only shrink, its other lines the gaps it records.
+    if (/\.txt$/i.test(file.path)) {
+      const text = decode(file.bytes);
+      if (!isBaseline(text)) continue;
+      const entries = text.split(/\r?\n/).map((l) => l.trim()).filter((l) => l !== "" && !l.startsWith("#"));
+      add({ id: file.path, kind: "baseline", text: file.path, span: `${file.path}:1`, textDigest: digestOf(text), attrs: { entries: String(entries.length), first: entries.slice(0, 5).join("\n") } });
+      continue;
+    }
     if (!/\.(md|markdown)$/i.test(file.path)) continue;
     const text = decode(file.bytes);
     const lines = text.split(/\r?\n/);
@@ -85,7 +185,9 @@ export function run(input: AdapterInput): AdapterOutput {
     add(doc);
     let open: Open | undefined;
     // The open fence's character and length: only a fence of the same character, at least as long, closes it.
-    let fence: { char: string; length: number } | undefined;
+    let fence: { char: string; length: number; gherkin: boolean } | undefined;
+    const prose = new Set<string>();
+    const specifies = saysNotExecuted(lines);
     // The Verified by field being read: its mechanisms are the first sentence of the whole value, which may run on to
     // indented lines, so its edges are made once the field ends.
     let verifying: { item: SourceItem; value: string; tokens: { t: string; span: string }[] } | undefined;
@@ -123,10 +225,24 @@ export function run(input: AdapterInput): AdapterOutput {
         if (s !== null) edges.push({ from, rel: "mentions-script", to: `script:${s[1]}`, span });
       }
     };
+    // Each path is read with its sentence (section 5), which may run over several lines of its paragraph: one that says
+    // the file is absent, or names another repository.
+    const paragraphs = paragraphsOf(lines);
     const mentions = (text: string, from: string, span: string) => {
+      const line = Number(span.slice(span.lastIndexOf(":") + 1)) - 1;
+      const para = paragraphs.get(line);
+      const sentences = para === undefined ? sentencesOf(text) : sentencesOf(para.text).filter((x) => x.offset < para.start + para.length && x.offset + x.text.length > para.start);
+      const seen = new Set<string>();
       for (const t of backticked(text)) {
         const p = pathOf(t);
-        if (p !== undefined) edges.push({ from, rel: "mentions-file", to: `file:${p}`, span });
+        if (p === undefined || seen.has(t)) continue;
+        seen.add(t);
+        // Every sentence on the line that mentions the path must say so: one that only uses it is a claim.
+        const own = sentences.filter((x) => x.text.includes(`\`${t}\``));
+        const absent = own.length > 0 && own.every((x) => ABSENT.test(x.text.replace(/`[^`]*`/g, " ")));
+        const named = own.map((x) => repoTokens(x.text).filter((r) => r !== p.replace(/\/$/, "")));
+        const others = named.length > 0 && named.every((n) => n.length > 0) ? [...new Set(named.flat())] : [];
+        edges.push({ from, rel: "mentions-file", to: `file:${p}`, span, ...(absent ? { absent: true } : {}), ...(others.length > 0 ? { repos: others } : {}) });
       }
     };
     const close = () => {
@@ -149,9 +265,18 @@ export function run(input: AdapterInput): AdapterOutput {
         const mark = fenceMark[1]!;
         if (fence === undefined) {
           endField();
-          fence = { char: mark[0]!, length: mark.length };
+          fence = { char: mark[0]!, length: mark.length, gherkin: /^(?:gherkin|feature)$/i.test(fenceMark[2]!.trim()) };
         } else if (mark[0] === fence.char && mark.length >= fence.length && fenceMark[2]!.trim() === "") fence = undefined;
         return;
+      }
+      // Specification prose in Gherkin (section 7): each scenario of a gherkin fence is a requirement of its own, in a
+      // document whose prose says its scenarios are not executed; elsewhere a fence is an example of the form.
+      if (fence?.gherkin === true && lift && specifies) {
+        const sc = /^\s*(?:Scenario Outline|Scenario Template|Scenario|Example):\s*(.+?)\s*$/.exec(raw);
+        if (sc !== null) {
+          const title = sc[1]!;
+          add({ id: unique(`${file.path}#${slug(title)}`, prose), kind: "requirement", text: title, span, textDigest: digestOf(title), attrs: { gherkin: "prose" } });
+        }
       }
       if (fence !== undefined) return;
       const h = /^(#{1,6})\s+(.*?)\s*#*\s*$/.exec(raw);
@@ -240,6 +365,9 @@ export function run(input: AdapterInput): AdapterOutput {
         const claim = claimOf(s.text);
         if (claim !== undefined) item.attrs!.claims = claim;
         add(item);
+        // A told rule that names a check its repository's dependency-cruiser configuration defines is verified by it.
+        const named = [...new Set(backticked(s.text).filter((t) => checks.has(t)))];
+        for (const n of named) edges.push({ from: id, rel: "verified-by", to: `file:${checks.get(n)!}`, span: item.span });
       }
     }
   }

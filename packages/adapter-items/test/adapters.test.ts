@@ -111,6 +111,9 @@ describe("the Markdown adapter", () => {
     expect(pathToken("src/core/error.ts")).toBe("src/core/error.ts");
     expect(pathToken("tests/typetests/")).toBe("tests/typetests/");
     for (const t of ["./errors", "../x/y", "@lgriffin/esi.ts", "src/*.ts", "npm run x", "https://x/y", "package.json"]) expect(pathToken(t), t).toBeUndefined();
+    // From the tutors run, section 5: an ellipsis placeholder and a branch named by its version.
+    for (const t of ["tests/bdd/steps/...", "packages/.../x.ts", "release/16.3.0", "release/v16.2.2"]) expect(pathToken(t), t).toBeUndefined();
+    expect(pathToken("docs/v2/guide.md")).toBe("docs/v2/guide.md");
   });
 });
 
@@ -172,10 +175,14 @@ describe("the Gherkin inventory adapter", () => {
 });
 
 describe("the test-file adapter", () => {
+  it("records a test title as its value, and leaves out skipped and todo tests", () => {
+    const out = tests(input({ "tests/t.spec.ts": "test('the course\\'s  page', () => {});\ntest.todo('later');\ntest.skip('not yet', () => {});\n" }, undefined, "TestFiles"));
+    expect(out.items![0]!.attrs?.titles).toBe("the course's page");
+  });
   it("counts tests and cites identifiers in titles only", () => {
     const file = ["describe('SEC-11: every call is indexed', () => {", "  it('lists ARCH-01', () => expect(['P2', 'SEC-12']).toBeTruthy());", "  it.skip(`later`, () => {});", "  // SEC-13 in a comment", "});"].join("\n");
     const out = tests(input({ "tests/a.test.ts": file, "tests/b.test.ts": "export {};\n" }, undefined, "TestFiles"));
-    expect(out.items!.map((i) => [i.id, i.attrs])).toEqual([["tests/a.test.ts", { tests: "2", skipped: "1" }], ["tests/b.test.ts", { tests: "0" }]]);
+    expect(out.items!.map((i) => [i.id, i.attrs])).toEqual([["tests/a.test.ts", { tests: "2", titles: "lists ARCH-01", skipped: "1" }], ["tests/b.test.ts", { tests: "0" }]]);
     expect(out.edges!.map((e) => [e.to, e.span])).toEqual([["SEC-11", "tests/a.test.ts:1"], ["ARCH-01", "tests/a.test.ts:2"]]);
     expect(out.diagnostics.map((d) => [d.code, d.span])).toEqual([["no-tests", "tests/b.test.ts"]]);
   });
@@ -196,7 +203,7 @@ describe("the test-file adapter", () => {
       "foo.it('ARCH-09 not a test');",
     ].join("\n");
     const out = tests(input({ "tests/p.test.ts": file }, undefined, "TestFiles"));
-    expect((out.items ?? [])[0]!.attrs).toEqual({ tests: "2" });
+    expect((out.items ?? [])[0]!.attrs).toEqual({ tests: "2", titles: "ARCH-02 row %s\nARCH-03 typed" });
     expect(out.edges!.map((e) => [e.to, e.span])).toEqual([["ARCH-02", "tests/p.test.ts:3"], ["ARCH-03", "tests/p.test.ts:4"], ["ARCH-04", "tests/p.test.ts:7"]]);
   });
 });
@@ -235,7 +242,7 @@ describe("test results (stage 26)", () => {
       { file: "tests/a.test.ts", outcome: "passed", cites: ["SEC-11"], span: "results/jest.json#testResults[0].assertionResults[1]" },
       { file: "tests/a.test.ts", outcome: "skipped", cites: [], span: "results/jest.json#testResults[0].assertionResults[2]" },
     ]);
-    expect(out.items!.find((i) => i.id === "tests/a.test.ts")!.attrs).toEqual({ tests: "2", passed: "1", failed: "1", errored: "0", skipped: "1" });
+    expect(out.items!.find((i) => i.id === "tests/a.test.ts")!.attrs).toEqual({ tests: "2", titles: "lists ARCH-01\nruns", passed: "1", failed: "1", errored: "0", skipped: "1" });
     // Runner file names are never repeated: the files outside the source are counted. The source's own test files
     // with no result are named (A-174).
     expect(out.diagnostics.map((d) => [d.code, d.message])).toEqual([
@@ -250,7 +257,7 @@ describe("test results (stage 26)", () => {
     i.executions = [{ path: "r.json", ...(() => { const bytes = new TextEncoder().encode(report); return { digest: digestOf(bytes), bytes }; })() }];
     const out = tests(i);
     expect(out.results!.map((r) => r.file)).toEqual(["packages/x/test/a.test.ts", "test/a.test.ts"]);
-    expect(out.items!.find((x) => x.id === "test/a.test.ts")!.attrs).toEqual({ tests: "2", passed: "1", failed: "0", errored: "0", skipped: "0" });
+    expect(out.items!.find((x) => x.id === "test/a.test.ts")!.attrs).toEqual({ tests: "2", titles: "y", passed: "1", failed: "0", errored: "0", skipped: "0" });
     expect(out.diagnostics).toEqual([]);
   });
 

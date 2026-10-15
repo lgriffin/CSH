@@ -329,7 +329,7 @@ describe("the inventory across languages", () => {
     const out = tests(input(files, undefined, { "results.json": report }));
     expect(out.items!.map((i) => [i.id, i.attrs])).toEqual([
       ["A.java", { tests: "1" }],
-      ["a.test.ts", { tests: "1" }],
+      ["a.test.ts", { tests: "1", titles: "REQ-1 x" }],
       ["pkg/a_test.go", { tests: "1", passed: "0", failed: "1", errored: "0", skipped: "0" }],
       ["src/lib.rs", { tests: "1" }],
       ["tests/test_a.py", { tests: "1", passed: "1", failed: "0", errored: "0", skipped: "0" }],

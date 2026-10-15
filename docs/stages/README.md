@@ -77,3 +77,7 @@ CSH as a second axis beside the outcome ([15](../spec/15-assertion-ladder.md)). 
 Stages 55 to 60 add `csh analyse`, a cold read of any repository, with danger, grain, packages and evidence in every
 language, then calibrate it on five subjects and ship it as a release and an Action
 ([16](../spec/16-analyse-danger-grain.md)). Their fixtures start at F160.
+
+Stage 61 answers what a cold read of tutors-mono-repo asked for ([17](../spec/17-from-the-tutors-run.md),
+[issue 85](https://github.com/lgriffin/CSH/issues/85)): rule tags, scenarios bound by title, the step library's dialect,
+file mentions, dependency-cruiser checks, baselines and specification prose. Its fixtures are F179 to F183.

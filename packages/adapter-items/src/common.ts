@@ -47,6 +47,10 @@ export function pathToken(token: string): string | undefined {
   if (/(^|\/)v?[xX]\.[yY]|\/<|[<>{}*]/.test(t)) return undefined;
   if (/^\d+(\.\d+)+\//.test(t)) return undefined;
   if (/^[\w-]+(\.[\w-]+)*\.(?:io|com|org|net|dev)\//.test(t)) return undefined;
+  // A placeholder with an ellipsis (tests/bdd/steps/...), and a branch or tag whose last segment is a version
+  // (release/16.3.0, release/v16.2.2), name no path (From the tutors run, section 5).
+  if (/(?:^|\/)\.{3,}(?:\/|$)|(?:\.\.\.|…)\/?$/.test(t)) return undefined;
+  if (/\/v?\d+(?:\.\d+)+$/.test(t)) return undefined;
   return t;
 }
 

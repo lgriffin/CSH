@@ -5,6 +5,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { COMPONENT_SCHEMA_V2, type ComponentManifest, type DeclaredSource, type Practice } from "@csh/component";
+import { isBaseline } from "@csh/adapter-items/markdown";
 import { compareCodePoints, globRegExp } from "@csh/kernel";
 import { trackedFiles } from "./sources.ts";
 
@@ -29,6 +30,11 @@ const MANIFESTS = ["package.json", "pyproject.toml", "pom.xml", "go.mod", "go.wo
 const TEST_DIRS = ["test", "tests", "__tests__"];
 /** The files an agent's tooling loads at the start of every session, by name, anywhere in the tree (stage 50). */
 export const INSTRUCTION_FILES = ["AGENTS.md", "CLAUDE.md", "GEMINI.md"];
+
+/** A dependency-cruiser configuration, by its file name. */
+const DEPENDENCY_CRUISER = /^\.dependency-cruiser\.(?:c?js|mjs|json)$/;
+
+export { isBaseline };
 
 const segments = (p: string) => p.split("/");
 const ext = (p: string) => {
@@ -166,8 +172,12 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   if (origin === undefined || origin === "") guesses.push(`subject.repo ${dir}: the checkout has no origin remote, so the manifest names a local path and is not portable`);
   else guesses.push(`subject.repo ${origin}: the checkout's origin remote; subject.commit is its HEAD`);
 
+  // A fixture, or a file under a dot-directory (.claude, .github), is test data or tooling, not the project's own.
+  const fixtures = (p: string) => underAny(p, ["fixtures", "__fixtures__"]) || segments(p).slice(0, -1).some((d) => d.startsWith("."));
   const markdown = files.filter((p) => ext(p) === "md");
-  const features = files.filter((p) => ext(p) === "feature");
+  // A feature file in a fixture is test data for the subject's own tooling (From the tutors run, section 3).
+  const allFeatures = files.filter((p) => ext(p) === "feature");
+  const features = allFeatures.filter((p) => !fixtures(p));
   const featureText = new Map(features.map((p) => [p, read(p)]));
   const mdText = new Map(markdown.map((p) => [p, read(p)]));
   const fams = families([...mdText.values(), ...featureText.values()]);
@@ -184,10 +194,14 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
     practices.push({ ...p, sources: [s.name] });
   };
 
+  // A dependency-cruiser configuration names the checks a told rule may cite (From the tutors run, section 6). Every
+  // Markdown source reads it, since a told rule may sit in any of them; the adapter reads only its check names.
+  const cruisers = files.filter((p) => DEPENDENCY_CRUISER.test(posix.basename(p)) && !underAny(p, ["fixtures", "__fixtures__"]));
+
   // Instructions: the files an agent reads at the start of every session (The Assertion Ladder, stage 50).
   const instructions = markdown.filter((p) => INSTRUCTION_FILES.includes(posix.basename(p)) || p === ".github/copilot-instructions.md");
   if (instructions.length > 0) {
-    add({ name: "Instructions", kind: "Documents", at: ".", include: [...instructions] }, { id: "instructions", name: "Instructions", kind: "instructions", unit: "the instruction file", settings: { ...idSettings } });
+    add({ name: "Instructions", kind: "Documents", at: ".", include: [...instructions, ...cruisers] }, { id: "instructions", name: "Instructions", kind: "instructions", unit: "the instruction file", settings: { ...idSettings } });
     guesses.push(`Instructions: ${instructions.length} ${instructions.length === 1 ? "file" : "files"} an agent reads at the start of a session (${instructions.join(", ")}), read as documents in a practice of their own`);
   }
 
@@ -196,7 +210,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   const tableRow = idPattern === undefined ? undefined : new RegExp(`^\\s*\\|\\s*(?:${idPattern})\\s*\\|`, "m");
   const requirements = heading === undefined || tableRow === undefined ? [] : markdown.filter((p) => !instructions.includes(p) && (heading.test(mdText.get(p)!) || tableRow.test(mdText.get(p)!)));
   if (requirements.length > 0) {
-    add({ name: "Requirements", kind: "Documents", at: ".", include: [...requirements] }, { id: "requirements", name: "Requirements", kind: "requirements", adapter: "@csh/adapter-items/markdown", unit: "the requirement", settings: { ...idSettings } });
+    add({ name: "Requirements", kind: "Documents", at: ".", include: [...requirements, ...cruisers] }, { id: "requirements", name: "Requirements", kind: "requirements", adapter: "@csh/adapter-items/markdown", unit: "the requirement", settings: { ...idSettings } });
     guesses.push(`Requirements: ${requirements.length} Markdown ${requirements.length === 1 ? "file has a heading or table row" : "files have headings or table rows"} that begin with an identifier, e.g. ${requirements[0]}`);
   }
 
@@ -204,8 +218,19 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   const changelog = (p: string) => /^(CHANGELOG|HISTORY)/i.test(posix.basename(p));
   const documents = markdown.filter((p) => !requirements.includes(p) && !instructions.includes(p) && !changelog(p) && !underAny(p, TEST_DIRS));
   if (documents.length > 0) {
-    add({ name: "Documents", kind: "Documents", at: ".", ...globsFor(documents, files, undefined, ["**/CHANGELOG*", "**/HISTORY*", ...TEST_DIRS.map((d) => `**/${d}/**`), ...requirements, ...instructions]) }, { id: "docs", name: "Documents", kind: "documents", unit: "the document", settings: { ...idSettings } });
+    const g = globsFor(documents, files, undefined, ["**/CHANGELOG*", "**/HISTORY*", ...TEST_DIRS.map((d) => `**/${d}/**`), ...requirements, ...instructions]);
+    add({ name: "Documents", kind: "Documents", at: ".", include: [...g.include, ...cruisers], exclude: g.exclude }, { id: "docs", name: "Documents", kind: "documents", unit: "the document", settings: { ...idSettings } });
     guesses.push(`Documents: ${documents.length} other Markdown files, leaving out changelogs and test directories`);
+  }
+  if (cruisers.length > 0 && sources.some((s) => s.include?.some((p) => cruisers.includes(p)))) guesses.push(`${cruisers.join(", ")}: a dependency-cruiser configuration, read for the names of the checks it defines`);
+  // Baselines: text files a repository says may only shrink, the gaps it already records (section 6). They belong to
+  // the documents practice, made for them when no other document is read.
+  const baselines = files.filter((p) => ext(p) === "txt" && !fixtures(p) && isBaseline(read(p)));
+  if (baselines.length > 0) {
+    if (!practices.some((p) => p.id === "docs")) practices.push({ id: "docs", name: "Documents", kind: "documents", unit: "the document", sources: [], settings: { ...idSettings } });
+    sources.push({ name: "Baselines", kind: "Documents", at: ".", include: [...baselines] });
+    practices.find((p) => p.id === "docs")!.sources.push("Baselines");
+    guesses.push(`Baselines: ${baselines.join(", ")}, ${baselines.length === 1 ? "a file that says" : "files that say"} it may only shrink, each entry a gap the repository records`);
   }
 
   // Features, with their tags read by family.
@@ -242,13 +267,12 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
       settings.tagCites = w.length === 1 ? `(${w[0]}-[0-9]+)` : `((?:${w.join("|")})-[0-9]+)`;
       guesses.push(`tagCites ${settings.tagCites}: the documents' identifiers appear as scenario tags`);
     }
-    add({ name: "Features", kind: "Features", at: ".", include: ["**/*.feature"], exclude: [...NEVER_GLOBS] }, { id: "bdd", name: "BDD", kind: "scenarios", unit: "the rule", ...(Object.keys(settings).length > 0 ? { settings } : {}) });
-    guesses.push(`Features: ${features.length} .feature files`);
+    const left = allFeatures.filter((p) => fixtures(p));
+    add({ name: "Features", kind: "Features", at: ".", include: ["**/*.feature"], exclude: [...NEVER_GLOBS, ...(left.length > 0 ? ["**/fixtures/**", "**/__fixtures__/**", "**/.*/**"] : [])] }, { id: "bdd", name: "BDD", kind: "scenarios", unit: "the rule", ...(Object.keys(settings).length > 0 ? { settings } : {}) });
+    guesses.push(`Features: ${features.length} .feature files${left.length > 0 ? `, leaving out ${left.length} in fixtures or dot-directories, which are test data` : ""}`);
   }
 
   // Tests by their runners' conventions, and step definitions beside features.
-  // A fixture, or a file under a dot-directory (.claude, .github), is test data or tooling, not the project's tests.
-  const fixtures = (p: string) => underAny(p, ["fixtures", "__fixtures__"]) || segments(p).slice(0, -1).some((d) => d.startsWith("."));
   const tests = files.filter((p) => testConvention(p) !== undefined && !fixtures(p));
   const steps = features.length === 0 ? [] : files.filter((p) => testConvention(p) === undefined && stepConvention(p) !== undefined && !fixtures(p));
   const testGlobs = [...new Set(tests.map((p) => testConvention(p)!))].sort(compareCodePoints);

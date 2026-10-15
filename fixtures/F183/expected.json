@@ -1,0 +1,18 @@
+{
+  "fixture": "F183",
+  "section": "From the tutors-mono-repo run, section 7; A-213",
+  "stage": 61,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "entries": [
+        { "outcome": "gap", "kind": "unverified", "subject": "Documents/docs/specifications/search.md#search-shows-the-line-of-single-line-content" }
+      ],
+      "entriesAbsent": [
+        { "kind": "unverified", "subject": "Documents/docs/specifications/search.md#search-shows-each-occurrence" },
+        { "kind": "unverified", "subject": "Documents/README.md#not-a-specification" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

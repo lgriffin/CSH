@@ -1,0 +1,20 @@
+{
+  "fixture": "F180",
+  "section": "From the tutors-mono-repo run, section 4; A-207 to A-209",
+  "stage": 61,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "entries": [
+        { "outcome": "gap", "kind": "undefined-step", "subject": "Features/rule-0003/seeded-days-are-covered", "detailIncludes": ["the report is archived"] },
+        { "outcome": "gap", "kind": "unused-step-definition", "subject": "Tests/tests/bdd/steps/release.steps.ts", "detailIncludes": ["the report is printed"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "undefined-step", "subject": "Features/rule-0001/the-objectives-are-listed" },
+        { "kind": "undefined-step", "subject": "Features/rule-0002/open-the-course-as-generator-release-wrote-it" },
+        { "kind": "steps-undecided", "subject": "Features/rule-0003/seeded-days-are-covered" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

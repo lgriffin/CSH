@@ -510,3 +510,40 @@ dependency between packages to judge.
 - **Always write them.** Every single-module repository with a diagram gains a gap naming its one package.
 
 Built as the first on 14 October 2026; the issue for the stage 55 to 60 decisions asks the owner to confirm.
+
+## Q-57 Told rules about data rather than code
+
+Raised in stage 61. The cold read of tutors-mono-repo lifted dependency sentences about data and tools, such as "Edits in
+the collaboration room are independent of the source `.excalidraw` file" and "nothing is tied to localhost", as told
+rules, each an `unverified` gap.
+
+- **Keep reading words, not meaning (chosen):** a narrower vocabulary (only sentences that name a layer, a package or a
+  path) would drop "Independent of Database." and "Your business rules are not bound to the database.", which the
+  stage 60 calibration showed to be true.
+- **Lift only sentences naming a part of the code.** Quieter on documents like tutors-mono-repo's, and silent on the
+  clean-architecture READMEs.
+
+Built as the first on 15 October 2026.
+
+## Q-58 vitest-cucumber parameters CSH does not know
+
+Raised in stage 61. vitest-cucumber defines more parameter types than the six A-207 reads (`{any}`, `{list}`, `{date}`
+and others), and a project can add its own.
+
+- **Any other `{name}` matches anything (chosen):** a step is never undefined because CSH does not know a type; a
+  definition can match more than the library would, so an unused definition can be missed.
+- **An unknown parameter makes the definition unreadable.** Its steps become undecided rather than matched.
+
+Built as the first on 15 October 2026.
+
+## Q-59 How a sentence says a file is elsewhere or absent
+
+Raised in stage 61. A-210 leaves a missing path unchecked when its sentence holds an absence word or an `owner/repo` that
+names no top-level entry. The words are a fixed list, and a sentence such as "`docs/x.md` was moved from old/place" also
+reads as naming another repository.
+
+- **The fixed lists (chosen):** each false refuted finding of the tutors run is gone, and what is left unchecked is
+  said nowhere as a gap; a real missing file mentioned beside such a word is missed.
+- **Report such a path as indeterminate.** Every one stays visible, at the cost of an entry per mention.
+
+Built as the first on 15 October 2026.

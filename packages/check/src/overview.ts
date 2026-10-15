@@ -75,6 +75,8 @@ export const GAP_NEXT: Record<string, string> = {
   // Step matching (From real runs, stage 46): placed, so that each says what would close it.
   "undefined-step": "Write a step definition that matches the step, or reword the step to match one",
   "unused-step-definition": "Use the definition in a scenario, or remove it",
+  // From the tutors run, section 6: a gap the repository records itself.
+  baselined: "Fix the entries the baseline records and delete their lines, so the file shrinks",
 };
 
 /** Signal kinds the tool could not decide, with what would decide each. Any other kind is indeterminate too. */

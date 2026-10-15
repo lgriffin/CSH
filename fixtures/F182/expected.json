@@ -1,0 +1,26 @@
+{
+  "fixture": "F182",
+  "section": "From the tutors-mono-repo run, section 6; A-211 and A-212",
+  "stage": 61,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": [".dependency-cruiser.cjs", "tests/architecture/known-violations.txt"],
+      "told": [
+        { "item": "Documents/docs/layering.md#L1", "lifted": "layering" },
+        { "item": "Documents/docs/layering.md#L3", "lifted": "layering" }
+      ],
+      "entries": [
+        { "outcome": "gap", "kind": "unverified", "subject": "Documents/docs/layering.md#L3" },
+        { "outcome": "gap", "kind": "baselined", "subject": "Baselines/tests/architecture/known-violations.txt", "detailIncludes": ["2 entries", "layer-core: packages/a/x.ts -> packages/b/y.ts", "layer-ui: packages/c/z.ts -> packages/d/w.ts"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "unverified", "subject": "Documents/docs/layering.md#L1" },
+        { "kind": "baselined", "subject": "Baselines/tests/architecture/known-drift.txt" },
+        { "kind": "baselined", "subject": "Baselines/notes.txt" }
+      ],
+      "rungs": { "Documents/docs/layering.md#L1": "L3", "Documents/docs/layering.md#L3": "L2" },
+      "subjectUntouched": true
+    }
+  }
+}

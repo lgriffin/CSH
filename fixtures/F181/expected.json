@@ -1,0 +1,23 @@
+{
+  "fixture": "F181",
+  "section": "From the tutors-mono-repo run, section 5; A-210",
+  "stage": 61,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "entries": [
+        { "outcome": "gap", "kind": "dangling-reference", "subject": "Documents/docs/missing.md", "detailIncludes": ["scripts/publish.sh"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "dangling-reference", "subject": "Documents/docs/ellipsis.md" },
+        { "kind": "dangling-reference", "subject": "Documents/docs/elsewhere.md" },
+        { "kind": "dangling-reference", "subject": "Documents/docs/branches.md" },
+        { "kind": "dangling-reference", "subject": "Documents/docs/retired.md" },
+        { "kind": "dangling-reference", "subject": "Documents/docs/optional.md" },
+        { "kind": "dangling-reference", "subject": "Documents/apps/reader/README.md" },
+        { "kind": "dangling-reference", "subject": "Documents/README.md" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

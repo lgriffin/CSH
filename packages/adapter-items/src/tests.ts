@@ -176,7 +176,13 @@ const LOAD = /(?<![.\w$])loadFeature\s*\(/g;
  * CSH can read (a template with an interpolation, or a regular expression that does not compile), which could match
  * any step.
  */
-export type StepPattern = { k: "expression"; text: string } | { k: "regex"; source: string; flags: string } | { k: "unreadable"; text: string };
+export type StepPattern = { k: "expression"; text: string } | { k: "vitest"; text: string } | { k: "regex"; source: string; flags: string } | { k: "unreadable"; text: string };
+
+/** A file that imports vitest-cucumber, whose step strings are read in its dialect (From the tutors run, section 4). */
+/** Whether a file imports @amiceli/vitest-cucumber: an import or require in its code, not a mention in a comment. */
+function importsVitestCucumber(code: string, strings: Map<number, string>): boolean {
+  return [...code.matchAll(/\b(?:from|import)\s*|\brequire\(\s*/g)].some((m) => strings.get(m.index + m[0].length) === "@amiceli/vitest-cucumber");
+}
 
 /**
  * Each step definition of a file (Cucumber-js style): its line, its literal text and its pattern. A regular
@@ -186,13 +192,21 @@ export function stepDefinitions(text: string): { line: number; title: string; pa
   const { code, strings } = lex(text);
   const out: { line: number; title: string; pattern: StepPattern }[] = [];
   const loads = new RegExp(LOAD.source).test(code);
+  const dialect = importsVitestCucumber(code, strings) ? "vitest" : "expression";
   for (const m of code.matchAll(loads ? LOWER_STEP : STEP)) {
     const at = skipSpace(code, m.index + m[0].length);
     const line = code.slice(0, at).split("\n").length;
-    const str = strings.get(at);
+    // A bare name as the first argument, with a step function after it, is read when the file declares it as a const
+    // string literal (A-209). A call with the name alone, such as jest-when's `when(mockFn)`, is no step definition.
+    const named = /^([A-Za-z_$][\w$]*)\s*,/.exec(code.slice(at));
+    const raw = strings.get(at) ?? (named !== null ? constString(code, strings, text, named[1]!) : undefined);
+    // The literal's value, as the runtime sees it: `'the course\'s'` is the course's (From the tutors run, section 4).
+    const str = raw === undefined ? undefined : unescapeJs(raw);
     if (str !== undefined) {
-      const pattern: StepPattern = text[at] === "`" && str.includes("${") ? { k: "unreadable", text: str } : { k: "expression", text: str };
+      const pattern: StepPattern = text[at] === "`" && str.includes("${") ? { k: "unreadable", text: str } : { k: dialect, text: str };
       out.push({ line, title: str, pattern });
+    } else if (named !== null) {
+      out.push({ line, title: "", pattern: { k: "unreadable", text: named[1]! } });
     } else if (code[at] === "/") {
       // The lexer blanks a regular expression's content, so its closing slash is the next one in code.
       const close = code.indexOf("/", at + 1);
@@ -209,6 +223,31 @@ export function stepDefinitions(text: string): { line: number; title: string; pa
     }
   }
   return out;
+}
+
+/** A title as it binds a scenario (From the tutors run, section 2): trimmed, its runs of white space one space. */
+export function titleKey(title: string): string {
+  return title.trim().replace(/\s+/g, " ");
+}
+
+/** A string literal's escapes read as JavaScript reads them: `\'` is `'`, `\n` a line break, `\\` one backslash. */
+export function unescapeJs(raw: string): string {
+  const named: Record<string, string> = { n: "\n", t: "\t", r: "\r", b: "\b", f: "\f", v: "\v", "0": "\0" };
+  return raw.replace(/\\(u\{[0-9a-fA-F]+\}|u[0-9a-fA-F]{4}|x[0-9a-fA-F]{2}|\r?\n|[\s\S])/g, (_, e: string) => {
+    if (e.startsWith("u{")) return String.fromCodePoint(parseInt(e.slice(2, -1), 16));
+    if (/^[ux]/.test(e) && e.length > 1) return String.fromCharCode(parseInt(e.slice(1), 16));
+    if (/^\r?\n$/.test(e)) return "";
+    return named[e] ?? e;
+  });
+}
+
+/** The literal a file declares as `const <name> = "…"`, once, with no interpolation; undefined for any other name. */
+function constString(code: string, strings: Map<number, string>, text: string, name: string): string | undefined {
+  const found = [...code.matchAll(new RegExp(`(?<![.\\w$])const\\s+${name.replace(/\$/g, "\\$")}\\s*(?::\\s*string\\s*)?=\\s*`, "g"))];
+  if (found.length !== 1) return undefined;
+  const at = found[0]!.index + found[0]![0].length;
+  const value = strings.get(at);
+  return value === undefined || (text[at] === "`" && value.includes("${")) ? undefined : value;
 }
 
 /**
@@ -369,6 +408,10 @@ export function run(input: AdapterInput): AdapterOutput {
       }
     }
     const attrs: Record<string, string> = { tests: String(tests) };
+    // The literal titles of its tests, by which a scenario of the same title is bound (From the tutors run, section 2).
+    // A skipped or todo test runs nothing, so it binds nothing. A title is read as its value, as a step string is.
+    const titles = [...new Set(decls.filter((d) => !d.describe && !/\.(skip|todo)\b/.test(d.modifiers) && d.title.trim() !== "").map((d) => titleKey(unescapeJs(d.title))))];
+    if (titles.length > 0) attrs.titles = titles.join("\n");
     if (steps > 0) attrs.steps = String(steps);
     if (defs.length > 0) attrs.stepDefinitions = defs.join("\n");
     if (skipped > 0) attrs.skipped = String(skipped);
