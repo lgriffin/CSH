@@ -50,23 +50,29 @@ const DEPENDENCY_CRUISER = /(?:^|\/)\.dependency-cruiser\.(?:c?js|mjs|json)$/;
 
 /**
  * A sentence that says the file it names is absent (From the tutors run, section 5): retired, removed, optional, a
- * leftover to delete, or none committed.
+ * leftover, or none committed. It is read with its backticked tokens left out, so `api/delete.ts` says nothing, and
+ * "used to" is the past ("two scripts used to point at"), not a purpose ("is used to configure").
  */
-const ABSENT = /\b(?:retired|removed|deleted|delete|no longer|leftover|optional|none is|formerly|used to|absent)\b/i;
+const ABSENT = /\b(?:retired|removed|deleted|no longer|leftover|optional|none is|formerly|(?<!\b(?:is|are|was|were|be|been|being|gets?|got)\s+)used to|absent)\b/i;
 
-/** An `owner/repo` token: exactly two segments, the last with no file extension. */
+/**
+ * An `owner/repo` token: exactly two segments, the last with no file extension, and one of them holding a digit, `-`,
+ * `_` or `.` as repository names do, so words such as and/or or client/server are not read as one.
+ */
 const REPO = /(?<![\w./@:-])([A-Za-z0-9][\w.-]*\/[A-Za-z0-9][\w-]*)(?![\w/.-])/g;
+const REPO_NAME = /[\d_.-]/;
 /** Media types are written as two segments too, and never name a repository. */
 const MEDIA = /^(?:application|text|image|audio|video|multipart|font|message|model)\//;
 
 /** The `owner/repo` tokens of a sentence, backticked or not, that are not media types. */
 export function repoTokens(sentence: string): string[] {
-  return [...new Set([...sentence.replace(/`/g, " ").matchAll(REPO)].map((m) => m[1]!).filter((t) => !MEDIA.test(t)))];
+  return [...new Set([...sentence.replace(/`/g, " ").matchAll(REPO)].map((m) => m[1]!).filter((t) => !MEDIA.test(t) && REPO_NAME.test(t)))];
 }
 
 /**
  * The paragraph each prose line of a Markdown file sits in: its lines joined by a space, and where in that text the line
- * starts, so a sentence that runs over a line break is read whole. Fences, headings, tables and blank lines end one.
+ * starts, so a sentence that runs over a line break is read whole. Fences, headings, tables and blank lines end one,
+ * and each list item starts one.
  */
 function paragraphsOf(lines: string[]): Map<number, { text: string; start: number; length: number }> {
   const out = new Map<number, { text: string; start: number; length: number }>();
@@ -92,21 +98,35 @@ function paragraphsOf(lines: string[]): Map<number, { text: string; start: numbe
       flush();
       return;
     }
+    if (/^(?:[-*+]|\d+[.)])\s/.test(line)) flush();
     group.push({ i, line });
   });
   flush();
   return out;
 }
 
-/** Whether a document's prose, outside fences and headings, says its scenarios are not executed (section 7). */
+/**
+ * Whether a document's prose, outside fences and headings, says its scenarios are not executed (section 7): one of its
+ * sentences says "not executed", "specification prose" or "are not run" and names a scenario.
+ */
 function saysNotExecuted(lines: string[]): boolean {
-  let fence = false;
-  for (const raw of lines) {
+  const said = /\b(?:not executed|specification prose|(?:are|is) not run)\b/i;
+  return [...new Set([...paragraphsOf(lines).values()].map((p) => p.text))].some((text) => sentencesOf(text).some((x) => said.test(x.text) && /\bscenarios?\b/i.test(x.text)));
+}
+
+/**
+ * Whether a text file is a baseline (section 6): one of the comment lines before its first entry says the file may only
+ * shrink. A header comment may wrap, so its lines are read together.
+ */
+export function isBaseline(text: string): boolean {
+  const header: string[] = [];
+  for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
-    if (/^(`{3,}|~{3,})/.test(line)) fence = !fence;
-    else if (!fence && !line.startsWith("#") && /\b(?:not executed|specification prose|(?:are|is) not run)\b/i.test(line)) return true;
+    if (line === "") continue;
+    if (!line.startsWith("#")) break;
+    header.push(line.replace(/^#+\s*/, ""));
   }
-  return false;
+  return /\bmay\s+only\s+shrink\b/i.test(header.join(" "));
 }
 
 /** The names of the checks a dependency-cruiser configuration defines: each `name: "…"` of its text, never run. */
@@ -153,6 +173,7 @@ export function run(input: AdapterInput): AdapterOutput {
     // A baseline (section 6): a text file that says it may only shrink, its other lines the gaps it records.
     if (/\.txt$/i.test(file.path)) {
       const text = decode(file.bytes);
+      if (!isBaseline(text)) continue;
       const entries = text.split(/\r?\n/).map((l) => l.trim()).filter((l) => l !== "" && !l.startsWith("#"));
       add({ id: file.path, kind: "baseline", text: file.path, span: `${file.path}:1`, textDigest: digestOf(text), attrs: { entries: String(entries.length), first: entries.slice(0, 5).join("\n") } });
       continue;
@@ -216,9 +237,11 @@ export function run(input: AdapterInput): AdapterOutput {
         const p = pathOf(t);
         if (p === undefined || seen.has(t)) continue;
         seen.add(t);
+        // Every sentence on the line that mentions the path must say so: one that only uses it is a claim.
         const own = sentences.filter((x) => x.text.includes(`\`${t}\``));
-        const absent = own.some((x) => ABSENT.test(x.text));
-        const others = [...new Set(own.flatMap((x) => repoTokens(x.text)))].filter((r) => r !== p.replace(/\/$/, ""));
+        const absent = own.length > 0 && own.every((x) => ABSENT.test(x.text.replace(/`[^`]*`/g, " ")));
+        const named = own.map((x) => repoTokens(x.text).filter((r) => r !== p.replace(/\/$/, "")));
+        const others = named.length > 0 && named.every((n) => n.length > 0) ? [...new Set(named.flat())] : [];
         edges.push({ from, rel: "mentions-file", to: `file:${p}`, span, ...(absent ? { absent: true } : {}), ...(others.length > 0 ? { repos: others } : {}) });
       }
     };

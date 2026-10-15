@@ -137,9 +137,32 @@ function definitionsOf(source: string, file: string, encoded: string): (Definiti
   });
 }
 
+/**
+ * The scenarios, and scenarios of specification prose, that a test binds by its title (From the tutors run, section 2),
+ * each with the test files that carry it. A title two of them share binds neither: which one a test means is unknown,
+ * so both are left to their steps and citations (A-205).
+ */
+export function boundByTitle(items: Prepared["items"]): Map<string, string[]> {
+  const key = (t: string) => t.trim().replace(/\s+/g, " ");
+  const tests = new Map<string, string[]>();
+  for (const i of items) {
+    if (i.kind !== "test-file" || i.attrs?.titles === undefined) continue;
+    for (const t of i.attrs.titles.split("\n").map(key).filter((x) => x !== "")) tests.set(t, [...(tests.get(t) ?? []), `${i.source}/${i.id}`]);
+  }
+  const named = new Map<string, string[]>();
+  for (const i of items) {
+    if (i.kind !== "scenario" && i.attrs?.gherkin !== "prose") continue;
+    const t = key(i.text);
+    if (tests.has(t)) named.set(t, [...(named.get(t) ?? []), `${i.source}/${i.id}`]);
+  }
+  const out = new Map<string, string[]>();
+  for (const [t, scenarios] of named) if (scenarios.length === 1) out.set(scenarios[0]!, tests.get(t)!);
+  return out;
+}
+
 export function stepGaps(prepared: Prepared): Gap[] {
   // A scenario a test carries the title of is bound by that test, not by step definitions (From the tutors run, section 2).
-  const titles = new Set(prepared.items.flatMap((i) => (i.kind === "test-file" && i.attrs?.titles !== undefined ? i.attrs.titles.split("\n").map((t) => t.trim()) : [])));
+  const bound = boundByTitle(prepared.items);
   const scenarios = prepared.items.filter((i) => i.kind === "scenario" && i.attrs?.steps !== undefined);
   const defs = prepared.items.flatMap((i) => (i.attrs?.stepDefinitions !== undefined ? definitionsOf(i.source, i.id, i.attrs.stepDefinitions) : []));
   if (scenarios.length === 0 || defs.length === 0) return [];
@@ -161,7 +184,7 @@ export function stepGaps(prepared: Prepared): Gap[] {
       if (hits.length === 0) missing.push(`${file}:${row.slice(0, tab)} "${text}"`);
     }
     // Its definitions still count as used; only a step none matches is not a gap of it.
-    if (missing.length === 0 || titles.has(sc.text.trim().replace(/\s+/g, " "))) continue;
+    if (missing.length === 0 || bound.has(`${sc.source}/${sc.id}`)) continue;
     const subject = `${sc.source}/${sc.id}`;
     if (unreadable.length === 0) gaps.push({ kind: "undefined-step", subject, fragments: [], detail: `no step definition matches ${missing.join("; ")}` });
     else gaps.push({ kind: "steps-undecided", subject, fragments: [], detail: `no step definition CSH can read matches ${missing.join("; ")}; ${unreadable.length} it cannot read could: ${unreadable.map((d) => `${d.span} ${d.shown}`).join("; ")}` });

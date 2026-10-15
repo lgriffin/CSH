@@ -179,7 +179,10 @@ const LOAD = /(?<![.\w$])loadFeature\s*\(/g;
 export type StepPattern = { k: "expression"; text: string } | { k: "vitest"; text: string } | { k: "regex"; source: string; flags: string } | { k: "unreadable"; text: string };
 
 /** A file that imports vitest-cucumber, whose step strings are read in its dialect (From the tutors run, section 4). */
-const VITEST_CUCUMBER = /\bfrom\s+["']@amiceli\/vitest-cucumber["']|\brequire\(\s*["']@amiceli\/vitest-cucumber["']\s*\)/;
+/** Whether a file imports @amiceli/vitest-cucumber: an import or require in its code, not a mention in a comment. */
+function importsVitestCucumber(code: string, strings: Map<number, string>): boolean {
+  return [...code.matchAll(/\b(?:from|import)\s*|\brequire\(\s*/g)].some((m) => strings.get(m.index + m[0].length) === "@amiceli/vitest-cucumber");
+}
 
 /**
  * Each step definition of a file (Cucumber-js style): its line, its literal text and its pattern. A regular
@@ -189,12 +192,13 @@ export function stepDefinitions(text: string): { line: number; title: string; pa
   const { code, strings } = lex(text);
   const out: { line: number; title: string; pattern: StepPattern }[] = [];
   const loads = new RegExp(LOAD.source).test(code);
-  const dialect = VITEST_CUCUMBER.test(text) ? "vitest" : "expression";
+  const dialect = importsVitestCucumber(code, strings) ? "vitest" : "expression";
   for (const m of code.matchAll(loads ? LOWER_STEP : STEP)) {
     const at = skipSpace(code, m.index + m[0].length);
     const line = code.slice(0, at).split("\n").length;
-    // A bare name as the first argument is read when the file declares it as a const string literal (A-209).
-    const named = /^([A-Za-z_$][\w$]*)\s*[,)]/.exec(code.slice(at));
+    // A bare name as the first argument, with a step function after it, is read when the file declares it as a const
+    // string literal (A-209). A call with the name alone, such as jest-when's `when(mockFn)`, is no step definition.
+    const named = /^([A-Za-z_$][\w$]*)\s*,/.exec(code.slice(at));
     const raw = strings.get(at) ?? (named !== null ? constString(code, strings, text, named[1]!) : undefined);
     // The literal's value, as the runtime sees it: `'the course\'s'` is the course's (From the tutors run, section 4).
     const str = raw === undefined ? undefined : unescapeJs(raw);
@@ -219,6 +223,11 @@ export function stepDefinitions(text: string): { line: number; title: string; pa
     }
   }
   return out;
+}
+
+/** A title as it binds a scenario (From the tutors run, section 2): trimmed, its runs of white space one space. */
+export function titleKey(title: string): string {
+  return title.trim().replace(/\s+/g, " ");
 }
 
 /** A string literal's escapes read as JavaScript reads them: `\'` is `'`, `\n` a line break, `\\` one backslash. */
@@ -400,7 +409,8 @@ export function run(input: AdapterInput): AdapterOutput {
     }
     const attrs: Record<string, string> = { tests: String(tests) };
     // The literal titles of its tests, by which a scenario of the same title is bound (From the tutors run, section 2).
-    const titles = [...new Set(decls.filter((d) => !d.describe && d.title.trim() !== "").map((d) => d.title.trim().replace(/\s+/g, " ")))];
+    // A skipped or todo test runs nothing, so it binds nothing. A title is read as its value, as a step string is.
+    const titles = [...new Set(decls.filter((d) => !d.describe && !/\.(skip|todo)\b/.test(d.modifiers) && d.title.trim() !== "").map((d) => titleKey(unescapeJs(d.title))))];
     if (titles.length > 0) attrs.titles = titles.join("\n");
     if (steps > 0) attrs.steps = String(steps);
     if (defs.length > 0) attrs.stepDefinitions = defs.join("\n");

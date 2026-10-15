@@ -194,4 +194,12 @@ describe("proposals the tutors run taught (From the tutors run, sections 3 and 6
     expect(isBaseline("\n# may only shrink\n")).toBe(true);
     expect(isBaseline("entry\n# may only shrink\n")).toBe(false);
   });
+
+  it("reads baselines with no other document, and a dependency-cruiser configuration with every Markdown source", () => {
+    const dir = checkout({ "AGENTS.md": "# Agents\n", ".dependency-cruiser.cjs": "module.exports = {};\n", "tests/arch/known.txt": "# This file may only shrink.\nrule: a -> b\n", "a.ts": "export {};\n" });
+    const r = propose(dir);
+    expect(reads(dir, r, "Instructions")).toEqual([".dependency-cruiser.cjs", "AGENTS.md"]);
+    expect(reads(dir, r, "Baselines")).toEqual(["tests/arch/known.txt"]);
+    expect(r.manifest.practices.find((p) => p.id === "docs")?.sources).toEqual(["Baselines"]);
+  });
 });

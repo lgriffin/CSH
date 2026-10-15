@@ -7,7 +7,7 @@ import type { Fact, ItemEdge } from "@csh/witness";
 import type { Prepared } from "./pool.ts";
 import { type Citation, termsOf, unobserved } from "./grain.ts";
 import { isToldRule } from "./ladder.ts";
-import { stepGaps } from "./steps.ts";
+import { boundByTitle, stepGaps } from "./steps.ts";
 import type { Gap, HistoryPort, Report } from "./types.ts";
 
 export interface TraceInput {
@@ -52,16 +52,6 @@ function relativeTo(span: string, path: string): string | undefined {
     } else parts.push(seg);
   }
   return parts.join("/");
-}
-
-/** The titles of the tests a test file declares (section 2), each trimmed. */
-function titlesOf(items: Prepared["items"]): Map<string, string[]> {
-  const out = new Map<string, string[]>();
-  for (const i of items) {
-    if (i.kind !== "test-file" || i.attrs?.titles === undefined) continue;
-    for (const t of i.attrs.titles.split("\n").map((x) => x.trim()).filter((x) => x !== "")) out.set(t, [...(out.get(t) ?? []), `${i.source}/${i.id}`]);
-  }
-  return out;
 }
 
 export function trace(input: TraceInput): TraceResult {
@@ -231,10 +221,10 @@ export function trace(input: TraceInput): TraceResult {
     gaps.push({ kind: "stale-prose", subject, fragments: [], detail: [...refs.keys()].sort(compareCodePoints).map((k) => refs.get(k)!).join("; ") });
   }
   // A scenario, or a scenario of specification prose, that a test carries the title of is checked by that test (section 2).
-  const titled = titlesOf(items);
+  const titled = boundByTitle(items);
   for (const it of items) {
     const q = `${it.source}/${it.id}`;
-    const by = it.kind === "scenario" || it.attrs?.gherkin === "prose" ? titled.get(it.text.trim()) : undefined;
+    const by = titled.get(q);
     for (const t of by ?? []) check(q, `test file ${t.slice(t.indexOf("/") + 1)}, by its title`);
     if (by !== undefined && it.attrs?.gherkin === "prose") (incoming.get(q) ?? incoming.set(q, new Set()).get(q)!).add("cites");
     // A baseline the repository says may only shrink (section 6): each entry is a gap it already records.

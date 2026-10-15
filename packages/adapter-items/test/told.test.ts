@@ -118,6 +118,24 @@ describe("what the tutors run taught the Markdown adapter (From the tutors run, 
     ]);
   });
 
+  it("reads a path as used when its words name it, or another sentence on its line uses it", () => {
+    const out = read({ "u.md": "`src/config.ts` is used to configure the app. `api/delete.ts` handles requests.\n\n`a/b.ts` builds it. Its `a/b.ts` step was removed.\n" });
+    expect(out.edges!.filter((e) => e.rel === "mentions-file").map((e) => [e.to, e.absent ?? false])).toEqual([["file:src/config.ts", false], ["file:api/delete.ts", false], ["file:a/b.ts", false]]);
+  });
+
+  it("reads each list item as a paragraph of its own", () => {
+    const out = read({ "l.md": "- `old/a.ts` was removed\n- `new/b.ts` builds and/or tests it\n" });
+    expect(out.edges!.filter((e) => e.rel === "mentions-file").map((e) => [e.to, e.absent ?? false, e.repos ?? []])).toEqual([["file:old/a.ts", true, []], ["file:new/b.ts", false, []]]);
+  });
+
+  it("reads a text file that does not say it may only shrink as nothing", () => {
+    expect(read({ "requirements.txt": "# pinned\nvitest==1\n", "LICENSE.txt": "MIT\n" }).items).toEqual([]);
+  });
+
+  it("reads no gherkin fence as specification prose when the not-executed sentence is about something else", () => {
+    expect(read({ "h.md": "# Hooks\n\nThe hook is not executed on CI.\n\n```gherkin\n  Scenario: An example\n```\n" }).items!.filter((i) => i.attrs?.gherkin === "prose")).toEqual([]);
+  });
+
   it("reads a baseline's entries, and nothing of a text file's comments", () => {
     const out = read({ "known.txt": "# This file may only shrink.\n\nrule: a -> b\nrule: c -> d\n" });
     expect(out.items!.map((i) => [i.id, i.kind, i.attrs])).toEqual([["known.txt", "baseline", { entries: "2", first: "rule: a -> b\nrule: c -> d" }]]);
@@ -139,7 +157,10 @@ describe("what the tutors run taught the Markdown adapter (From the tutors run, 
 
 describe("repoTokens and cruiserChecks", () => {
   it("finds owner/repo tokens, never a media type or a longer path", () => {
-    expect(repoTokens("in tutors-sdk/tutors-release-harness, see `docs/a/b.md` and application/json or `src/core`")).toEqual(["tutors-sdk/tutors-release-harness", "src/core"]);
+    expect(repoTokens("in tutors-sdk/tutors-release-harness, see `docs/a/b.md` and application/json or `src/core-2`")).toEqual(["tutors-sdk/tutors-release-harness", "src/core-2"]);
+  });
+  it("does not read words joined by a slash as a repository", () => {
+    expect(repoTokens("read/write and/or client/server, UI/UX, async/await")).toEqual([]);
   });
   it("reads each check name, quoted any way", () => {
     expect(cruiserChecks(`{ name: "a" }, { "name": 'b' }, { name: \`c\` }, { label: "d" }`)).toEqual(["a", "b", "c"]);

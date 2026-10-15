@@ -36,9 +36,12 @@ scenarios' steps against the step definitions of other features, and reported 94
 
 **What changes.**
 
-- A test file item records the literal titles of the tests it declares: attribute `titles`, one per line, in
-  TypeScript and JavaScript.
-- A scenario whose title equals one of those titles, after trimming, is bound by that test. Its steps are not matched
+- A test file item records the titles of the tests it declares: attribute `titles`, one per line, in TypeScript and
+  JavaScript. Each literal is read as its value, as a step string is (section 4). A `.skip` or `.todo` test runs
+  nothing, so its title is left out.
+- A scenario whose title equals one of those titles, after trimming and collapsing runs of white space, is bound by
+  that test, unless another scenario has the same title. Which of the two the test means is then unknown, so neither
+  is bound by title. Its steps are not matched
   against step definitions, so they can be neither an `undefined-step` nor `steps-undecided` gap. The scenario is
   checked by the test file for its rung, as a citation would make it (A-205).
 - A scenario no test names by title is matched against step definitions as before.
@@ -63,8 +66,9 @@ dot-directory, as the `Tests` and `Code` sources already do. The guess says so (
 
 **What changes.**
 
-- **The library decides the dialect.** A step definition file that imports `@amiceli/vitest-cucumber` has its string
-  definitions read in that library's dialect (A-207):
+- **The library decides the dialect.** A step definition file whose code imports or requires
+  `@amiceli/vitest-cucumber` has its string definitions read in that library's dialect (A-207). A comment that names the
+  library does not count:
   - `{string}` matches a quoted string; `{int}`, `{float}` and `{number}` match a number; `{boolean}` matches `true`
     or `false`; `{word}` matches a run with no white space; `{char}` matches one character.
   - Any other `{name}` (`{any}`, `{list}`, `{date}` and so on) matches anything.
@@ -75,9 +79,11 @@ dot-directory, as the `Tests` and `Code` sources already do. The guess says so (
   definition means.
 - **A literal is read as its value.** A step string's escapes are read as JavaScript reads them: `'the course\'s'` is
   `the course's`.
-- **A const step text is read.** When a step function's first argument is a bare name, and the same file declares
+- **A const step text is read.** When a step function's first argument is a bare name with a further argument after
+  it, and the same file declares
   `const <name> = "<literal>"` or `'…'` with no interpolation, the definition is that literal (A-209). Any other name
-  is a definition CSH cannot read, which makes the steps it could match undecided.
+  is a definition CSH cannot read, which makes the steps it could match undecided. A call with the bare name alone,
+  such as jest-when's `when(mockFn)`, is not a step definition.
 
 ## 5. File mentions that are not claims about this tree (D6)
 
@@ -100,11 +106,17 @@ those files exist in this tree:
 - **Another repository.** The sentence a path is mentioned in is read. If the sentence names another repository, the
   path is unchecked: neither a gap nor evidence. A sentence names another repository when it holds an `owner/repo`
   token (backticked or not, exactly two segments, no file extension, not a MIME type) whose first segment is not a
-  top-level entry of this repository.
-- **Sentences, not lines.** A sentence is read whole, even when it runs over a line break in its paragraph.
+  top-level entry of this repository. One of its segments must hold a digit, `-`, `_` or `.`, as repository names
+  usually do, so that words such as and/or or client/server are not read as a repository.
+- **Sentences, not lines.** A sentence is read whole, even when it runs over a line break in its paragraph. Each list
+  item is a paragraph of its own.
 - **Absence.** A path mentioned in a sentence that says it is absent is unchecked when it names nothing. Such a
-  sentence holds `retired`, `removed`, `deleted`, `delete`, `no longer`, `leftover`, `optional`, `none is`,
-  `formerly`, `used to` or `absent`. When the file does exist, the mention is read as any other.
+  sentence holds `retired`, `removed`, `deleted`, `no longer`, `leftover`, `optional`, `none is`, `formerly`,
+  `used to` or `absent`, read with its backticked tokens left out, so `api/delete.ts` says nothing. "Used to" after a
+  form of be or get is a purpose, as in "is used to configure", and does not count. When the file
+  does exist, the mention is read as any other.
+- **Every sentence.** When a line mentions a path in several sentences, the path is unchecked only when every one of
+  them says it is absent, or every one names another repository. A sentence that uses the path is a claim.
 
 ## 6. Mechanisms the repository names, and the gaps it records (D7)
 
@@ -118,15 +130,17 @@ those files exist in this tree:
 **What changes.**
 
 - **A dependency-cruiser configuration is read.** A tracked `.dependency-cruiser.cjs`, `.js`, `.mjs` or `.json` at any
-  depth joins the proposed `Documents` source. The guess names it. The Markdown adapter reads each `name: "…"` of the
+  depth joins each proposed Markdown source (`Instructions`, `Requirements` and `Documents`), since a told rule may sit
+  in any of them. The guess names it. The Markdown adapter reads each `name: "…"` of the
   file's text as a check the configuration defines. It reads the text and never runs it.
 - **A told rule can name its check.** A told rule that names one of those checks in backticks is verified by the
   configuration file: a `verified-by` edge to it. It is checked, at L3, and is not `unverified` (A-211).
 - **Baselines are read.** A tracked `.txt` file at any depth is a baseline when one of the comment lines (`#`) before
   its first entry says the file "may only shrink". The proposal reads each one in a source `Baselines` of the
   documents practice, apart from `Documents` because baselines usually sit in test directories, which `Documents`
-  leaves out. A baseline is an item
-  whose entries are its other lines that are not blank. A baseline with entries is a gap, `baselined`: the repository
+  leaves out. The practice is made for them when there is no other document. The adapter reads a `.txt` file as a
+  baseline only when the file says it may only shrink, whatever the profile says, so a hand-written profile's
+  `requirements.txt` or `LICENSE.txt` is not one. A baseline is an item whose entries are its other lines that are not blank. A baseline with entries is a gap, `baselined`: the repository
   records them as known and still open. The gap's detail gives the count and the first five entries, and its next step
   is to shrink the file. An empty baseline is no gap (A-212).
 
@@ -136,8 +150,9 @@ those files exist in this tree:
 "specification prose, not executed". These are specified behaviour that nothing runs, which is exactly a gap. CSH read
 fenced blocks as code and said nothing.
 
-**What changes.** A Markdown file read with told sentences may say, in its prose outside fences and headings, that its
-scenarios are "not executed", "specification prose", or "are not run". In such a file, each `Scenario:`,
+**What changes.** A Markdown file read with told sentences may say, in a sentence of its prose outside fences and
+headings, that its scenarios are "not executed", "specification prose", or "are not run". The sentence must name a
+scenario, so "the hook is not executed on CI" does not count. In such a file, each `Scenario:`,
 `Scenario Outline:` or `Example:` line inside a fence whose info string is `gherkin` or `feature` is a requirement item
 of its own (A-213). Elsewhere a gherkin fence is an example of the form, such as one in a guide to writing features,
 and is not read:

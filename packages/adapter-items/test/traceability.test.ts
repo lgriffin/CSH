@@ -72,6 +72,14 @@ describe("steps files", () => {
     ]);
   });
 
+  it("chooses the vitest-cucumber dialect by an import, not by a comment that names the library", () => {
+    expect(stepDefinitions('// unlike @amiceli/vitest-cucumber, from "@amiceli/vitest-cucumber" is not imported here\nGiven("a/b", () => {});').map((d) => d.pattern.k)).toEqual(["expression"]);
+  });
+
+  it("reads no definition from a step-named call with a bare name alone, such as jest-when's when(mockFn)", () => {
+    expect(stepDefinitions('loadFeature("f.feature");\nwhen(mockFn).calledWith(1).mockReturnValue(2);\ngiven("a", () => {});').map((d) => d.title)).toEqual(["a"]);
+  });
+
   it("reads lower-case step functions only in a file that loads a feature", () => {
     expect(stepDefinitions('given("a", () => {});')).toEqual([]);
     expect(stepDefinitions('loadFeature("f.feature");\ngiven("a", () => {});').map((d) => d.title)).toEqual(["a"]);

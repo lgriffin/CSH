@@ -85,4 +85,13 @@ describe("outline templates and title binding (From the tutors run, sections 2 a
     const p = prepare(module, [scenario({ steps: "4\tthe course is open\n5\tnothing defines this" }, "Search matches every word"), steps("9\tvitest\tthe course is open", { titles: "Search matches every word" })]);
     expect(stepGaps(p)).toEqual([]);
   });
+  it("binds a title with white space runs inside it", () => {
+    const p = prepare(module, [scenario({ steps: "4\tthe course is open\n5\tnothing defines this" }, "Search  matches   every word"), steps("9\tvitest\tthe course is open", { titles: "Search matches every word" })]);
+    expect(stepGaps(p)).toEqual([]);
+  });
+  it("binds neither of two scenarios that share a test's title", () => {
+    const two = { source: "F", kind: "Features", files: [], output: { diagnostics: [], edges: [], items: ["a", "b"].map((f) => ({ id: `${f}#/s`, kind: "scenario" as const, text: "Same title", span: `${f}.feature:3`, textDigest: "sha256:0", attrs: { steps: "4\tthe course is open\n5\tnothing defines this" } })) } };
+    const p = prepare(module, [two, steps("9\tvitest\tthe course is open", { titles: "Same title" })]);
+    expect(stepGaps(p).map((g) => [g.kind, g.subject])).toEqual([["undefined-step", "F/a#/s"], ["undefined-step", "F/b#/s"]]);
+  });
 });
