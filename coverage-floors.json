@@ -1,0 +1,168 @@
+{
+  "lines": 91,
+  "statements": 91,
+  "functions": 93,
+  "branches": 85,
+  "packages/a3/src/**": {
+    "lines": 98,
+    "statements": 98,
+    "functions": 99,
+    "branches": 85
+  },
+  "packages/adapter-c4-mermaid/src/**": {
+    "lines": 80,
+    "statements": 80,
+    "functions": 65,
+    "branches": 88
+  },
+  "packages/adapter-ears-markdown/src/**": {
+    "lines": 93,
+    "statements": 93,
+    "functions": 82,
+    "branches": 92
+  },
+  "packages/adapter-gherkin/src/**": {
+    "lines": 96,
+    "statements": 96,
+    "functions": 99,
+    "branches": 90
+  },
+  "packages/adapter-items/src/**": {
+    "lines": 96,
+    "statements": 96,
+    "functions": 98,
+    "branches": 90
+  },
+  "packages/adapter-witness-files/src/**": {
+    "lines": 99,
+    "statements": 99,
+    "functions": 99,
+    "branches": 82
+  },
+  "packages/agent/src/**": {
+    "lines": 85,
+    "statements": 85,
+    "functions": 84,
+    "branches": 70
+  },
+  "packages/arch/src/**": {
+    "lines": 97,
+    "statements": 97,
+    "functions": 99,
+    "branches": 91
+  },
+  "packages/check/src/**": {
+    "lines": 94,
+    "statements": 94,
+    "functions": 97,
+    "branches": 88
+  },
+  "packages/cli/src/**": {
+    "lines": 81,
+    "statements": 81,
+    "functions": 97,
+    "branches": 73
+  },
+  "packages/component/src/**": {
+    "lines": 96,
+    "statements": 96,
+    "functions": 99,
+    "branches": 87
+  },
+  "packages/csl/src/**": {
+    "lines": 75,
+    "statements": 75,
+    "functions": 63,
+    "branches": 84
+  },
+  "packages/emit/src/**": {
+    "lines": 90,
+    "statements": 90,
+    "functions": 89,
+    "branches": 76
+  },
+  "packages/facts/src/**": {
+    "lines": 82,
+    "statements": 82,
+    "functions": 82,
+    "branches": 58
+  },
+  "packages/facts-code/src/**": {
+    "lines": 88,
+    "statements": 88,
+    "functions": 94,
+    "branches": 89
+  },
+  "packages/facts-imports/src/**": {
+    "lines": 87,
+    "statements": 87,
+    "functions": 91,
+    "branches": 79
+  },
+  "packages/facts-ts/src/**": {
+    "lines": 95,
+    "statements": 95,
+    "functions": 95,
+    "branches": 83
+  },
+  "packages/gate/src/**": {
+    "lines": 99,
+    "statements": 99,
+    "functions": 99,
+    "branches": 95
+  },
+  "packages/harness/src/**": {
+    "lines": 86,
+    "statements": 86,
+    "functions": 89,
+    "branches": 88
+  },
+  "packages/kernel/src/**": {
+    "lines": 89,
+    "statements": 89,
+    "functions": 96,
+    "branches": 83
+  },
+  "packages/ledger/src/**": {
+    "lines": 95,
+    "statements": 95,
+    "functions": 91,
+    "branches": 89
+  },
+  "packages/print/src/**": {
+    "lines": 97,
+    "statements": 97,
+    "functions": 99,
+    "branches": 88
+  },
+  "packages/review/src/**": {
+    "lines": 96,
+    "statements": 96,
+    "functions": 99,
+    "branches": 78
+  },
+  "packages/run/src/**": {
+    "lines": 92,
+    "statements": 92,
+    "functions": 95,
+    "branches": 85
+  },
+  "packages/solver/src/**": {
+    "lines": 96,
+    "statements": 96,
+    "functions": 99,
+    "branches": 88
+  },
+  "packages/testkit/src/**": {
+    "lines": 89,
+    "statements": 89,
+    "functions": 88,
+    "branches": 71
+  },
+  "packages/witness/src/**": {
+    "lines": 86,
+    "statements": 86,
+    "functions": 94,
+    "branches": 82
+  }
+}

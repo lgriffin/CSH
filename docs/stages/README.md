@@ -64,6 +64,7 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 61: What the tutors-mono-repo run asked for](stage-61.md)
 - [Stage 62: What the Toads run asked for](stage-62.md)
 - [Stage 64: The command line, hardened](stage-64.md)
+- [Stage 65: Coverage floors](stage-65.md)
 
 Stages 10 to 16 build the anchor design ([09](../spec/09-anchor-harness-a3.md)): a component to anchor on, harnesses,
 runs and the A3. Their fixtures, F80 to F96, were written before any of their code, and the fixture runner reports
@@ -98,3 +99,6 @@ import-linter contracts, and what a told rule is not. Its fixtures are F184 to F
 Stage 64 hardens the command line for use outside this repository: every argument is checked before a command runs,
 each mistake is named with the command's usage, files that cannot be used are said rather than thrown, and the README
 and [the command line guide](../guides/cli.md) say how to use it. It changes no result, so it has no fixtures.
+
+Stage 65 measures coverage for the first time and holds every package to a floor in CI, and brings the README's
+counts and lists up to date.
