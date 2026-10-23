@@ -52,8 +52,9 @@ export type ItemKind = "requirement" | "rule" | "scenario" | "feature" | "test-f
  * implements a requirement. `verified-by`: a requirement names the mechanism that verifies it. `exemplifies`: a
  * scenario sits under a rule. `cites`: a test names a requirement in its title. `mentions`: free text names an item; it
  * counts only when it resolves. `mentions-file`: text names a path. `mentions-symbol` (stage 24): text names a symbol
- * beside the one code path on its line, as "symbol:" path "#" name. `mentions-script`: text names `npm run` and a
- * script, as "script:" name. `loads` (stage 42): a steps file loads the feature at a path, named as the feature item.
+ * beside the one code path on its line, as "symbol:" path "#" name, or a name of a package's code in its own document,
+ * as "symbol:" directory "/#" name (stage 67). `mentions-script`: text names `npm run` and a script, as "script:" name,
+ * or a task runner and a task, as "task:" runner "#" name (stage 68). `loads` (stage 42): a steps file loads the feature at a path, named as the feature item.
  * `decided-by` (stage 42): a feature or rule names, in its description, a decision it rests on.
  */
 export type EdgeRel = "implements" | "verified-by" | "exemplifies" | "cites" | "mentions" | "mentions-file" | "mentions-symbol" | "mentions-script" | "loads" | "decided-by";
@@ -208,6 +209,17 @@ export interface FieldFact extends FactBase {
 }
 
 /**
+ * A task a task runner's file at the repository's root names (stage 68): a hereby task, a make target or a just recipe,
+ * read from the file's text. A task named "*" says the file may name tasks its text does not show.
+ */
+export interface TaskFact extends FactBase {
+  kind: "task";
+  runner: "hereby" | "make" | "just";
+  file: string;
+  name: string;
+}
+
+/**
  * A name a module declares at its top level, exported or not (version 2, stage 24): what it declares, the class it
  * extends as written, and a constant's literal value.
  */
@@ -250,7 +262,7 @@ export interface DeclareFact extends FactBase {
  * The fact format (csh-facts/v1 and v2), evidence beside the witness format; a fact never carries authority. In
  * version 2 a dependency's ends may be modules, by path, as well as packages.
  */
-export type Fact = PackageFact | DependencyFact | SkippedFact | ModuleFact | ExportFact | FieldFact | DeclareFact;
+export type Fact = PackageFact | DependencyFact | SkippedFact | ModuleFact | ExportFact | FieldFact | DeclareFact | TaskFact;
 
 export interface AdapterOutput {
   claims?: ClaimSet;

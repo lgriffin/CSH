@@ -254,7 +254,7 @@ export async function gapView(input: GapInput): Promise<{ view: GapView; errors:
   }
   for (const [subject, detail] of unobserved) gaps.push({ kind: "unobserved-test", subject, fragments: [], detail });
 
-  const order = ["unliftable", "unconstrained-after", "no-example", "no-rule", "single-source", "uncited", "unbound", "reserved", "relaxed", "unowned-source", "undrawn-dependency", "unobserved-relation", "unplaced-package", "dangling-reference", "unverified", "unobserved-terms", "justified-gap", "status-unsupported", "stale-prose", "untraced-change", "failing-test", "unaccepted-case", "orphan-output", "shared-stem", "unpaired-outputs", "accepted-outputs", "outcome-unknown", "unobserved-test"];
+  const order = ["unliftable", "unconstrained-after", "no-example", "no-rule", "single-source", "uncited", "unbound", "reserved", "relaxed", "unowned-source", "undrawn-dependency", "unobserved-relation", "unplaced-package", "dangling-reference", "symbol-undecided", "unverified", "unobserved-terms", "justified-gap", "status-unsupported", "stale-prose", "untraced-change", "failing-test", "unaccepted-case", "orphan-output", "shared-stem", "unpaired-outputs", "accepted-outputs", "outcome-unknown", "unobserved-test"];
   gaps.sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind) || compareCodePoints(a.subject, b.subject) || compareCodePoints(a.detail ?? "", b.detail ?? ""));
   return { view: { sources, rows, gaps }, errors };
 }

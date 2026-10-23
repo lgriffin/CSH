@@ -598,3 +598,13 @@ a snapshot entry no test reads, look like checked behaviour and check nothing. T
 - **Masked danger,** with the green it names being the committed output.
 
 Built as the first on 23 October 2026.
+
+## Q-63 What a name a package's document gives, and its code does not declare, is
+
+Raised in stage 67. `tsc/internal/format/README.md` names `createRulesMap`, which the Go port renamed `buildRulesMap`. Its sibling `tsc/internal/fswatch/README.md` names `ReadDirectoryChangesW`, a Windows API. Nothing in the text tells the two apart, and a measure over TypeScript, Toads, tutors-mono-repo and CSH found most undeclared names in backticks are of code outside the repository: OS APIs, JSON keys, framework types, other repositories' classes.
+
+- **Indeterminate, listing each name (chosen):** the renamed function is shown with what would decide it, and nothing outside the repository is called a gap.
+- **A gap, as a dangling reference:** finds the rename with the same weight as a missing file, at the cost of false refutations wherever a document names an API it calls.
+- **Read only a name with a code verb nearby** ("calls", "via", "returns"): fewer names, but the rule would be a guess at English, and `ReadDirectoryChangesW` sits in a table with none.
+
+Built as the first on 23 October 2026.

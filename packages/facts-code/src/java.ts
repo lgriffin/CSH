@@ -34,7 +34,7 @@ export interface JavaImport {
 
 export interface JavaDeclaration {
   symbol: string;
-  declares: "class" | "interface" | "enum" | "record" | "annotation" | "const";
+  declares: "class" | "interface" | "enum" | "record" | "annotation" | "const" | "method";
   line: number;
   base?: string;
   /** The interfaces a class, enum or record implements, and an interface's further supertypes (stage 59). */
@@ -275,6 +275,15 @@ function declareType(n: Node, outer: string, out: JavaDeclaration[]): void {
   const switches = outer === "" ? switchesIn(n) : [];
   out.push({ symbol, declares, line: lineOf(id), ...(stripped !== "" ? { base: stripped } : {}), ...(bases.length > 0 ? { bases } : {}), public: modifiersOf(n).has("public"), ...(outer !== "" ? { nested: true } : {}), ...(members !== undefined ? { members } : {}), ...(switches.length > 0 ? { switches } : {}) });
   out.push(...constantsOf(n, symbol));
+  // Its methods, as `Type.name` (stage 67), each name once however it is overloaded.
+  const methods = new Set<string>();
+  for (const m of membersOf(n)) {
+    const name = m.type === "method_declaration" ? m.childForFieldName("name") : null;
+    if (name !== null && !methods.has(name.text)) {
+      methods.add(name.text);
+      out.push({ symbol: `${symbol}.${name.text}`, declares: "method", line: lineOf(name), nested: true });
+    }
+  }
   for (const m of membersOf(n)) if (Object.hasOwn(TYPES, m.type)) declareType(m, symbol, out);
 }
 
@@ -343,7 +352,7 @@ export async function readJavaFiles(input: readonly InputFile[], ctx: FactContex
   for (const [path, j] of read) {
     packages.set(j.pkg, [...(packages.get(j.pkg) ?? []), path]);
     for (const d of j.declarations) {
-      if (d.declares === "const") continue;
+      if (d.declares === "const" || d.declares === "method") continue;
       const fqn = j.pkg === "" ? d.symbol : `${j.pkg}.${d.symbol}`;
       types.set(fqn, [...(types.get(fqn) ?? []), path]);
     }

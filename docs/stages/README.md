@@ -66,6 +66,8 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 63: What the TypeScript run asked for](stage-63.md)
 - [Stage 64: The command line, hardened](stage-64.md)
 - [Stage 65: Coverage floors](stage-65.md)
+- [Stage 67: Names in a package's documents](stage-67.md)
+- [Stage 68: Task runners](stage-68.md)
 
 Stages 10 to 16 build the anchor design ([09](../spec/09-anchor-harness-a3.md)): a component to anchor on, harnesses,
 runs and the A3. Their fixtures, F80 to F96, were written before any of their code, and the fixture runner reports
@@ -107,6 +109,10 @@ and [the command line guide](../guides/cli.md) say how to use it. It changes no 
 
 Stage 65 measures coverage for the first time and holds every package to a floor in CI, and brings the README's
 counts and lists up to date.
+
+Stages 67 and 68 answer the rest of what the TypeScript run asked for ([20](../spec/20-symbols-and-task-runners.md),
+[issue 89](https://github.com/lgriffin/CSH/issues/89)): a name a package's own document gives in backticks, checked
+against the package's code, and the commands of hereby, make and just. Their fixtures are F192 to F194.
 
 Stages 70 to 73 read a repository's test suites as evidence ([21](../spec/21-test-suites-as-evidence.md),
 [issue 89](https://github.com/lgriffin/CSH/issues/89), gap 6): cases paired with their accepted outputs, snapshot

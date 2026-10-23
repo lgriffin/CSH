@@ -112,6 +112,63 @@ describe("trace against code facts (stage 24)", () => {
   });
 });
 
+describe("names of a package's code, and task runners (stages 67 and 68)", () => {
+  const fact = (f: Record<string, unknown>) => ({ schema: "csh-facts/v2", subject: { commit: "c" }, tool: { id: "facts-code", version: "1" }, ...f }) as never;
+  const run = (edges: { to: string; span: string; absent?: boolean; rel?: string }[]): SourceRun[] => [
+    { source: "Docs", kind: "Documents", files: [], output: { diagnostics: [], items: [item("src/fmt/README.md", "document")], edges: edges.map((e) => ({ from: "src/fmt/README.md", rel: (e.rel ?? "mentions-symbol") as never, to: e.to, span: e.span, ...(e.absent === true ? { absent: true } : {}) })) } },
+  ];
+  const facts = [
+    fact({ kind: "module", name: "src/fmt/rules.go" }),
+    fact({ kind: "declare", module: "src/fmt/rules.go", symbol: "buildRulesMap", declares: "function", at: "src/fmt/rules.go:1" }),
+    fact({ kind: "declare", module: "src/fmt/span.go", symbol: "worker.processPair", declares: "method", at: "src/fmt/span.go:9" }),
+    fact({ kind: "module", name: "src/ast/node.go" }),
+    fact({ kind: "declare", module: "src/ast/node.go", symbol: "SourceFile", declares: "struct", at: "src/ast/node.go:1" }),
+    fact({ kind: "task", runner: "hereby", file: "Herebyfile.mjs", name: "test", at: "Herebyfile.mjs" }),
+    fact({ kind: "task", runner: "make", file: "Makefile", name: "lint", at: "Makefile" }),
+    fact({ kind: "task", runner: "make", file: "Makefile", name: "*", at: "Makefile" }),
+  ];
+  const files = ["src/fmt/rules.go", "src/fmt/span.go", "src/ast/node.go", "src/ui/TutorsShell.svelte", "Herebyfile.mjs", "Makefile"];
+
+  it("resolves a name the package declares, by a member's last part; leaves unchecked one declared elsewhere, a file's name, one said gone, or one in a directory that holds no module; and lists the rest as undecided", () => {
+    const r = trace({
+      prepared: prepare(module, run([
+        { to: "symbol:src/fmt/#buildRulesMap", span: "src/fmt/README.md:1" },
+        { to: "symbol:src/fmt/#processPair", span: "src/fmt/README.md:2" },
+        { to: "symbol:src/fmt/#SourceFile", span: "src/fmt/README.md:3" },
+        { to: "symbol:src/fmt/#TutorsShell", span: "src/fmt/README.md:4" },
+        { to: "symbol:src/fmt/#oldHelper", span: "src/fmt/README.md:5", absent: true },
+        { to: "symbol:src/fmt/#createRulesMap", span: "src/fmt/README.md:6" },
+        { to: "symbol:src/fmt/#ReadDirectoryChangesW", span: "src/fmt/README.md:7" },
+        { to: "symbol:docs/#ghostName", span: "docs/x.md:1" },
+        { to: "symbol:src/#underPackage", span: "src/README.md:1" },
+      ])),
+      facts,
+      files,
+    });
+    expect(r.gaps).toEqual([{ kind: "symbol-undecided", subject: "Docs/src/fmt/README.md", fragments: [], detail: "names in backticks that no code of the repository declares: src/fmt/README.md:6 createRulesMap; src/fmt/README.md:7 ReadDirectoryChangesW" }]);
+    expect(r.edges.some((e) => e.dangling === true)).toBe(false);
+  });
+
+  it("checks nothing about a package without facts", () => {
+    expect(trace({ prepared: prepare(module, run([{ to: "symbol:src/fmt/#createRulesMap", span: "src/fmt/README.md:6" }])), files }).gaps).toEqual([]);
+  });
+
+  it("resolves a task its runner names; one missing is dangling, unless the runner's set is open, its file was not read, or its sentence says it is not built yet", () => {
+    const r = trace({
+      prepared: prepare(module, run([
+        { rel: "mentions-script", to: "task:hereby#test", span: "d.md:1" },
+        { rel: "mentions-script", to: "task:hereby#release", span: "d.md:2" },
+        { rel: "mentions-script", to: "task:make#anything", span: "d.md:3" },
+        { rel: "mentions-script", to: "task:just#fmt", span: "d.md:4" },
+        { rel: "mentions-script", to: "task:hereby#seed", span: "d.md:5", absent: true },
+      ])),
+      facts,
+      files,
+    });
+    expect(r.gaps).toEqual([{ kind: "dangling-reference", subject: "Docs/src/fmt/README.md", fragments: [], detail: "names what does not exist: d.md:2 mentions-script hereby release" }]);
+  });
+});
+
 describe("trace with history (stage 25)", () => {
   const dated = (commit: string) => ({ commit, date: `2026-0${commit.length}-01T00:00:00+00:00` });
   // Every line was last changed by "old"; src/a.ts and docs/x.md changed after it, src/b.ts did not.
@@ -129,7 +186,7 @@ describe("trace with history (stage 25)", () => {
       files: [],
       output: {
         diagnostics: [],
-        items: [item("R-1", "requirement", { status: "Enforced" }), item("R-2", "requirement", { status: "Enforced" }), item("R-3", "requirement", { status: "Enforced" }), item("R-4", "requirement", { status: "Practised" })],
+        items: [item("R-1", "requirement", { status: "Enforced" }), item("R-2", "requirement", { status: "Enforced" }), item("R-3", "requirement", { status: "Enforced" }), item("R-4", "requirement", { status: "Practised" }), item("R-5", "requirement", { status: "Enforced" })],
         edges: [
           { from: "R-1", rel: "verified-by", to: "file:a.ts", span: "c.md:2" },
           { from: "R-1", rel: "mentions-file", to: "file:src/b.ts", span: "c.md:3" },
@@ -140,12 +197,17 @@ describe("trace with history (stage 25)", () => {
           { from: "R-3", rel: "verified-by", to: "text:branch protection", span: "c.md:8" },
           { from: "R-3", rel: "mentions-script", to: "script:check", span: "c.md:9" },
           { from: "R-3", rel: "mentions-file", to: "file:c.ts", span: "c.md:9" },
+          { from: "R-5", rel: "verified-by", to: "text:npx hereby test", span: "c.md:11" },
+          { from: "R-5", rel: "mentions-script", to: "task:hereby#test", span: "c.md:11" },
         ],
       },
     },
   ];
   const files = ["src/a.ts", "src/b.ts", "docs/x.md", "x/c.ts", "y/c.ts"];
-  const facts = [{ schema: "csh-facts/v2", subject: { commit: "c" }, tool: { id: "facts-ts", version: "1" }, kind: "field", file: "package.json", path: "/scripts/check", value: "x", at: "package.json" }] as never[];
+  const facts = [
+    { schema: "csh-facts/v2", subject: { commit: "c" }, tool: { id: "facts-ts", version: "1" }, kind: "field", file: "package.json", path: "/scripts/check", value: "x", at: "package.json" },
+    { schema: "csh-facts/v2", subject: { commit: "c" }, tool: { id: "facts-code", version: "1" }, kind: "task", runner: "hereby", file: "Herebyfile.mjs", name: "test", at: "Herebyfile.mjs" },
+  ] as never[];
 
   it("reports a line older than the code file it names, by a bare name too, and never a document or a directory", () => {
     const r = trace({ prepared: prepare(module, charter), files, facts, history });
@@ -160,7 +222,7 @@ describe("trace with history (stage 25)", () => {
     expect(r.gaps.filter((g) => g.kind === "stale-prose")).toEqual([]);
   });
 
-  it("reports an Enforced status that no mechanism it names supports; a script named on the verifying line supports it", () => {
+  it("reports an Enforced status that no mechanism it names supports; a script or a task named on the verifying line supports it", () => {
     const r = trace({ prepared: prepare(module, charter), files, facts, history });
     expect(r.gaps.filter((g) => g.kind === "status-unsupported")).toEqual([{ kind: "status-unsupported", subject: "Charter/R-3", fragments: [], detail: "R-3:1: its stated status is Enforced, and nothing it names as a mechanism resolves, and no test cites it" }]);
   });

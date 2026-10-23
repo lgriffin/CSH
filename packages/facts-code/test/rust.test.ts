@@ -220,8 +220,11 @@ describe("declarations and exports", () => {
       ["Id", "type", null, null],
       ["U", "struct", null, null],
     ]);
-    // Nothing inside an impl or fn is top level.
-    expect(declares(facts, "adapters/src/db.rs")).toEqual([["Pool", "struct", null, null]]);
+    // Nothing inside an impl or fn is top level; an impl's functions are its type's methods (stage 67).
+    expect(declares(facts, "adapters/src/db.rs")).toEqual([
+      ["Pool", "struct", null, null],
+      ["Pool.get", "method", null, null],
+    ]);
   });
 
   it("exports plain pub items, #[macro_export] macros and pub use leaves, not pub(crate)", async () => {

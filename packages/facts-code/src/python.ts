@@ -60,7 +60,7 @@ export interface PyImport {
 
 export interface PyDeclaration {
   symbol: string;
-  declares: "class" | "function" | "const" | "var" | "type";
+  declares: "class" | "function" | "const" | "var" | "type" | "method";
   line: number;
   base?: string;
   value?: string;
@@ -139,7 +139,13 @@ function declarationsOf(n: Node): PyDeclaration[] {
       .filter((c) => c.type === "class_definition" || (c.type === "decorated_definition" && c.childForFieldName("definition")?.type === "class_definition"))
       .flatMap(declarationsOf)
       .map((d) => ({ ...d, symbol: `${name}.${d.symbol}` }));
-    return [{ symbol: name, declares: "class", line, ...(first !== undefined ? { base: first.text } : {}) }, ...nested];
+    // Its methods, as `Class.name` (stage 67): each function defined directly in its body.
+    const methods = (body === null ? [] : named(body)).flatMap((c) => {
+      const def = c.type === "decorated_definition" ? c.childForFieldName("definition") : c;
+      const m = def?.type === "function_definition" ? def.childForFieldName("name")?.text : undefined;
+      return m === undefined ? [] : [{ symbol: `${name}.${m}`, declares: "method" as const, line: lineOf(c) }];
+    });
+    return [{ symbol: name, declares: "class", line, ...(first !== undefined ? { base: first.text } : {}) }, ...methods.filter((m, i) => methods.findIndex((x) => x.symbol === m.symbol) === i), ...nested];
   }
   if (n.type === "function_definition") {
     const name = n.childForFieldName("name")?.text;

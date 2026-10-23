@@ -7,3 +7,4 @@ export * from "./java.ts";
 export { goReader, parseGoMod, readGo, readGoFile, TOOL as GO_TOOL, type GoDeclaration } from "./go.ts";
 export { cratesOf, literalValue as rustLiteralValue, readRust, readTree, resolveMod, rust } from "./rust.ts";
 export { holderOf, type Package, packageFacts, packagesOf, PACKAGES_TOOL } from "./packages.ts";
+export { herebyTasks, justRecipes, makeTargets, runnerOf, taskFacts, TOOL as TASKS_TOOL } from "./tasks.ts";
