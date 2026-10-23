@@ -3,7 +3,7 @@
 // nothing verifies, is a gap. Nothing here judges whether an edge is right: a document that says it implements a
 // requirement is taken at its word, and only a reference to nothing is reported.
 import { compareCodePoints } from "@csh/kernel";
-import type { Fact, ItemEdge } from "@csh/witness";
+import { type Fact, type ItemEdge, mentionLanguageOf } from "@csh/witness";
 import type { Prepared } from "./pool.ts";
 import { type Citation, termsOf, unobserved } from "./grain.ts";
 import { isToldRule } from "./ladder.ts";
@@ -35,15 +35,7 @@ export interface TestMentions {
   unread: Map<string, string[]>;
 }
 
-/** The language of a code file, as the tests that may mention its symbols are read; undefined for one no lexer reads. */
-export function mentionLanguageOf(path: string): string | undefined {
-  if (/\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/.test(path)) return "typescript";
-  if (path.endsWith(".py")) return "python";
-  if (path.endsWith(".java")) return "java";
-  if (path.endsWith(".go")) return "go";
-  if (path.endsWith(".rs")) return "rust";
-  return undefined;
-}
+export { mentionLanguageOf };
 
 const LANGUAGE_NAMES: Record<string, string> = { typescript: "TypeScript", python: "Python", java: "Java", go: "Go", rust: "Rust" };
 
@@ -54,23 +46,33 @@ const withTests = (name: string, tests: string[]) => `\`${name}\` (${tests.slice
  * What the tests make of the symbols each document names (section 4): exercised when a test mentions every one,
  * unexercised when one is mentioned by none, undecided when the rest are in a language of which no test was read.
  */
-function exerciseGaps(named: Map<string, Map<string, string>>, m: TestMentions): Gap[] {
+function exerciseGaps(named: Map<string, Map<string, { name: string; module: string }>>, m: TestMentions): Gap[] {
   const gaps: Gap[] = [];
   for (const [subject, symbols] of [...named].sort(([a], [b]) => compareCodePoints(a, b))) {
     const mentioned: string[] = [];
     const missing: string[] = [];
     const undecided: string[] = [];
-    for (const [name, module] of [...symbols].sort(([a], [b]) => compareCodePoints(a, b))) {
-      const lang = mentionLanguageOf(module);
-      const label = lang === undefined ? undefined : LANGUAGE_NAMES[lang];
-      if (lang === undefined) undecided.push(`\`${name}\` (${module}: no test lexer reads its language)`);
-      else if (!m.languages.has(lang)) undecided.push(`\`${name}\` (${label} code, and no ${label} test file was read)`);
-      else if ((m.unread.get(lang) ?? []).length > 0) undecided.push(`\`${name}\` (${label} code, and ${m.unread.get(lang)!.slice(0, 3).join(", ")} could not be read)`);
-      else {
-        const tests = m.byName.get(`${lang}:${name}`);
-        if (tests === undefined || tests.length === 0) missing.push(name);
-        else mentioned.push(withTests(name, tests));
+    // A name two languages declare is exercised when a test of either mentions it: the document may mean either.
+    const byName = new Map<string, string[]>();
+    for (const { name, module } of symbols.values()) byName.set(name, [...(byName.get(name) ?? []), module]);
+    for (const [name, modules] of [...byName].sort(([a], [b]) => compareCodePoints(a, b))) {
+      const why: string[] = [];
+      let tests: string[] = [];
+      for (const module of modules.sort(compareCodePoints)) {
+        const lang = mentionLanguageOf(module);
+        const label = lang === undefined ? undefined : LANGUAGE_NAMES[lang];
+        const by = lang === undefined ? [] : (m.byName.get(`${lang}:${name}`) ?? []);
+        const unread = lang === undefined ? [] : (m.unread.get(lang) ?? []);
+        // A test that mentions it decides it, whatever else could not be read; an unread test file only leaves
+        // undecided a symbol no test read mentions.
+        if (by.length > 0) tests = [...tests, ...by];
+        else if (lang === undefined) why.push(`${module}: no test lexer reads its language`);
+        else if (unread.length > 0) why.push(`${label} code, and ${unread.slice(0, 3).join(", ")}${unread.length > 3 ? `, and ${unread.length - 3} more` : ""} could not be read`);
+        else if (!m.languages.has(lang)) why.push(`${label} code, and no ${label} test file was read`);
       }
+      if (tests.length > 0) mentioned.push(withTests(name, [...new Set(tests)].sort(compareCodePoints)));
+      else if (why.length > 0) undecided.push(`\`${name}\` (${why.join("; ")})`);
+      else missing.push(name);
     }
     const rest = `${mentioned.length > 0 ? `; mentioned by a test: ${mentioned.join(", ")}` : ""}${undecided.length > 0 ? `; undecided: ${undecided.join(", ")}` : ""}`;
     if (missing.length > 0) gaps.push({ kind: "unexercised", subject, fragments: [], detail: `names ${missing.map((n) => `\`${n}\``).join(", ")}, which no test mentions${rest}` });
@@ -245,7 +247,8 @@ export function trace(input: TraceInput): TraceResult {
     let common: string[] | undefined;
     for (const t of terms) {
       const by = [...m.languages].flatMap((l) => m.byName.get(`${l}:${t}`) ?? []);
-      common = common === undefined ? by : common.filter((f) => by.includes(f));
+      const bySet = new Set(by);
+      common = common === undefined ? [...bySet] : common.filter((f) => bySet.has(f));
       if (common.length === 0) return "";
     }
     const near = [...common!].sort(compareCodePoints);
@@ -269,7 +272,8 @@ export function trace(input: TraceInput): TraceResult {
     if (!seen.includes(how)) checks.set(item, [...seen, how]);
   };
   const stale = new Map<string, Map<string, string>>();
-  const namedSymbols = new Map<string, Map<string, string>>();
+  // Each symbol a document names, once for each language that declares it, with a module that does.
+  const namedSymbols = new Map<string, Map<string, { name: string; module: string }>>();
   const h = input.history;
   for (const e of edges) {
     const resolved = resolve(e.source, e);
@@ -289,8 +293,12 @@ export function trace(input: TraceInput): TraceResult {
     if (e.rel === "mentions-symbol" && r === "file") {
       const [where, symbol] = e.to.slice(7).split("#") as [string, string];
       const name = symbol.slice(symbol.lastIndexOf(".") + 1);
-      const module = where.endsWith("/") ? (declaredIn.get(name) ?? []).filter((x) => x.startsWith(where)).sort(compareCodePoints)[0] : where;
-      if (module !== undefined) (namedSymbols.get(from) ?? namedSymbols.set(from, new Map()).get(from)!).set(name, module);
+      const modules = where.endsWith("/") ? (declaredIn.get(name) ?? []).filter((x) => x.startsWith(where)).sort(compareCodePoints) : [where];
+      const at = namedSymbols.get(from) ?? namedSymbols.set(from, new Map()).get(from)!;
+      for (const module of modules) {
+        const key = `${mentionLanguageOf(module) ?? module}:${name}`;
+        if (!at.has(key)) at.set(key, { name, module });
+      }
     }
     if (e.rel === "verified-by") verifiedBy.add(from);
     if (e.rel === "decided-by") decided.set(from, [...(decided.get(from) ?? []), e.to.replace(/^file:/, "")]);
@@ -394,7 +402,7 @@ export function trace(input: TraceInput): TraceResult {
       gaps.push({ kind: "unverified", subject: q, fragments: [], detail: `${it.span}: names no mechanism that verifies it, and no test cites it${status}${nearestTests(it.text)}` });
     } else if (it.kind === "rule" && !into.has("exemplifies")) {
       const d = decided.get(q);
-      gaps.push({ kind: "unverified", subject: q, fragments: [], detail: `${it.span}: no scenario sits under this rule${d !== undefined ? `; it cites ${d.join(", ")}, a decision, cited and not verified` : ""}` });
+      gaps.push({ kind: "unverified", subject: q, fragments: [], detail: `${it.span}: no scenario sits under this rule${d !== undefined ? `; it cites ${d.join(", ")}, a decision, cited and not verified` : ""}${nearestTests(it.text)}` });
     } else if (it.kind === "property" && !into.has("cites")) {
       // A structured trace entry no scenario cites (stage 28). One that records why it has none is a justified gap: a
       // silence stated with its reason reads differently from a bare one.

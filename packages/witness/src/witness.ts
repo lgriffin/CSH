@@ -575,3 +575,19 @@ export function witnessExampleName(id: string): string {
   const parts = id.split(/[^A-Za-z0-9]+/).filter((p) => p !== "");
   return `Witness${parts.map((p) => p[0]!.toUpperCase() + p.slice(1)).join("")}`;
 }
+
+/** The language a test file's mentions are in, and a symbol's module is in, by extension (A-264). */
+export type MentionLanguage = "typescript" | "python" | "java" | "go" | "rust";
+
+/**
+ * The language of a code file, as the tests that may mention its symbols are read; undefined for one no test lexer
+ * reads. The adapters that read the tests and the check that reads the symbols share this one table.
+ */
+export function mentionLanguageOf(path: string): MentionLanguage | undefined {
+  if (/\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/.test(path)) return "typescript";
+  if (path.endsWith(".py")) return "python";
+  if (path.endsWith(".java")) return "java";
+  if (path.endsWith(".go")) return "go";
+  if (path.endsWith(".rs")) return "rust";
+  return undefined;
+}

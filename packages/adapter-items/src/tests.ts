@@ -9,7 +9,7 @@
 // class, a Go package or a Rust test binary instead of a file, by what the source's files declare (tests-join.ts).
 import { posix } from "node:path";
 import { compareCodePoints, digestOf } from "@csh/kernel";
-import { type Adapter, type AdapterInput, type AdapterOutput, type Diagnostic, type ItemEdge, parseTestResults, type SourceItem, type TestOutcome, type TestResult } from "@csh/witness";
+import { type Adapter, type AdapterInput, type AdapterOutput, type Diagnostic, type ItemEdge, type MentionLanguage, mentionLanguageOf, parseTestResults, type SourceItem, type TestOutcome, type TestResult } from "@csh/witness";
 import { decode, idPatternOf, sortedFiles } from "./common.ts";
 import { joiner, type Join } from "./tests-join.ts";
 import { stepDefinitionsOther } from "./steps-other.ts";
@@ -35,6 +35,9 @@ const CALL = /(?<![.\w$])(describe|it|test)((?:\.\w+)*)\s*(?:<[^<>()]*>)?\s*(\(|
  * so offsets and lines still match the text), and the content of each string by the offset of its opening quote.
  * A call written inside a fixture string or a comment is then not code, and is never read as a test.
  */
+// A keyword after which a slash starts a regular expression, as after an operator: `return /x/`.
+const REGEX_AFTER = /(?:^|[^\w$.])(?:return|typeof|case|do|else|in|of|new|delete|void|throw|instanceof|yield|await)\s*$/;
+
 export function lex(text: string): { code: string; strings: Map<number, string> } {
   const out = text.split("");
   const strings = new Map<number, string>();
@@ -65,7 +68,7 @@ export function lex(text: string): { code: string; strings: Map<number, string> 
       blank(i + 1, j);
       i = j + 1;
       prev = "x";
-    } else if (c === "/" && (prev === "" || /[(,=:[!&|?{};+\-*%<>~^]/.test(prev))) {
+    } else if (c === "/" && (prev === "" || /[(,=:[!&|?{};+\-*%<>~^]/.test(prev) || REGEX_AFTER.test(out.slice(Math.max(0, i - 12), i).join("")))) {
       let j = i + 1;
       let cls = false;
       while (j < text.length && text[j] !== "\n" && (cls || text[j] !== "/")) {
@@ -344,14 +347,7 @@ export function observedIn(code: string, from: number, to: number, strings?: Map
   return [...out].sort(compareCodePoints);
 }
 
-/** The language a test file's mentions are in, as a symbol's module names it: by extension (A-264). */
-export type MentionLanguage = "typescript" | "python" | "java" | "go" | "rust";
-
-/** The language of a code file, for the tests that may mention its symbols; undefined for one no test lexer reads. */
-export function mentionLanguageOf(path: string): MentionLanguage | undefined {
-  if (/\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/.test(path)) return "typescript";
-  return languageOf(path);
-}
+export { type MentionLanguage, mentionLanguageOf };
 
 /**
  * Every identifier a test file's code mentions, with comments and strings left out (Reading test suites as evidence,
@@ -360,8 +356,29 @@ export function mentionLanguageOf(path: string): MentionLanguage | undefined {
 export function mentionsOf(path: string, text: string): { language: MentionLanguage; identifiers: string[] } | undefined {
   const language = mentionLanguageOf(path);
   if (language === undefined) return undefined;
-  const code = language === "typescript" ? lex(text).code : lexOther(text, language).code;
+  const code = language === "typescript" ? [lex(text).code, ...interpolations(text)].join("\n") : lexOther(text, language).code;
   return { language, identifiers: [...new Set(code.match(IDENTIFIER) ?? [])].sort(compareCodePoints) };
+}
+
+/** The code inside each `${…}` of a template literal, lexed in turn: lex blanks a template whole, its code too. */
+function interpolations(text: string): string[] {
+  const out: string[] = [];
+  for (const [at, body] of lex(text).strings) {
+    if (text[at] !== "`") continue;
+    for (let i = body.indexOf("${"); i >= 0; i = body.indexOf("${", i + 1)) {
+      if (body[i - 1] === "\\") continue;
+      let depth = 1;
+      let j = i + 2;
+      for (; j < body.length && depth > 0; j++) {
+        if (body[j] === "{") depth++;
+        else if (body[j] === "}") depth--;
+      }
+      const inner = body.slice(i + 2, j - 1);
+      out.push(lex(inner).code, ...interpolations(inner));
+      i = j - 1;
+    }
+  }
+  return out;
 }
 
 /** A string literal that is a single identifier: a value, not prose. */
