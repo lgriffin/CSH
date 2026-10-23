@@ -100,7 +100,16 @@ describe("Python test files", () => {
   });
 
   it("says when a file declares no test", () => {
-    expect(read("conftest.py", "import pytest\n\n@pytest.fixture\ndef client():\n    return 1\n").diagnostics).toEqual(["no-tests"]);
+    expect(read("tests/helpers.py", "import pytest\n\n@pytest.fixture\ndef client():\n    return 1\n").diagnostics).toEqual(["no-tests"]);
+  });
+  it("says nothing of a conftest.py, which holds fixtures and steps, not tests (stage 62)", () => {
+    expect(read("conftest.py", "import pytest\n\n@pytest.fixture\ndef client():\n    return 1\n").diagnostics).toEqual([]);
+  });
+  it("records what a pytest-bdd module binds, and does not say it declares no test (stage 62)", () => {
+    const r = read("tests/test_orders.py", 'from pytest_bdd import scenarios, scenario as bind\n\nscenarios(str(F / "orders.feature"))\n\n@bind(F, "REQ-1 a " "title")\ndef test_one():\n    pass\n');
+    expect(r.attrs).toMatchObject({ bdd: "pytest-bdd", bindsFeatures: "orders.feature", bindsTitles: "REQ-1 a title" });
+    expect(r.diagnostics).toEqual([]);
+    expect(read("tests/test_loop.py", 'from pytest_bdd import scenarios\n\nfor n in ("a", "b"):\n    scenarios(str(F / f"{n}.feature"))\n').diagnostics).toEqual([]);
   });
 });
 

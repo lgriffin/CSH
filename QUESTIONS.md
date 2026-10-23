@@ -547,3 +547,21 @@ reads as naming another repository.
 - **Report such a path as indeterminate.** Every one stays visible, at the cost of an entry per mention.
 
 Built as the first on 15 October 2026.
+
+## Q-60 Which runner the executions guess names
+
+Raised in stage 62. The proposal's `executions` guess names vitest or jest when a `package.json` lists either one. Toads lists vitest in `apps/web`, but its requirements are run by pytest (`[tool.pytest.ini_options]`), so the guess points at the smaller runner.
+
+- **Leave the guess as it is (chosen for now):** it is a guess, listed as one, and no outcome depends on it.
+- **Name every runner the repository configures,** pytest among them, with the command that writes each one's results file.
+
+Built as the first on 23 October 2026.
+
+## Q-61 How a computed pytest-bdd binding is read
+
+Raised in stage 62. Toads binds 52 scenarios through helpers that compute each title from the feature file (`@_bind("hub_claim.feature", 1)`). CSH cannot read which scenario such a call binds, so every scenario of the features those files name that is not otherwise bound is `binding-undecided`. There are 73 of them. A `scenarios()` call computed in a loop over literal names is read as binding each name (A-215).
+
+- **Indeterminate, naming the file (chosen):** nothing is called a gap that pytest might run, and each entry says what would decide it.
+- **Read the helper's idiom,** a number or identifier passed beside a feature name. That decides more, at the cost of a reading specific to one repository.
+
+Built as the first on 23 October 2026.

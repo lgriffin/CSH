@@ -157,6 +157,13 @@ A repository that checks itself is read as it checks itself ([17](docs/spec/17-f
 - Gherkin in a document that says its scenarios are not executed is specified behaviour that nothing runs.
 - A path in a sentence that names another repository, or says the file is retired or optional, is not read as a claim about this tree.
 
+A Python repository that checks itself is read the same way ([18](docs/spec/18-from-the-toads-run.md)):
+- A path the repository's `.gitignore` ignores is local to a checkout, not a dangling reference.
+- pytest-bdd's `scenarios()` and `@scenario` bind scenarios. A bound scenario with no steps passes having checked nothing, a scenario nothing binds never runs, and one bound by a title CSH cannot read is indeterminate.
+- pytest-bdd's step definitions are matched as pytest-bdd matches them.
+- A told rule that names an import-linter contract, by its name, its modules or its configuration file, is verified by it.
+- A quotation, "import" meaning a data import, and a restriction in another clause make no told rule.
+
 [subjects/esi-ts](subjects/esi-ts) evaluates [ESI.ts](https://github.com/lgriffin/ESI.ts), a mature TypeScript client, from
 outside. At its pinned commit CSH reports 113 gaps, 8 indeterminate and 43 converged, and each of the eleven
 disagreements in [11](docs/spec/11-ingesting-a-codebase.md) is reported or listed as unknown with a reason
@@ -378,12 +385,12 @@ Its security model is read as a structured trace, its test results are committed
 
 ## Status of the build
 
-Stages 1 to 61 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 129 golden
-fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F125, F130 to F132, F140 to F142, F150 to F155, F160 to F165, F170 to F183), as do
+Stages 1 to 62 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 134 golden
+fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F125, F130 to F132, F140 to F142, F150 to F155, F160 to F165, F170 to F188), as do
 the unit, property and fault-injection tests; F118 to F125 cover [polyglot code](docs/spec/12-polyglot-code.md),
 stages 29 to 35, F130 to F132 [what real runs asked for](docs/spec/13-from-real-runs.md), stages 38 to 44, F140
 to F142 [what the Java and Python runs asked for](docs/spec/14-from-the-java-and-python-runs.md), stage 45, and F150 to F155
-[the Assertion Ladder](docs/spec/15-assertion-ladder.md), stages 47 to 52, and F160 to F165 and F170 to F178 [the analyse command, danger, grain and polyglot evidence](docs/spec/16-analyse-danger-grain.md), stages 55 to 59; stage 60 calibrated it on five subjects and added the release and the Action; F179 to F183 [what the tutors-mono-repo run asked for](docs/spec/17-from-the-tutors-run.md), stage 61. The composition fixtures
+[the Assertion Ladder](docs/spec/15-assertion-ladder.md), stages 47 to 52, and F160 to F165 and F170 to F178 [the analyse command, danger, grain and polyglot evidence](docs/spec/16-analyse-danger-grain.md), stages 55 to 59; stage 60 calibrated it on five subjects and added the release and the Action; F179 to F183 [what the tutors-mono-repo run asked for](docs/spec/17-from-the-tutors-run.md), stage 61; F184 to F188 [what the Toads run asked for](docs/spec/18-from-the-toads-run.md), stage 62. The composition fixtures
 F70 to F78 were written by the implementer and accepted by the owner. [docs/stages](docs/stages) records what each
 stage built and what its fixtures revealed.
 

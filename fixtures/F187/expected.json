@@ -1,0 +1,26 @@
+{
+  "fixture": "F187",
+  "section": "From the Toads run, section 4; A-218",
+  "stage": 62,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "told": [
+        { "item": "Documents/docs/architecture.md#L3", "lifted": "layering" },
+        { "item": "Documents/docs/architecture.md#L5", "lifted": "layering" },
+        { "item": "Documents/docs/architecture.md#L7", "lifted": "layering" },
+        { "item": "Documents/docs/architecture.md#L9", "lifted": "layering" }
+      ],
+      "rungs": { "Documents/docs/architecture.md#L3": "L3", "Documents/docs/architecture.md#L5": "L3", "Documents/docs/architecture.md#L7": "L3", "Documents/docs/architecture.md#L9": "L2" },
+      "entries": [
+        { "outcome": "gap", "kind": "unverified", "subject": "Documents/docs/architecture.md#L9" }
+      ],
+      "entriesAbsent": [
+        { "kind": "unverified", "subject": "Documents/docs/architecture.md#L3" },
+        { "kind": "unverified", "subject": "Documents/docs/architecture.md#L5" },
+        { "kind": "unverified", "subject": "Documents/docs/architecture.md#L7" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

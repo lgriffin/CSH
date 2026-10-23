@@ -13,6 +13,14 @@ const DEPENDENCY = /\b(?:depends?|depending|depended)\s+(?:directly\s+|only\s+)?
 const RESTRICTION = /(?<![\w-])(?:not|never|no|nothing|only|cannot|independent|decoupled|forbids?|forbidden|forbidding)(?![\w-])|n['’]t(?![\w-])/i;
 /** A sentence that hedges or asks says nothing is so (stage 60): "it might seem that", "appears to", a question. */
 const HEDGE = /\b(?:might|seems?|seemed|appears?|appeared)\b/i;
+/** A word after which "import" or "imports" is a noun, a data import, not a dependency (From the Toads run, section 5). */
+const DETERMINER = /^(?:the|a|an|this|that|each|every|no|any|its|their|same|later|next|first|last|one)$/i;
+/** A word after the noun "import" that makes it name code dependencies again: an import contract, any import of the logger. */
+const CODE_NOUN = /^(?:contracts?|rules?|boundary|boundaries|linter|graph|of|from)$/i;
+/** A word that opens a clause of its own: a restriction before it restricts nothing after it (A-219). */
+const SUBORDINATOR = /^(?:because|since|whereas|although|though|so)$/i;
+/** A quotation of three or more words, straight or curly: something said, not something stated (A-219). */
+const QUOTED = /"[^"\n]*"|“[^”\n]*”/g;
 /** How many words before and after the dependency phrase a restriction is looked for (A-203). */
 const BEFORE = 5;
 const AFTER = 4;
@@ -21,14 +29,23 @@ const AFTER = 4;
  * Whether a sentence is a told rule, and which kind: an EARS sentence first, then a layering sentence, whose
  * restriction stands within five words before the dependency phrase, in it, or within four after ("does not import",
  * "depends only on", "imports nothing", "depend on inner layers, never the reverse"), so that a "not" elsewhere in the
- * sentence restricts nothing it names (A-203).
+ * sentence restricts nothing it names (A-203). Since stage 62 (A-219), a quotation is not read, "import" after a
+ * determiner is a data import unless a code noun, `of` or `from` follows it ("an import contract", "any import of"), and the words before are cut at a
+ * word that opens a clause of their own ("cannot show that, because it depends on").
  */
 export function toldKind(sentence: string): Told | undefined {
   if (classify(sentence) !== undefined) return "ears";
   if (/\?\s*$/.test(sentence) || HEDGE.test(sentence)) return undefined;
-  for (const m of sentence.matchAll(new RegExp(DEPENDENCY.source, "gi"))) {
-    const before = sentence.slice(0, m.index).split(/\s+/).filter((w) => w !== "").slice(-BEFORE).join(" ");
-    const after = sentence.slice(m.index + m[0].length).split(/\s+/).filter((w) => w !== "").slice(0, AFTER).join(" ");
+  // A quotation is blanked to spaces, so what it says neither depends nor restricts.
+  const text = sentence.replace(QUOTED, (q) => (q.trim().split(/\s+/).length >= 3 ? " ".repeat(q.length) : q));
+  const bare = (w: string) => w.replace(/^[^\w]+|[^\w]+$/g, "");
+  for (const m of text.matchAll(new RegExp(DEPENDENCY.source, "gi"))) {
+    const words = text.slice(0, m.index).split(/\s+/).filter((w) => w !== "");
+    const next = bare(text.slice(m.index + m[0].length).split(/\s+/).find((w) => w !== "") ?? "");
+    if (/^imports?$/i.test(m[0]) && words.length > 0 && DETERMINER.test(bare(words[words.length - 1]!)) && !CODE_NOUN.test(next)) continue;
+    const clause = words.slice(words.findLastIndex((w) => SUBORDINATOR.test(bare(w))) + 1);
+    const before = clause.slice(-BEFORE).join(" ");
+    const after = text.slice(m.index + m[0].length).split(/\s+/).filter((w) => w !== "").slice(0, AFTER).join(" ");
     if (RESTRICTION.test(before) || RESTRICTION.test(m[0]) || RESTRICTION.test(after)) return "layering";
   }
   return undefined;

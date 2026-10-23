@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { check, type CheckResult, type EvidenceStore, makeRefiner, type Report, type AuthorityResolver, type SourceRun } from "@csh/check";
 import { gitHistory } from "./history.ts";
-import { runSources, type RunSourcesOptions, toolCodeDigest, trackedFiles } from "./sources.ts";
+import { ignoredPaths, runSources, type RunSourcesOptions, toolCodeDigest, trackedFiles } from "./sources.ts";
 import { emit, type EmitOptions, type EmitResult, type Lock } from "@csh/emit";
 import { canonicalJson, canonicalModule, digestJson, digestOf, fragmentsOf, isArchRule, moduleDigest, refName, type Module } from "@csh/kernel";
 import { type LedgerState, resolveAuthority } from "@csh/ledger";
@@ -167,7 +167,20 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   const claimsAFile = module.intents.some((i) => i.obligations.some((o) => o.kind === "architecture" && isArchRule(o.native) && o.native.k === "claim" && o.native.p.k === "file"));
   if (claimsAFile || runs.some((r) => (r.output.edges ?? []).length > 0)) {
     const files = tracked ?? trackedFiles(opts.sourceRoot ?? opts.root);
-    if (files !== undefined) checkOpts.files = files;
+    if (files !== undefined) {
+      checkOpts.files = files;
+      // A path prose names that is not tracked may be one the repository ignores: local to a checkout, not missing (A-214).
+      const known = new Set(files);
+      // A path written with a trailing slash names a directory, which an ignore pattern ending in / matches; it is asked as written.
+      const named = runs.flatMap((r) => (r.output.edges ?? []).flatMap((e) => {
+        if (!e.to.startsWith("file:")) return [];
+        const p = e.to.slice(5).replace(/\/$/, "");
+        const dir = e.to.endsWith("/") ? "/" : "";
+        return [p, ...nearPath(e.span, p)].flatMap((x) => (dir === "" ? [x] : [x, `${x}/`]));
+      }));
+      const ignored = ignoredPaths(opts.sourceRoot ?? opts.root, [...new Set(named.filter((p) => p !== "" && p !== "/" && !known.has(p.replace(/\/$/, "")) && !p.startsWith("/") && !p.split("/").includes("..")))]);
+      if (ignored.length > 0) checkOpts.ignored = ignored;
+    }
   }
   if (opts.component !== undefined) {
     const { unowned } = checkAgainstModule(opts.component.manifest, module);
@@ -197,6 +210,22 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   history?.save();
   if (history?.sinceProblem !== undefined) checked.report.errors.push({ code: "history-since-unknown", severity: "warning", detail: `${history.sinceProblem}; no untraced-change is reported` });
   return { runs, checked };
+}
+
+/** A path read from the directory of the file a span names, as trace reads it, when that file is not at the root. */
+function nearPath(span: string, path: string): string[] {
+  const file = span.slice(0, span.lastIndexOf(":"));
+  const cut = file.lastIndexOf("/");
+  if (cut < 0) return [];
+  const parts: string[] = [];
+  for (const seg of `${file.slice(0, cut)}/${path}`.split("/")) {
+    if (seg === "" || seg === ".") continue;
+    if (seg === "..") {
+      if (parts.length === 0) return [];
+      parts.pop();
+    } else parts.push(seg);
+  }
+  return [parts.join("/")];
 }
 
 export function fixtureRoot(spec: string): string {

@@ -3,6 +3,7 @@
 // against cucumber-js's. A definition CSH cannot read (a computed pattern, a regular expression that does not compile)
 // is kept as unreadable: it could match any step.
 import type { StepPattern } from "./tests.ts";
+import { pytestBddSteps } from "./pytest-bdd.ts";
 import { type Language, lexOther, lineIndex, lineStarts } from "./tests-other.ts";
 
 export interface StepDefinition {
@@ -54,6 +55,7 @@ const skipSpace = (code: string, at: number): number => {
 
 /**
  * The step definitions of a file:
+ * - pytest-bdd, in a file that imports it (stage 62): see pytest-bdd.ts.
  * - behave, in a file that imports it (Hypothesis has a `@given` too): `@given`, `@when`, `@then`, `@step` (and the
  *   capitalised aliases), in its default `parse` format, read as a regular expression whose `{name:type}` matches
  *   anything and whose other characters are literal; after `use_step_matcher("re")`, a regular expression.
@@ -79,7 +81,8 @@ export function stepDefinitionsOther(text: string, lang: Language): StepDefiniti
   // The lexer blanks a string's content, so the literal ends at the first character that is no space, quote or `#`.
   const whole = (at: number) => /^[\s"'`#]*[,)]/.test(code.slice(at + 1));
   if (lang === "python") {
-    if (!/^\s*(?:from\s+behave(?:\.\w+)*\s+import|import\s+behave)\b/m.test(code)) return [];
+    // pytest-bdd's decorators, in a file that imports them (From the Toads run, section 3).
+    if (!/^\s*(?:from\s+behave(?:\.\w+)*\s+import|import\s+behave)\b/m.test(code)) return pytestBddSteps(text);
     // use_step_matcher switches the matcher for the definitions after it in the file.
     const switches = [...code.matchAll(/(?<![\w.])use_step_matcher\s*\(/g)].map((m) => {
       const at = skipSpace(code, m.index + m[0].length);

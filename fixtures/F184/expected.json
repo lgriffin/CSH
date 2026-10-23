@@ -1,0 +1,18 @@
+{
+  "fixture": "F184",
+  "section": "From the Toads run, section 1; A-214",
+  "stage": 62,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "entries": [
+        { "outcome": "gap", "kind": "dangling-reference", "subject": "Documents/docs/missing.md", "detailIncludes": ["config/limits.yaml"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "dangling-reference", "subject": "Documents/docs/setup.md" },
+        { "kind": "dangling-reference", "subject": "Documents/README.md" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

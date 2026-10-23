@@ -81,3 +81,7 @@ language, then calibrate it on five subjects and ship it as a release and an Act
 Stage 61 answers what a cold read of tutors-mono-repo asked for ([17](../spec/17-from-the-tutors-run.md),
 [issue 85](https://github.com/lgriffin/CSH/issues/85)): rule tags, scenarios bound by title, the step library's dialect,
 file mentions, dependency-cruiser checks, baselines and specification prose. Its fixtures are F179 to F183.
+
+Stage 62 answers what a cold read of Toads, a Python repository, asked for ([18](../spec/18-from-the-toads-run.md),
+[issue 87](https://github.com/lgriffin/CSH/issues/87)): ignored files, pytest-bdd's bindings and step definitions,
+import-linter contracts, and what a told rule is not. Its fixtures are F184 to F188.

@@ -196,3 +196,66 @@ export function stepGaps(prepared: Prepared): Gap[] {
   }
   return gaps;
 }
+
+/**
+ * What pytest-bdd's bindings decide (From the Toads run, section 2; A-215, A-216). A Python test file that imports
+ * pytest_bdd records the feature files its `scenarios(...)` calls name, the titles its `scenario(...)` calls bind, and,
+ * for a call CSH cannot read, the names that may say which. pytest-bdd runs only what a module binds, so, once any test
+ * file is read as a pytest-bdd module, each scenario of a feature file is bound, possibly bound, or not bound.
+ */
+export function pytestBddBindings(items: Prepared["items"]): { bound: Map<string, string[]>; gaps: Gap[] } {
+  const bound = new Map<string, string[]>();
+  const gaps: Gap[] = [];
+  const modules = items.filter((i) => i.kind === "test-file" && i.attrs?.bdd === "pytest-bdd");
+  if (modules.length === 0) return { bound, gaps };
+  const scenarios = items.filter((i) => i.kind === "scenario" && i.attrs?.gherkin !== "prose" && /\.feature:\d+$/.test(i.span));
+  const fileOf = (span: string) => span.slice(0, span.lastIndexOf(":"));
+  const features = [...new Set(scenarios.map((s) => fileOf(s.span)))];
+  const lines = (v: string | undefined) => (v ?? "").split("\n").filter((x) => x !== "");
+  // A feature file a literal names: from the test file's directory when it climbs with ./ or ../, else any whose path ends with it.
+  const named = (test: string, ref: string): string[] => {
+    const r = ref.replace(/\\/g, "/");
+    if (/^\.\.?\//.test(r)) {
+      const dir = test.includes("/") ? test.slice(0, test.lastIndexOf("/")) : "";
+      const parts: string[] = [];
+      for (const seg of `${dir}/${r}`.split("/")) {
+        if (seg === "" || seg === ".") continue;
+        if (seg === "..") parts.pop();
+        else parts.push(seg);
+      }
+      return features.filter((f) => f === parts.join("/"));
+    }
+    return features.filter((f) => f === r || f.endsWith(`/${r}`));
+  };
+  const base = (f: string) => f.slice(f.lastIndexOf("/") + 1);
+  const byFeature = new Map<string, Set<string>>();
+  const maybe = new Map<string, Set<string>>();
+  const byTitle = new Map<string, Set<string>>();
+  const put = (m: Map<string, Set<string>>, k: string, v: string) => m.set(k, (m.get(k) ?? new Set()).add(v));
+  for (const t of modules) {
+    for (const ref of lines(t.attrs?.bindsFeatures)) for (const f of named(t.id, ref)) put(byFeature, f, t.id);
+    for (const n of lines(t.attrs?.bindsNamed)) for (const f of features.filter((x) => base(x) === `${n}.feature`)) put(byFeature, f, t.id);
+    for (const ref of lines(t.attrs?.bindsUndecided)) for (const f of named(t.id, ref)) put(maybe, f, t.id);
+    for (const title of lines(t.attrs?.bindsTitles)) put(byTitle, title, t.id);
+  }
+  const key = (t: string) => t.trim().replace(/\s+/g, " ");
+  const shared = new Map<string, number>();
+  for (const s of scenarios) shared.set(key(s.text), (shared.get(key(s.text)) ?? 0) + 1);
+  const list = (s: Set<string> | undefined) => [...(s ?? [])].sort(compareCodePoints);
+  for (const s of scenarios) {
+    const q = `${s.source}/${s.id}`;
+    const file = fileOf(s.span);
+    const by = [...new Set([...list(byFeature.get(file)), ...(shared.get(key(s.text)) === 1 ? list(byTitle.get(key(s.text))) : [])])].sort(compareCodePoints);
+    const steps = lines(s.attrs?.steps).length;
+    const tags = s.attrs?.tags !== undefined && s.attrs.tags !== "" ? `; tagged ${s.attrs.tags}` : "";
+    if (by.length > 0) {
+      bound.set(q, by);
+      if (steps === 0) gaps.push({ kind: "stepless-scenario", subject: q, fragments: [], detail: `${s.span}: bound by ${by.join(", ")}, and it has no steps, so its test passes having checked nothing${tags}` });
+      continue;
+    }
+    const undecided = list(maybe.get(file));
+    if (undecided.length > 0) gaps.push({ kind: "binding-undecided", subject: q, fragments: [], detail: `${s.span}: ${undecided.join(", ")} ${undecided.length === 1 ? "binds" : "bind"} scenarios of ${file} by a title CSH cannot read, so whether a test binds this one is not known${tags}` });
+    else gaps.push({ kind: "unbound-scenario", subject: q, fragments: [], detail: `${s.span}: no test binds it, so pytest-bdd never runs it; ${steps === 0 ? "it has no steps" : `its ${steps} step${steps === 1 ? "" : "s"} never run`}${tags}` });
+  }
+  return { bound, gaps };
+}

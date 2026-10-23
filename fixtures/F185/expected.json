@@ -1,0 +1,28 @@
+{
+  "fixture": "F185",
+  "section": "From the Toads run, section 2; A-215, A-216",
+  "stage": 62,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["style cucumber"],
+      "entries": [
+        { "outcome": "gap", "kind": "stepless-scenario", "subject": "Features/tests/features/orders.feature#/req-ord-002-a-member-cancels-an-open-order", "detailIncludes": ["tests/step_defs/test_orders.py", "@pending"] },
+        { "outcome": "gap", "kind": "unbound-scenario", "subject": "Features/tests/features/refunds.feature#/req-ref-002-an-officer-denies-a-refund", "detailIncludes": ["3 steps", "never run"] },
+        { "outcome": "gap", "kind": "unbound-scenario", "subject": "Features/tests/features/refunds.feature#/req-ref-003-a-partial-refund-is-recorded", "detailIncludes": ["no steps", "@pending"] },
+        { "outcome": "indeterminate", "kind": "binding-undecided", "subject": "Features/tests/features/accounts.feature#/req-acc-001-a-member-signs-in", "detailIncludes": ["tests/step_defs/test_accounts.py"] },
+        { "outcome": "indeterminate", "kind": "binding-undecided", "subject": "Features/tests/features/accounts.feature#/req-acc-002-a-member-signs-out", "detailIncludes": ["tests/step_defs/test_accounts.py"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "unbound-scenario", "subject": "Features/tests/features/orders.feature#/req-ord-001-a-placed-order-is-stored" },
+        { "kind": "stepless-scenario", "subject": "Features/tests/features/orders.feature#/req-ord-001-a-placed-order-is-stored" },
+        { "kind": "unbound-scenario", "subject": "Features/tests/features/refunds.feature#/req-ref-001-an-officer-approves-a-refund" },
+        { "kind": "unbound-scenario", "subject": "Features/tests/features/shipping.feature#/req-shp-001-a-stored-order-ships" },
+        { "kind": "undefined-step", "subject": "Features/tests/features/refunds.feature#/req-ref-002-an-officer-denies-a-refund" },
+        { "kind": "undefined-step", "subject": "Features/tests/features/shipping.feature#/req-shp-001-a-stored-order-ships" },
+        { "kind": "unused-step-definition", "subject": "Tests/tests/step_defs/test_refunds.py" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

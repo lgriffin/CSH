@@ -1,0 +1,7 @@
+[project]
+name = "shop"
+version = "0.1.0"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest", "pytest-bdd>=7"]

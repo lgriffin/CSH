@@ -1,0 +1,25 @@
+{
+  "fixture": "F186",
+  "section": "From the Toads run, section 3; A-217",
+  "stage": 62,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["style cucumber"],
+      "entries": [
+        { "outcome": "gap", "kind": "undefined-step", "subject": "Features/tests/features/cart.feature#/req-cart-002-emptying-the-basket", "detailIncludes": ["the basket is empty for good"] },
+        { "outcome": "gap", "kind": "unused-step-definition", "subject": "Tests/tests/step_defs/test_cart.py", "detailIncludes": ["the basket is gone"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "undefined-step", "subject": "Features/tests/features/cart.feature#/req-cart-001-adding-an-item" },
+        { "kind": "undefined-step", "subject": "Features/tests/features/cart.feature#/req-cart-003-a-guest-empties-the-basket" },
+        { "kind": "steps-undecided", "subject": "Features/tests/features/cart.feature#/req-cart-001-adding-an-item" },
+        { "kind": "steps-undecided", "subject": "Features/tests/features/cart.feature#/req-cart-002-emptying-the-basket" },
+        { "kind": "steps-undecided", "subject": "Features/tests/features/cart.feature#/req-cart-003-a-guest-empties-the-basket" },
+        { "kind": "unused-step-definition", "subject": "Tests/tests/conftest.py" },
+        { "kind": "unbound-scenario", "subject": "Features/tests/features/cart.feature#/req-cart-001-adding-an-item" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

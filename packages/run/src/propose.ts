@@ -62,6 +62,8 @@ function testConvention(p: string): string | undefined {
 /** A step definition file's convention, as a glob; undefined for any other file. */
 function stepConvention(p: string): string | undefined {
   const e = ext(p);
+  // A behave step file is Python in a steps directory beside the features (From the Toads run, section 3).
+  if (e === "py" && underAny(p, ["steps"]) && !/^test_|_test\.py$/.test(posix.basename(p))) return "**/steps/**/*.py";
   if (!JS_EXT.includes(e)) return undefined;
   if (/\.steps\.[a-z]+$/.test(posix.basename(p))) return `**/*.steps.${e}`;
   if (underAny(p, ["step_definitions"])) return `**/step_definitions/**/*.${e}`;
@@ -196,7 +198,10 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
 
   // A dependency-cruiser configuration names the checks a told rule may cite (From the tutors run, section 6). Every
   // Markdown source reads it, since a told rule may sit in any of them; the adapter reads only its check names.
-  const cruisers = files.filter((p) => DEPENDENCY_CRUISER.test(posix.basename(p)) && !underAny(p, ["fixtures", "__fixtures__"]));
+  // An import-linter configuration names the contracts a told rule may name, read the same way (From the Toads run,
+  // section 4): a pyproject.toml with a [tool.importlinter] table, an .importlinter, or a setup.cfg with [importlinter].
+  const linters = files.filter((p) => !fixtures(p) && ((posix.basename(p) === "pyproject.toml" && /^\s*\[tool\.importlinter\]/m.test(read(p))) || posix.basename(p) === ".importlinter" || (posix.basename(p) === "setup.cfg" && /^\s*\[importlinter\]/m.test(read(p)))));
+  const cruisers = [...files.filter((p) => DEPENDENCY_CRUISER.test(posix.basename(p)) && !underAny(p, ["fixtures", "__fixtures__"])), ...linters];
 
   // Instructions: the files an agent reads at the start of every session (The Assertion Ladder, stage 50).
   const instructions = markdown.filter((p) => INSTRUCTION_FILES.includes(posix.basename(p)) || p === ".github/copilot-instructions.md");
@@ -222,7 +227,9 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
     add({ name: "Documents", kind: "Documents", at: ".", include: [...g.include, ...cruisers], exclude: g.exclude }, { id: "docs", name: "Documents", kind: "documents", unit: "the document", settings: { ...idSettings } });
     guesses.push(`Documents: ${documents.length} other Markdown files, leaving out changelogs and test directories`);
   }
-  if (cruisers.length > 0 && sources.some((s) => s.include?.some((p) => cruisers.includes(p)))) guesses.push(`${cruisers.join(", ")}: a dependency-cruiser configuration, read for the names of the checks it defines`);
+  const cruiserFiles = cruisers.filter((p) => !linters.includes(p));
+  if (cruiserFiles.length > 0 && sources.some((s) => s.include?.some((p) => cruiserFiles.includes(p)))) guesses.push(`${cruiserFiles.join(", ")}: a dependency-cruiser configuration, read for the names of the checks it defines`);
+  if (linters.length > 0 && sources.some((s) => s.include?.some((p) => linters.includes(p)))) guesses.push(`${linters.join(", ")}: an import-linter configuration, read for the contracts it defines`);
   // Baselines: text files a repository says may only shrink, the gaps it already records (section 6). They belong to
   // the documents practice, made for them when no other document is read.
   const baselines = files.filter((p) => ext(p) === "txt" && !fixtures(p) && isBaseline(read(p)));
@@ -288,11 +295,17 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
       }
     });
   const runner = deps.includes("vitest") ? "vitest" : deps.includes("jest") ? "jest" : undefined;
+  // pytest-bdd binds scenarios and defines steps in test modules and conftest.py files (From the Toads run, section 3).
+  const pytestBdd = features.length === 0 ? [] : tests.filter((p) => ext(p) === "py" && /^[ \t]*(?:from\s+pytest_bdd(?:\.\w+)*\s+import|import\s+pytest_bdd)\b/m.test(read(p)));
+  const conftests = pytestBdd.length === 0 ? [] : files.filter((p) => posix.basename(p) === "conftest.py" && !fixtures(p) && !never(p));
   if (tests.length + steps.length > 0) {
     const testPractice: Omit<Practice, "sources"> = { id: "tdd", name: "TDD", kind: "tests", unit: "the test file", settings: { ...idSettings } };
     if (steps.length > 0) {
       testPractice.settings!.style = "cucumber";
       guesses.push(`style cucumber: ${steps.length} step definition ${steps.length === 1 ? "file" : "files"} beside the features, e.g. ${steps[0]}`);
+    } else if (pytestBdd.length > 0) {
+      testPractice.settings!.style = "cucumber";
+      guesses.push(`style cucumber: ${pytestBdd.length} test ${pytestBdd.length === 1 ? "file imports" : "files import"} pytest_bdd, which binds the features' scenarios and defines their steps, e.g. ${pytestBdd[0]}${conftests.length > 0 ? `; ${conftests.length} conftest.py ${conftests.length === 1 ? "file is" : "files are"} read for steps too` : ""}`);
     }
     if (Object.keys(testPractice.settings!).length === 0) delete testPractice.settings;
     if (runner !== undefined) {
@@ -301,7 +314,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
       const command = runner === "vitest" ? `npx vitest run --reporter=json --outputFile=${report}` : `npx jest --json --outputFile=${report}`;
       guesses.push(`executions csh/results.json: package.json names ${runner}; in the subject run ${command}, then csh results import tdd <subject>/${report}`);
     }
-    add({ name: "Tests", kind: "TestFiles", at: ".", ...globsFor([...tests, ...steps], files, [...testGlobs, ...stepGlobs], ["**/fixtures/**", "**/__fixtures__/**"]) }, testPractice);
+    add({ name: "Tests", kind: "TestFiles", at: ".", ...globsFor([...tests, ...steps, ...conftests], files, [...testGlobs, ...stepGlobs, ...(conftests.length > 0 ? ["**/conftest.py"] : [])], ["**/fixtures/**", "**/__fixtures__/**"]) }, testPractice);
     guesses.push(`Tests: ${tests.length} files by the conventions ${testGlobs.join(", ") || "none"}${steps.length > 0 ? `, and ${steps.length} step definition files` : ""}`);
   }
 
