@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { proposeProfile, selectFiles } from "../src/index.ts";
+import { globRegExp } from "@csh/kernel";
 import { buildOutputsOf, isBaseline } from "../src/propose.ts";
 
 let dirs: string[] = [];
@@ -248,10 +249,15 @@ describe("build output (stage 75, A-268)", () => {
   it("is a dist, build, out or target directory at the root or beside a build manifest, never a source directory of that name", () => {
     const o = buildOutputsOf(["build/app.js", "web/package.json", "web/dist/a.js", "tsc/internal/execute/build/build.go", "web/src/out/f.ts"]);
     expect([...o.dirs].sort()).toEqual(["build", "web/dist"]);
-    // `build` and `out` name source somewhere, so only their output directories are excluded; `dist` and `target` stay plain.
-    expect(o.globs).toEqual(expect.arrayContaining(["**/node_modules/**", "**/dist/**", "build/**", "**/target/**"]));
+    // `build` and `out` name source somewhere, so each is excluded where a build would write it, at the root and beside
+    // every manifest, with files there yet or not; `dist` and `target` stay plain.
+    expect(o.globs).toEqual(expect.arrayContaining(["**/node_modules/**", "**/dist/**", "build/**", "web/build/**", "out/**", "web/out/**", "**/target/**"]));
     expect(o.globs).not.toContain("**/build/**");
-    expect(o.globs.some((g) => g.includes("out"))).toBe(false);
+    expect(o.globs).not.toContain("**/out/**");
+    const excluded = (p: string) => o.globs.some((g) => globRegExp(g).test(p));
+    expect(excluded("web/build/later.js")).toBe(true);
+    expect(excluded("tsc/internal/execute/build/build.go")).toBe(false);
+    expect(excluded("web/src/out/f.ts")).toBe(false);
   });
 
   it("keeps the plain globs while no source directory has one of the names", () => {

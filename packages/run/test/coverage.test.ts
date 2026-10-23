@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { type Coverage, coverageOfSources, renderCoverage } from "../src/coverage.ts";
+import { type Coverage, coverageLine, coverageOfSources, renderCoverage } from "../src/coverage.ts";
 
 const c: Coverage = {
   tracked: 10,
@@ -27,6 +27,11 @@ describe("coverage", () => {
     expect(text).toMatch(/\.rs\s+3  e\.g\. verify\/src\/lib\.rs/);
   });
 
+  it("renders an analysis written before stage 75 as it measured it, claiming no skips", () => {
+    const old = { tracked: 10, read: 6, byName: 2, unread: [{ ext: ".rs", files: 4, sample: "a.rs" }] };
+    expect(coverageLine(old)).toBe("coverage: 6 of 10 tracked files read (2 by name); not read: 4 .rs");
+  });
+
   it("counts the kinds past the top few rather than listing them all", () => {
     const many: Coverage = { ...c, missed: Array.from({ length: 15 }, (_, i) => ({ ext: `.e${i}`, files: 1, sample: `f${i}` })) };
     expect(renderCoverage(many, "Demo", 5)).toContain("and 10 more kinds");
@@ -46,6 +51,9 @@ describe("coverage", () => {
         "testdata/case.txt": "",
         "LICENSE": "",
         "docs/guide.md": "# Guide\n",
+        "docs/c4.mmd": "C4Container\n",
+        ".beads/issues.jsonl": "",
+        "Makefile": "all:\n",
       };
       for (const [f, text] of Object.entries(files)) {
         mkdirSync(join(dir, f, ".."), { recursive: true });
@@ -55,9 +63,10 @@ describe("coverage", () => {
       git("commit", "-q", "-m", "one");
       const c = coverageOfSources(dir, [{ name: "Code", kind: "Code", at: ".", include: ["**/*.ts", "package.json"], exclude: ["dist/**", "**/vendor/**"] }])!;
       expect(c.read).toBe(3);
-      expect(c.eligible).toBe(4);
+      // A diagram, an issues file and a task runner have readers, so a profile that leaves them out misses them.
+      expect(c.eligible).toBe(7);
       expect(c.skipped.map((k) => [k.reason, k.files])).toEqual([["build output", 1], ["installed or vendored", 1], ["test data no suite pairs", 1], ["with no reader", 1]]);
-      expect(c.missed).toEqual([{ ext: ".md", files: 1, sample: "docs/guide.md" }]);
+      expect(c.missed.map((m) => m.ext).sort()).toEqual([".jsonl", ".md", ".mmd", "Makefile"]);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

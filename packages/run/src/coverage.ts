@@ -7,6 +7,7 @@ import { selectFiles, trackedDirsOf, trackedFiles } from "./sources.ts";
 import type { Project } from "./project.ts";
 import type { DeclaredSource } from "@csh/component";
 import { coverageLine, type SkipReason } from "@csh/check";
+import { runnerOf } from "@csh/facts-code";
 import { buildOutputsOf, CODE_EXT, INSTALLED_DIRS, MANIFESTS } from "./propose.ts";
 
 export { coverageLine };
@@ -27,7 +28,10 @@ export interface Coverage {
 }
 
 /** Extensions some source kind of CSH reads; a file of any other kind has no reader unless a source reads it. */
-const READABLE_EXT = new Set([...CODE_EXT, "md", "markdown", "feature", "snap"]);
+const READABLE_EXT = new Set([...CODE_EXT, "md", "markdown", "feature", "snap", "mmd"]);
+/** Files read by their name or path rather than their extension: import-linter and dependency-cruiser contracts, issues. */
+const readableByName = (path: string, base: string) =>
+  MANIFESTS.includes(base) || runnerOf(base) !== undefined || base === ".importlinter" || base === "setup.cfg" || /^\.dependency-cruiser\.(?:c?js|mjs|json)$/.test(base) || path.endsWith(".beads/issues.jsonl") || path === "issues.jsonl";
 const TEST_DATA_DIRS = ["testdata", "fixtures", "__fixtures__"];
 
 /** Why an unread file is skipped, or undefined when it is eligible: a file some profile should read (A-268). */
@@ -39,7 +43,7 @@ function skipReasonOf(path: string, outputs: Set<string>): SkipReason | undefine
   if (dirs.some((s) => TEST_DATA_DIRS.includes(s))) return "test data no suite pairs";
   const base = segs[segs.length - 1]!;
   const dot = base.lastIndexOf(".");
-  if (MANIFESTS.includes(base) || (dot > 0 && READABLE_EXT.has(base.slice(dot + 1).toLowerCase()))) return undefined;
+  if (readableByName(path, base) || (dot > 0 && READABLE_EXT.has(base.slice(dot + 1).toLowerCase()))) return undefined;
   return "with no reader";
 }
 

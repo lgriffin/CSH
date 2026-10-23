@@ -50,7 +50,11 @@ export function buildOutputsOf(tracked: readonly string[]): { dirs: Set<string>;
     }
   }
   const generic = (d: string) => `**/${d}/**`;
-  const globs = [...INSTALLED_DIRS.map(generic), ...OUTPUT_DIRS.flatMap((d) => (source.has(d) ? [...dirs].filter((x) => posix.basename(x) === d).sort(compareCodePoints).map((x) => `${x}/**`) : [generic(d)]))];
+  // Where a name is also source, every place a build could write it is excluded: the root and beside each manifest,
+  // with files there or not, so a build committed later is still passed over.
+  const places = [".", ...manifestDirs].filter((m, i, a) => a.indexOf(m) === i).sort(compareCodePoints);
+  const beside = (d: string) => places.map((m) => (m === "." ? `${d}/**` : `${m}/${d}/**`));
+  const globs = [...INSTALLED_DIRS.map(generic), ...OUTPUT_DIRS.flatMap((d) => (source.has(d) ? beside(d) : [generic(d)]))];
   return { dirs, globs };
 }
 

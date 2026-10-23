@@ -99,14 +99,19 @@ export interface CoverageCounts {
  * why, then what eligible files were not read (Reading test suites as evidence, section 8).
  */
 export function coverageLine(c: CoverageCounts): string {
-  const eligible = c.eligible ?? c.tracked;
+  // An analysis written before stage 75 counted no skips: say what it measured, not "none skipped".
+  if (c.eligible === undefined) {
+    const by = (c.byName ?? 0) > 0 ? ` (${c.byName} by name)` : "";
+    return c.read === c.tracked ? `coverage: all ${c.tracked} tracked files read${by}` : `coverage: ${c.read} of ${c.tracked} tracked files read${by}; not read: ${c.unread.slice(0, 3).map((u) => `${u.files} ${u.ext}`).join(", ")}${c.unread.length > 3 ? ", …" : ""}`;
+  }
+  const eligible = c.eligible;
   const n = c.byName ?? 0;
   const pct = c.read === eligible ? 100 : Math.floor((c.read * 100) / Math.max(eligible, 1));
   const head = c.read === eligible ? `all ${eligible} eligible files read (100%)` : `${c.read} of ${eligible} eligible files read (${pct}%)`;
   const parsed = n === 0 ? "all parsed" : `${c.read - n} parsed and ${n} by name`;
   const skips = c.skipped ?? [];
   const skipped = skips.length === 0 ? `${c.tracked} tracked, none skipped` : `${c.tracked - eligible} of ${c.tracked} tracked skipped: ${skips.map((k) => `${k.files} ${k.reason}`).join(", ")}`;
-  const missed = c.missed ?? (c.eligible === undefined ? c.unread : []);
+  const missed = c.missed ?? [];
   const rest = c.read === eligible ? "" : `; not read: ${missed.slice(0, 3).map((u) => `${u.files} ${u.ext}`).join(", ")}${missed.length > 3 ? ", …" : ""}`;
   return `coverage: ${head}, ${parsed}; ${skipped}${rest}`;
 }
