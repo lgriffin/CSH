@@ -18,7 +18,8 @@ the same few ways. `csh init --subject <dir>` proposes one.
 
 `<dir>` is a git checkout of the subject. Only its tracked files are read (`git ls-files`), so what a profile could
 read and what `csh coverage` counts are the same list. A path with a segment `node_modules`, `dist`, `build`, `out`,
-`coverage`, `vendor` or `target` is never proposed for any source.
+`coverage`, `vendor` or `target` is never proposed for any source. Since stage 75, `dist`, `build`, `out` and `target`
+are passed over only at the root or beside a build manifest ([21](21-test-suites-as-evidence.md), section 8).
 
 ### 1.2 What it proposes
 
@@ -69,7 +70,8 @@ as `csh coverage` prints it, so the files no source reads are listed before the 
 ### 1.4 Coverage in every run
 
 `csh run` adds one line after its counts: `coverage: N of M tracked files read; csh coverage lists the rest`, or
-`coverage: all M tracked files read`. It is left out when the run is of another commit (`--at`), the source root is
+`coverage: all M tracked files read`; since stage 75 it counts the eligible files read, parsed and read by name, and why the rest are skipped
+([21](21-test-suites-as-evidence.md), section 8). It is left out when the run is of another commit (`--at`), the source root is
 not a git repository, or the component manifest declares no sources (a specification that declares its own sources is
 not counted, and would read as nothing read; stage 43).
 

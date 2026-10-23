@@ -239,3 +239,35 @@ section 3 to the same standard, each with fixtures of its own.
 - F218: Vitest snapshot entries with a title CSH cannot read: `test.each` with a placeholder, a template with one.
 - F219: outputs named after a test file: a Go and a TypeScript test of the stem, a stem two test files share, and an
   output no test file names.
+| 75 | What a run read, parsed and skipped; build output only where a build writes it | F226 |
+
+## 8. What a run read, parsed and skipped (stage 75)
+
+Reading most of a repository by name makes "N of M tracked files read" say less than it did: on lgriffin/TypeScript
+67,656 files are read, and 62,119 of them only by name. Leigh asked, 23 October 2026, for the count of files touched
+and parsed, and for what was skipped to be explained, so that a run can say it read 100% of the files it should.
+
+- **Read** (touched) is a file some source selects. **Parsed** is a file some source reads whole, its content given to
+  an adapter. **By name** is a read file no source reads whole (A-261). Read is parsed plus by name.
+- **Skipped** is a tracked file no source reads for a reason, the first of these that holds: **installed or vendored**
+  (beneath `node_modules`, `vendor`, `coverage`, `.venv`, `venv`, `site-packages` or `__pycache__`), **build output**
+  (A-268, below), **test data no suite pairs** (beneath `testdata`, `fixtures` or `__fixtures__`), or **with no
+  reader** (no source kind of CSH reads its kind: not code, Markdown, a feature file, a snapshot or a language
+  manifest).
+- **Eligible** is every tracked file that is not skipped. An eligible file no source reads is a miss of the profile.
+- `csh run`'s line ([13](13-from-real-runs.md), section 1.4) and `csh analyse`'s say
+  `coverage: R of E eligible files read (P%), Q parsed and N by name; S of M tracked skipped: 42 installed or vendored, …;
+  not read: …`. With every eligible file read the head is `all E eligible files read (100%)` and nothing follows the
+  skipped counts; with nothing by name it is `all parsed`; with nothing skipped it is `M tracked, none skipped`. The
+  percentage is rounded down, so 100% means every one.
+- `csh coverage` and `csh init --subject` open with the same line, then list the sources, the skipped files by reason
+  and the eligible files not read by extension.
+
+The same run asked why 271 files were not read. Nine of them were the fault of the proposal: the Go package
+`tsc/internal/execute/build` is source, but a segment named `build` was never proposed ([13](13-from-real-runs.md),
+section 1.1). `dist`, `build`, `out` and `target` name a build's output only where a build writes it: at the
+repository's root, or beside a build manifest (`package.json`, `tsconfig.json`, `pyproject.toml`, `setup.py`,
+`pom.xml`, `build.gradle`, `build.gradle.kts`, `go.mod`, `go.work`, `Cargo.toml`). A directory of one of these names
+anywhere else is source, and is proposed like any other (A-268). `node_modules`, `vendor`, `coverage`, `.venv`, `venv`,
+`site-packages` and `__pycache__` are never proposed, wherever they are. The rest of the 271 are vendored, test data no
+suite pairs, or files no reader reads (localisation archives, YAML, `go.sum`, licences), and stay unread.

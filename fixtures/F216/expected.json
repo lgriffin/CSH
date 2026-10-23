@@ -17,7 +17,7 @@
       ],
       "byName": ["testdata/baselines/reference/compiler/a.baseline.md", "testdata/baselines/reference/compiler/a.types", "testdata/tests/cases/compiler/a.ts"],
       "guessesInclude": ["Outputs", "reference tree", "snapshot directories", "testdata"],
-      "coverage": { "tracked": 14, "read": 12, "unread": ["testdata/fixtures/lib.d.ts", "testdata/helper.go"] }
+      "coverage": { "tracked": 14, "read": 12, "byName": 3, "parsed": 9, "eligible": 12, "skipped": { "test data no suite pairs": 2 }, "unread": ["testdata/fixtures/lib.d.ts", "testdata/helper.go"], "linesInclude": ["coverage: all 12 eligible files read (100%), 9 parsed and 3 by name; 2 of 14 tracked skipped: 2 test data no suite pairs"] }
     }
   }
 }

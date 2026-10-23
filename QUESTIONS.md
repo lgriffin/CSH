@@ -599,6 +599,19 @@ a snapshot entry no test reads, look like checked behaviour and check nothing. T
 
 Built as the first on 23 October 2026.
 
+## Q-82 Whether a file with no reader counts against the eligible files
+
+Raised in stage 75 ([21](docs/spec/21-test-suites-as-evidence.md), section 8). lgriffin/TypeScript tracks 114 files no
+source kind of CSH reads: CI workflows in YAML, compressed localisation tables, `go.sum`, licences, hooks. Leigh asked
+for "100% of eligible files" as the stat.
+
+- **Skipped, with the reason named (chosen):** a file with no reader is not eligible, so 100% means every file CSH can
+  read was read; the line counts the skipped ones by reason, and `csh coverage` gives an example of each.
+- **Eligible, and so a miss:** the percentage would fall below 100 on every repository with a CI workflow, and say only
+  that CSH has no YAML reader.
+
+Built as the first on 23 October 2026.
+
 ## Q-63 What a name a package's document gives, and its code does not declare, is
 
 Raised in stage 67. `tsc/internal/format/README.md` names `createRulesMap`, which the Go port renamed `buildRulesMap`. Its sibling `tsc/internal/fswatch/README.md` names `ReadDirectoryChangesW`, a Windows API. Nothing in the text tells the two apart, and a measure over TypeScript, Toads, tutors-mono-repo and CSH found most undeclared names in backticks are of code outside the repository: OS APIs, JSON keys, framework types, other repositories' classes.
