@@ -45,7 +45,7 @@ export interface SourceItem {
   attrs?: Record<string, string>;
 }
 
-export type ItemKind = "requirement" | "rule" | "scenario" | "feature" | "test-file" | "document" | "issue" | "property" | "baseline";
+export type ItemKind = "requirement" | "rule" | "scenario" | "feature" | "test-file" | "document" | "issue" | "property" | "baseline" | "suite";
 
 /**
  * How one item refers to another, or to a file of the repository (stage 22). `implements`: a document says it

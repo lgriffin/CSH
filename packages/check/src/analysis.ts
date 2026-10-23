@@ -16,7 +16,7 @@ export interface Analysis {
   /** Each guess the proposal made, with what it was read from; empty for a given profile. */
   guesses: string[];
   /** Tracked files read and not read, when the profile declares its sources. */
-  coverage?: { tracked: number; read: number; unread: { ext: string; files: number; sample: string }[] };
+  coverage?: { tracked: number; read: number; byName?: number; unread: { ext: string; files: number; sample: string }[] };
   /** Told rules lifted from prose, each an item at its line. */
   told: { item: string; lifted: string; span: string; text: string }[];
   overview: Overview;
@@ -82,7 +82,8 @@ export function renderAnalysis(a: Analysis): string {
   const lifted = (k: string) => a.told.filter((t) => t.lifted === k).length;
   const out = [`CSH analysis of ${a.subject.repo} at ${a.subject.commit.slice(0, 12)}`];
   out.push(a.profile.kind === "proposed" ? `  profile: proposed, ${`${a.guesses.length} ${a.guesses.length === 1 ? "guess" : "guesses"}`} (csh analyse --json lists them); nothing is written into the subject` : `  profile: ${a.profile.dir}`);
-  if (a.coverage !== undefined) out.push(a.coverage.read === a.coverage.tracked ? `  coverage: all ${a.coverage.tracked} tracked files read` : `  coverage: ${a.coverage.read} of ${a.coverage.tracked} tracked files read; not read: ${a.coverage.unread.slice(0, 3).map((u) => `${u.files} ${u.ext}`).join(", ")}${a.coverage.unread.length > 3 ? ", …" : ""}`);
+  const byName = (a.coverage?.byName ?? 0) > 0 ? ` (${a.coverage!.byName} by name)` : "";
+  if (a.coverage !== undefined) out.push(a.coverage.read === a.coverage.tracked ? `  coverage: all ${a.coverage.tracked} tracked files read${byName}` : `  coverage: ${a.coverage.read} of ${a.coverage.tracked} tracked files read${byName}; not read: ${a.coverage.unread.slice(0, 3).map((u) => `${u.files} ${u.ext}`).join(", ")}${a.coverage.unread.length > 3 ? ", …" : ""}`);
   out.push(`  told rules lifted from prose: ${a.told.length} (${lifted("layering")} layering, ${lifted("ears")} EARS), each cited as its sentence`, "");
   out.push(`== Danger (${s.danger.length}): refuted or masked, never scored; each keeps its outcome`);
   if (s.danger.length === 0) out.push("  none established");

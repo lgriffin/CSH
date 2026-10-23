@@ -2,7 +2,7 @@
 // directory no source names are all skipped in silence, so a profile can look complete while a third of the repository
 // is outside it. This lists, per source, the files it reads, then the tracked files no source reads, by extension.
 import { posix } from "node:path";
-import { compareCodePoints } from "@csh/kernel";
+import { compareCodePoints, globRegExp } from "@csh/kernel";
 import { selectFiles, trackedDirsOf, trackedFiles } from "./sources.ts";
 import type { Project } from "./project.ts";
 import type { DeclaredSource } from "@csh/component";
@@ -10,6 +10,8 @@ import type { DeclaredSource } from "@csh/component";
 export interface Coverage {
   tracked: number;
   read: number;
+  /** Of the files read, how many are read by name, their bytes never opened (A-261). */
+  byName: number;
   sources: { name: string; kind: string; files: number }[];
   unread: { ext: string; files: number; sample: string }[];
 }
@@ -31,12 +33,22 @@ export function coverageOfSources(root: string, declared: readonly DeclaredSourc
   const tracked = trackedFiles(root);
   if (tracked === undefined) return undefined;
   const read = new Set<string>();
+  // A file one source reads by name and another reads whole is read whole.
+  const named = new Set<string>();
+  const whole = new Set<string>();
   const sources: Coverage["sources"] = [];
   const dirs = trackedDirsOf(tracked);
   const isTracked = new Set(tracked);
   for (const s of declared) {
     const files = selectFiles(root, s.at, s.include, s.exclude, dirs).filter((f) => isTracked.has(f.path));
-    for (const f of files) read.add(f.path);
+    const base = posix.normalize(s.at) === "." ? "" : posix.normalize(s.at).replace(/\/$/, "");
+    const below = (p: string) => (base === "" ? p : p.startsWith(`${base}/`) ? p.slice(base.length + 1) : posix.basename(p));
+    const names = (s.names ?? []).map(globRegExp);
+    for (const f of files) {
+      read.add(f.path);
+      if (names.some((r) => r.test(below(f.path)))) named.add(f.path);
+      else whole.add(f.path);
+    }
     sources.push({ name: s.name, kind: s.kind, files: files.length });
   }
   const groups = new Map<string, string[]>();
@@ -48,11 +60,11 @@ export function coverageOfSources(root: string, declared: readonly DeclaredSourc
     else g.push(f);
   }
   const unread = [...groups].map(([ext, fs]) => ({ ext, files: fs.length, sample: fs[0]! })).sort((a, b) => b.files - a.files || compareCodePoints(a.ext, b.ext));
-  return { tracked: tracked.length, read: tracked.filter((f) => read.has(f)).length, sources, unread };
+  return { tracked: tracked.length, read: tracked.filter((f) => read.has(f)).length, byName: [...named].filter((f) => !whole.has(f)).length, sources, unread };
 }
 
 export function renderCoverage(c: Coverage, name: string, top = 12): string {
-  const lines = [`coverage ${name}: ${c.read} of ${c.tracked} tracked files read by ${c.sources.length} sources`];
+  const lines = [`coverage ${name}: ${c.read} of ${c.tracked} tracked files read by ${c.sources.length} sources${c.byName > 0 ? `, ${c.byName} of them by name` : ""}`];
   for (const s of c.sources) lines.push(`  ${s.name.padEnd(18)} ${s.kind.padEnd(10)} ${String(s.files).padStart(6)} files${s.files === 0 ? "  (matches nothing)" : ""}`);
   const rest = c.tracked - c.read;
   lines.push(`  not read: ${rest} files`);

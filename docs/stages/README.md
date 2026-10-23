@@ -102,3 +102,8 @@ and [the command line guide](../guides/cli.md) say how to use it. It changes no 
 
 Stage 65 measures coverage for the first time and holds every package to a floor in CI, and brings the README's
 counts and lists up to date.
+
+Stages 70 to 73 read a repository's test suites as evidence ([21](../spec/21-test-suites-as-evidence.md),
+[issue 89](https://github.com/lgriffin/CSH/issues/89), gap 6): cases paired with their accepted outputs, snapshot
+entries with their tests, and what prose names with the tests that exercise it. Stage 70 pairs by path. Its fixtures
+are F210 to F216.

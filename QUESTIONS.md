@@ -570,7 +570,9 @@ Built as the first on 23 October 2026.
 
 Raised in stage 70 ([21](docs/spec/21-test-suites-as-evidence.md), section 2). A case of a reference tree or of mirrored
 directories with no accepted output checks nothing the runner can compare. A runner may skip such a case on purpose:
-TypeScript's skips cases by name, and others by an option it no longer supports. CSH does not read the runner.
+TypeScript's skips cases by name, and others by an option it no longer supports. A runner may also accept that a case
+writes nothing: 14 of TypeScript's 282 ask for no emit and no type baselines, and check only that they compile clean.
+CSH does not read the runner.
 
 - **A gap that says the runner may skip it (chosen):** each one is addressable, by accepting its output or removing the
   case, and the detail says why it might be deliberate.

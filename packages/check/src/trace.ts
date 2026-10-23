@@ -7,6 +7,7 @@ import type { Fact, ItemEdge } from "@csh/witness";
 import type { Prepared } from "./pool.ts";
 import { type Citation, termsOf, unobserved } from "./grain.ts";
 import { isToldRule } from "./ladder.ts";
+import { outputGaps } from "./outputs.ts";
 import { boundByTitle, pytestBddBindings, stepGaps } from "./steps.ts";
 import type { Gap, HistoryPort, Report } from "./types.ts";
 
@@ -67,7 +68,7 @@ export function trace(input: TraceInput): TraceResult {
   // An identifier that names no item as written names the one item it matches with case ignored, when only one does
   // (From the tutors run, section 1): a test tag `@rule-0056` cites RULE-0056, and the Rule's own tag is rule-0056.
   const byFolded = new Map<string, string[]>();
-  for (const i of items) if (i.kind !== "document" && i.kind !== "test-file" && i.kind !== "baseline") byFolded.set(i.id.toLowerCase(), [...(byFolded.get(i.id.toLowerCase()) ?? []), `${i.source}/${i.id}`]);
+  for (const i of items) if (i.kind !== "document" && i.kind !== "test-file" && i.kind !== "baseline" && i.kind !== "suite") byFolded.set(i.id.toLowerCase(), [...(byFolded.get(i.id.toLowerCase()) ?? []), `${i.source}/${i.id}`]);
   const files = input.files === undefined ? undefined : new Set(input.files);
   const ignored = new Set(input.ignored ?? []);
   // A path counts as one of the repository's only when its first segment is a top-level entry of it (A-96): prose
@@ -275,5 +276,7 @@ export function trace(input: TraceInput): TraceResult {
     }
   }
   gaps.push(...stepGaps(input.prepared));
+  // What each directory of accepted outputs paired (Reading test suites as evidence, section 2).
+  gaps.push(...outputGaps(items));
   return { gaps, edges: out, checks };
 }

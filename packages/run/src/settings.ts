@@ -10,6 +10,8 @@ export const ADAPTER_SETTINGS: Record<string, readonly string[]> = {
   "@csh/adapter-items/markdown": [...ID, "headingFields", "verifiedField", "headings"],
   "@csh/adapter-items/gherkin": ["tagCites", "idTag"],
   "@csh/adapter-items/tests": [...ID, "citePattern", "citeBodies", "style"],
+  // An Outputs source shares the tests practice and its settings, and reads none of them (stage 70).
+  "@csh/adapter-items/outputs": [...ID, "citePattern", "citeBodies", "style"],
   "@csh/adapter-items/jsonl": ID,
   "@csh/adapter-items/yaml": [...ID, "collection", "idField", "textField", "edges", "fields", "silence"],
 };

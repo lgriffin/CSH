@@ -119,8 +119,8 @@ export function sourceSettings(c: LoadedComponent | undefined): RunSourcesOption
   }
   // A source the manifest declares may narrow the files read under it (stage 22).
   for (const s of c.manifest.sources ?? []) {
-    if (s.include === undefined && s.exclude === undefined) continue;
-    out[s.name] = { ...(out[s.name] ?? {}), ...(s.include !== undefined ? { include: s.include } : {}), ...(s.exclude !== undefined ? { exclude: s.exclude } : {}) };
+    if (s.include === undefined && s.exclude === undefined && s.names === undefined) continue;
+    out[s.name] = { ...(out[s.name] ?? {}), ...(s.include !== undefined ? { include: s.include } : {}), ...(s.exclude !== undefined ? { exclude: s.exclude } : {}), ...(s.names !== undefined ? { names: s.names } : {}) };
   }
   return out;
 }
