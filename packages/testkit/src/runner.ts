@@ -8,7 +8,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { type Assessment, type AuthorityResolver, cachingSolver, renderAnalysis, makeRefiner, type Finding, MemoryEvidenceStore, overviewOf, type Report, SolverCache } from "@csh/check";
 import { emit, type Lock, readLock, typeCheck } from "@csh/emit";
 import { acceptDecision, gate, type Snapshot, type Waiver } from "@csh/gate";
-import { digestJson, digestOf, type Fragment, fragmentsOf, type Module, stableJson, textDigestOf } from "@csh/kernel";
+import { digestJson, digestOf, type Fragment, fragmentsOf, globRegExp, type Module, stableJson, textDigestOf } from "@csh/kernel";
 import { authorship, formatDecision, gitVcs, LEDGER_PATH, MAINTAINERS_PATH, readLedger, resolveAuthority, type Decision, type LedgerState, type Role } from "@csh/ledger";
 import { printModule } from "@csh/print";
 import type { SolverPort } from "@csh/solver";
@@ -38,7 +38,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 68;
+export const BUILT_THROUGH_STAGE = 70;
 
 const AGENT_BIN = resolve(import.meta.dirname, "../../agent/bin/csh-agent.js");
 
@@ -787,6 +787,11 @@ export class FixtureRunner {
       const said = r.guesses.join("\n");
       for (const g of (x.guessesInclude ?? []) as string[]) if (!said.includes(g)) failures.push(`no guess mentions ${g}; guessed:\n${said}`);
       for (const g of (x.guessesExclude ?? []) as string[]) if (said.includes(g)) failures.push(`a guess mentions ${g}; guessed:\n${said}`);
+      // The files the proposal reads by name (Reading test suites as evidence, A-261), from every source that names any.
+      if (x.byName !== undefined) {
+        const named = sources.flatMap((s) => (s.names === undefined ? [] : selectFiles(subject, s.at, s.include, s.exclude).map((f) => f.path).filter((p) => s.names!.some((g) => globRegExp(g).test(p))))).sort();
+        if (JSON.stringify(named) !== JSON.stringify([...x.byName].sort())) failures.push(`read by name ${JSON.stringify(named)}, expected ${JSON.stringify(x.byName)}`);
+      }
       if (x.coverage !== undefined) {
         const c = coverageOfSources(subject, sources);
         if (c === undefined) failures.push("no coverage of the proposal");

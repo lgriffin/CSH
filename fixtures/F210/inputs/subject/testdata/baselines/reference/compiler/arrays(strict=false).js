@@ -1,0 +1,1 @@
+=== arrays(strict=false).js

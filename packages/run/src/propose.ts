@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { COMPONENT_SCHEMA_V2, type ComponentManifest, type DeclaredSource, type Practice } from "@csh/component";
 import { isBaseline } from "@csh/adapter-items/markdown";
+import { outputDirsOf, suiteFilesOf } from "@csh/adapter-items/outputs";
 import { runnerOf } from "@csh/facts-code";
 import { compareCodePoints, globRegExp } from "@csh/kernel";
 import { trackedFiles } from "./sources.ts";
@@ -75,7 +76,8 @@ function stepConvention(p: string): string | undefined {
   return undefined;
 }
 
-const matches = (p: string, globs: string[]) => globs.some((g) => globRegExp(g).test(p));
+const compiled = new Map<string, RegExp>();
+const matches = (p: string, globs: string[]) => globs.some((g) => (compiled.get(g) ?? compiled.set(g, globRegExp(g)).get(g)!).test(p));
 
 /**
  * Include and exclude globs that select exactly `intended` out of `universe`: the given includes (or one glob per
@@ -83,11 +85,15 @@ const matches = (p: string, globs: string[]) => globs.some((g) => globRegExp(g).
  */
 function globsFor(intended: string[], universe: string[], include?: string[], exclude: string[] = []): { include: string[]; exclude: string[] } {
   const inc = include ?? [...new Set(intended.map((p) => (p.includes("/") ? `${segments(p)[0]}/**/*.${ext(p)}` : `*.${ext(p)}`)))].sort(compareCodePoints);
-  const exc = [...NEVER_GLOBS, ...exclude.filter((g) => universe.some((p) => globRegExp(g).test(p) && !intended.includes(p)))];
   const want = new Set(intended);
+  const exc = [...NEVER_GLOBS, ...exclude.filter((g) => {
+    const r = globRegExp(g);
+    return universe.some((p) => r.test(p) && !want.has(p));
+  })];
   const picked = (p: string) => matches(p, inc) && !matches(p, exc);
   const extras = universe.filter((p) => picked(p) && !want.has(p));
-  const missing = intended.filter((p) => !picked(p) && !extras.includes(p));
+  const extra = new Set(extras);
+  const missing = intended.filter((p) => !picked(p) && !extra.has(p));
   return { include: [...inc, ...missing], exclude: [...exc, ...extras] };
 }
 
@@ -180,7 +186,17 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
 
   // A fixture, or a file under a dot-directory (.claude, .github), is test data or tooling, not the project's own.
   const fixtures = (p: string) => underAny(p, ["fixtures", "__fixtures__"]) || segments(p).slice(0, -1).some((d) => d.startsWith("."));
-  const markdown = files.filter((p) => ext(p) === "md");
+  // Suites of cases and accepted outputs (Reading test suites as evidence, section 2), and test data (A-262): a file
+  // under a testdata directory, which Go's tooling ignores by definition and other languages use the same way, and every
+  // file of a suite, is read by the Outputs source alone, never as code, a document or a test.
+  const testData = (p: string) => underAny(p, ["testdata"]);
+  const outputDirs = outputDirsOf(files.filter((p) => !fixtures(p) || testData(p)));
+  const suiteFiles = suiteFilesOf(outputDirs);
+  const suite = new Set(suiteFiles);
+  const uiCases = new Set(outputDirs.filter((o) => o.conventions.includes("UI outputs")).flatMap((o) => [...o.paired.keys()]));
+  const dataOrSuite = (p: string) => testData(p) || (suite.has(p) && testConvention(p) === undefined);
+  // Test data and suite files are never opened here: a baseline in Markdown is no requirement or instruction.
+  const markdown = files.filter((p) => ext(p) === "md" && !dataOrSuite(p));
   // A feature file in a fixture is test data for the subject's own tooling (From the tutors run, section 3).
   const allFeatures = files.filter((p) => ext(p) === "feature");
   const features = allFeatures.filter((p) => !fixtures(p));
@@ -204,7 +220,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   // Markdown source reads it, since a told rule may sit in any of them; the adapter reads only its check names.
   // An import-linter configuration names the contracts a told rule may name, read the same way (From the Toads run,
   // section 4): a pyproject.toml with a [tool.importlinter] table, an .importlinter, or a setup.cfg with [importlinter].
-  const linters = files.filter((p) => !fixtures(p) && ((posix.basename(p) === "pyproject.toml" && /^\s*\[tool\.importlinter\]/m.test(read(p))) || posix.basename(p) === ".importlinter" || (posix.basename(p) === "setup.cfg" && /^\s*\[importlinter\]/m.test(read(p)))));
+  const linters = files.filter((p) => !fixtures(p) && !dataOrSuite(p) && ((posix.basename(p) === "pyproject.toml" && /^\s*\[tool\.importlinter\]/m.test(read(p))) || posix.basename(p) === ".importlinter" || (posix.basename(p) === "setup.cfg" && /^\s*\[importlinter\]/m.test(read(p)))));
   const cruisers = [...files.filter((p) => DEPENDENCY_CRUISER.test(posix.basename(p)) && !underAny(p, ["fixtures", "__fixtures__"])), ...linters];
 
   // Instructions: the files an agent reads at the start of every session (The Assertion Ladder, stage 50).
@@ -225,9 +241,9 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
 
   // Documents: every other Markdown file, less changelogs and those in test directories.
   const changelog = (p: string) => /^(CHANGELOG|HISTORY)/i.test(posix.basename(p));
-  const documents = markdown.filter((p) => !requirements.includes(p) && !instructions.includes(p) && !changelog(p) && !underAny(p, TEST_DIRS));
+  const documents = markdown.filter((p) => !requirements.includes(p) && !instructions.includes(p) && !changelog(p) && !underAny(p, TEST_DIRS) && !dataOrSuite(p));
   if (documents.length > 0) {
-    const g = globsFor(documents, files, undefined, ["**/CHANGELOG*", "**/HISTORY*", ...TEST_DIRS.map((d) => `**/${d}/**`), ...requirements, ...instructions]);
+    const g = globsFor(documents, files, undefined, ["**/CHANGELOG*", "**/HISTORY*", ...TEST_DIRS.map((d) => `**/${d}/**`), "**/testdata/**", ...requirements, ...instructions]);
     add({ name: "Documents", kind: "Documents", at: ".", include: [...g.include, ...cruisers], exclude: g.exclude }, { id: "docs", name: "Documents", kind: "documents", unit: "the document", settings: { ...idSettings } });
     guesses.push(`Documents: ${documents.length} other Markdown files, leaving out changelogs and test directories`);
   }
@@ -236,7 +252,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   if (linters.length > 0 && sources.some((s) => s.include?.some((p) => linters.includes(p)))) guesses.push(`${linters.join(", ")}: an import-linter configuration, read for the contracts it defines`);
   // Baselines: text files a repository says may only shrink, the gaps it already records (section 6). They belong to
   // the documents practice, made for them when no other document is read.
-  const baselines = files.filter((p) => ext(p) === "txt" && !fixtures(p) && isBaseline(read(p)));
+  const baselines = files.filter((p) => ext(p) === "txt" && !fixtures(p) && !dataOrSuite(p) && isBaseline(read(p)));
   if (baselines.length > 0) {
     if (!practices.some((p) => p.id === "docs")) practices.push({ id: "docs", name: "Documents", kind: "documents", unit: "the document", sources: [], settings: { ...idSettings } });
     sources.push({ name: "Baselines", kind: "Documents", at: ".", include: [...baselines] });
@@ -284,7 +300,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   }
 
   // Tests by their runners' conventions, and step definitions beside features.
-  const tests = files.filter((p) => testConvention(p) !== undefined && !fixtures(p));
+  const tests = files.filter((p) => testConvention(p) !== undefined && !fixtures(p) && !testData(p) && !uiCases.has(p));
   const steps = features.length === 0 ? [] : files.filter((p) => testConvention(p) === undefined && stepConvention(p) !== undefined && !fixtures(p));
   const testGlobs = [...new Set(tests.map((p) => testConvention(p)!))].sort(compareCodePoints);
   const stepGlobs = [...new Set(steps.map((p) => stepConvention(p)!))].sort(compareCodePoints);
@@ -324,7 +340,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
       const command = runner === "vitest" ? `npx vitest run --reporter=json --outputFile=${report}` : `npx jest --json --outputFile=${report}`;
       guesses.push(`executions csh/results.json: package.json names ${runner}; in the subject run ${command}, then csh results import tdd <subject>/${report}`);
     }
-    add({ name: "Tests", kind: "TestFiles", at: ".", ...globsFor([...tests, ...steps, ...conftests], files, [...testGlobs, ...stepGlobs, ...(conftests.length > 0 ? ["**/conftest.py"] : [])], ["**/fixtures/**", "**/__fixtures__/**"]) }, testPractice);
+    add({ name: "Tests", kind: "TestFiles", at: ".", ...globsFor([...tests, ...steps, ...conftests], files, [...testGlobs, ...stepGlobs, ...(conftests.length > 0 ? ["**/conftest.py"] : [])], ["**/fixtures/**", "**/__fixtures__/**", "**/testdata/**"]) }, testPractice);
     guesses.push(`Tests: ${tests.length} files by the conventions ${testGlobs.join(", ") || "none"}${steps.length > 0 ? `, and ${steps.length} step definition files` : ""}`);
   }
 
@@ -333,20 +349,45 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   // a `steps` package is ordinary code where no feature file is.
   const stepSet = new Set(steps);
   const stepFile = (p: string) => stepSet.has(p) || (ext(p) !== "py" && stepConvention(p) !== undefined);
-  const code = files.filter((p) => CODE_EXT.includes(ext(p)) && testConvention(p) === undefined && !stepFile(p) && !fixtures(p));
+  const code = files.filter((p) => CODE_EXT.includes(ext(p)) && testConvention(p) === undefined && !stepFile(p) && !fixtures(p) && !dataOrSuite(p));
   // A nested manifest names a module of its own; one in a fixture or a dot-directory is test data or tooling.
   // A task runner's file at the root is read for its tasks (stage 68).
-  const manifests = files.filter((p) => (MANIFESTS.includes(posix.basename(p)) && !fixtures(p) && (p.includes("/") ? !underAny(p, TEST_DIRS) : true)) || (runnerOf(p) !== undefined && !code.includes(p)));
+  const manifests = files.filter((p) => (MANIFESTS.includes(posix.basename(p)) && !fixtures(p) && !testData(p) && (p.includes("/") ? !underAny(p, TEST_DIRS) : true)) || (runnerOf(p) !== undefined && !code.includes(p)));
   // A repository with no code CSH reads but a task runner's file still has a Code source, for the runner's tasks.
   const runners = manifests.filter((p) => runnerOf(p) !== undefined);
   if (code.length > 0) {
-    const g = globsFor(code, files, undefined, [...testGlobs, ...stepGlobs, "**/fixtures/**", "**/__fixtures__/**"]);
+    const g = globsFor(code, files, undefined, [...testGlobs, ...stepGlobs, "**/fixtures/**", "**/__fixtures__/**", "**/testdata/**"]);
     add({ name: "Code", kind: "Code", at: ".", include: [...g.include, ...manifests], exclude: g.exclude }, { id: "code", name: "Code facts", kind: "facts", unit: "the module" });
     guesses.push(`Code: ${code.length} source files in ${[...new Set(code.map((p) => ext(p)))].sort(compareCodePoints).join(", ")}${manifests.length > 0 ? `, and ${manifests.join(", ")}` : ""}`);
   } else if (runners.length > 0) {
     add({ name: "Code", kind: "Code", at: ".", include: runners, exclude: [] }, { id: "code", name: "Code facts", kind: "facts", unit: "the module" });
     guesses.push(`Code: no source files, and ${runners.join(", ")}`);
   }
+
+  // Accepted outputs (Reading test suites as evidence, section 2): one source for every suite, owned by the tests
+  // practice. A reference tree or mirrored directories are read by their globs, any other suite by its files. Every
+  // file is read by name (A-261) but a snapshot file, whose entries stage 71 reads.
+  if (suiteFiles.length > 0) {
+    // A suite at the root of the checkout is read by its files: a glob of its directory would select everything.
+    const trees = outputDirs.filter((o) => o.caseDir !== undefined && o.dir !== ".").flatMap((o) => [`${o.dir}/**`, `${o.caseDir}/**`]);
+    const treeGlobs = [...new Set(trees)].sort(compareCodePoints);
+    const inTree = (p: string) => matches(p, treeGlobs);
+    const rest = suiteFiles.filter((p) => !inTree(p));
+    const g = globsFor(suiteFiles, files, [...treeGlobs, ...rest]);
+    const snapshot = (p: string) => underAny(p, ["__snapshots__"]) || (segments(p).at(-2) === "snapshots" && ext(p) === "snap");
+    const names = [...treeGlobs, ...rest.filter((p) => !snapshot(p))];
+    sources.push({ name: "Outputs", kind: "Outputs", at: ".", include: g.include, exclude: g.exclude, ...(names.length > 0 ? { names } : {}) });
+    const owner = practices.find((p) => p.kind === "tests");
+    if (owner !== undefined) owner.sources.push("Outputs");
+    else practices.push({ id: "tdd", name: "TDD", kind: "tests", unit: "the test file", sources: ["Outputs"] });
+    const by = new Map<string, number>();
+    for (const o of outputDirs) for (const c of o.conventions) by.set(c, (by.get(c) ?? 0) + 1);
+    const cases = outputDirs.reduce((n, o) => n + o.cases.length, 0);
+    const named = suiteFiles.filter((p) => matches(p, names)).length;
+    guesses.push(`Outputs: ${suiteFiles.length} files of ${outputDirs.length} ${outputDirs.length === 1 ? "directory" : "directories"} of accepted outputs (${[...by].map(([c, n]) => `${c} ${n}`).join(", ") || "none paired"}), ${cases} ${cases === 1 ? "case" : "cases"}; ${named} read by name, their bytes never opened`);
+  }
+  const data = files.filter((p) => testData(p) && !suite.has(p));
+  if (files.some(testData)) guesses.push(`testdata: ${files.filter(testData).length} files under testdata directories are test data, never code, documents or tests${data.length > 0 ? `; ${data.length} that no suite pairs are read by no source` : ""}`);
 
   // A Mermaid container diagram in a file of its own (stage 55): the first line that is not blank or a comment says C4Container.
   const diagrams = files.filter((p) => ext(p) === "mmd" && !fixtures(p) && read(p).split(/\r?\n/).map((l) => l.trim()).find((l) => l !== "" && !l.startsWith("%%")) === "C4Container");

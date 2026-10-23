@@ -11,6 +11,9 @@ import { type SourceRun, TOOL_VERSION } from "@csh/check";
 import { installedReadable } from "@csh/emit";
 import type { AdapterInput, AdapterOutput } from "@csh/witness";
 
+/** The digest of no bytes: what a file read by name is handed over as (A-261). */
+const EMPTY_DIGEST = digestOf(new Uint8Array(0));
+
 /** Built-in adapters by source kind. Configuration may add more (kind to module specifier or path). */
 export const BUILTIN_ADAPTERS: Record<string, string> = {
   Witnesses: "@csh/adapter-witness-files",
@@ -21,6 +24,7 @@ export const BUILTIN_ADAPTERS: Record<string, string> = {
   Documents: "@csh/adapter-items/markdown",
   Features: "@csh/adapter-items/gherkin",
   TestFiles: "@csh/adapter-items/tests",
+  Outputs: "@csh/adapter-items/outputs",
   Issues: "@csh/adapter-items/jsonl",
   Traces: "@csh/adapter-items/yaml",
   Code: "@csh/facts-code",
@@ -48,7 +52,7 @@ export interface RunSourcesOptions {
    * Settings by source name, from the component manifest. A source's own adapter takes precedence over the one for
    * its kind.
    */
-  perSource?: Record<string, { adapter?: string; executions?: string; cites?: string; steps?: string; settings?: Record<string, string>; include?: string[]; exclude?: string[] }>;
+  perSource?: Record<string, { adapter?: string; executions?: string; cites?: string; steps?: string; settings?: Record<string, string>; include?: string[]; exclude?: string[]; names?: string[] }>;
   /** The executions file joined to a Witnesses source that no practice owns; none when absent (#22). */
   executions?: string;
   /** Authority of each binding, by binding fragment name; candidate when absent. */
@@ -361,6 +365,9 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
     const selected = inc === undefined && exc === undefined ? found : found.filter((f) => (inc === undefined || inc.some((r) => r.test(below(f.path)))) && !(exc ?? []).some((r) => r.test(below(f.path))));
     const kept = opts.tracked === undefined ? selected : selected.filter((f) => opts.tracked!.has(f.path));
     const untracked = selected.length - kept.length;
+    // A file read by name is handed over as its path alone (A-261): its bytes are never opened.
+    const byName = own?.names === undefined ? undefined : own.names.map(globRegExp);
+    const nameOnly = (p: string) => byName !== undefined && byName.some((r) => r.test(below(p)));
     const named = opts.perSource?.[source.name]?.adapter ?? opts.adapters?.[source.kind];
     // A kept output is reused when everything it was made from is the same (stage 27). A project-local adapter is
     // project code that may import anything, so its output is never kept.
@@ -371,6 +378,7 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
       const execFiles = ownExec === undefined ? [] : (filesAt(opts.codeRoot ?? opts.root, ownExec).files ?? []);
       const stepFiles = own?.steps === undefined ? [] : (filesAt(opts.codeRoot ?? opts.root, own.steps).files ?? []);
       const digests = (fs: { path: string; abs: string }[]) => fs.map((f) => [f.path, digestOf(new Uint8Array(readFileSync(f.abs)))]);
+      const ownDigests = (fs: { path: string; abs: string }[]) => fs.map((f) => (nameOnly(f.path) ? [f.path, EMPTY_DIGEST] : [f.path, digestOf(new Uint8Array(readFileSync(f.abs)))]));
       const key = digestJson({
         tool,
         isolated: opts.isolated ?? true,
@@ -384,7 +392,7 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
         vocabulary: module.vocabulary,
         bindings,
         // A pinned checkout's files are its commit's: their paths say which were read, and none is opened.
-        files: opts.cache.pinned !== undefined ? { pinned: opts.cache.pinned, paths: kept.map((f) => f.path) } : digests(kept),
+        files: opts.cache.pinned !== undefined ? { pinned: opts.cache.pinned, paths: kept.map((f) => f.path) } : ownDigests(kept),
         exec: digests(execFiles),
         steps: digests(stepFiles),
       });
@@ -397,6 +405,7 @@ export async function runSources(module: Module, opts: RunSourcesOptions): Promi
       continue;
     }
     const files = kept.map((f) => {
+      if (nameOnly(f.path)) return { path: f.path, digest: EMPTY_DIGEST, bytes: new Uint8Array(0) };
       const bytes = new Uint8Array(readFileSync(f.abs));
       return { path: f.path, digest: digestOf(bytes), bytes };
     });

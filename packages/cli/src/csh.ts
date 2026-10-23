@@ -645,7 +645,8 @@ async function run(p: Project, a: Args, io: Io): Promise<number> {
   // What the profile leaves unread, said on every run of the current snapshot (From real runs, section 1.4).
   // Only sources the manifest declares are counted: a specification that declares its own would read as nothing read.
   const c = a.options.at === undefined && (p.component?.manifest.sources ?? []).length > 0 ? coverageOf(p) : undefined;
-  if (c !== undefined) lines.push(c.read === c.tracked ? `  coverage: all ${c.tracked} tracked files read` : `  coverage: ${c.read} of ${c.tracked} tracked files read; not read: ${c.unread.slice(0, 3).map((u) => `${u.files} ${u.ext}`).join(", ")}${c.unread.length > 3 ? ", …" : ""}; csh coverage lists the rest`);
+  const byName = c !== undefined && c.byName > 0 ? ` (${c.byName} by name)` : "";
+  if (c !== undefined) lines.push(c.read === c.tracked ? `  coverage: all ${c.tracked} tracked files read${byName}` : `  coverage: ${c.read} of ${c.tracked} tracked files read${byName}; not read: ${c.unread.slice(0, 3).map((u) => `${u.files} ${u.ext}`).join(", ")}${c.unread.length > 3 ? ", …" : ""}; csh coverage lists the rest`);
   const v = (x: string) => (report.assessments ?? []).filter((y) => y.verdict === x).length;
   lines.push(`  obligations ${(report.assessments ?? []).length}: conflicting ${v("conflicting")}, violated ${v("violated")}, satisfied ${v("satisfied")}, unknown ${v("unknown")}`);
   lines.push(`  gate ${decision.overall} (${decision.mode})`);

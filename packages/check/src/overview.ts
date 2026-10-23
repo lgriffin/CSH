@@ -80,6 +80,9 @@ export const GAP_NEXT: Record<string, string> = {
   "unbound-scenario": "Bind the scenario in a test module (scenarios() or @scenario), or say it is not built yet",
   // From the tutors run, section 6: a gap the repository records itself.
   baselined: "Fix the entries the baseline records and delete their lines, so the file shrinks",
+  // Accepted outputs (Reading test suites as evidence, section 2).
+  "unaccepted-case": "Accept the output the runner writes for the case, or remove the case if the runner is meant to skip it",
+  "orphan-output": "Delete the output, or restore the case that produced it",
 };
 
 /** Signal kinds the tool could not decide, with what would decide each. Any other kind is indeterminate too. */
@@ -93,11 +96,14 @@ export const INDETERMINATE_NEXT: Record<string, string> = {
   "unconstrained-after": "Say what the event leaves unchanged",
   "steps-undecided": "Check by hand whether a definition CSH cannot read (a custom parameter type, a computed pattern) matches the step",
   "binding-undecided": "Write the scenario's title as a literal in its @scenario call, or check by hand which scenarios the computed title binds",
+  "shared-stem": "Rename one of the cases, or check by hand which of them the runner reads and which wrote the outputs",
+  "unpaired-outputs": "Check by hand which test writes these outputs, or keep them where a convention pairs them with their cases",
   "symbol-undecided": "Check each name by hand: rename it in the prose if the code renamed it, or leave it if it names code outside the repository",
 };
 /** Signal kinds that are a convergence: the source states a silence and its reason, and nothing contradicts it. */
 export const CONVERGED_NEXT: Record<string, string> = {
   "justified-gap": "The silence is recorded with its reason: revisit the reason when the design changes",
+  "accepted-outputs": "The cases it counts have outputs a person accepted, and any without one is a gap of its own: the runner's results say whether the cases still produce them",
 };
 const OTHER_NEXT = "No rule places this kind yet: read its detail";
 

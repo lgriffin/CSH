@@ -1,0 +1,22 @@
+{
+  "fixture": "F211",
+  "section": "Reading test suites as evidence, section 2; A-263",
+  "stage": 70,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["Outputs", "golden siblings"],
+      "entries": [
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/format/testdata", "detailIncludes": ["golden siblings", "2 of 2 cases"] },
+        { "outcome": "indeterminate", "kind": "unpaired-outputs", "subject": "Outputs/format/testdata", "detailIncludes": ["2 files", "TestFormat.golden"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "orphan-output", "subject": "Outputs/format/testdata/TestFormat.golden" },
+        { "kind": "orphan-output", "subject": "Outputs/format/testdata/twice.golden" },
+        { "kind": "unaccepted-case", "subject": "Outputs/format/testdata/twice.go" },
+        { "kind": "unaccepted-case", "subject": "Outputs/format/testdata/notes.txt" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

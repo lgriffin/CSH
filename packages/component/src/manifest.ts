@@ -78,6 +78,11 @@ export interface DeclaredSource {
   include?: string[];
   /** Globs over paths relative to `at`: files that match one are not read, even when included. */
   exclude?: string[];
+  /**
+   * Globs over paths relative to `at`: files that match one are read by name (Reading test suites as evidence, A-261).
+   * The adapter is given their paths and never their bytes.
+   */
+  names?: string[];
 }
 
 export interface ComponentManifest {
@@ -162,7 +167,7 @@ export function validateManifest(v: unknown): ComponentProblem[] {
           bad("malformed-manifest", `sources[${i}] must have a name, a kind and a relative path at`);
           continue;
         }
-        for (const k of ["include", "exclude"] as const) if (s[k] !== undefined && !strings(s[k])) bad("malformed-manifest", `sources[${i}].${k} must be a list of globs`);
+        for (const k of ["include", "exclude", "names"] as const) if (s[k] !== undefined && !strings(s[k])) bad("malformed-manifest", `sources[${i}].${k} must be a list of globs`);
         if (names.has(s.name)) bad("duplicate-source", `source ${s.name} is declared twice`);
         names.add(s.name);
       }

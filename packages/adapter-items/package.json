@@ -10,7 +10,8 @@
     "./gherkin": "./src/gherkin.ts",
     "./tests": "./src/tests.ts",
     "./jsonl": "./src/jsonl.ts",
-    "./yaml": "./src/yaml.ts"
+    "./yaml": "./src/yaml.ts",
+    "./outputs": "./src/outputs.ts"
   },
   "dependencies": {
     "@csh/adapter-ears-markdown": "workspace:*",

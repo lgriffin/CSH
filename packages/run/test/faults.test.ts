@@ -164,3 +164,18 @@ describe("source locations", () => {
     expect(runs.find((r) => r.source === "UnitTests")!.output.diagnostics[0]!.code).toBe("local-ran");
   }, 20000);
 });
+
+describe("files read by name (Reading test suites as evidence, A-261)", () => {
+  it("hands the adapter a named file's path and no bytes, and every other file whole", async () => {
+    const d = fresh("names");
+    writeFileSync(join(d, "inputs", "big.baseline"), "x".repeat(1000));
+    const e = await emit(join(d, "spec.csl.ts"), { root: d, readable: [resolve(d, "..")] });
+    if (!e.ok) throw new Error("emit failed");
+    const module = { ...e.module, sources: [{ name: "Sizes", kind: "Sizes", at: "inputs" }] } as typeof e.module;
+    const runs = await runSources(module, { root: d, isolated: false, adapters: { Sizes: join(ADAPTERS, "sizes.ts") }, perSource: { Sizes: { names: ["*.baseline"] } }, bindingAuthority: () => "approved" });
+    const items = new Map((runs[0]!.output.items ?? []).map((i) => [i.id, i]));
+    expect(items.get("inputs/big.baseline")?.attrs?.bytes).toBe("0");
+    expect(Number(items.get("inputs/witnesses.ndjson")?.attrs?.bytes)).toBeGreaterThan(0);
+    expect(runs[0]!.files.find((f) => f.path === "inputs/big.baseline")?.digest).toBe(items.get("inputs/big.baseline")?.textDigest);
+  });
+});

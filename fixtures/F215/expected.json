@@ -1,0 +1,19 @@
+{
+  "fixture": "F215",
+  "section": "Reading test suites as evidence, section 2; A-263",
+  "stage": 70,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["Outputs", "snapshot directories"],
+      "entries": [
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/src/__snapshots__", "detailIncludes": ["snapshot directories", "1 of 1 case"] },
+        { "outcome": "gap", "kind": "orphan-output", "subject": "Outputs/src/__snapshots__/parse.test.ts.snap", "detailIncludes": ["src/parse.test.ts"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "orphan-output", "subject": "Outputs/src/__snapshots__/format.test.ts.snap" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "name": "checker",
+  "devDependencies": { "jest": "29.7.0" }
+}

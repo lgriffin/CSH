@@ -8,6 +8,7 @@ import { type Coverage, coverageOfSources, renderCoverage } from "../src/coverag
 const c: Coverage = {
   tracked: 10,
   read: 6,
+  byName: 0,
   sources: [{ name: "Docs", kind: "Documents", files: 4 }, { name: "Code", kind: "Code", files: 2 }, { name: "Tests", kind: "TestFiles", files: 0 }],
   unread: [{ ext: ".rs", files: 3, sample: "verify/src/lib.rs" }, { ext: ".sql", files: 1, sample: "db/a.sql" }],
 };
