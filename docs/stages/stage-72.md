@@ -30,6 +30,7 @@ On the CI subjects, checked by hand:
 |---|---|---|
 | taskboard (`analysis-expected.json` of taskboard-typescript) | 2 `unexercised`, 2 `exercised` | `ApiExceptionHandler` appears in `ArchitectureTest.java` only in a string; no TypeScript test names `DomainError` or `ErrorCode`. Counts now 3 gaps, 1 indeterminate, 2 converged |
 | ESI.ts (its profile, `csh/expected.json`) | 6 `exercised` | 43 converged becomes 49 |
-| ESI.ts read cold | 11 `exercised`, 3 `unexercised` | `OLDEST_TYPESCRIPT` and `DOC_SOURCES` are named only by scripts, and `parseJsonBody` by no test |
+| lgriffin/TypeScript read cold, at `a91e938` | 1 `exercised`, 1 `unexercised` | `tsc/internal/format/README.md` names `FormatSpan`, `processNode` and `processPair`, which `api.go` and its siblings declare and no `_test.go` file mentions; `tsc/internal/fswatch/README.md`'s three errors are each named by a Go test. 283 gaps, 16 indeterminate, 18 converged |
+| ESI.ts read cold | 13 `exercised`, 3 `unexercised` | `OLDEST_TYPESCRIPT` and `DOC_SOURCES` are named only by scripts, and `parseJsonBody` by no test |
 
 The rung of nothing changes: a mention is not a citation.
