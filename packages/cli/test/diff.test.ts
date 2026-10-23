@@ -45,6 +45,8 @@ describe("csh diff", () => {
   }, 300_000);
 
   it("reads a stored run's directory as a side, and prints the model with --json", async () => {
+    // Its own stored run, so that the test does not lean on the one before it.
+    expect(await csh(["run"], io(proj).io)).toBe(0);
     const runs = join(proj, ".csh-cache", "runs");
     const stored = readdirSync(runs).map((x) => join(runs, x)).find((x) => existsSync(join(x, "report.json")));
     expect(stored).toBeDefined();
