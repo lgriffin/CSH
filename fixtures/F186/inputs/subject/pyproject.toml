@@ -1,0 +1,6 @@
+[project]
+name = "cart"
+version = "0.1.0"
+
+[dependency-groups]
+dev = ["pytest", "pytest-bdd>=7", "hypothesis"]

@@ -1,0 +1,18 @@
+{
+  "fixture": "F188",
+  "section": "From the Toads run, section 5; A-219",
+  "stage": 62,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "told": [
+        { "item": "Documents/docs/bot.md#L11", "lifted": "layering" },
+        { "item": "Documents/docs/bot.md#L13", "lifted": "layering" },
+        { "item": "Documents/docs/bot.md#L15", "lifted": "layering" },
+        { "item": "Documents/docs/bot.md#L17", "lifted": "layering" }
+      ],
+      "toldAbsent": ["Documents/docs/bot.md#L3", "Documents/docs/bot.md#L5", "Documents/docs/bot.md#L7", "Documents/docs/bot.md#L9"],
+      "subjectUntouched": true
+    }
+  }
+}

@@ -1,0 +1,22 @@
+[project]
+name = "shop"
+version = "0.1.0"
+
+[tool.importlinter]
+root_packages = ["shop_api", "shop_bot", "shop_worker"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "The bot talks to the API only over HTTP: no shop_api or sqlalchemy imports"
+type = "forbidden"
+source_modules = ["shop_bot"]
+forbidden_modules = ["shop_api", "sqlalchemy"]
+
+[[tool.importlinter.contracts]]
+name = "Only the worker imports the analyzer (ana_core, ana_store)"
+type = "forbidden"
+source_modules = [
+  "shop_api",
+  "shop_bot",
+]
+forbidden_modules = ["ana_core", "ana_store"]

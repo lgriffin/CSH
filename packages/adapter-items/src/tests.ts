@@ -13,6 +13,7 @@ import { type Adapter, type AdapterInput, type AdapterOutput, type Diagnostic, t
 import { decode, idPatternOf, sortedFiles } from "./common.ts";
 import { joiner, type Join } from "./tests-join.ts";
 import { stepDefinitionsOther } from "./steps-other.ts";
+import { pytestBddBindings } from "./pytest-bdd.ts";
 import { inventory, languageOf, lexOther, lineIndex, lineStarts, runnerName, underscoreFree } from "./tests-other.ts";
 
 /** A `go.mod` or `Cargo.toml` in a test source is read for its layout, to join results, and is not a test file. */
@@ -359,8 +360,19 @@ export function run(input: AdapterInput): AdapterOutput {
           }
         }
       }
+      // What a pytest-bdd module binds (From the Toads run, section 2): it generates a test per scenario it binds.
+      const bdd = lang === "python" ? pytestBddBindings(text) : undefined;
+      if (bdd !== undefined) {
+        attrs.bdd = "pytest-bdd";
+        if (bdd.features.length > 0) attrs.bindsFeatures = bdd.features.join("\n");
+        if (bdd.dirs.length > 0) attrs.bindsDirs = bdd.dirs.join("\n");
+        if (bdd.named.length > 0) attrs.bindsNamed = bdd.named.join("\n");
+        if (bdd.pairs.length > 0) attrs.bindsPairs = bdd.pairs.join("\n");
+        if (bdd.titles.length > 0) attrs.bindsTitles = bdd.titles.join("\n");
+        if (bdd.undecided.length > 0) attrs.bindsUndecided = bdd.undecided.join("\n");
+      }
       items.push({ id: file.path, kind: "test-file", text: file.path, span: `${file.path}:1`, textDigest: digestOf(text), attrs });
-      if (found.tests === 0 && defs.length === 0) diagnostics.push({ code: "no-tests", severity: "info", message: `${file.path} declares no test its runner would collect`, span: file.path });
+      if (found.tests === 0 && defs.length === 0 && bdd?.binds !== true && posix.basename(file.path) !== "conftest.py") diagnostics.push({ code: "no-tests", severity: "info", message: `${file.path} declares no test its runner would collect`, span: file.path });
       continue;
     }
     let steps = 0;

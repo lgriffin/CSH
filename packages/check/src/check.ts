@@ -36,6 +36,8 @@ export interface CheckOptions {
   subjectCommit?: string;
   /** The files the repository tracks, relative to the root sources are read from; edges to files resolve against it. */
   files?: string[];
+  /** Of the paths edges name that are not tracked, those the repository's ignore files ignore (A-214). */
+  ignored?: string[];
   /** The repository's history at the commit evaluated (stage 25): stale-prose and untraced-change come from it. */
   history?: HistoryPort;
 }
@@ -70,7 +72,7 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
   const outcome = await runQueries(pool, env, authority);
   const arch = evaluateArchitecture({ prepared, fragments: prepared.fragments, authority, live: (n) => pool.byName.has(n), ...(opts.files !== undefined ? { files: opts.files } : {}), ...(opts.snapshot !== undefined ? { snapshotCommit: opts.snapshot.commit } : {}), ...(opts.subjectCommit !== undefined ? { subjectCommit: opts.subjectCommit } : {}), ...(opts.history !== undefined ? { history: opts.history } : {}) });
   outcome.findings = sortFindings([...outcome.findings, ...arch.findings]);
-  const traced = trace({ prepared, facts: currentFacts(prepared.runs.flatMap((r) => r.output.facts ?? []), opts.snapshot?.commit, opts.subjectCommit), ...(opts.files !== undefined ? { files: opts.files } : {}), ...(opts.history !== undefined ? { history: opts.history } : {}) });
+  const traced = trace({ prepared, facts: currentFacts(prepared.runs.flatMap((r) => r.output.facts ?? []), opts.snapshot?.commit, opts.subjectCommit), ...(opts.files !== undefined ? { files: opts.files } : {}), ...(opts.ignored !== undefined ? { ignored: opts.ignored } : {}), ...(opts.history !== undefined ? { history: opts.history } : {}) });
   const tested = testOutcomes(prepared, traced.edges, opts.files);
   const gaps = await gapView({ prepared, pool, outcome, env, authority, archGaps: arch.gaps, traceGaps: [...traced.gaps, ...untracedChanges(opts.history), ...tested.gaps], ...(opts.component !== undefined ? { unowned: opts.component.unowned } : {}) });
   const tool = { version: TOOL_VERSION, solver: opts.solver.id, budgetMs };

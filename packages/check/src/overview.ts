@@ -75,6 +75,9 @@ export const GAP_NEXT: Record<string, string> = {
   // Step matching (From real runs, stage 46): placed, so that each says what would close it.
   "undefined-step": "Write a step definition that matches the step, or reword the step to match one",
   "unused-step-definition": "Use the definition in a scenario, or remove it",
+  // pytest-bdd bindings (From the Toads run, section 2).
+  "stepless-scenario": "Write the scenario's steps, or keep its test from running until they exist",
+  "unbound-scenario": "Bind the scenario in a test module (scenarios() or @scenario), or say it is not built yet",
   // From the tutors run, section 6: a gap the repository records itself.
   baselined: "Fix the entries the baseline records and delete their lines, so the file shrinks",
 };
@@ -89,6 +92,7 @@ export const INDETERMINATE_NEXT: Record<string, string> = {
   reserved: "The term is reserved: bind it or remove it once its meaning is settled",
   "unconstrained-after": "Say what the event leaves unchanged",
   "steps-undecided": "Check by hand whether a definition CSH cannot read (a custom parameter type, a computed pattern) matches the step",
+  "binding-undecided": "Write the scenario's title as a literal in its @scenario call, or check by hand which scenarios the computed title binds",
 };
 /** Signal kinds that are a convergence: the source states a silence and its reason, and nothing contradicts it. */
 export const CONVERGED_NEXT: Record<string, string> = {

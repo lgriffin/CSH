@@ -7,13 +7,15 @@ import type { Fact, ItemEdge } from "@csh/witness";
 import type { Prepared } from "./pool.ts";
 import { type Citation, termsOf, unobserved } from "./grain.ts";
 import { isToldRule } from "./ladder.ts";
-import { boundByTitle, stepGaps } from "./steps.ts";
+import { boundByTitle, pytestBddBindings, stepGaps } from "./steps.ts";
 import type { Gap, HistoryPort, Report } from "./types.ts";
 
 export interface TraceInput {
   prepared: Prepared;
   /** The files the repository tracks at the evaluated commit, relative to its root; undefined when not known. */
   files?: string[];
+  /** Untracked paths the repository's ignore files ignore (From the Toads run, section 1): local to a checkout. */
+  ignored?: string[];
   /** The code facts of the run: a symbol or script named in prose is resolved against them (stage 24). */
   facts?: Fact[];
   /** The repository's history (stage 25): with it, prose that names a file changed since is stale-prose. */
@@ -67,6 +69,7 @@ export function trace(input: TraceInput): TraceResult {
   const byFolded = new Map<string, string[]>();
   for (const i of items) if (i.kind !== "document" && i.kind !== "test-file" && i.kind !== "baseline") byFolded.set(i.id.toLowerCase(), [...(byFolded.get(i.id.toLowerCase()) ?? []), `${i.source}/${i.id}`]);
   const files = input.files === undefined ? undefined : new Set(input.files);
+  const ignored = new Set(input.ignored ?? []);
   // A path counts as one of the repository's only when its first segment is a top-level entry of it (A-96): prose
   // writes application/json and CJS/ESM in backticks too.
   const top = new Set((input.files ?? []).map((f) => f.split("/")[0]!));
@@ -121,6 +124,8 @@ export function trace(input: TraceInput): TraceResult {
       if (!top.has(p.split("/")[0]!)) return null;
       if (files.has(p) || dirs.has(p)) return "file";
       // Missing, in a sentence that says it is absent, or that names another repository: unchecked, not dangling.
+      // So is a path the repository ignores, from the root or the mentioning file's directory (A-214).
+      if ([p, near].some((x) => x !== undefined && (ignored.has(x) || ignored.has(`${x}/`)))) return null;
       if (e.absent === true || (e.repos ?? []).some((r) => !top.has(r.split("/")[0]!))) return null;
       return undefined;
     }
@@ -222,6 +227,10 @@ export function trace(input: TraceInput): TraceResult {
   }
   // A scenario, or a scenario of specification prose, that a test carries the title of is checked by that test (section 2).
   const titled = boundByTitle(items);
+  // A scenario a pytest-bdd module binds is checked by it; one it may bind, or binds by nothing, is said so (A-216).
+  const bdd = pytestBddBindings(items);
+  for (const [q, by] of bdd.bound) for (const t of by) check(q, `test file ${t}, by pytest-bdd`);
+  gaps.push(...bdd.gaps);
   for (const it of items) {
     const q = `${it.source}/${it.id}`;
     const by = titled.get(q);

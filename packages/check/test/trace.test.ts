@@ -253,3 +253,81 @@ describe("references the tutors run taught (From the tutors run, sections 1, 5 a
     expect(g[0]!.detail).toContain("and 1 more");
   });
 });
+
+describe("From the Toads run (stage 62)", () => {
+  const sc = (id: string, span: string, attrs?: Record<string, string>) => ({ id, kind: "scenario" as const, text: id.slice(id.lastIndexOf("/") + 1), span, textDigest: "sha256:0", ...(attrs !== undefined ? { attrs } : {}) });
+  const tf = (id: string, attrs: Record<string, string>) => ({ id, kind: "test-file" as const, text: id, span: `${id}:1`, textDigest: "sha256:0", attrs: { tests: "0", bdd: "pytest-bdd", ...attrs } });
+  const of = (items: NonNullable<SourceRun["output"]["items"]>, tests: NonNullable<SourceRun["output"]["items"]>): SourceRun[] => [
+    { source: "Features", kind: "Features", files: [], output: { diagnostics: [], items, edges: [] } },
+    { source: "Tests", kind: "TestFiles", files: [], output: { diagnostics: [], items: tests, edges: [] } },
+  ];
+  const kinds = (r: ReturnType<typeof trace>) => r.gaps.map((g) => [g.kind, g.subject]).sort();
+
+  it("decides each scenario of a pytest-bdd repository: bound, step-less, unbound or undecided", () => {
+    const items = [
+      sc("a.feature#/one", "tests/features/a.feature:3", { steps: "4\tx" }),
+      sc("a.feature#/two", "tests/features/a.feature:8", { tags: "@pending" }),
+      sc("b.feature#/three", "tests/features/b.feature:3", { steps: "4\tx" }),
+      sc("b.feature#/four", "tests/features/b.feature:8", { steps: "9\tx\n10\ty" }),
+      sc("c.feature#/five", "tests/features/c.feature:3", { steps: "4\tx" }),
+      sc("d.feature#/six", "tests/features/d.feature:3", { steps: "4\tx" }),
+    ];
+    const tests = [
+      tf("tests/step_defs/test_a.py", { bindsFeatures: "../features/a.feature" }),
+      tf("tests/step_defs/test_b.py", { bindsTitles: "three" }),
+      tf("tests/step_defs/test_c.py", { bindsUndecided: "c.feature" }),
+      tf("tests/step_defs/test_d.py", { bindsNamed: "d\nhelpers" }),
+    ];
+    const r = trace({ prepared: prepare(module, of(items, tests)) });
+    expect(kinds(r)).toEqual([
+      ["binding-undecided", "Features/c.feature#/five"],
+      ["stepless-scenario", "Features/a.feature#/two"],
+      ["unbound-scenario", "Features/b.feature#/four"],
+    ]);
+    expect(r.gaps.find((g) => g.kind === "unbound-scenario")!.detail).toContain("its 2 steps never run");
+    expect(r.gaps.find((g) => g.kind === "stepless-scenario")!.detail).toContain("tagged @pending");
+    expect(r.checks.get("Features/b.feature#/three")).toEqual(["test file tests/step_defs/test_b.py, by pytest-bdd"]);
+    expect(r.checks.get("Features/d.feature#/six")).toEqual(["test file tests/step_defs/test_d.py, by pytest-bdd"]);
+  });
+
+  it("binds every feature file under a directory, and a title with its feature file, not by its title alone", () => {
+    const items = [
+      sc("a.feature#/one", "tests/features/shop/a.feature:3", { steps: "4\tx" }),
+      sc("b.feature#/one", "tests/other/b.feature:3", { steps: "4\tx" }),
+      sc("c.feature#/Pay", "tests/other/c.feature:3", { steps: "4\tx" }),
+      sc("d.feature#/Pay", "tests/other/d.feature:3", { steps: "4\tx" }),
+      sc("e.feature#/Refund", "tests/other/e.feature:3", { steps: "4\tx" }),
+      sc("f.feature#/Refund", "tests/other/f.feature:3", { steps: "4\tx" }),
+    ];
+    const tests = [
+      tf("tests/step_defs/test_a.py", { bindsDirs: "../features" }),
+      tf("tests/step_defs/test_p.py", { bindsPairs: "c.feature\tPay" }),
+      tf("tests/step_defs/test_r.py", { bindsTitles: "Refund" }),
+    ];
+    const r = trace({ prepared: prepare(module, of(items, tests)) });
+    expect(kinds(r)).toEqual([
+      ["binding-undecided", "Features/e.feature#/Refund"],
+      ["binding-undecided", "Features/f.feature#/Refund"],
+      ["unbound-scenario", "Features/b.feature#/one"],
+      ["unbound-scenario", "Features/d.feature#/Pay"],
+    ]);
+    expect(r.checks.get("Features/a.feature#/one")).toEqual(["test file tests/step_defs/test_a.py, by pytest-bdd"]);
+    expect(r.checks.get("Features/c.feature#/Pay")).toEqual(["test file tests/step_defs/test_p.py, by pytest-bdd"]);
+  });
+
+  it("decides nothing when no test file is a pytest-bdd module", () => {
+    const r = trace({ prepared: prepare(module, of([sc("a.feature#/one", "a.feature:3")], [{ ...tf("t.py", {}), attrs: { tests: "1" } }])) });
+    expect(kinds(r)).toEqual([]);
+  });
+
+  it("leaves a missing path the repository ignores unchecked, from the root, the mentioning directory, or as a directory", () => {
+    const doc = (to: string, span = "docs/a.md:3"): SourceRun[] => [{ source: "Docs", kind: "Documents", files: [], output: { diagnostics: [], items: [item("docs/a.md", "document")], edges: [{ from: "docs/a.md", rel: "mentions-file", to, span }] } }];
+    const files = ["docs/a.md", "config/x.example.yaml"];
+    const dangling = (to: string, ignored: string[]) => trace({ prepared: prepare(module, doc(to)), files, ignored }).gaps.some((g) => g.kind === "dangling-reference");
+    expect(dangling("file:config/x.yaml", [])).toBe(true);
+    expect(dangling("file:config/x.yaml", ["config/x.yaml"])).toBe(false);
+    expect(dangling("file:config/gen/", ["config/gen/"])).toBe(false);
+    expect(dangling("file:docs/local.md", ["docs/docs/local.md"])).toBe(false);
+    expect(dangling("file:config/y.yaml", ["config/x.yaml"])).toBe(true);
+  });
+});

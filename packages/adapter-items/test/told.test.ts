@@ -20,6 +20,14 @@ describe("toldKind", () => {
     ["Ports import nothing.", "layering"],
     ["Nothing in the pipeline imports a concrete middleware.", "layering"],
     ["The lint forbids any import of the global logger.", "layering"],
+    // Stage 62: "import" before a code noun, or "of", still names a dependency; a restriction in its own clause still counts.
+    ["The import rules forbid the cogs from reaching the database.", "layering"],
+    ["A cog never touches the database (an import contract in `pyproject.toml` forbids it).", "layering"],
+    ["Handlers must not, under any circumstances, import the database driver.", "layering"],
+    ["The worker imports nothing from the web layer, because the web layer is optional.", "layering"],
+    // "no" and "any" restrict an import; they do not make it a data import.
+    ["Core has no imports outside the domain.", "layering"],
+    ["There are no imports between layers.", "layering"],
     ["When a reservation exceeds the stock, the service shall reject it.", "ears"],
     ["The service shall log every refusal.", "ears"],
   ])("%s is %s", (s, kind) => expect(toldKind(s)).toBe(kind));
@@ -29,6 +37,12 @@ describe("toldKind", () => {
     "At first glance, based on imports, it might seem that the Dependency Rule isn't violated.",
     "Imports therefore carry the `.ts` extension, type-only imports say `import type`, and `enum` and constructor parameter properties are not available.",
     "Does the domain not import the store?",
+    // Stage 62 (A-219): a quotation, a data import, and a restriction in the clause before a "because".
+    'Anyone else gets "Only that night\'s officers can import its sign-ups." The same import is open to officers.',
+    "Members can change their specs; either way, no later import touches them.",
+    "The import keeps only what the hub uses today.",
+    "A generic guild site cannot show that, because it depends on the guild's own analysis.",
+    "The bot says \u201cyou cannot import this file\u201d when it is too large.",
   ])("%s is no told rule", (s) => expect(toldKind(s)).toBeUndefined());
 });
 

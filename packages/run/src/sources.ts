@@ -1,7 +1,7 @@
 // Running sources through adapters (Evidence tab, section 4). The harness reads the
 // files; the adapter sees only their bytes, the vocabulary and the bindings.
 import { unknownSettings } from "./settings.ts";
-import { execFileSync, spawn } from "node:child_process";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { createRequire } from "node:module";
@@ -208,6 +208,19 @@ export function trackedFiles(root: string): string[] | undefined {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * Which of the given paths, none of them tracked, the repository's own ignore files ignore (From the Toads run, section
+ * 1; A-214): its `.gitignore` files and `.git/info/exclude`, never the reader's global excludes, so the answer is the
+ * repository's. Empty when git cannot say.
+ */
+export function ignoredPaths(root: string, paths: string[]): string[] {
+  if (paths.length === 0) return [];
+  const r = spawnSync("git", ["-c", `core.excludesFile=${join(root, ".git", "csh-no-global-excludes")}`, "check-ignore", "--no-index", "-z", "--stdin"], { cwd: root, input: paths.join("\0"), encoding: "utf8", stdio: ["pipe", "pipe", "ignore"], maxBuffer: 64 * 1024 * 1024 });
+  // Exit 1 means none is ignored; anything else but 0 means git could not say.
+  if (r.status !== 0) return [];
+  return [...new Set(r.stdout.split("\0").filter((f) => f !== ""))].sort(compareCodePoints);
 }
 
 const SELF = fileURLToPath(import.meta.url);
