@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { proposeProfile, selectFiles } from "../src/index.ts";
-import { isBaseline } from "../src/propose.ts";
+import { buildOutputsOf, isBaseline } from "../src/propose.ts";
 
 let dirs: string[] = [];
 afterEach(() => {
@@ -241,5 +241,20 @@ describe("proposals the tutors run taught (From the tutors run, sections 3 and 6
     expect(reads(dir, r, "Instructions")).toBeUndefined();
     expect(reads(dir, r, "Baselines")).toBeUndefined();
     expect(reads(dir, r, "Outputs")).toEqual(expect.arrayContaining(["tests/expected/x.md", "tests/input/x.md"]));
+  });
+});
+
+describe("build output (stage 75, A-268)", () => {
+  it("is a dist, build, out or target directory at the root or beside a build manifest, never a source directory of that name", () => {
+    const o = buildOutputsOf(["build/app.js", "web/package.json", "web/dist/a.js", "tsc/internal/execute/build/build.go", "web/src/out/f.ts"]);
+    expect([...o.dirs].sort()).toEqual(["build", "web/dist"]);
+    // `build` and `out` name source somewhere, so only their output directories are excluded; `dist` and `target` stay plain.
+    expect(o.globs).toEqual(expect.arrayContaining(["**/node_modules/**", "**/dist/**", "build/**", "**/target/**"]));
+    expect(o.globs).not.toContain("**/build/**");
+    expect(o.globs.some((g) => g.includes("out"))).toBe(false);
+  });
+
+  it("keeps the plain globs while no source directory has one of the names", () => {
+    expect(buildOutputsOf(["src/a.ts", "package.json", "dist/a.js"]).globs).toEqual(expect.arrayContaining(["**/dist/**", "**/build/**", "**/out/**", "**/target/**"]));
   });
 });

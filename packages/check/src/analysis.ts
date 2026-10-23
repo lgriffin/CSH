@@ -16,7 +16,7 @@ export interface Analysis {
   /** Each guess the proposal made, with what it was read from; empty for a given profile. */
   guesses: string[];
   /** Tracked files read and not read, when the profile declares its sources. */
-  coverage?: { tracked: number; read: number; byName?: number; unread: { ext: string; files: number; sample: string }[] };
+  coverage?: CoverageCounts;
   /** Told rules lifted from prose, each an item at its line. */
   told: { item: string; lifted: string; span: string; text: string }[];
   overview: Overview;
@@ -76,14 +76,48 @@ function byKind(es: OverviewEntry[], shown = 3): string[] {
   return out;
 }
 
+/** Why a tracked file no source reads is not one a profile should read (Reading test suites as evidence, section 8). */
+export type SkipReason = "installed or vendored" | "build output" | "test data no suite pairs" | "with no reader";
+
+/** What a profile reads, as the counts csh run, csh analyse and csh coverage share. */
+export interface CoverageCounts {
+  tracked: number;
+  /** Files some source selects. */
+  read: number;
+  /** Of those, the files no source reads whole (A-261). The rest are parsed. */
+  byName?: number;
+  /** Tracked files less those skipped for a reason (stage 75); absent in an analysis written before it. */
+  eligible?: number;
+  unread: { ext: string; files: number; sample: string }[];
+  skipped?: { reason: SkipReason; files: number; sample: string }[];
+  /** The eligible files not read, by extension. */
+  missed?: { ext: string; files: number; sample: string }[];
+}
+
+/**
+ * The coverage line: the eligible files read, of them how many parsed and how many by name, then what was skipped and
+ * why, then what eligible files were not read (Reading test suites as evidence, section 8).
+ */
+export function coverageLine(c: CoverageCounts): string {
+  const eligible = c.eligible ?? c.tracked;
+  const n = c.byName ?? 0;
+  const pct = c.read === eligible ? 100 : Math.floor((c.read * 100) / Math.max(eligible, 1));
+  const head = c.read === eligible ? `all ${eligible} eligible files read (100%)` : `${c.read} of ${eligible} eligible files read (${pct}%)`;
+  const parsed = n === 0 ? "all parsed" : `${c.read - n} parsed and ${n} by name`;
+  const skips = c.skipped ?? [];
+  const skipped = skips.length === 0 ? `${c.tracked} tracked, none skipped` : `${c.tracked - eligible} of ${c.tracked} tracked skipped: ${skips.map((k) => `${k.files} ${k.reason}`).join(", ")}`;
+  const missed = c.missed ?? (c.eligible === undefined ? c.unread : []);
+  const rest = c.read === eligible ? "" : `; not read: ${missed.slice(0, 3).map((u) => `${u.files} ${u.ext}`).join(", ")}${missed.length > 3 ? ", …" : ""}`;
+  return `coverage: ${head}, ${parsed}; ${skipped}${rest}`;
+}
+
 /** The analysis as text: what was read, then each section in order, then the counts. */
 export function renderAnalysis(a: Analysis): string {
   const s = sectionsOf(a);
   const lifted = (k: string) => a.told.filter((t) => t.lifted === k).length;
   const out = [`CSH analysis of ${a.subject.repo} at ${a.subject.commit.slice(0, 12)}`];
   out.push(a.profile.kind === "proposed" ? `  profile: proposed, ${`${a.guesses.length} ${a.guesses.length === 1 ? "guess" : "guesses"}`} (csh analyse --json lists them); nothing is written into the subject` : `  profile: ${a.profile.dir}`);
-  const byName = (a.coverage?.byName ?? 0) > 0 ? ` (${a.coverage!.byName} by name)` : "";
-  if (a.coverage !== undefined) out.push(a.coverage.read === a.coverage.tracked ? `  coverage: all ${a.coverage.tracked} tracked files read${byName}` : `  coverage: ${a.coverage.read} of ${a.coverage.tracked} tracked files read${byName}; not read: ${a.coverage.unread.slice(0, 3).map((u) => `${u.files} ${u.ext}`).join(", ")}${a.coverage.unread.length > 3 ? ", …" : ""}`);
+  if (a.coverage !== undefined) out.push(`  ${coverageLine(a.coverage)}`);
   out.push(`  told rules lifted from prose: ${a.told.length} (${lifted("layering")} layering, ${lifted("ears")} EARS), each cited as its sentence`, "");
   out.push(`== Danger (${s.danger.length}): refuted or masked, never scored; each keeps its outcome`);
   if (s.danger.length === 0) out.push("  none established");

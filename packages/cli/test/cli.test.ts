@@ -166,7 +166,7 @@ describe("csh init and csh run", () => {
       expect(await csh(["init", "--root", root, "--subject", subject], x)).toBe(0);
       expect(o.out).toMatch(/Every value below is a guess/);
       expect(o.out).toMatch(/idPattern \(\?:REQ\)-\[0-9\]\+/);
-      expect(o.out).toMatch(/coverage Shop: 11 of 15 tracked files read by 6 sources/);
+      expect(o.out).toMatch(/coverage Shop: 11 of 12 eligible files read \(91%\), all parsed; 3 of 15 tracked skipped: 1 build output, 1 test data no suite pairs, 1 with no reader; not read: 1 \.md\n  read by 6 sources:/);
       expect(o.out).toMatch(/not portable/);
       const m = JSON.parse(readFileSync(join(root, "csh", "component.json"), "utf8"));
       expect(m.sources.map((s: { name: string }) => s.name)).toEqual(["Requirements", "Documents", "Features", "Tests", "Code", "Issues"]);
@@ -177,7 +177,7 @@ describe("csh init and csh run", () => {
       expect(await csh(["subject", "fetch", "--root", root], fetched.io)).toBe(0);
       const r = io(root);
       expect(await csh(["run", "--root", root], r.io)).toBe(0);
-      expect(r.o.out).toMatch(/\n  coverage: 11 of 15 tracked files read; not read: \d+ \.\w+[^;]*; csh coverage lists the rest\n/);
+      expect(r.o.out).toMatch(/\n  coverage: 11 of 12 eligible files read \(91%\), all parsed; 3 of 15 tracked skipped: [^;]*; not read: 1 \.md; csh coverage lists the rest\n/);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

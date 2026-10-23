@@ -6,14 +6,53 @@ import { compareCodePoints, globRegExp } from "@csh/kernel";
 import { selectFiles, trackedDirsOf, trackedFiles } from "./sources.ts";
 import type { Project } from "./project.ts";
 import type { DeclaredSource } from "@csh/component";
+import { coverageLine, type SkipReason } from "@csh/check";
+import { buildOutputsOf, CODE_EXT, INSTALLED_DIRS, MANIFESTS } from "./propose.ts";
+
+export { coverageLine };
 
 export interface Coverage {
   tracked: number;
   read: number;
   /** Of the files read, how many are read by name, their bytes never opened (A-261). */
   byName: number;
+  /** Tracked files less those skipped for a reason: what a profile should read (stage 75). */
+  eligible: number;
   sources: { name: string; kind: string; files: number }[];
   unread: { ext: string; files: number; sample: string }[];
+  /** The unread files skipped, by why. */
+  skipped: { reason: SkipReason; files: number; sample: string }[];
+  /** The unread files that are eligible, by extension: what the profile misses. */
+  missed: { ext: string; files: number; sample: string }[];
+}
+
+/** Extensions some source kind of CSH reads; a file of any other kind has no reader unless a source reads it. */
+const READABLE_EXT = new Set([...CODE_EXT, "md", "markdown", "feature", "snap"]);
+const TEST_DATA_DIRS = ["testdata", "fixtures", "__fixtures__"];
+
+/** Why an unread file is skipped, or undefined when it is eligible: a file some profile should read (A-268). */
+function skipReasonOf(path: string, outputs: Set<string>): SkipReason | undefined {
+  const segs = path.split("/");
+  const dirs = segs.slice(0, -1);
+  if (dirs.some((s) => INSTALLED_DIRS.includes(s))) return "installed or vendored";
+  if (dirs.some((_, i) => outputs.has(segs.slice(0, i + 1).join("/")))) return "build output";
+  if (dirs.some((s) => TEST_DATA_DIRS.includes(s))) return "test data no suite pairs";
+  const base = segs[segs.length - 1]!;
+  const dot = base.lastIndexOf(".");
+  if (MANIFESTS.includes(base) || (dot > 0 && READABLE_EXT.has(base.slice(dot + 1).toLowerCase()))) return undefined;
+  return "with no reader";
+}
+
+/** Files grouped by a key, largest group first. */
+function grouped<K extends string>(files: readonly string[], key: (f: string) => K): { key: K; files: number; sample: string }[] {
+  const groups = new Map<K, string[]>();
+  for (const f of files) {
+    const k = key(f);
+    const g = groups.get(k);
+    if (g === undefined) groups.set(k, [f]);
+    else g.push(f);
+  }
+  return [...groups].map(([k, fs]) => ({ key: k, files: fs.length, sample: fs[0]! })).sort((a, b) => b.files - a.files || compareCodePoints(a.key, b.key));
 }
 
 /** The extension that groups an unread file: ".rs", or the whole name for a file with none (Dockerfile). */
@@ -51,24 +90,35 @@ export function coverageOfSources(root: string, declared: readonly DeclaredSourc
     }
     sources.push({ name: s.name, kind: s.kind, files: files.length });
   }
-  const groups = new Map<string, string[]>();
-  for (const f of tracked) {
-    if (read.has(f)) continue;
-    const k = extOf(f);
-    const g = groups.get(k);
-    if (g === undefined) groups.set(k, [f]);
-    else g.push(f);
-  }
-  const unread = [...groups].map(([ext, fs]) => ({ ext, files: fs.length, sample: fs[0]! })).sort((a, b) => b.files - a.files || compareCodePoints(a.ext, b.ext));
-  return { tracked: tracked.length, read: tracked.filter((f) => read.has(f)).length, byName: [...named].filter((f) => !whole.has(f)).length, sources, unread };
+  const notRead = tracked.filter((f) => !read.has(f));
+  const outputs = buildOutputsOf(tracked).dirs;
+  const reasons = new Map(notRead.map((f) => [f, skipReasonOf(f, outputs)] as const));
+  const missed = notRead.filter((f) => reasons.get(f) === undefined);
+  const unread = grouped(notRead, extOf).map((g) => ({ ext: g.key, files: g.files, sample: g.sample }));
+  const skipped = grouped(notRead.filter((f) => reasons.get(f) !== undefined), (f) => reasons.get(f)!).map((g) => ({ reason: g.key, files: g.files, sample: g.sample }));
+  const touched = tracked.length - notRead.length;
+  return {
+    tracked: tracked.length,
+    read: touched,
+    byName: [...named].filter((f) => !whole.has(f)).length,
+    eligible: touched + missed.length,
+    sources,
+    unread,
+    skipped,
+    missed: grouped(missed, extOf).map((g) => ({ ext: g.key, files: g.files, sample: g.sample })),
+  };
 }
 
 export function renderCoverage(c: Coverage, name: string, top = 12): string {
-  const lines = [`coverage ${name}: ${c.read} of ${c.tracked} tracked files read by ${c.sources.length} sources${c.byName > 0 ? `, ${c.byName} of them by name` : ""}`];
-  for (const s of c.sources) lines.push(`  ${s.name.padEnd(18)} ${s.kind.padEnd(10)} ${String(s.files).padStart(6)} files${s.files === 0 ? "  (matches nothing)" : ""}`);
-  const rest = c.tracked - c.read;
-  lines.push(`  not read: ${rest} files`);
-  for (const u of c.unread.slice(0, top)) lines.push(`    ${u.ext.padEnd(14)} ${String(u.files).padStart(6)}  e.g. ${u.sample}`);
-  if (c.unread.length > top) lines.push(`    and ${c.unread.length - top} more kinds`);
+  const lines = [`${coverageLine(c).replace(/^coverage:/, `coverage ${name}:`)}`, `  read by ${c.sources.length} sources:`];
+  for (const s of c.sources) lines.push(`    ${s.name.padEnd(18)} ${s.kind.padEnd(10)} ${String(s.files).padStart(6)} files${s.files === 0 ? "  (matches nothing)" : ""}`);
+  if (c.skipped.length > 0) {
+    lines.push(`  skipped: ${c.tracked - c.eligible} files`);
+    for (const k of c.skipped) lines.push(`    ${k.reason.padEnd(26)} ${String(k.files).padStart(6)}  e.g. ${k.sample}`);
+  }
+  const missed = c.eligible - c.read;
+  lines.push(`  eligible, not read: ${missed} files`);
+  for (const u of c.missed.slice(0, top)) lines.push(`    ${u.ext.padEnd(14)} ${String(u.files).padStart(6)}  e.g. ${u.sample}`);
+  if (c.missed.length > top) lines.push(`    and ${c.missed.length - top} more kinds`);
   return `${lines.join("\n")}\n`;
 }
