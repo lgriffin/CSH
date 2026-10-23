@@ -84,6 +84,8 @@ export const GAP_NEXT: Record<string, string> = {
   "unaccepted-case": "Accept the output the runner writes for the case, or remove the case if the runner is meant to skip it",
   "orphan-output": "Delete the output, or restore the case that produced it",
   "obsolete-snapshot": "Delete the entry (the runner's update mode removes it), or restore the test that wrote it",
+  // What prose names, tests exercise (Reading test suites as evidence, section 4).
+  unexercised: "Write a test that exercises each symbol no test mentions, or stop describing it",
 };
 
 /** Signal kinds the tool could not decide, with what would decide each. Any other kind is indeterminate too. */
@@ -100,12 +102,14 @@ export const INDETERMINATE_NEXT: Record<string, string> = {
   "shared-stem": "Rename one of the cases, or check by hand which of them the runner reads and which wrote the outputs",
   "unpaired-outputs": "Check by hand which test writes these outputs, or keep them where a convention pairs them with their cases",
   "snapshot-undecided": "Check by hand which test writes each entry, or give the tests literal titles CSH can read",
+  "exercise-undecided": "Read the tests of that language, or check by hand which tests exercise each symbol",
   "symbol-undecided": "Check each name by hand: rename it in the prose if the code renamed it, or leave it if it names code outside the repository",
 };
 /** Signal kinds that are a convergence: the source states a silence and its reason, and nothing contradicts it. */
 export const CONVERGED_NEXT: Record<string, string> = {
   "justified-gap": "The silence is recorded with its reason: revisit the reason when the design changes",
   "accepted-outputs": "The cases it counts have outputs a person accepted, and any without one is a gap of its own: the runner's results say whether the cases still produce them",
+  exercised: "A test mentions each symbol the prose names; whether it observes what the prose says is for a test that cites it",
 };
 const OTHER_NEXT = "No rule places this kind yet: read its detail";
 

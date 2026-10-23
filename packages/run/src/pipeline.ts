@@ -2,11 +2,12 @@
 // check. Used by csh check, csh run, the fixture runner and the tests.
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { check, type CheckResult, type EvidenceStore, makeRefiner, type Report, type AuthorityResolver, type SourceRun } from "@csh/check";
+import { check, type CheckResult, type EvidenceStore, makeRefiner, mentionLanguageOf, type Report, type AuthorityResolver, type SourceRun, type TestMentions } from "@csh/check";
+import { mentionsOf } from "@csh/adapter-items/tests";
 import { gitHistory } from "./history.ts";
 import { ignoredPaths, runSources, type RunSourcesOptions, toolCodeDigest, trackedFiles } from "./sources.ts";
 import { emit, type EmitOptions, type EmitResult, type Lock } from "@csh/emit";
-import { canonicalJson, canonicalModule, digestJson, digestOf, fragmentsOf, isArchRule, moduleDigest, refName, type Module } from "@csh/kernel";
+import { canonicalJson, canonicalModule, compareCodePoints, digestJson, digestOf, fragmentsOf, isArchRule, moduleDigest, refName, type Module } from "@csh/kernel";
 import { type LedgerState, resolveAuthority } from "@csh/ledger";
 import { checkAgainstModule, type ComponentProblem, readClaims, withDeclaredSources, withProposedClaims, DEFAULT_EXECUTIONS, type LoadedComponent, ownersOf } from "@csh/component";
 import type { SolverPort } from "@csh/solver";
@@ -163,6 +164,10 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
   if (opts.unchangedSince !== undefined) checkOpts.unchangedSince = opts.unchangedSince;
   if (opts.composition !== undefined) checkOpts.composition = opts.composition;
   if (opts.subjectCommit !== undefined) checkOpts.subjectCommit = opts.subjectCommit;
+  // What the code of every test file mentions (Reading test suites as evidence, section 4): read here, where the files are,
+  // so no adapter reads another source's files.
+  const mentions = testMentions(opts.sourceRoot ?? opts.root, runs);
+  if (mentions !== undefined) checkOpts.mentions = mentions;
   // Edges to files, and claims that a file exists, resolve against what the repository tracks; listed only when needed.
   const claimsAFile = module.intents.some((i) => i.obligations.some((o) => o.kind === "architecture" && isArchRule(o.native) && o.native.k === "claim" && o.native.p.k === "file"));
   if (claimsAFile || runs.some((r) => (r.output.edges ?? []).length > 0)) {
@@ -230,4 +235,29 @@ function nearPath(span: string, path: string): string[] {
 
 export function fixtureRoot(spec: string): string {
   return dirname(resolve(spec));
+}
+
+/** The identifiers the code of each test file of the run's TestFiles sources holds (A-264); undefined with none. */
+export function testMentions(root: string, runs: readonly SourceRun[]): TestMentions | undefined {
+  const files = [...new Set(runs.filter((r) => r.kind === "TestFiles").flatMap((r) => r.files.map((f) => f.path)))].sort(compareCodePoints);
+  if (files.length === 0) return undefined;
+  const byName = new Map<string, string[]>();
+  const languages = new Set<string>();
+  const unread = new Map<string, string[]>();
+  for (const path of files) {
+    let text: string;
+    try {
+      text = readFileSync(join(root, path), "utf8");
+    } catch {
+      const lang = mentionLanguageOf(path);
+      if (lang !== undefined) (unread.get(lang) ?? unread.set(lang, []).get(lang)!).push(path);
+      continue;
+    }
+    const m = mentionsOf(path, text);
+    if (m === undefined) continue;
+    languages.add(m.language);
+    // A symbol is exercised only by a test of its own language: a Python test's `TaskRepository` is not the Java one.
+    for (const id of m.identifiers) (byName.get(`${m.language}:${id}`) ?? byName.set(`${m.language}:${id}`, []).get(`${m.language}:${id}`)!).push(path);
+  }
+  return { byName, languages, unread };
 }

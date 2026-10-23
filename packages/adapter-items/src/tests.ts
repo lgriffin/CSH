@@ -344,6 +344,26 @@ export function observedIn(code: string, from: number, to: number, strings?: Map
   return [...out].sort(compareCodePoints);
 }
 
+/** The language a test file's mentions are in, as a symbol's module names it: by extension (A-264). */
+export type MentionLanguage = "typescript" | "python" | "java" | "go" | "rust";
+
+/** The language of a code file, for the tests that may mention its symbols; undefined for one no test lexer reads. */
+export function mentionLanguageOf(path: string): MentionLanguage | undefined {
+  if (/\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/.test(path)) return "typescript";
+  return languageOf(path);
+}
+
+/**
+ * Every identifier a test file's code mentions, with comments and strings left out (Reading test suites as evidence,
+ * section 4; A-264): the grain of every test of the file at once. Undefined for a file no test lexer reads.
+ */
+export function mentionsOf(path: string, text: string): { language: MentionLanguage; identifiers: string[] } | undefined {
+  const language = mentionLanguageOf(path);
+  if (language === undefined) return undefined;
+  const code = language === "typescript" ? lex(text).code : lexOther(text, language).code;
+  return { language, identifiers: [...new Set(code.match(IDENTIFIER) ?? [])].sort(compareCodePoints) };
+}
+
 /** A string literal that is a single identifier: a value, not prose. */
 const VALUE = /^[A-Za-z_][\w-]*$/;
 

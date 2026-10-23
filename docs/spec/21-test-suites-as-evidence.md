@@ -176,12 +176,12 @@ check, as history is, so no adapter reads another source's files.
 | A symbol it names that no test mentions | `unexercised`: the symbols no test mentions, and those a test does | gap |
 | A symbol whose module is in a language of which no test file was read, or whose test files could not be read | `exercise-undecided`, naming the language or file | indeterminate |
 
-A symbol is mentioned when a test file's code holds an identifier equal to its name, the last part of a member's name
-(`Basket.add` is `add`). The languages are those whose tests the stage 57 lexers read: TypeScript and JavaScript,
-Python, Java, Go and Rust. The language of a symbol is its module's; a name of a package's code (stage 67) takes the
-language of the module that declares it. A document whose undecided symbols are its only ones is `exercise-undecided`;
-one with a symbol no test mentions is `unexercised`, its undecided symbols named beside the others. A repository with no
-`TestFiles` source gives none of the three signals.
+A symbol is mentioned when the code of a test file in its own language holds an identifier equal to its name, the last
+part of a member's name (`Basket.add` is `add`). The languages are those whose tests the stage 57 lexers read:
+TypeScript and JavaScript, Python, Java, Go and Rust. The language of a symbol is its module's; a name of a package's
+code (stage 67) takes the language of the module that declares it. A document with a symbol no test mentions is
+`unexercised`, its undecided symbols named beside the others; one with none unmentioned and one undecided is
+`exercise-undecided`. A repository with no `TestFiles` source gives none of the three signals.
 
 A mention is the weakest evidence a test can give: the test touches the symbol and may observe nothing of what the
 sentence says. That is why it is `exercised` and never `verified`, and why the rung is unchanged. The gap it closes is
