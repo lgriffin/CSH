@@ -8,7 +8,7 @@ The subject is a Go checker with a reference tree under `testdata`, and a TypeSc
   snapshot names. It belongs to the tests practice, beside `Tests`.
 - The case `a.ts` is not Code, and the accepted output `a.baseline.md` is not a document.
 - `testdata/helper.go` and `testdata/fixtures/lib.d.ts` are test data no suite pairs, so no source reads them.
-- Every file of the reference tree, and the snapshot's test file, is read by name. The snapshot is read with its
-  content, which stage 71 reads.
+- Every file of the reference tree is read by name. The snapshot is read with its content, and so, since stage 71
+  reads the snapshot's entries with the test file it names, is that test file (it was read by name in stage 70).
 
 The expected result was written from the specification before the code.

@@ -1,0 +1,24 @@
+{
+  "fixture": "F218",
+  "section": "Reading test suites as evidence, section 3; A-266",
+  "stage": 71,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["Outputs", "snapshot directories"],
+      "entries": [
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/src/__snapshots__", "detailIncludes": ["snapshot directories", "2 of 2 cases", "3 of 7 snapshot entries"] },
+        { "outcome": "gap", "kind": "obsolete-snapshot", "subject": "Outputs/src/__snapshots__/case.test.ts.snap::case > lower 1", "detailIncludes": ["case > lower", "src/case.test.ts"] },
+        { "outcome": "indeterminate", "kind": "snapshot-undecided", "subject": "Outputs/src/__snapshots__/slug.test.ts.snap", "detailIncludes": ["3 entries", "src/slug.test.ts:5", "src/slug.test.ts:10"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "obsolete-snapshot", "subject": "Outputs/src/__snapshots__/case.test.ts.snap::case > upper > shouts 1" },
+        { "kind": "obsolete-snapshot", "subject": "Outputs/src/__snapshots__/case.test.ts.snap::case > upper > shouts > loud 2" },
+        { "kind": "obsolete-snapshot", "subject": "Outputs/src/__snapshots__/slug.test.ts.snap::slug > keeps unicode letters 1" },
+        { "kind": "obsolete-snapshot", "subject": "Outputs/src/__snapshots__/slug.test.ts.snap::slug > drops spaces at the ends 1" },
+        { "kind": "snapshot-undecided", "subject": "Outputs/src/__snapshots__/case.test.ts.snap" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

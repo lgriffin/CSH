@@ -83,6 +83,7 @@ export const GAP_NEXT: Record<string, string> = {
   // Accepted outputs (Reading test suites as evidence, section 2).
   "unaccepted-case": "Accept the output the runner writes for the case, or remove the case if the runner is meant to skip it",
   "orphan-output": "Delete the output, or restore the case that produced it",
+  "obsolete-snapshot": "Delete the entry (the runner's update mode removes it), or restore the test that wrote it",
 };
 
 /** Signal kinds the tool could not decide, with what would decide each. Any other kind is indeterminate too. */
@@ -98,6 +99,7 @@ export const INDETERMINATE_NEXT: Record<string, string> = {
   "binding-undecided": "Write the scenario's title as a literal in its @scenario call, or check by hand which scenarios the computed title binds",
   "shared-stem": "Rename one of the cases, or check by hand which of them the runner reads and which wrote the outputs",
   "unpaired-outputs": "Check by hand which test writes these outputs, or keep them where a convention pairs them with their cases",
+  "snapshot-undecided": "Check by hand which test writes each entry, or give the tests literal titles CSH can read",
   "symbol-undecided": "Check each name by hand: rename it in the prose if the code renamed it, or leave it if it names code outside the repository",
 };
 /** Signal kinds that are a convergence: the source states a silence and its reason, and nothing contradicts it. */

@@ -3,10 +3,14 @@
 // from the files' paths alone, by each convention as its runners keep it, so a file the source reads by name (A-261)
 // gives the adapter everything it needs. Each directory that holds accepted outputs is one item, with what its
 // pairing found: the cases with outputs, the cases with none, the outputs no case produces, the stems two cases share,
-// and the outputs no convention pairs. The check turns those into results; nothing here decides an outcome.
+// and the outputs no convention pairs. The check turns those into results; nothing here decides an outcome. A Jest or
+// Vitest snapshot file is also read for its entries, each matched with a test of the file it names (section 3; stage
+// 71), and an output no convention pairs may be named after a test file.
 import { posix } from "node:path";
 import { compareCodePoints, digestOf } from "@csh/kernel";
 import type { Adapter, AdapterInput, AdapterOutput, SourceItem } from "@csh/witness";
+import { decode } from "./common.ts";
+import { testNames } from "./tests.ts";
 
 export const manifest = {
   id: "csh.adapter.items.outputs",
@@ -16,7 +20,7 @@ export const manifest = {
   inputKinds: ["Outputs"],
 } as const;
 
-export type Convention = "reference tree" | "mirrored directories" | "golden siblings" | "UI outputs" | "snapshot directories" | "approved files";
+export type Convention = "reference tree" | "mirrored directories" | "golden siblings" | "UI outputs" | "snapshot directories" | "approved files" | "named after a test file";
 
 /** What the pairing found in one directory of accepted outputs. */
 export interface OutputDir {
@@ -39,9 +43,11 @@ export interface OutputDir {
   /** Outputs no convention pairs, with why. */
   unpaired: string[];
   why?: string;
+  /** Test files a stem two of them share names, which the source reads so that the adapter sees the same pairing. */
+  named?: string[];
 }
 
-const ORDER: Convention[] = ["reference tree", "mirrored directories", "golden siblings", "UI outputs", "snapshot directories", "approved files"];
+const ORDER: Convention[] = ["reference tree", "mirrored directories", "golden siblings", "UI outputs", "snapshot directories", "approved files", "named after a test file"];
 const MIRRORED_IN = ["input", "inputs"];
 const MIRRORED_OUT = ["expected", "output", "outputs", "golden", "goldens"];
 // Mirrored directories are a suite only beneath a directory of tests or test data: a program's own input and output
@@ -58,6 +64,16 @@ export const stemOf = (p: string): string => {
   const i = b.lastIndexOf(".");
   return i <= 0 ? b : b.slice(0, i);
 };
+
+/**
+ * A test file's stem less its test affix (A-267), for the test files the proposal reads as tests: `x.test.ts` and
+ * `x.spec.js` (any JavaScript or TypeScript extension), `test_x.py` and `x_test.py`, `XTest.java` and `XTests.java`,
+ * and `x_test.go` are `x` or `X`; undefined for any other file.
+ */
+export function testStemOf(p: string): string | undefined {
+  const b = posix.basename(p);
+  return (/^(.+)\.(?:test|spec)\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/.exec(b) ?? /^test_(.+)\.py$/.exec(b) ?? /^(.+)_test\.(?:py|go)$/.exec(b) ?? /^(.+?)Tests?\.java$/.exec(b))?.[1];
+}
 
 /** The stem of `stems` an output's base name begins with, followed by `.` or `(` or nothing; the longest wins. */
 function stemFor(base: string, stems: ReadonlySet<string>): string | undefined {
@@ -220,7 +236,7 @@ export function outputDirsOf(paths: readonly string[]): OutputDir[] {
 
   // Snapshot directories: __snapshots__/a.test.ts.snap names the test file a.test.ts above it (Jest, Vitest);
   // test_a.ambr, or a directory test_a/, names test_a.py (syrupy). An insta snapshot in snapshots/ names its test by its
-  // header, which stage 71 reads.
+  // header, which stage 74 reads.
   for (const s of free()) {
     const segs = s.split("/");
     const k = segs.lastIndexOf("__snapshots__", segs.length - 2);
@@ -240,7 +256,7 @@ export function outputDirsOf(paths: readonly string[]): OutputDir[] {
       }
       continue;
     }
-    if (segs.length >= 2 && segs[segs.length - 2] === "snapshots" && /\.snap$/.test(s)) unpairedHere(at(dirOf(s)), s, "an insta snapshot, named by its header (stage 71)");
+    if (segs.length >= 2 && segs[segs.length - 2] === "snapshots" && /\.snap$/.test(s)) unpairedHere(at(dirOf(s)), s, "an insta snapshot, named by its header (stage 74)");
   }
 
   // Approved files: X.m.approved.<ext> accepts the sibling test file whose stem is X.
@@ -250,6 +266,66 @@ export function outputDirsOf(paths: readonly string[]): OutputDir[] {
     const o = at(dirOf(a) || ".");
     if (named.length === 1) pairOne(o, "approved files", named[0]!, a);
     else unpairedHere(o, a, named.length === 0 ? "an approved file with no sibling test of its name" : "an approved file with more than one sibling of its name");
+  }
+
+  // Named after a test file (section 3; stage 71, A-267): an output no convention paired whose name begins with a test
+  // file's stem less its affix, as TypeScript's fourslash baselines are. A stem two test files share pairs nothing. A
+  // test file whose stem names outputs of more than one directory keeps those of the directory its own directory's test
+  // files name most, so a fourslash test is not taken to write a tsc baseline that a scenario of the same name writes.
+  // An accepted output is never a test file, even when its name has a test's affix.
+  const outputs = new Set<string>();
+  for (const o of out.values()) {
+    for (const v of o.paired.values()) for (const x of v) outputs.add(x);
+    for (const x of o.unpaired) outputs.add(x);
+    for (const x of o.orphans) outputs.add(x.output);
+  }
+  const byTest = new Map<string, string[]>();
+  for (const p of all) {
+    if (outputs.has(p)) continue;
+    const t = testStemOf(p);
+    if (t !== undefined) push(byTest, t, p);
+  }
+  const testStems = new Set(byTest.keys());
+  const found: { o: OutputDir; output: string; tests: string[] }[] = [];
+  for (const o of out.values()) for (const u of o.unpaired) {
+    const t = stemFor(posix.basename(u), testStems);
+    found.push({ o, output: u, tests: t === undefined ? [] : byTest.get(t)! });
+  }
+  const dirsOf = new Map<string, Set<string>>();
+  const named = new Map<string, number>();
+  for (const f of found) {
+    if (f.tests.length !== 1) continue;
+    const t = f.tests[0]!;
+    (dirsOf.get(t) ?? dirsOf.set(t, new Set()).get(t)!).add(f.o.dir);
+    const k = `${dirOf(t)}\t${f.o.dir}`;
+    named.set(k, (named.get(k) ?? 0) + 1);
+  }
+  const homeOf = (t: string) => [...dirsOf.get(t)!].sort((a, b) => (named.get(`${dirOf(t)}\t${b}`) ?? 0) - (named.get(`${dirOf(t)}\t${a}`) ?? 0) || compareCodePoints(a, b))[0]!;
+  const tally = new Map<OutputDir, { left: string[]; twice: number; elsewhere: number; none: number }>();
+  for (const f of found) {
+    const t = tally.get(f.o) ?? tally.set(f.o, { left: [], twice: 0, elsewhere: 0, none: 0 }).get(f.o)!;
+    const test = f.tests[0];
+    if (f.tests.length === 1 && (dirsOf.get(test!)!.size === 1 || homeOf(test!) === f.o.dir)) pairOne(f.o, "named after a test file", test!, f.output);
+    else {
+      t.left.push(f.output);
+      if (f.tests.length > 1) {
+        t.twice++;
+        f.o.named = [...new Set([...(f.o.named ?? []), ...f.tests])].sort(compareCodePoints);
+      } else if (f.tests.length === 1) t.elsewhere++;
+      else t.none++;
+    }
+  }
+  for (const [o, t] of tally) {
+    // The rest keep their reason; where test files named some of a directory's outputs, it says the rest name none.
+    const someNamed = t.left.length < o.unpaired.length;
+    o.unpaired = t.left;
+    const reasons = [
+      ...(t.twice > 0 ? ["a stem two test files share"] : []),
+      ...(t.elsewhere > 0 ? ["a stem of a test file whose directory's tests write another suite"] : []),
+      ...(t.none > 0 ? [someNamed ? `${o.why ?? "no convention"}, and no test file of its name` : (o.why ?? "")] : []),
+    ];
+    if (t.left.length === 0) delete o.why;
+    else o.why = reasons.join(", or ");
   }
 
   for (const o of out.values()) {
@@ -272,12 +348,42 @@ export function suiteFilesOf(dirs: readonly OutputDir[]): string[] {
     for (const x of o.orphans) s.add(x.output);
     for (const x of o.shared) for (const y of [...x.cases, ...x.outputs]) s.add(y);
     for (const x of o.unpaired) s.add(x);
+    for (const x of o.named ?? []) s.add(x);
   }
   return [...s].sort(compareCodePoints);
 }
 
+/** The keys of a Jest or Vitest snapshot file, unescaped, and the runner its first line names. */
+export function snapshotKeys(text: string): { runner: "jest" | "vitest" | undefined; keys: string[] } {
+  const first = text.slice(0, text.indexOf("\n") < 0 ? text.length : text.indexOf("\n"));
+  const runner = /^\/\/ Jest Snapshot/.test(first) ? "jest" : /^\/\/ Vitest Snapshot/.test(first) ? "vitest" : undefined;
+  const keys: string[] = [];
+  // Each entry is exports[`key`] = `value`; with a backtick, a backslash and ${ escaped in both, so a value cannot
+  // hold a line that reads as a key.
+  const entry = /^exports\[`((?:[^`\\]|\\[\s\S])*)`\]\s*=\s*`(?:[^`\\]|\\[\s\S])*`;?/gm;
+  for (const m of text.matchAll(entry)) keys.push(m[1]!.replace(/\\([\s\S])/g, "$1"));
+  return { runner, keys };
+}
+
+/** What the entries of a snapshot file say of the tests of the file it names (section 3; A-266). */
+export function snapshotEntries(snap: string, test: string): { entries: number; matched: number; unmatched: string[]; unreadable: number[] } {
+  const { runner, keys } = snapshotKeys(snap);
+  const { names, unreadable } = testNames(test);
+  const ways = runner === "jest" ? [[" ", ": "]] : runner === "vitest" ? [[" > ", " > "]] : [[" ", ": "], [" > ", " > "]];
+  const full = ways.map(([sep, hint]) => ({ names: new Set(names.map((n) => n.join(sep))), hint: hint! }));
+  const named = (k: string) => {
+    const name = k.replace(/ \d+$/, "");
+    return full.some((w) => w.names.has(name) || [...w.names].some((n) => name.startsWith(`${n}${w.hint}`)));
+  };
+  const unmatched = keys.filter((k) => !named(k));
+  return { entries: keys.length, matched: keys.length - unmatched.length, unmatched, unreadable };
+}
+
+const JS = /\.(?:ts|tsx|js|jsx|mjs|cjs|mts|cts)$/;
+
 export function run(input: AdapterInput): AdapterOutput {
   const items: SourceItem[] = [];
+  const bytes = new Map(input.files.map((f) => [f.path, f.bytes]));
   for (const o of outputDirsOf(input.files.map((f) => f.path))) {
     const outputs = [...o.paired.values()].reduce((n, v) => n + v.length, 0);
     const first = [...o.paired.values()].flat()[0] ?? o.orphans[0]?.output ?? o.shared[0]?.outputs[0] ?? o.unpaired[0] ?? o.unaccepted[0] ?? o.dir;
@@ -288,6 +394,32 @@ export function run(input: AdapterInput): AdapterOutput {
     if (o.unaccepted.length > 0) attrs.unaccepted = o.unaccepted.join("\n");
     if (o.orphans.length > 0) attrs.orphans = o.orphans.map((x) => `${x.output}\t${x.names}`).join("\n");
     if (o.shared.length > 0) attrs.shared = o.shared.map((x) => JSON.stringify({ stem: x.stem, cases: x.cases, outputs: x.outputs })).join("\n");
+    if (o.caseDir === undefined && o.cases.some((c) => !c.startsWith(`${o.dir}/`) && dirOf(c) !== dirOf(o.dir))) attrs.elsewhere = "true";
+    // A Jest or Vitest snapshot's entries, read where the source read both files whole (not by name).
+    let entries = 0;
+    let matched = 0;
+    const obsolete: string[] = [];
+    const undecided: string[] = [];
+    for (const [test, outs] of o.paired) {
+      if (!JS.test(test)) continue;
+      const t = decode(bytes.get(test) ?? new Uint8Array(0));
+      for (const snap of outs.filter((x) => /(?:^|\/)__snapshots__\/[^/]+\.snap$/.test(x))) {
+        const sn = decode(bytes.get(snap) ?? new Uint8Array(0));
+        if (sn === "" || t === "") continue;
+        const e = snapshotEntries(sn, t);
+        entries += e.entries;
+        matched += e.matched;
+        if (e.unmatched.length === 0) continue;
+        if (e.unreadable.length === 0) for (const key of e.unmatched) obsolete.push(JSON.stringify({ snapshot: snap, key, test }));
+        else undecided.push(JSON.stringify({ snapshot: snap, test, entries: e.unmatched.length, lines: e.unreadable }));
+      }
+    }
+    if (entries > 0) {
+      attrs.entries = String(entries);
+      attrs.entriesMatched = String(matched);
+    }
+    if (obsolete.length > 0) attrs.obsolete = obsolete.join("\n");
+    if (undecided.length > 0) attrs.undecided = undecided.join("\n");
     if (o.unpaired.length > 0) {
       attrs.unpaired = String(o.unpaired.length);
       attrs.unpairedSample = o.unpaired[0]!;

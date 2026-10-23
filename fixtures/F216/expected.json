@@ -15,7 +15,7 @@
         { "sources": ["Tests", "Outputs"], "kind": "tests", "executions": "csh/results.json", "settings": { "citePattern": "(?!)" } },
         { "sources": ["Code"], "kind": "facts" }
       ],
-      "byName": ["src/view.test.ts", "testdata/baselines/reference/compiler/a.baseline.md", "testdata/baselines/reference/compiler/a.types", "testdata/tests/cases/compiler/a.ts"],
+      "byName": ["testdata/baselines/reference/compiler/a.baseline.md", "testdata/baselines/reference/compiler/a.types", "testdata/tests/cases/compiler/a.ts"],
       "guessesInclude": ["Outputs", "reference tree", "snapshot directories", "testdata"],
       "coverage": { "tracked": 14, "read": 12, "unread": ["testdata/fixtures/lib.d.ts", "testdata/helper.go"] }
     }

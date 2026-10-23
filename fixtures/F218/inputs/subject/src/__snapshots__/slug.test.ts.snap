@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`slug > drops spaces at the ends 1`] = `"a"`;
+
+exports[`slug > keeps unicode letters 1`] = `"é"`;
+
+exports[`slug > turns 'A b' into a slug 1`] = `"a-b"`;
+
+exports[`slug > turns 'C' into a slug 1`] = `"c"`;

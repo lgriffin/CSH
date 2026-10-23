@@ -177,6 +177,8 @@ A repository's test suites are read as evidence ([21](docs/spec/21-test-suites-a
 - Each case is paired with the outputs a person accepted for it, by path: TypeScript's reference baselines, golden files, Rust UI outputs, Jest, Vitest and syrupy snapshot directories, and approved files. A suite whose cases have outputs converges, a case with none and an output with none are gaps, and what no convention pairs is indeterminate.
 - The pairing needs only the files' names, so a tree of baselines is read by name, its bytes never opened.
 - Test data is not code: a case is never read as the program's own module, nor a baseline in Markdown as a document.
+- Each entry of a Jest or Vitest snapshot file is matched with a test of the file it names, by the full name the runner gives it. An entry no test names is a gap when every title is a literal, and indeterminate when a title CSH cannot read might name it.
+- An output named after a test file is that test's, as TypeScript's fourslash baselines are.
 
 [subjects/esi-ts](subjects/esi-ts) evaluates [ESI.ts](https://github.com/lgriffin/ESI.ts), a mature TypeScript client, from
 outside. At its pinned commit CSH reports 113 gaps, 8 indeterminate and 43 converged, and each of the eleven
@@ -392,12 +394,12 @@ Its security model is read as a structured trace, its test results are committed
 
 ## Status of the build
 
-Stages 1 to 65, 67, 68 and 70 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 147 golden
-fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F125, F130 to F132, F140 to F142, F150 to F155, F160 to F165, F170 to F194, F210 to F216), as do
+Stages 1 to 65, 67, 68, 70 and 71 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 150 golden
+fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F125, F130 to F132, F140 to F142, F150 to F155, F160 to F165, F170 to F194, F210 to F219), as do
 the unit, property and fault-injection tests; F118 to F125 cover [polyglot code](docs/spec/12-polyglot-code.md),
 stages 29 to 35, F130 to F132 [what real runs asked for](docs/spec/13-from-real-runs.md), stages 38 to 44, F140
 to F142 [what the Java and Python runs asked for](docs/spec/14-from-the-java-and-python-runs.md), stage 45, and F150 to F155
-[the Assertion Ladder](docs/spec/15-assertion-ladder.md), stages 47 to 52, and F160 to F165 and F170 to F178 [the analyse command, danger, grain and polyglot evidence](docs/spec/16-analyse-danger-grain.md), stages 55 to 59; stage 60 calibrated it on five subjects and added the release and the Action; F179 to F183 [what the tutors-mono-repo run asked for](docs/spec/17-from-the-tutors-run.md), stage 61; F184 to F188 [what the Toads run asked for](docs/spec/18-from-the-toads-run.md), stage 62; F189 to F191 [what the TypeScript run asked for](docs/spec/19-from-the-typescript-run.md), stage 63; F192 to F194 [symbols in prose and task runners](docs/spec/20-symbols-and-task-runners.md), stages 67 and 68; F210 to F216 [accepted outputs paired by path](docs/spec/21-test-suites-as-evidence.md), stage 70. The composition fixtures
+[the Assertion Ladder](docs/spec/15-assertion-ladder.md), stages 47 to 52, and F160 to F165 and F170 to F178 [the analyse command, danger, grain and polyglot evidence](docs/spec/16-analyse-danger-grain.md), stages 55 to 59; stage 60 calibrated it on five subjects and added the release and the Action; F179 to F183 [what the tutors-mono-repo run asked for](docs/spec/17-from-the-tutors-run.md), stage 61; F184 to F188 [what the Toads run asked for](docs/spec/18-from-the-toads-run.md), stage 62; F189 to F191 [what the TypeScript run asked for](docs/spec/19-from-the-typescript-run.md), stage 63; F192 to F194 [symbols in prose and task runners](docs/spec/20-symbols-and-task-runners.md), stages 67 and 68; F210 to F216 [accepted outputs paired by path](docs/spec/21-test-suites-as-evidence.md), stage 70; F217 to F219 [snapshot entries and outputs named after a test](docs/spec/21-test-suites-as-evidence.md), stage 71. The composition fixtures
 F70 to F78 were written by the implementer and accepted by the owner. [docs/stages](docs/stages) records what each
 stage built and what its fixtures revealed.
 

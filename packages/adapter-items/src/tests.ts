@@ -166,6 +166,58 @@ export function declarations(text: string): { line: number; at: number; describe
   return out;
 }
 
+/** A test call as Jest and Vitest name it, with Jest's `x` and `f` aliases (`xit`, `fit`, `xtest`, `xdescribe`, `fdescribe`). */
+const NAMED_CALL = /(?<![.\w$])([xf]?(?:describe|it)|x?test)((?:\.\w+)*)\s*(?:<[^<>()]*>)?\s*(\(|`)/g;
+
+/** Whether a template's text has a placeholder: a `${` that no backslash escapes. */
+const placeholder = (raw: string) => /(?:^|[^\\])(?:\\\\)*\$\{/.test(raw);
+
+/**
+ * The names a runner gives the tests of a file (Reading test suites as evidence, section 3; stage 71, A-266): for each
+ * test, the titles of the describes around it and its own, outermost first, as Jest and Vitest join them into a full
+ * name, each exactly as the runner reads it. A skipped or todo test keeps its name, since the runner keeps its snapshot
+ * entries. A title is unreadable when it is not a literal standing alone as the first argument, is a template with a
+ * placeholder, or is the title of an `each` or `for` with a `%` or `$` format; every test beneath an unreadable describe
+ * is unreadable too, and each is counted by the line of the title that is.
+ */
+export function testNames(text: string): { names: string[][]; unreadable: number[] } {
+  const { code, strings } = lex(text);
+  const starts = lineStarts(text);
+  const names: string[][] = [];
+  const unreadable = new Set<number>();
+  // The describes open at each call, innermost last: a call's span holds the calls inside its callback.
+  const open: { to: number; title: string | undefined; line: number }[] = [];
+  for (const m of code.matchAll(NAMED_CALL)) {
+    let at = m.index + m[0].length;
+    const each = /\.(each|for)\b/.test(m[2]!);
+    if (m[3] === "`") {
+      const table = strings.get(at - 1);
+      if (table === undefined) continue;
+      at = skipSpace(code, at + table.length + 1);
+      if (code[at] !== "(") continue;
+      at++;
+    } else if (each) {
+      at = skipSpace(code, pastClose(code, at));
+      if (code[at] !== "(") continue;
+      at++;
+    }
+    at = skipSpace(code, at);
+    while (open.length > 0 && open.at(-1)!.to <= at) open.pop();
+    const raw = strings.get(at);
+    const alone = raw !== undefined && /[,)]/.test(code[skipSpace(code, at + raw.length + 2)] ?? "");
+    const readable = alone && !(text[at] === "`" && placeholder(raw)) && !((each || m[3] === "`") && /[%$]/.test(raw));
+    const call = { to: pastClose(code, at), title: readable ? unescapeJs(raw) : undefined, line: lineIndex(starts, at) + 1 };
+    if (/describe$/.test(m[1]!) || /^\.describe\b/.test(m[2]!)) {
+      open.push(call);
+      continue;
+    }
+    const blind = [...open, call].find((d) => d.title === undefined);
+    if (blind !== undefined) unreadable.add(blind.line);
+    else names.push([...open.map((d) => d.title!), call.title!]);
+  }
+  return { names, unreadable: [...unreadable].sort((a, b) => a - b) };
+}
+
 /** A Cucumber step definition: Given, When, Then, And, But, Step or defineStep, called with a string or a regular expression. */
 const STEP = /(?<![.\w$])(Given|When|Then|And|But|Step|defineStep)\s*\(/g;
 /** jest-cucumber's step functions, read only in a file that loads a feature, where they cannot be anything else (stage 42). */

@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`cart names the currency 1`] = `"EUR"`;
+
+exports[`cart total adds the lines 1`] = `3`;
+
+exports[`cart total adds the lines: empty 2`] = `0`;
+
+exports[`cart total removes a line 1`] = `2`;
+
+exports[`cart total rounds to cents 1`] = `0.01`;

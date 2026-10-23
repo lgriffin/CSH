@@ -1,0 +1,24 @@
+{
+  "fixture": "F217",
+  "section": "Reading test suites as evidence, section 3; A-266",
+  "stage": 71,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["Outputs", "snapshot directories"],
+      "entries": [
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/src/__snapshots__", "detailIncludes": ["snapshot directories", "1 of 1 case", "4 of 5 snapshot entries"] },
+        { "outcome": "gap", "kind": "obsolete-snapshot", "subject": "Outputs/src/__snapshots__/cart.test.ts.snap::cart total removes a line 1", "detailIncludes": ["cart total removes a line", "src/cart.test.ts"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "obsolete-snapshot", "subject": "Outputs/src/__snapshots__/cart.test.ts.snap::cart total adds the lines 1" },
+        { "kind": "obsolete-snapshot", "subject": "Outputs/src/__snapshots__/cart.test.ts.snap::cart total adds the lines: empty 2" },
+        { "kind": "obsolete-snapshot", "subject": "Outputs/src/__snapshots__/cart.test.ts.snap::cart total rounds to cents 1" },
+        { "kind": "obsolete-snapshot", "subject": "Outputs/src/__snapshots__/cart.test.ts.snap::cart names the currency 1" },
+        { "kind": "snapshot-undecided", "subject": "Outputs/src/__snapshots__/cart.test.ts.snap" },
+        { "kind": "orphan-output", "subject": "Outputs/src/__snapshots__/cart.test.ts.snap" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

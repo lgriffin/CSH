@@ -1,0 +1,21 @@
+{
+  "fixture": "F219",
+  "section": "Reading test suites as evidence, section 3; A-267",
+  "stage": 71,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["Outputs", "named after a test file"],
+      "entries": [
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/testdata/baselines/reference/fourslash", "detailIncludes": ["named after a test file", "2 of 2 cases", "2 files"] },
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/testdata/baselines/reference/api", "detailIncludes": ["named after a test file", "1 of 1 case"] },
+        { "outcome": "indeterminate", "kind": "unpaired-outputs", "subject": "Outputs/testdata/baselines/reference/fourslash", "detailIncludes": ["2 files", "a stem two test files share", "no test file of its name"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "unpaired-outputs", "subject": "Outputs/testdata/baselines/reference/api" },
+        { "kind": "orphan-output", "subject": "Outputs/testdata/baselines/reference/fourslash/rename/nothing.baseline.jsonc" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

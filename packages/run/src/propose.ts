@@ -366,7 +366,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
 
   // Accepted outputs (Reading test suites as evidence, section 2): one source for every suite, owned by the tests
   // practice. A reference tree or mirrored directories are read by their globs, any other suite by its files. Every
-  // file is read by name (A-261) but a snapshot file, whose entries stage 71 reads.
+  // file is read by name (A-261) but a snapshot file and the test it names, whose entries are read together (stage 71).
   if (suiteFiles.length > 0) {
     // A suite at the root of the checkout is read by its files: a glob of its directory would select everything.
     const trees = outputDirs.filter((o) => o.caseDir !== undefined && o.dir !== ".").flatMap((o) => [`${o.dir}/**`, `${o.caseDir}/**`]);
@@ -375,7 +375,9 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
     const rest = suiteFiles.filter((p) => !inTree(p));
     const g = globsFor(suiteFiles, files, [...treeGlobs, ...rest]);
     const snapshot = (p: string) => underAny(p, ["__snapshots__"]) || (segments(p).at(-2) === "snapshots" && ext(p) === "snap");
-    const names = [...treeGlobs, ...rest.filter((p) => !snapshot(p))];
+    // A snapshot file's entries are read with the test file it names (stage 71), so both are read whole.
+    const snapshotTests = new Set(outputDirs.flatMap((o) => [...o.paired].filter(([, outs]) => outs.some(snapshot)).map(([t]) => t)));
+    const names = [...treeGlobs, ...rest.filter((p) => !snapshot(p) && !snapshotTests.has(p))];
     sources.push({ name: "Outputs", kind: "Outputs", at: ".", include: g.include, exclude: g.exclude, ...(names.length > 0 ? { names } : {}) });
     const owner = practices.find((p) => p.kind === "tests");
     if (owner !== undefined) owner.sources.push("Outputs");
