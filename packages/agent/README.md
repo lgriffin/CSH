@@ -42,6 +42,7 @@ but it makes the boundary testable on the harness's side ([10](../../docs/spec/1
 
 ## How it is tested
 
+- `test/tools.test.ts` (stage 65): every tool called in process on a copy of the lockout example: `status`, `run`, `gaps` with `explain` and `print` of what it lists, the refusals of an unknown id or fragment and of each missing argument, `queue`, `diff` of HEAD against the working tree, `propose_claim` for an undeclared intent, and `a3_open` once and refused the second time.
 - `test/agent.test.ts`: the tool list, refusal of other names, and the envelope (a property: quoted text never appears among the unquoted strings).
 - F113: a scripted client lists exactly the nine tools. F114: it calls every tool on a component whose sources carry an instruction aimed at an agent, and finds that text only under `quoted`.
 - `packages/testkit/test/agent-session.test.ts`: the protocol on the lockout regression, ending at `says: stop`, with the transcript that [the agent guide](../../docs/guides/agents.md) shows.

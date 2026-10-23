@@ -39,6 +39,35 @@ jobs:
       - name: README commands
         run: node packages/testkit/src/triangle.ts readme
 
+  # The coverage floors (stage 65): the whole suite with V8 coverage, failing when the workspace or any package falls
+  # below its floor in coverage-floors.json. The report is kept as an artifact and its totals go to the job summary.
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: npx tsc -p tsconfig.fixtures.json
+      - run: pnpm test:coverage
+      - name: Totals
+        if: always()
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            jq -r '"| | Lines | Statements | Functions | Branches |\n| --- | --- | --- | --- | --- |\n| Workspace | \(.total.lines.pct)% | \(.total.statements.pct)% | \(.total.functions.pct)% | \(.total.branches.pct)% |"' coverage/coverage-summary.json >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/
+
   # The same suite on Windows (From real runs, stage 41): paths with backslashes, CRLF checkouts and the sandbox's
   # permission model differ there, and the runs that found these were on Windows.
   windows:
