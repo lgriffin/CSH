@@ -79,6 +79,11 @@ export interface ItemEdge {
   absent?: boolean;
   /** The `owner/repo` tokens of the sentence that mentions the file: one that names no top-level entry is elsewhere. */
   repos?: string[];
+  /**
+   * For a file a relative link names (From the TypeScript run, section 3): the path is resolved already, so it is checked
+   * as written, never as a bare name or from the mentioning file's directory.
+   */
+  exact?: boolean;
 }
 
 export interface AdapterManifest {

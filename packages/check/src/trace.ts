@@ -117,6 +117,8 @@ export function trace(input: TraceInput): TraceResult {
     if (e.to.startsWith("file:")) {
       if (files === undefined) return null;
       const p = e.to.slice(5).replace(/\/$/, "");
+      // A relative link's path is resolved already: checked as written (From the TypeScript run, section 3).
+      if (e.exact === true) return files.has(p) || dirs.has(p) ? "file" : ignored.has(p) || e.absent === true || (e.repos ?? []).some((r) => !top.has(r.split("/")[0]!)) ? null : undefined;
       // From the directory of the file that mentions it, when it names nothing from the root (section 5).
       const near = relativeTo(e.span, p);
       if (near !== undefined && (files.has(near) || dirs.has(near)) && !files.has(p) && !dirs.has(p)) return "file";

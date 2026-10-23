@@ -21,6 +21,9 @@ export interface Proposal {
 export const NEVER_PROPOSED = ["node_modules", "dist", "build", "out", "coverage", "vendor", "target", ".venv", "venv", "site-packages", "__pycache__"];
 const NEVER_GLOBS = NEVER_PROPOSED.map((d) => `**/${d}/**`);
 
+/** A pattern that matches no text: the citations of tests in a repository with no identifier scheme (A-221). */
+export const NO_CITATION = "(?!)";
+
 /** Prefixes of identifiers that belong to the world, not to the repository: UTF-8, SHA-256, RFC-9110. */
 export const EXTERNAL_FAMILIES = ["UTF", "SHA", "ISO", "RFC", "CVE", "AES", "RSA", "TLS", "SSL", "HTTP", "ES", "ECMA", "PEP", "JSR", "GPL", "LGPL", "AGPL", "MIT", "BSD", "CC"];
 
@@ -315,6 +318,12 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   const conftests = pytestBdd.length === 0 ? [] : files.filter((p) => posix.basename(p) === "conftest.py" && !fixtures(p) && !never(p));
   if (tests.length + steps.length > 0) {
     const testPractice: Omit<Practice, "sources"> = { id: "tdd", name: "TDD", kind: "tests", unit: "the test file", settings: { ...idSettings } };
+    // With no scheme, a test title's PREFIX-number (WTF-8, JIRA-123) names nothing the repository defines, so it cites
+    // nothing (From the TypeScript run, section 2).
+    if (idPattern === undefined) {
+      testPractice.settings!.citePattern = NO_CITATION;
+      guesses.push("tests cite nothing: with no identifier scheme, an identifier in a test's title names nothing the repository defines");
+    }
     if (steps.length > 0) {
       testPractice.settings!.style = "cucumber";
       guesses.push(`style cucumber: ${steps.length} step definition ${steps.length === 1 ? "file" : "files"} beside the features, e.g. ${steps[0]}`);

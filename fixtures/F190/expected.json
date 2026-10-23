@@ -1,0 +1,15 @@
+{
+  "fixture": "F190",
+  "section": "From the TypeScript run, section 2; A-221",
+  "stage": 63,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["no idPattern", "tests cite nothing"],
+      "entriesAbsent": [
+        { "kind": "dangling-reference", "subject": "Tests/test/decode.test.ts" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

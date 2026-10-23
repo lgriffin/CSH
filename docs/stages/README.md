@@ -63,6 +63,7 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 60: Calibrate and ship](stage-60.md)
 - [Stage 61: What the tutors-mono-repo run asked for](stage-61.md)
 - [Stage 62: What the Toads run asked for](stage-62.md)
+- [Stage 63: What the TypeScript run asked for](stage-63.md)
 - [Stage 64: The command line, hardened](stage-64.md)
 - [Stage 65: Coverage floors](stage-65.md)
 
@@ -95,6 +96,10 @@ file mentions, dependency-cruiser checks, baselines and specification prose. Its
 Stage 62 answers what a cold read of Toads, a Python repository, asked for ([18](../spec/18-from-the-toads-run.md),
 [issue 87](https://github.com/lgriffin/CSH/issues/87)): ignored files, pytest-bdd's bindings and step definitions,
 import-linter contracts, and what a told rule is not. Its fixtures are F184 to F188.
+
+Stage 63 answers what a cold read of microsoft/TypeScript asked for ([19](../spec/19-from-the-typescript-run.md),
+[issue 89](https://github.com/lgriffin/CSH/issues/89)): a file the reader is told to create, test titles in a repository
+with no identifier scheme, and relative Markdown links. Its fixtures are F189 to F191.
 
 Stage 64 hardens the command line for use outside this repository: every argument is checked before a command runs,
 each mistake is named with the command's usage, files that cannot be used are said rather than thrown, and the README

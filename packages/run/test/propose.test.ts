@@ -141,7 +141,9 @@ describe("proposeProfile", () => {
     const r = propose(dir);
     expect(reads(dir, r, "Tests")).toEqual(["app/cart_test.py", "cart/cart_test.go", "crate/tests/it.rs", "src/test/java/CartTest.java", "src/test/java/CartTests.java", "tests/test_cart.py"]);
     expect(reads(dir, r, "Code")).toEqual(["app/cart.py", "cart/cart.go", "crate/src/lib.rs", "src/main/java/Cart.java"]);
-    expect(r.manifest.practices.find((p) => p.id === "tdd")?.settings).toBeUndefined();
+    // No identifier scheme, so a test title cites nothing (A-221).
+    expect(r.manifest.practices.find((p) => p.id === "tdd")?.settings).toEqual({ citePattern: "(?!)" });
+    expect(r.guesses.join("\n")).toMatch(/tests cite nothing/);
   });
 
   it("does not take a tag family as the rules' identifier when one of its tags names two rules, or the feature", () => {

@@ -12,7 +12,7 @@
       },
       "practices": [
         { "sources": ["Documents"], "kind": "documents" },
-        { "sources": ["Tests", "Outputs"], "kind": "tests", "executions": "csh/results.json" },
+        { "sources": ["Tests", "Outputs"], "kind": "tests", "executions": "csh/results.json", "settings": { "citePattern": "(?!)" } },
         { "sources": ["Code"], "kind": "facts" }
       ],
       "byName": ["src/view.test.ts", "testdata/baselines/reference/compiler/a.baseline.md", "testdata/baselines/reference/compiler/a.types", "testdata/tests/cases/compiler/a.ts"],

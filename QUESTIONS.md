@@ -566,6 +566,13 @@ Raised in stage 62. Toads binds 52 scenarios through helpers that compute each t
 
 Built as the first on 23 October 2026.
 
+## Q-62 What a test title cites when the repository has no identifier scheme
+
+Raised in stage 63. The cold read of microsoft/TypeScript found no identifier scheme, and read "WTF-8" in a test title as a citation of a requirement nothing defines. The default pattern already leaves out `UTF`, `SHA`, `ISO` and a few other names by listing them.
+
+- **Cite nothing when there is no scheme (chosen):** with no scheme, an identifier names nothing the repository defines, so nothing can be refuted. A test that cites a tracker key, such as `JIRA-123`, is no longer a dangling reference either.
+- **Grow the list of names left out:** each new encoding, standard or tracker key would be another false refutation until it was listed.
+
 ## Q-80 A case with no accepted output that the runner may skip
 
 Raised in stage 70 ([21](docs/spec/21-test-suites-as-evidence.md), section 2). A case of a reference tree or of mirrored
