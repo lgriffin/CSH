@@ -1,0 +1,19 @@
+{
+  "fixture": "F225",
+  "section": "Reading test suites as evidence, section 4; A-264",
+  "stage": 72,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "entries": [
+        { "outcome": "converged", "kind": "exercised", "subject": "Documents/docs/orders.md", "detailIncludes": ["`parse_order`", "orders/tests/parse.rs"] },
+        { "outcome": "gap", "kind": "unexercised", "subject": "Documents/docs/shop.md", "detailIncludes": ["`Receipt`", "no test mentions", "`Basket`", "shop/src/test/java/shop/BasketTest.java"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "exercise-undecided", "subject": "Documents/docs/shop.md" },
+        { "kind": "exercise-undecided", "subject": "Documents/docs/orders.md" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

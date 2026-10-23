@@ -1,0 +1,19 @@
+{
+  "fixture": "F224",
+  "section": "Reading test suites as evidence, section 4; A-264",
+  "stage": 72,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "entries": [
+        { "outcome": "converged", "kind": "exercised", "subject": "Documents/tally/README.md", "detailIncludes": ["`count_votes`", "`break_tie`", "tests/test_count.py"] },
+        { "outcome": "indeterminate", "kind": "exercise-undecided", "subject": "Documents/tools/gen/README.md", "detailIncludes": ["`RenderAll`", "Go"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "unexercised", "subject": "Documents/tools/gen/README.md" },
+        { "kind": "unexercised", "subject": "Documents/tally/README.md" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}
