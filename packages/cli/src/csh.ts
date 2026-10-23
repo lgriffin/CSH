@@ -1,7 +1,7 @@
 // The csh command (Joint evaluation, section 7; Authority tab, sections 3.4 and 6; Anchor, harnesses and A3, section 7.1).
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { a3Dir, readJudgments } from "@csh/a3";
 import { checkExpected, claimEvidence, lineStating, linesStatingVersion, DIVERGENCE_READINGS, type Finding, ladderOf, overviewOf, renderLadder, parseExpected, renderExpect, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report, type SentenceAt } from "@csh/check";
 import { exitCode, formatDecision as formatGate, type GateDecision, type Mode } from "@csh/gate";
@@ -10,96 +10,14 @@ import { appendDecision, type DecisionKind, isCalendarDate, LEDGER_PATH, persons
 import { printFragment } from "@csh/print";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
 import { componentQueue, coverageOf, renderCoverage, componentStatus, decideGate as decideFor, evaluateProject, GATE_PATH, renderQueue, renderStatus, ledgerOf, loadProject, MODEL_PATH, OVERVIEW_PATH, type Project, REPORT_PATH, importResults, runAt, runComponent, type RunResult, fetchSubject, runWarnings, specPathOf, storedRuns, subjectWarnings } from "@csh/run";
-import { type Args, parseArgs } from "./args.ts";
+import { type Args, argProblems, hint, parseArgs, valueProblems } from "./args.ts";
+import { COMMAND_NAMES, commandNamed, helpOf, synopsis, USAGE, version } from "./commands.ts";
 import { init } from "./init.ts";
+import { debugging } from "./exit.ts";
 import { a3Command, a3Fragment, historyCommand } from "./a3.ts";
 import { diffCommand } from "./diff.ts";
 import { analyseCommand } from "./analyse.ts";
 
-const USAGE = `csh: the Composable Specification Harness
-
-  csh init                        Write csh/component.json by asking for each field. Guesses nothing. Writes under
-                                  the same root as every other command: --root, or the git top level.
-  csh init --subject <dir>        Propose csh/component.json from a checkout's tracked files: sources by directory and
-                                  extension, an identifier pattern, tag and test settings, a results file. Prints
-                                  every guess and what the proposal leaves unread.
-  csh analyse <path> [--at <commit>] [--json] [--out <dir>] [--profile <dir>] [--expected <file>] [--budget ms]
-                                  Read a repository cold: propose a profile, lift the layering and EARS sentences of
-                                  its documents as told rules, read its code and tests, check, and place every result,
-                                  danger first, then conflicts, gaps, indeterminate and converged. Writes
-                                  csh-analysis.html and .json under --out (reports). Never writes into the repository,
-                                  runs its tests or reads a ledger. Exits 0 when it completes; with --expected, 1 when
-                                  the analysis does not meet that csh-expected/v1 file.
-  csh run [--at <commit>] [--mode advisory|enforcing] [--budget ms] [--no-cache]
-                                  Run each practice's harness, check and gate one snapshot of the component, and
-                                  store the run under .csh-cache/runs/. Exits non-zero only on block in enforcing
-                                  mode, or when the run could not be made.
-  csh check [spec] [--out report.json] [--json] [--budget ms] [--no-cache]
-                                  Run every check and write the report. Exits 0 when the run completed.
-  csh gaps [spec]                 Print the gap view only.
-  csh coverage [--json]           What each source reads, and the tracked files no source reads, by extension.
-  csh overview [--run <dir|commit>] [--signal <id>] [--out <file>] [--json]
-                                  Place every result of the last report in one of three outcomes: gaps (suggestions,
-                                  with what would close each), indeterminate (with what would decide it) and
-                                  converged. Prints the counts by practice and kind and writes the sheet to
-                                  reports/csh-overview.html, which opens on any signal as #<id>. --signal prints one.
-  csh ladder [--run <dir|commit>] [--json]
-                                  Every told rule on the Assertion Ladder, weakest first: its rung (L2 told, L3
-                                  checked, L4 explained, L5 prevented), the mechanisms that establish it, and the
-                                  outcomes of the overview entries about it. Reads the last report; decides nothing.
-  csh explain <finding-id> [--run <dir|commit>]
-                                  Print one finding, members rendered through the printer. With --run, from a stored
-                                  run (its directory, or a commit whose newest stored run is read) rather than reports/.
-  csh approve <fragment> --actor <name> --rationale <text>
-                                  A fragment, or #a3/<slug> for an A3's judgments.
-  csh reject <fragment> --actor <name> --rationale <text>
-  csh retire <fragment> --actor <name> --rationale <text>
-  csh waive <fragment> --scope <finding-id|obligation> --expires <YYYY-MM-DD> --actor <name> --rationale <text>
-  csh countersign <seq> --actor <name> --rationale <text>
-                                  Draft a ledger line. The tool never commits or signs: commit
-                                  csh/ledger.ndjson alone, signed with your own key.
-  csh status [--json]             What is and is not protected, for one component: the root of trust, the
-                                  maintainers, what is approved, the gate mode and whether the stored decision is
-                                  for the current snapshot. Reads only; always exits 0 when it can read the component.
-  csh diff <base> <head> [--json] [--out <dir>]
-                                  What a change did to the results: approvals lost, new violations, rules gone
-                                  unknown, signals appeared and cleared, observations, counts. Each side is a stored
-                                  run's directory, a commit (run when no run of it is stored) or . for the working
-                                  tree. A side that cannot be run is unavailable, never an empty diff. Exits 0.
-  csh queue [--json]              What awaits the owner's decision: candidate rules, unapproved bindings and A3
-                                  judgments, each with who wrote it, how long it has waited and what approving it
-                                  would unlock. Warns past csh/config.json's queueLimit. Reads only; exits 0.
-  csh gate [--mode advisory|enforcing] [--out decision.json]
-                                  Check and decide for the current snapshot. Exits non-zero only on block in enforcing mode.
-  csh a3 open <slug> [--at <commit>] [--stage <id>]
-                                  Record a run as an A3's first stage and write an empty judgments skeleton under
-                                  csh/a3/<slug>/. Never overwrites judgments.
-  csh a3 stage <slug> <id> --at <commit> [--mode advisory|enforcing]
-                                  Record the run of a commit as a stage, running the commit if no run is stored.
-  csh a3 build <slug> [--check]   Build a3.json, a3.md and a3.html from the stage records and judgments; with
-                                  --check, fail when the committed ones differ.
-  csh a3 verify <slug>            Re-run every stage at its commit and report any that differs.
-  csh history <slug> [--from <tag>] [--to <tag>] [--match <glob>]
-                                  Run a subject at each release tag in the range (tags matching v* by default),
-                                  oldest first, and record each run as a stage of the A3 <slug>, opening it if needed.
-  csh results import <practice> <runner-report> [--base <dir>]
-                                  Reduce a Jest or Vitest JSON report to csh-results/v1 (each test file's counts, the
-                                  identifiers each citing test cites, the commit) and write it to the practice's
-                                  executions path. Test names are dropped, so the file can be committed.
-  csh expect [--expected <file>] [--run <dir|commit>]
-                                  Compare the last report with the expected results (csh/expected.json): each
-                                  expectation names an outcome, a signal kind and a subject that must be reported.
-                                  Exits 1 on any mismatch.
-  csh subject fetch [--at <tag|commit>]
-                                  Clone the subject and check out its pinned commit, or another commit beside it.
-  csh gate --verify <decision.json>
-                                  Recompute the decision; refuse one made for any other snapshot or that differs.
-
-  csh subject fetch               Fetch the subject the manifest names, at its pinned commit, under .csh-cache/subjects/.
-
-Options common to all: --root <dir> (default: the git repository or the current directory); --subject <dir> (a
-checkout of the subject to read instead of the fetched one).
-`;
 
 interface Io {
   out: (s: string) => void;
@@ -133,11 +51,44 @@ function write(path: string, text: string): void {
 
 /** The report a reading command reads: a stored run's, else the last one written; a missing one is said, not thrown. */
 function reportFor(p: Project, a: Args, stored: { report: string } | undefined, cmd: string, io: Io): Report | undefined {
-  if (stored !== undefined) return JSON.parse(readFileSync(stored.report, "utf8")) as Report;
-  const path = join(p.root, a.options.report ?? REPORT_PATH);
-  if (existsSync(path)) return JSON.parse(readFileSync(path, "utf8")) as Report;
-  io.err(`csh ${cmd}: no report at ${(relative(io.cwd, path) || path).replace(/\\/g, "/")}; csh run or csh check writes one, and writes none when it fails\n`);
-  return undefined;
+  const path = stored?.report ?? join(p.root, a.options.report ?? REPORT_PATH);
+  if (!existsSync(path)) {
+    io.err(`csh ${cmd}: no report at ${shown(io.cwd, path)}; csh run or csh check writes one, and writes none when it fails\n`);
+    return undefined;
+  }
+  const r = readJson<Report>(path);
+  if ("error" in r || r.value === null || typeof r.value !== "object" || !Array.isArray(r.value.findings)) {
+    io.err(`csh ${cmd}: ${shown(io.cwd, path)} is not a report csh wrote${"error" in r ? ` (${r.error})` : ""}; csh run or csh check writes it again\n`);
+    return undefined;
+  }
+  return r.value;
+}
+
+/** A path as a person reads it: relative to where they are, unless that climbs out of it, then absolute. */
+function shown(cwd: string, path: string): string {
+  // Compared as real paths: git names the root in its own spelling (C:/Users/... for a Windows short name), never the
+  // working directory's.
+  const rel = relative(real(cwd), real(path));
+  return (rel === "" || rel.startsWith("..") || isAbsolute(rel) ? path : rel).replace(/\\/g, "/");
+}
+
+/** The real path of a file or of where it would be: the nearest existing ancestor resolved, the rest kept. */
+function real(path: string): string {
+  try {
+    return realpathSync.native(path);
+  } catch {
+    const up = dirname(path);
+    return up === path ? path : join(real(up), basename(path));
+  }
+}
+
+/** A JSON file read, or why it could not be. */
+function readJson<T>(path: string): { value: T } | { error: string } {
+  try {
+    return { value: JSON.parse(readFileSync(path, "utf8")) as T };
+  } catch (e) {
+    return { error: e instanceof SyntaxError ? `not JSON: ${e.message}` : (e as Error).message };
+  }
 }
 
 /** The report and model files of a stored run: --run names its directory, or a commit whose newest stored run is read. */
@@ -198,6 +149,15 @@ async function decide(kind: DecisionKind, p: Project, a: Args, io: Io): Promise<
     io.err("a decision needs a non-empty --rationale\n");
     return 2;
   }
+  // Checked before the run the decision needs, so that a mistyped date or seq costs nothing.
+  if (kind === "waive" && (a.options.scope === undefined || a.options.expires === undefined || !isCalendarDate(a.options.expires))) {
+    io.err("csh waive needs --scope <finding-id|obligation> and --expires <YYYY-MM-DD>\n");
+    return 2;
+  }
+  if (kind === "countersign" && !/^[1-9][0-9]*$/.test(target)) {
+    io.err(`csh countersign: a ledger entry is named by its seq, a whole number from 1, not ${JSON.stringify(target)}\n`);
+    return 2;
+  }
   const slug = /^(?:[^/]+\/)?#a3\/([a-z0-9][a-z0-9-]*)$/.exec(target)?.[1];
   if (slug !== undefined) return decideA3(kind, p, slug, actor, rationale, io);
   const res = await runCheck(p, { ...a, positional: [] }, io);
@@ -237,11 +197,7 @@ async function decide(kind: DecisionKind, p: Project, a: Args, io: Io): Promise<
     d.cited = frag.cites.map((c) => ({ source: c.source, id: c.id, textDigest: report.items.find((i) => i.source === c.source && i.id === c.id)?.textDigest ?? "missing" }));
   }
   if (kind === "waive") {
-    if (a.options.scope === undefined || a.options.expires === undefined || !isCalendarDate(a.options.expires)) {
-      io.err("csh waive needs --scope <finding-id|obligation> and --expires <YYYY-MM-DD>\n");
-      return 2;
-    }
-    d.waiver = { scope: a.options.scope, expires: a.options.expires };
+    d.waiver = { scope: a.options.scope!, expires: a.options.expires! };
   }
   if (refers !== undefined) d.refers = refers;
   const written = appendDecision(join(p.root, LEDGER_PATH), d);
@@ -281,15 +237,80 @@ async function decideA3(kind: DecisionKind, p: Project, slug: string, actor: str
 
 export async function csh(argv: string[], io: Io): Promise<number> {
   const a = parseArgs(argv);
-  if (a.errors.length > 0) {
-    io.err(`${a.errors.join("\n")}\n`);
+  const cmd = a.positional.shift();
+  if (a.flags.has("version") && cmd === undefined && a.errors.length === 0) {
+    io.out(`csh ${version()}\n`);
+    return 0;
+  }
+  if (cmd === undefined) {
+    if (a.flags.has("help") && a.errors.length === 0) {
+      io.out(USAGE);
+      return 0;
+    }
+    io.err(a.errors.length > 0 ? `csh: ${a.errors.join("; ")}\nRun csh help for the list of commands.\n` : USAGE);
     return 2;
   }
-  const cmd = a.positional.shift();
-  if (cmd === undefined || cmd === "help" || a.flags.has("help")) {
-    io.out(USAGE);
-    return cmd === undefined ? 2 : 0;
+  const command = commandNamed(cmd);
+  if (command === undefined) {
+    io.err(`csh: unknown command ${JSON.stringify(cmd)}${hint(cmd, COMMAND_NAMES, "")}\nRun csh help for the list of commands.\n`);
+    return 2;
   }
+  if (cmd === "help") {
+    // help is checked like any command, so that csh help status extra is refused rather than half read.
+    const problems = [...a.errors, ...argProblems(a, command)];
+    if (problems.length > 0) {
+      io.err(`${problems.map((x) => `csh help: ${x}`).join("\n")}\nusage: csh help [command]\n`);
+      return 2;
+    }
+    const about = a.positional[0];
+    if (about === undefined) {
+      io.out(USAGE);
+      return 0;
+    }
+    const c = commandNamed(about);
+    if (c === undefined || about === "help") {
+      io.err(`csh help: no command ${JSON.stringify(about)}${hint(about, COMMAND_NAMES, "")}\n`);
+      return 2;
+    }
+    io.out(helpOf(c));
+    return 0;
+  }
+  if (a.flags.has("help")) {
+    io.out(helpOf(command));
+    return 0;
+  }
+  // Every argument is checked before anything is read or run: a misspelt option is named, never silently ignored.
+  // A command with subcommands (csh a3) is checked against what the one named takes.
+  const sub = command.subcommands === undefined ? undefined : a.positional[0];
+  const accepts = sub === undefined ? command : command.subcommands![sub];
+  const subNames = Object.keys(command.subcommands ?? {});
+  const problems = [...a.errors, ...(accepts === undefined ? [`no subcommand ${JSON.stringify(sub)}${hint(sub!, subNames, "")}; there are ${subNames.join(", ")}`] : argProblems(a, accepts)), ...valueProblems(a)];
+  if (problems.length > 0) {
+    io.err(`${problems.map((x) => `csh ${cmd}: ${x}`).join("\n")}\nusage: ${synopsis(command).join("\n       ")}\nRun csh help ${cmd} for more.\n`);
+    return 2;
+  }
+  for (const k of ["root", "subject"] as const) {
+    const dir = a.options[k];
+    const at = dir === undefined ? undefined : resolve(io.cwd, dir);
+    // csh init writes its manifest under a root it may create, so a root that does not exist yet is not refused there;
+    // csh init --subject names the checkout to propose from, which must exist as much as any other.
+    const creates = cmd === "init" && k === "root" && at !== undefined && !existsSync(at);
+    if (at !== undefined && !creates && !(existsSync(at) && statSync(at).isDirectory())) {
+      io.err(`csh ${cmd}: --${k} ${dir} is not a directory\n`);
+      return 2;
+    }
+  }
+  try {
+    return await dispatch(cmd, a, io);
+  } catch (e) {
+    // An error no command expected: said in one line, with the stack only when asked for.
+    const err = e instanceof Error ? e : new Error(String(e));
+    io.err(`csh ${cmd}: ${err.message}\n${debugging() ? `${err.stack ?? ""}\n` : "Set CSH_DEBUG=1 to see where it came from.\n"}`);
+    return 1;
+  }
+}
+
+async function dispatch(cmd: string, a: Args, io: Io): Promise<number> {
   if (cmd === "init") return init(io.cwd, a.options.root, io, a.options.subject);
   if (cmd === "analyse") return analyseCommand(a, io, io.solver ?? defaultSolver);
   const subject = a.options.subject !== undefined ? resolve(io.cwd, a.options.subject) : undefined;
@@ -445,8 +466,13 @@ export async function csh(argv: string[], io: Io): Promise<number> {
         io.err(`no finding or overview entry ${id ?? ""} in the report\n`);
         return 2;
       }
-      const model = JSON.parse(readFileSync(stored?.model ?? join(p.root, MODEL_PATH), "utf8")) as Module;
-      io.out(explainFinding(f, model));
+      const modelPath = stored?.model ?? join(p.root, MODEL_PATH);
+      const model = existsSync(modelPath) ? readJson<Module>(modelPath) : { error: "no such file" };
+      if ("error" in model) {
+        io.err(`csh explain: cannot read the model at ${shown(io.cwd, modelPath)} (${model.error}); csh check writes it beside the report\n`);
+        return 2;
+      }
+      io.out(explainFinding(f, model.value));
       return 0;
     }
     case "approve":
@@ -495,7 +521,7 @@ export async function csh(argv: string[], io: Io): Promise<number> {
       });
     }
     default:
-      io.err(`unknown command ${cmd}\n${USAGE}`);
+      io.err(`csh: unknown command ${JSON.stringify(cmd)}\n`);
       return 2;
   }
 }
@@ -516,7 +542,13 @@ async function decideGate(p: Project, a: Args, io: Io): Promise<GateDecision | u
 
 async function runGate(p: Project, a: Args, io: Io): Promise<number> {
   if (a.options.verify !== undefined) {
-    const given = JSON.parse(readFileSync(join(p.root, a.options.verify), "utf8")) as GateDecision;
+    const file = resolve(p.root, a.options.verify);
+    const read = existsSync(file) ? readJson<GateDecision>(file) : { error: "no such file" };
+    if ("error" in read || read.value === null || typeof read.value !== "object" || typeof read.value.snapshotDigest !== "string") {
+      io.err(`csh gate --verify: ${shown(io.cwd, file)} is not a decision csh gate wrote${"error" in read ? ` (${read.error})` : ""}\n`);
+      return 2;
+    }
+    const given = read.value;
     // Recompute the decision for this snapshot, in the mode the decision claims, and accept only an identical one.
     const fresh = await decideGate(p, { ...a, options: { ...a.options, mode: given.mode } }, io);
     if (fresh === undefined) return 1;
