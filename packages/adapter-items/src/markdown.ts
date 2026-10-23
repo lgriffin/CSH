@@ -10,7 +10,7 @@ import { digestOf } from "@csh/kernel";
 import type { Adapter, AdapterInput, AdapterOutput, Diagnostic, ItemEdge, SourceItem } from "@csh/witness";
 import { backticked, bareFileToken, decode, idPatternOf, pathToken, slug, sortedFiles, unique } from "./common.ts";
 import { type Contract, IMPORT_LINTER, importContracts, namesContract } from "./import-linter.ts";
-import { sentencesOf, toldSentences } from "./told.ts";
+import { sentencesOf, toldSentences, unquoted } from "./told.ts";
 
 export const manifest = {
   id: "csh.adapter.items.markdown",
@@ -377,7 +377,9 @@ export function run(input: AdapterInput): AdapterOutput {
         const named = [...new Set(backticked(s.text).filter((t) => checks.has(t)))];
         for (const n of named) edges.push({ from: id, rel: "verified-by", to: `file:${checks.get(n)!}`, span: item.span });
         // So is one that names an import-linter contract, by its name, its modules, or the file that holds it (A-218).
-        for (const [config, cs] of contracts) if (namesContract(s.text, backticked(s.text), config, cs)) edges.push({ from: id, rel: "verified-by", to: `file:${config}`, span: item.span });
+        // A quotation names nothing, as it states nothing (A-219).
+        const said = unquoted(s.text);
+        for (const [config, cs] of contracts) if (namesContract(said, backticked(said), config, cs)) edges.push({ from: id, rel: "verified-by", to: `file:${config}`, span: item.span });
       }
     }
   }

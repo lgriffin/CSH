@@ -365,7 +365,9 @@ export function run(input: AdapterInput): AdapterOutput {
       if (bdd !== undefined) {
         attrs.bdd = "pytest-bdd";
         if (bdd.features.length > 0) attrs.bindsFeatures = bdd.features.join("\n");
+        if (bdd.dirs.length > 0) attrs.bindsDirs = bdd.dirs.join("\n");
         if (bdd.named.length > 0) attrs.bindsNamed = bdd.named.join("\n");
+        if (bdd.pairs.length > 0) attrs.bindsPairs = bdd.pairs.join("\n");
         if (bdd.titles.length > 0) attrs.bindsTitles = bdd.titles.join("\n");
         if (bdd.undecided.length > 0) attrs.bindsUndecided = bdd.undecided.join("\n");
       }

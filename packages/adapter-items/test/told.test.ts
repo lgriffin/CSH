@@ -25,6 +25,9 @@ describe("toldKind", () => {
     ["A cog never touches the database (an import contract in `pyproject.toml` forbids it).", "layering"],
     ["Handlers must not, under any circumstances, import the database driver.", "layering"],
     ["The worker imports nothing from the web layer, because the web layer is optional.", "layering"],
+    // "no" and "any" restrict an import; they do not make it a data import.
+    ["Core has no imports outside the domain.", "layering"],
+    ["There are no imports between layers.", "layering"],
     ["When a reservation exceeds the stock, the service shall reject it.", "ears"],
     ["The service shall log every refusal.", "ears"],
   ])("%s is %s", (s, kind) => expect(toldKind(s)).toBe(kind));

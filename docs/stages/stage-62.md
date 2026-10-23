@@ -51,3 +51,14 @@ The prose-drift A3 of ESI.ts changes in seven stages, v10.0.0 to v10.2.3. ESI.ts
 which the site generator fills. Prose that names them, or a page in them, is no longer a dangling reference. At
 v10.0.0 that removes the dangling reference of `guides/RELEASE.md` and shortens those of the charter and
 `guides/QUALITY-GATES.md`. The A3 is rebuilt to match.
+
+## After review
+
+The review of the stage found bindings it misread, each now covered by a test, and F185 by a directory. A
+`scenarios()` argument that is one literal naming a directory binds every feature file under it. A `@scenario` keeps
+its feature file with its title, so a title two features share no longer reads as unbound, and a unique one no longer
+binds the wrong feature. A binding in a function body, and an `fr"…"` path, are undecided rather than read as
+literals, and escapes are read as Python reads them. `import pytest_bdd, os` is read. "No imports" and "any imports"
+are layering rules again (A-219), a quotation names no contract, and a short contract name counts in backticks or
+quotes (A-218). A Python `steps` package is Code where no feature file is. The reads of Toads, tutors-mono-repo and
+every subject are unchanged.

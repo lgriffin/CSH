@@ -5,11 +5,12 @@
 import type { StepPattern } from "./tests.ts";
 import { lexOther, lineIndex, lineStarts } from "./tests-other.ts";
 
-/** A Python string literal's content as Python reads it, unless it is raw. */
-export function unescapePython(raw: string): string {
+/** A Python string literal's content as Python reads it, unless it is raw; undefined for a `\N{name}` escape, which needs Unicode's names. */
+export function unescapePython(raw: string): string | undefined {
   const named: Record<string, string> = { n: "\n", t: "\t", r: "\r", "0": "\0", a: "\x07", b: "\b", f: "\f", v: "\v" };
-  return raw.replace(/\\(u[0-9a-fA-F]{4}|x[0-9a-fA-F]{2}|\r?\n|[\s\S])/g, (_, e: string) => {
-    if (/^[ux]/.test(e) && e.length > 1) return String.fromCharCode(parseInt(e.slice(1), 16));
+  if (/(?<!\\)(?:\\\\)*\\N\{/.test(raw)) return undefined;
+  return raw.replace(/\\(U[0-9a-fA-F]{8}|u[0-9a-fA-F]{4}|x[0-9a-fA-F]{2}|\r?\n|[\s\S])/g, (_, e: string) => {
+    if (/^[uxU]/.test(e) && e.length > 1) return parseInt(e.slice(1), 16) <= 0x10ffff ? String.fromCodePoint(parseInt(e.slice(1), 16)) : `\\${e}`;
     if (/^\r?\n$/.test(e)) return "";
     return named[e] ?? (/["'\\]/.test(e) ? e : `\\${e}`);
   });
@@ -28,9 +29,13 @@ export function pytestBddImports(code: string): { names: Map<string, string>; pa
       if (p !== null) (m[1] !== undefined ? parsers : names).set(p[2] ?? p[1]!, p[1]!);
     }
   }
-  for (const m of code.matchAll(/^[ \t]*import\s+pytest_bdd(?:\s+as\s+(\w+))?\s*$/gm)) {
-    found = true;
-    module.push(m[1] ?? "pytest_bdd");
+  for (const m of code.matchAll(/^[ \t]*import\s+([^\n]*)/gm)) {
+    for (const part of m[1]!.split(",")) {
+      const p = /^\s*pytest_bdd(?:\s+as\s+(\w+))?\s*$/.exec(part);
+      if (p === null) continue;
+      found = true;
+      module.push(p[1] ?? "pytest_bdd");
+    }
   }
   return found ? { names, parsers, module } : undefined;
 }
@@ -49,7 +54,9 @@ export function literalAt(text: string, code: string, strings: Map<number, strin
     if (raw === undefined) break;
     // An f-string with a field is computed.
     if (/[fF]/.test(prefix) && /\{[^{]/.test(raw.replace(/\{\{/g, ""))) return undefined;
-    value += /[rR]/.test(prefix) ? raw : unescapePython(raw);
+    const read = /[rR]/.test(prefix) ? raw : unescapePython(raw);
+    if (read === undefined) return undefined;
+    value += read;
     any = true;
     const quote = text.startsWith(text[q]!.repeat(3), q) ? 3 : 1;
     i = q + quote + raw.length + quote;
@@ -80,14 +87,63 @@ const skip = (code: string, at: number) => {
 export interface Bindings {
   /** Feature files `scenarios(...)` names by a literal, as written. */
   features: string[];
+  /** Directories `scenarios(...)` names by an argument that is one literal, every feature file under which it binds. */
+  dirs: string[];
   /** For a computed `scenarios(...)`: the file's literals that may name a feature file by its base name. */
   named: string[];
-  /** Titles `scenario(file, title)` binds by a literal. */
+  /** `scenario(file, title)` with both literal: the feature file as written, a tab, and the title. */
+  pairs: string[];
+  /** Titles `scenario(file, title)` binds by a literal, where the feature file is computed. */
   titles: string[];
-  /** For a computed title: the file's literals that name a `.feature` file, whose scenarios may be bound. */
+  /** For a binding CSH cannot read, or one in a function that may never be called: the feature files it may bind. */
   undecided: string[];
   /** Whether the file binds anything, so that its tests are generated. */
   binds: boolean;
+}
+
+/** The offset where the string whose quote is at `q` starts, its prefix (`r`, `f`, `fr`, …) included. */
+function prefixStart(code: string, q: number): number {
+  let i = q;
+  while (i > q - 2 && /[rRbBuUfF]/.test(code[i - 1] ?? "")) i--;
+  return /\w/.test(code[i - 1] ?? "") ? q : i;
+}
+
+/** The literals of the code from `open` to `close`, adjacent ones joined: each value, undefined when it is computed, and whether it is all its argument. */
+function literalsIn(text: string, code: string, strings: Map<number, string>, open: number, close: number): { value: string | undefined; whole: boolean }[] {
+  const out: { value: string | undefined; whole: boolean }[] = [];
+  let past = open;
+  for (const [q] of [...strings].filter(([at]) => at >= open && at < close).sort((x, y) => x[0] - y[0])) {
+    if (q < past) continue;
+    const start = prefixStart(code, q);
+    const l = literalAt(text, code, strings, start);
+    let end = l?.end;
+    if (end === undefined) {
+      const raw = strings.get(q)!;
+      const quote = text.startsWith(text[q]!.repeat(3), q) ? 3 : 1;
+      end = q + quote + raw.length + quote;
+    }
+    past = end;
+    // All its argument: at the call's own depth, after its "(" or a ",", and before a "," or its ")".
+    const before = code.slice(open, start);
+    const depth = (before.match(/[([{]/g) ?? []).length - (before.match(/[)\]}]/g) ?? []).length;
+    const whole = depth === 0 && /(?:^|,)\s*$/.test(before) && /[,)]/.test(code[skip(code, end)] ?? "");
+    out.push({ value: l?.value, whole });
+  }
+  return out;
+}
+
+/** Whether the code at `at` is in the body of a function, which runs only when something calls it. */
+function inFunction(code: string, at: number): boolean {
+  const lines = code.slice(0, at).split("\n");
+  const indent = (l: string) => /^[ \t]*/.exec(l)![0].length;
+  let level = indent(lines[lines.length - 1]!);
+  for (let i = lines.length - 2; i >= 0 && level > 0; i--) {
+    const l = lines[i]!;
+    if (l.trim() === "" || indent(l) >= level) continue;
+    if (/^[ \t]*(?:async\s+)?def\b/.test(l)) return true;
+    level = indent(l);
+  }
+  return false;
 }
 
 /** What a Python test file binds through pytest-bdd; undefined when it does not import pytest_bdd. */
@@ -96,21 +152,24 @@ export function pytestBddBindings(text: string): Bindings | undefined {
   const imports = pytestBddImports(code);
   if (imports === undefined) return undefined;
   const callee = (orig: string) => [...[...imports.names].filter(([, o]) => o === orig).map(([alias]) => alias), ...imports.module.map((m) => `${m}.${orig}`)];
-  const out: Bindings = { features: [], named: [], titles: [], undecided: [], binds: false };
+  const out: Bindings = { features: [], dirs: [], named: [], pairs: [], titles: [], undecided: [], binds: false };
   // Every literal of the file, read once: candidates for a computed call.
-  const literals: string[] = [];
-  for (const [at] of strings) {
-    const l = literalAt(text, code, strings, /[rRbBuUfF]/.test(code[at - 1] ?? "") ? at - 1 : at);
-    if (l !== undefined) literals.push(l.value);
-  }
+  const literals = literalsIn(text, code, strings, 0, code.length).flatMap((l) => (l.value === undefined ? [] : [l.value]));
+  const featureLiterals = literals.filter((l) => /\.feature$/.test(l));
   const call = (names: string[]) => (names.length === 0 ? [] : [...code.matchAll(new RegExp(`(?<![\\w.])(?:${names.map((n) => n.replace(/\./g, "\\.")).join("|")})\\s*\\(`, "g"))].filter((m) => !/\bdef\s+$/.test(code.slice(Math.max(0, m.index - 8), m.index))));
   for (const m of call(callee("scenarios"))) {
     out.binds = true;
     const open = m.index + m[0].length;
     const close = argumentEndAll(code, open);
-    const named = [...strings].filter(([at]) => at >= open && at < close).map(([at, v]) => ({ v, f: /[fF]/.test(code[at - 1] ?? "") }));
-    const feats = named.filter((x) => !x.f && /\.feature$/.test(x.v)).map((x) => x.v);
-    if (feats.length > 0) out.features.push(...feats);
+    const lits = literalsIn(text, code, strings, open, close);
+    const feats = lits.flatMap((l) => (l.value !== undefined && /\.feature$/.test(l.value) ? [l.value] : []));
+    const dirs = lits.flatMap((l) => (l.whole && l.value !== undefined && !/\.feature$/.test(l.value) && l.value.trim() !== "" ? [l.value.replace(/\/+$/, "")] : []));
+    // A call in a function binds only if the function is called, which CSH does not follow.
+    const target = inFunction(code, m.index) ? out.undecided : undefined;
+    if (lits.every((l) => l.value !== undefined) && (feats.length > 0 || dirs.length > 0)) {
+      (target ?? out.features).push(...feats);
+      if (target === undefined) out.dirs.push(...dirs);
+    } else if (target !== undefined) target.push(...featureLiterals);
     else out.named.push(...literals.filter((l) => /^[\w.-]+$/.test(l)).map((l) => l.replace(/\.feature$/, "")));
   }
   for (const m of call(callee("scenario"))) {
@@ -119,10 +178,16 @@ export function pytestBddBindings(text: string): Bindings | undefined {
     const comma = argumentEnd(code, first);
     const title = code[comma] === "," ? literalAt(text, code, strings, comma + 1) : undefined;
     const after = title === undefined ? undefined : skip(code, title.end);
-    if (title !== undefined && (code[after!] === "," || code[after!] === ")")) out.titles.push(title.value.trim().replace(/\s+/g, " "));
-    else out.undecided.push(...literals.filter((l) => /\.feature$/.test(l)));
+    const feats = literalsIn(text, code, strings, first, comma).flatMap((l) => (l.value !== undefined && /\.feature$/.test(l.value) ? [l.value] : []));
+    if (title === undefined || !(code[after!] === "," || code[after!] === ")") || inFunction(code, m.index)) {
+      out.undecided.push(...(feats.length > 0 ? feats : featureLiterals));
+      continue;
+    }
+    const t = title.value.trim().replace(/\s+/g, " ");
+    if (feats.length === 1) out.pairs.push(`${feats[0]}\t${t}`);
+    else out.titles.push(t);
   }
-  for (const k of ["features", "named", "titles", "undecided"] as const) out[k] = [...new Set(out[k])].sort();
+  for (const k of ["features", "dirs", "named", "pairs", "titles", "undecided"] as const) out[k] = [...new Set(out[k])].sort();
   return out;
 }
 

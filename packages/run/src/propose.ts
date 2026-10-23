@@ -319,7 +319,11 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   }
 
   // Code: every file CSH reads facts from that is not a test, plus the language manifests at the root.
-  const code = files.filter((p) => CODE_EXT.includes(ext(p)) && testConvention(p) === undefined && stepConvention(p) === undefined && !fixtures(p));
+  // A JavaScript step file stays out of Code by its convention; a Python one only when it is read as a step file, since
+  // a `steps` package is ordinary code where no feature file is.
+  const stepSet = new Set(steps);
+  const stepFile = (p: string) => stepSet.has(p) || (ext(p) !== "py" && stepConvention(p) !== undefined);
+  const code = files.filter((p) => CODE_EXT.includes(ext(p)) && testConvention(p) === undefined && !stepFile(p) && !fixtures(p));
   // A nested manifest names a module of its own; one in a fixture or a dot-directory is test data or tooling.
   const manifests = files.filter((p) => MANIFESTS.includes(posix.basename(p)) && !fixtures(p) && (p.includes("/") ? !underAny(p, TEST_DIRS) : true));
   if (code.length > 0) {

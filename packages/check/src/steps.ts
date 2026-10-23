@@ -212,40 +212,58 @@ export function pytestBddBindings(items: Prepared["items"]): { bound: Map<string
   const fileOf = (span: string) => span.slice(0, span.lastIndexOf(":"));
   const features = [...new Set(scenarios.map((s) => fileOf(s.span)))];
   const lines = (v: string | undefined) => (v ?? "").split("\n").filter((x) => x !== "");
-  // A feature file a literal names: from the test file's directory when it climbs with ./ or ../, else any whose path ends with it.
+  // A path a literal names, from the test file's directory when it climbs with ./ or ../; undefined for any other.
+  const climbed = (test: string, ref: string): string | undefined => {
+    if (!/^\.\.?\//.test(ref)) return undefined;
+    const dir = test.includes("/") ? test.slice(0, test.lastIndexOf("/")) : "";
+    const parts: string[] = [];
+    for (const seg of `${dir}/${ref}`.split("/")) {
+      if (seg === "" || seg === ".") continue;
+      if (seg === "..") parts.pop();
+      else parts.push(seg);
+    }
+    return parts.join("/");
+  };
+  // A feature file a literal names: the one it climbs to, else any whose path ends with it.
   const named = (test: string, ref: string): string[] => {
     const r = ref.replace(/\\/g, "/");
-    if (/^\.\.?\//.test(r)) {
-      const dir = test.includes("/") ? test.slice(0, test.lastIndexOf("/")) : "";
-      const parts: string[] = [];
-      for (const seg of `${dir}/${r}`.split("/")) {
-        if (seg === "" || seg === ".") continue;
-        if (seg === "..") parts.pop();
-        else parts.push(seg);
-      }
-      return features.filter((f) => f === parts.join("/"));
-    }
-    return features.filter((f) => f === r || f.endsWith(`/${r}`));
+    const up = climbed(test, r);
+    return features.filter((f) => (up !== undefined ? f === up : f === r || f.endsWith(`/${r}`)));
+  };
+  // The feature files under a directory a literal names, at any depth, as pytest-bdd collects them.
+  const under = (test: string, ref: string): string[] => {
+    const r = ref.replace(/\\/g, "/").replace(/\/+$/, "");
+    const up = climbed(test, r);
+    return features.filter((f) => (up !== undefined ? up === "" || f.startsWith(`${up}/`) : f.startsWith(`${r}/`) || f.includes(`/${r}/`)));
   };
   const base = (f: string) => f.slice(f.lastIndexOf("/") + 1);
+  const key = (t: string) => t.trim().replace(/\s+/g, " ");
   const byFeature = new Map<string, Set<string>>();
   const maybe = new Map<string, Set<string>>();
   const byTitle = new Map<string, Set<string>>();
+  const byPair = new Map<string, Set<string>>();
   const put = (m: Map<string, Set<string>>, k: string, v: string) => m.set(k, (m.get(k) ?? new Set()).add(v));
   for (const t of modules) {
     for (const ref of lines(t.attrs?.bindsFeatures)) for (const f of named(t.id, ref)) put(byFeature, f, t.id);
+    for (const ref of lines(t.attrs?.bindsDirs)) for (const f of under(t.id, ref)) put(byFeature, f, t.id);
     for (const n of lines(t.attrs?.bindsNamed)) for (const f of features.filter((x) => base(x) === `${n}.feature`)) put(byFeature, f, t.id);
     for (const ref of lines(t.attrs?.bindsUndecided)) for (const f of named(t.id, ref)) put(maybe, f, t.id);
     for (const title of lines(t.attrs?.bindsTitles)) put(byTitle, title, t.id);
+    for (const pair of lines(t.attrs?.bindsPairs)) {
+      const [ref, title] = pair.split("\t") as [string, string];
+      for (const f of named(t.id, ref)) put(byPair, `${f}\t${key(title)}`, t.id);
+    }
   }
-  const key = (t: string) => t.trim().replace(/\s+/g, " ");
   const shared = new Map<string, number>();
   for (const s of scenarios) shared.set(key(s.text), (shared.get(key(s.text)) ?? 0) + 1);
   const list = (s: Set<string> | undefined) => [...(s ?? [])].sort(compareCodePoints);
   for (const s of scenarios) {
     const q = `${s.source}/${s.id}`;
     const file = fileOf(s.span);
-    const by = [...new Set([...list(byFeature.get(file)), ...(shared.get(key(s.text)) === 1 ? list(byTitle.get(key(s.text))) : [])])].sort(compareCodePoints);
+    const title = key(s.text);
+    // A title bound with no readable feature file binds the one scenario that has it; when two share it, either may be the one.
+    const byShared = shared.get(title) === 1 ? [] : list(byTitle.get(title));
+    const by = [...new Set([...list(byFeature.get(file)), ...list(byPair.get(`${file}\t${title}`)), ...(shared.get(title) === 1 ? list(byTitle.get(title)) : [])])].sort(compareCodePoints);
     const steps = lines(s.attrs?.steps).length;
     const tags = s.attrs?.tags !== undefined && s.attrs.tags !== "" ? `; tagged ${s.attrs.tags}` : "";
     if (by.length > 0) {
@@ -255,6 +273,7 @@ export function pytestBddBindings(items: Prepared["items"]): { bound: Map<string
     }
     const undecided = list(maybe.get(file));
     if (undecided.length > 0) gaps.push({ kind: "binding-undecided", subject: q, fragments: [], detail: `${s.span}: ${undecided.join(", ")} ${undecided.length === 1 ? "binds" : "bind"} scenarios of ${file} by a title CSH cannot read, so whether a test binds this one is not known${tags}` });
+    else if (byShared.length > 0) gaps.push({ kind: "binding-undecided", subject: q, fragments: [], detail: `${s.span}: ${byShared.join(", ")} ${byShared.length === 1 ? "binds" : "bind"} a scenario titled as this one in a feature file CSH cannot read, and ${shared.get(title)} scenarios share the title, so whether a test binds this one is not known${tags}` });
     else gaps.push({ kind: "unbound-scenario", subject: q, fragments: [], detail: `${s.span}: no test binds it, so pytest-bdd never runs it; ${steps === 0 ? "it has no steps" : `its ${steps} step${steps === 1 ? "" : "s"} never run`}${tags}` });
   }
   return { bound, gaps };

@@ -26,6 +26,11 @@ const TOML = [
   'source_modules = ["shop_api", "shop_bot"]',
   'forbidden_modules = ["ana_core"]',
   "",
+  "[[tool.importlinter.contracts]]",
+  'name = "API boundary"',
+  'type = "layers"',
+  'layers = ["shop_api", "shop_core"]',
+  "",
   "[tool.ruff]",
   'line-length = 120',
   "",
@@ -36,6 +41,7 @@ describe("import-linter contracts", () => {
     expect(importContracts("pyproject.toml", TOML)).toEqual([
       { name: "The bot talks to the API only over HTTP: no shop_api imports", type: "forbidden", sources: ["shop_bot"], forbidden: ["shop_api", "sqlalchemy"] },
       { name: "Only the worker imports the analyzer (ana_core)", type: "forbidden", sources: ["shop_api", "shop_bot"], forbidden: ["ana_core"] },
+      { name: "API boundary", type: "layers", sources: [], forbidden: [] },
     ]);
   });
   it("reads an INI configuration, lists one per line or comma-separated", () => {
@@ -55,12 +61,22 @@ describe("a told rule that names a contract", () => {
     "The bot may not import `shop_api`, so it reaches the API over HTTP.",
     "A cog never touches the database (an import contract in `pyproject.toml` forbids it).",
     "`lint-imports` fails when a cog imports the store; see `pyproject.toml`.",
+    "The core never imports the API (the `API boundary` contract).",
   ])("%s is verified", (s) => expect(names(s)).toBe(true));
   it.each([
     "The API does not import `sqlalchemy` outside its repositories.",
     "Only the worker imports things.",
     "An import contract forbids it.",
+    "The API boundary is where the core may not import the API.",
   ])("%s is not", (s) => expect(names(s)).toBe(false));
+
+  it("reads no contract a quotation names", () => {
+    const enc = (t: string) => new TextEncoder().encode(t);
+    const doc = 'The bot never imports the store; it replies "an import contract in `pyproject.toml` forbids it" when asked.\n';
+    const out = run({ source: { name: "Docs", kind: "Documents" }, files: [{ path: "pyproject.toml", bytes: enc(TOML) }, { path: "docs/a.md", bytes: enc(`# A\n\n${doc}`) }], config: { told: "sentences" } } as unknown as Parameters<typeof run>[0]);
+    expect((out.items ?? []).some((i) => i.attrs?.lifted === "layering")).toBe(true);
+    expect((out.edges ?? []).filter((e) => e.rel === "verified-by")).toEqual([]);
+  });
 
   it("is a verified-by edge to the configuration from the told rule", () => {
     const enc = (t: string) => new TextEncoder().encode(t);

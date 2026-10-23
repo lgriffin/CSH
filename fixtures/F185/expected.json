@@ -18,6 +18,8 @@
         { "kind": "stepless-scenario", "subject": "Features/tests/features/orders.feature#/req-ord-001-a-placed-order-is-stored" },
         { "kind": "unbound-scenario", "subject": "Features/tests/features/refunds.feature#/req-ref-001-an-officer-approves-a-refund" },
         { "kind": "unbound-scenario", "subject": "Features/tests/features/shipping.feature#/req-shp-001-a-stored-order-ships" },
+        { "kind": "unbound-scenario", "subject": "Features/tests/features/archive/archive.feature#/req-arc-001-an-archived-order-is-kept" },
+        { "kind": "undefined-step", "subject": "Features/tests/features/archive/archive.feature#/req-arc-001-an-archived-order-is-kept" },
         { "kind": "undefined-step", "subject": "Features/tests/features/refunds.feature#/req-ref-002-an-officer-denies-a-refund" },
         { "kind": "undefined-step", "subject": "Features/tests/features/shipping.feature#/req-shp-001-a-stored-order-ships" },
         { "kind": "unused-step-definition", "subject": "Tests/tests/step_defs/test_refunds.py" }

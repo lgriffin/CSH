@@ -98,6 +98,15 @@ describe("proposeProfile", () => {
     expect(reads(dir, r, "Tests")).toEqual(["features/steps/a.steps.js", "src/d.test.js"]);
   });
 
+  it("keeps a Python steps package in Code where no feature file is, and reads it as steps beside features (stage 62)", () => {
+    const plain = checkout({ "src/pipeline/steps/load.py": "def load():\n    pass\n", "tests/test_load.py": "def test_x():\n    pass\n" });
+    expect(reads(plain, propose(plain), "Code")).toEqual(["src/pipeline/steps/load.py"]);
+    const bdd = checkout({ "features/a.feature": "Feature: A\n  Scenario: S\n    Given a\n", "features/steps/a.py": "from behave import given\n\n@given('a')\ndef a(c):\n    pass\n" });
+    const r = propose(bdd);
+    expect(reads(bdd, r, "Code")).toBeUndefined();
+    expect(reads(bdd, r, "Tests")).toEqual(["features/steps/a.py"]);
+  });
+
   it("leaves tests and colocated tests out of Code, and names jest's results", () => {
     const dir = checkout({
       "package.json": JSON.stringify({ name: "@acme/shop-core", devDependencies: { jest: "30.0.0" } }),

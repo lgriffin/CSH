@@ -44,11 +44,18 @@ scenario of a file. `@scenario(file, "title")` binds one, by its title. CSH read
   joined to any other path parts, as `str(FEATURES / "orders.feature")` writes it. A feature file is named when its
   path, or its path from the test file's directory, ends with the literal. An argument with no such literal is
   computed. For a computed call, such as `scenarios(str(FEATURES / f"{name}.feature"))` in a loop, each string literal
-  of the file that is the base name of a feature file, with or without `.feature`, names that file.
+  of the file that is the base name of a feature file, with or without `.feature`, names that file. A literal that is
+  a whole argument and does not end in `.feature`, as in `scenarios("features")`, names a directory: every feature file
+  under it, at any depth, is bound, as pytest-bdd collects them. A literal is read as Python reads it, its escapes and
+  its whole prefix too, so `fr"{name}.feature"` is computed.
 - **`@scenario(file, title)`** binds the scenario whose title equals the literal title: one string, or adjacent
-  strings joined, as Python joins them. The title must be shared by no other scenario. A title that is not a literal
+  strings joined, as Python joins them. When the file argument holds a literal ending in `.feature`, only the scenario
+  of that feature file with that title is bound. When it holds none (`str(FEATURE)`), the title must be shared by no
+  other scenario; a title two scenarios share leaves both `binding-undecided`. A title that is not a literal
   (`_title(feature, 3)`), and any `scenario(` call whose title is computed, binds by a title CSH cannot read. Every
   feature file a literal of that test file names is then only possibly bound.
+- **A call in a function body** binds only when something calls the function, which CSH does not follow. The feature
+  files it names are only possibly bound.
 - A file that binds a scenario declares tests. It is not reported as declaring none.
 
 What the bindings decide, for each scenario of a `.feature` file, when the Tests source reads a pytest-bdd module:
@@ -89,7 +96,7 @@ step files sit beside the features, so behave's and pytest-bdd's definitions wer
 - **The proposal.** When feature files exist and a Python test file imports `pytest_bdd`, the Tests practice gets
   `style: cucumber`. The proposed Tests source also reads each `conftest.py` beside a test file, where pytest-bdd step
   definitions often sit. A behave step file (`**/steps/**/*.py`) beside features is proposed as a step file, as a
-  JavaScript one is.
+  JavaScript one is. Where no feature file is, a `steps` package is ordinary code and stays in the Code source.
 
 pytest-bdd scopes a step definition to its module and the `conftest.py` files above it. CSH matches a step against
 every definition the Tests source reads, as it does for cucumber-js, so a step defined only in another module is not
@@ -112,13 +119,15 @@ module a contract forbids, and one says "an import contract in `pyproject.toml` 
 - **When a told rule is verified.** A told rule is verified by the configuration file when its sentence meets one of
   three tests:
   - **By name.** The sentence contains a contract's name up to its first parenthesis or colon, with case and runs of
-    white space ignored.
+    white space ignored. A name of one or two words (`API boundary`) is matched only as the whole of a backticked or
+    quoted span, since a short phrase can occur by chance.
   - **By modules.** The sentence names in backticks a module that a `forbidden` contract forbids, and contains a word of
     one of that contract's source modules. The words are the module's last dotted part split at `_`, less the words of
     the forbidden module. `toads_bot` gives `bot` when `toads_api` is forbidden. A `-` in a backticked name reads as
     `_`, as pip reads it.
   - **By mention.** The sentence says "import contract", "import-linter" or "lint-imports", and names the configuration
     file in backticks.
+  - A quotation of three or more words (section 5) names no contract, as it states nothing.
 - **Translation.** CSH does not translate or run the contracts. As with dependency-cruiser, they are mechanisms the
   repository names.
 
@@ -136,9 +145,10 @@ module a contract forbids, and one says "an import contract in `pyproject.toml` 
 - **A quotation is not read.** Text in double quotes (straight or curly) of three or more words is not read for a
   dependency or a restriction: it is something said, not something stated.
 - **"import" as a noun.** "import" right after a determiner or an adjective (`the`, `a`, `an`, `this`, `that`, `each`,
-  `every`, `no`, `any`, `its`, `their`, `same`, `later`, `next`, `first`, `last`, `one`) names a data import, not a
-  dependency. The exception is when the next word is `contract`, `contracts`, `rule`, `rules`, `boundary`,
-  `boundaries`, `linter`, `graph`, `of` or `from`, as in "any import of the global logger". "imports" after such a word is a noun too.
+  `every`, `its`, `their`, `same`, `later`, `next`, `first`, `last`, `one`) names a data import, not a dependency.
+  `no` and `any` are not among them: they restrict an import, so "core has no imports outside the domain" is a
+  layering rule. The exception is when the next word is `contract`, `contracts`, `rule`, `rules`, `boundary`,
+  `boundaries`, `linter`, `graph`, `of` or `from`, as in "the import contract". "imports" after such a word is a noun too.
 - **A restriction stays in its clause.** The five words before a dependency phrase are cut at the last subordinating
   word (`because`, `since`, `whereas`, `although`, `though`, `so`), so a restriction in the clause before it restricts
   nothing that clause names.

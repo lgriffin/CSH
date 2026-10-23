@@ -14,6 +14,10 @@ describe("pytest-bdd imports", () => {
     expect([...i.parsers]).toEqual([["fmt", "parse"]]);
     expect(i.module).toEqual(["pytest_bdd"]);
   });
+  it("reads pytest_bdd among modules a comma-separated import names", () => {
+    expect(pytestBddImports("import os, pytest_bdd as bdd, re\n")!.module).toEqual(["bdd"]);
+    expect(pytestBddSteps('import os, pytest_bdd\n@pytest_bdd.given("a step")\ndef a(): pass\n').map((d) => d.title)).toEqual(["a step"]);
+  });
   it("is undefined for a file that does not import pytest_bdd, whatever it mentions", () => {
     expect(pytestBddImports("from hypothesis import given\n# from pytest_bdd import given\n".replace(/#.*$/m, "  "))).toBeUndefined();
   });
@@ -31,6 +35,9 @@ describe("literals", () => {
     expect(lit('f"{name}.feature"')).toBeUndefined();
     expect(lit('f"plain {{x}}"')).toBe("plain {{x}}");
     expect(lit("name")).toBeUndefined();
+    expect(lit('fr"{name}.feature"')).toBeUndefined();
+    expect(lit('"caf\\U000000e9 \\u00e9"')).toBe("café é");
+    expect(lit('"\\N{BULLET} item"')).toBeUndefined();
   });
   it("reads a literal with no escapes as itself", () => {
     fc.assert(fc.property(fc.string({ unit: fc.constantFrom("a", " ", ".", "{", "}", "(", "-") }), (t) => lit(JSON.stringify(t)) === t && unescapePython(t) === t));
@@ -48,6 +55,23 @@ describe("pytest-bdd bindings", () => {
     expect(b.named).toEqual(expect.arrayContaining(["shipping", "returns", "accounts"]));
     expect(b.undecided).toEqual(["accounts.feature"]);
     expect(b.titles).toEqual([]);
+  });
+  it("reads a directory scenarios() names as its whole argument, and nothing else as one", () => {
+    const b = pytestBddBindings('from pytest_bdd import scenarios\nscenarios("features", "../shared/")\nscenarios(os.path.join("more", name))\n')!;
+    expect(b.dirs).toEqual(["../shared", "features"]);
+    expect(b.features).toEqual([]);
+  });
+  it("calls a scenarios() with an fr-string computed, and reads escapes in a feature path", () => {
+    expect(pytestBddBindings('from pytest_bdd import scenarios\nscenarios(fr"{name}.feature")\n')!).toMatchObject({ features: [], dirs: [] });
+    expect(pytestBddBindings('from pytest_bdd import scenarios\nscenarios("shop/orders\\u002efeature")\n')!).toMatchObject({ features: ["shop/orders.feature"], named: [] });
+  });
+  it("keeps the feature file of a literal @scenario with its title", () => {
+    const b = pytestBddBindings('from pytest_bdd import scenario\n@scenario("shop/orders.feature", "Pay")\ndef test_pay(): pass\n')!;
+    expect(b).toMatchObject({ pairs: ["shop/orders.feature\tPay"], titles: [] });
+  });
+  it("reads a binding in a function body as undecided, since the function may never be called", () => {
+    const b = pytestBddBindings(['from pytest_bdd import scenario, scenarios', 'def unused():', '    scenarios("orders.feature")', '    return scenario("refunds.feature", "Refund")', 'for x in ("a",):', '    scenarios("returns.feature")', ""].join("\n"))!;
+    expect(b).toMatchObject({ features: ["returns.feature"], pairs: [], titles: [], undecided: ["orders.feature", "refunds.feature"] });
   });
   it("reads nothing in a file that does not import pytest_bdd, and does not take a def for a call", () => {
     expect(pytestBddBindings('def scenarios(x):\n    pass\nscenarios("a.feature")\n')).toBeUndefined();

@@ -14,7 +14,7 @@ const RESTRICTION = /(?<![\w-])(?:not|never|no|nothing|only|cannot|independent|d
 /** A sentence that hedges or asks says nothing is so (stage 60): "it might seem that", "appears to", a question. */
 const HEDGE = /\b(?:might|seems?|seemed|appears?|appeared)\b/i;
 /** A word after which "import" or "imports" is a noun, a data import, not a dependency (From the Toads run, section 5). */
-const DETERMINER = /^(?:the|a|an|this|that|each|every|no|any|its|their|same|later|next|first|last|one)$/i;
+const DETERMINER = /^(?:the|a|an|this|that|each|every|its|their|same|later|next|first|last|one)$/i;
 /** A word after the noun "import" that makes it name code dependencies again: an import contract, any import of the logger. */
 const CODE_NOUN = /^(?:contracts?|rules?|boundary|boundaries|linter|graph|of|from)$/i;
 /** A word that opens a clause of its own: a restriction before it restricts nothing after it (A-219). */
@@ -24,6 +24,11 @@ const QUOTED = /"[^"\n]*"|“[^”\n]*”/g;
 /** How many words before and after the dependency phrase a restriction is looked for (A-203). */
 const BEFORE = 5;
 const AFTER = 4;
+
+/** A sentence with each quotation of three or more words blanked to spaces, so what it says neither depends, restricts nor names (A-219). */
+export function unquoted(sentence: string): string {
+  return sentence.replace(QUOTED, (q) => (q.trim().split(/\s+/).length >= 3 ? " ".repeat(q.length) : q));
+}
 
 /**
  * Whether a sentence is a told rule, and which kind: an EARS sentence first, then a layering sentence, whose
@@ -37,7 +42,7 @@ export function toldKind(sentence: string): Told | undefined {
   if (classify(sentence) !== undefined) return "ears";
   if (/\?\s*$/.test(sentence) || HEDGE.test(sentence)) return undefined;
   // A quotation is blanked to spaces, so what it says neither depends nor restricts.
-  const text = sentence.replace(QUOTED, (q) => (q.trim().split(/\s+/).length >= 3 ? " ".repeat(q.length) : q));
+  const text = unquoted(sentence);
   const bare = (w: string) => w.replace(/^[^\w]+|[^\w]+$/g, "");
   for (const m of text.matchAll(new RegExp(DEPENDENCY.source, "gi"))) {
     const words = text.slice(0, m.index).split(/\s+/).filter((w) => w !== "");

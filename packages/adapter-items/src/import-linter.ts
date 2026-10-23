@@ -77,6 +77,8 @@ export function importContracts(path: string, text: string): Contract[] {
 }
 
 const words = (s: string) => new Set(s.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w !== ""));
+/** The text of each quotation of a sentence, straight or curly. */
+const quoted = (s: string) => [...s.matchAll(/"([^"\n]*)"|“([^”\n]*)”/g)].map((m) => m[1] ?? m[2]!);
 const collapse = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
 /** A module as pip and Python compare it: `-` reads as `_`, case aside. */
 const moduleOf = (t: string) => t.trim().replace(/-/g, "_").toLowerCase();
@@ -94,9 +96,10 @@ export function namesContract(sentence: string, ticks: string[], file: string, c
   const named = new Set(ticks.map(moduleOf));
   for (const c of contracts) {
     const head = collapse(c.name.split(/[(:]/)[0]!);
-    if (head.split(" ").length >= 3 && said.includes(head)) return true;
+    // A name of three words or more is named by the sentence; a shorter one only in backticks or quotes, as a name.
+    if (head.split(" ").length >= 3 ? said.includes(head) : head !== "" && [...ticks, ...quoted(sentence)].some((t) => collapse(t) === head)) return true;
     if (c.type !== "forbidden") continue;
-    for (const f of c.forbidden.filter((m) => named.has(m.toLowerCase()))) {
+    for (const f of c.forbidden.filter((m) => named.has(moduleOf(m)))) {
       const theirs = words(f.split(".").pop()!.replace(/_/g, " "));
       if (c.sources.some((s) => [...words(s.split(".").pop()!.replace(/_/g, " "))].some((w) => !theirs.has(w) && w.length > 2 && ws.has(w)))) return true;
     }

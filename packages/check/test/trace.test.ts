@@ -290,6 +290,31 @@ describe("From the Toads run (stage 62)", () => {
     expect(r.checks.get("Features/d.feature#/six")).toEqual(["test file tests/step_defs/test_d.py, by pytest-bdd"]);
   });
 
+  it("binds every feature file under a directory, and a title with its feature file, not by its title alone", () => {
+    const items = [
+      sc("a.feature#/one", "tests/features/shop/a.feature:3", { steps: "4\tx" }),
+      sc("b.feature#/one", "tests/other/b.feature:3", { steps: "4\tx" }),
+      sc("c.feature#/Pay", "tests/other/c.feature:3", { steps: "4\tx" }),
+      sc("d.feature#/Pay", "tests/other/d.feature:3", { steps: "4\tx" }),
+      sc("e.feature#/Refund", "tests/other/e.feature:3", { steps: "4\tx" }),
+      sc("f.feature#/Refund", "tests/other/f.feature:3", { steps: "4\tx" }),
+    ];
+    const tests = [
+      tf("tests/step_defs/test_a.py", { bindsDirs: "../features" }),
+      tf("tests/step_defs/test_p.py", { bindsPairs: "c.feature\tPay" }),
+      tf("tests/step_defs/test_r.py", { bindsTitles: "Refund" }),
+    ];
+    const r = trace({ prepared: prepare(module, of(items, tests)) });
+    expect(kinds(r)).toEqual([
+      ["binding-undecided", "Features/e.feature#/Refund"],
+      ["binding-undecided", "Features/f.feature#/Refund"],
+      ["unbound-scenario", "Features/b.feature#/one"],
+      ["unbound-scenario", "Features/d.feature#/Pay"],
+    ]);
+    expect(r.checks.get("Features/a.feature#/one")).toEqual(["test file tests/step_defs/test_a.py, by pytest-bdd"]);
+    expect(r.checks.get("Features/c.feature#/Pay")).toEqual(["test file tests/step_defs/test_p.py, by pytest-bdd"]);
+  });
+
   it("decides nothing when no test file is a pytest-bdd module", () => {
     const r = trace({ prepared: prepare(module, of([sc("a.feature#/one", "a.feature:3")], [{ ...tf("t.py", {}), attrs: { tests: "1" } }])) });
     expect(kinds(r)).toEqual([]);
