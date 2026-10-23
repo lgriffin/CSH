@@ -65,18 +65,14 @@ export const stemOf = (p: string): string => {
   return i <= 0 ? b : b.slice(0, i);
 };
 
-/** A test file's code extensions, in the languages whose runners name test files by an affix. */
-const TEST_CODE = /\.(?:ts|tsx|js|jsx|mjs|cjs|mts|cts|go|py|java|kt|rs|rb|cs|swift|scala)$/;
-
 /**
- * A test file's stem less its test affix (A-267): `x_test.go`, `x.test.ts`, `x.spec.ts`, `x-test.js`, `test_x.py`,
- * `XTest.java`, `XTests.cs` and `TestX.java` are all `x` or `X`; undefined for a file whose name has no affix.
+ * A test file's stem less its test affix (A-267), for the test files the proposal reads as tests: `x.test.ts` and
+ * `x.spec.js` (any JavaScript or TypeScript extension), `test_x.py` and `x_test.py`, `XTest.java` and `XTests.java`,
+ * and `x_test.go` are `x` or `X`; undefined for any other file.
  */
 export function testStemOf(p: string): string | undefined {
   const b = posix.basename(p);
-  if (!TEST_CODE.test(b)) return undefined;
-  const n = b.slice(0, b.lastIndexOf("."));
-  return (/^(.+?)(?:_test|[._-](?:test|spec))$/.exec(n) ?? /^test_(.+)$/.exec(n) ?? /^(.+?)Tests?$/.exec(n) ?? /^Test([A-Z].*)$/.exec(n))?.[1];
+  return (/^(.+)\.(?:test|spec)\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/.exec(b) ?? /^test_(.+)\.py$/.exec(b) ?? /^(.+)_test\.(?:py|go)$/.exec(b) ?? /^(.+?)Tests?\.java$/.exec(b))?.[1];
 }
 
 /** The stem of `stems` an output's base name begins with, followed by `.` or `(` or nothing; the longest wins. */
@@ -276,8 +272,16 @@ export function outputDirsOf(paths: readonly string[]): OutputDir[] {
   // file's stem less its affix, as TypeScript's fourslash baselines are. A stem two test files share pairs nothing. A
   // test file whose stem names outputs of more than one directory keeps those of the directory its own directory's test
   // files name most, so a fourslash test is not taken to write a tsc baseline that a scenario of the same name writes.
+  // An accepted output is never a test file, even when its name has a test's affix.
+  const outputs = new Set<string>();
+  for (const o of out.values()) {
+    for (const v of o.paired.values()) for (const x of v) outputs.add(x);
+    for (const x of o.unpaired) outputs.add(x);
+    for (const x of o.orphans) outputs.add(x.output);
+  }
   const byTest = new Map<string, string[]>();
   for (const p of all) {
+    if (outputs.has(p)) continue;
     const t = testStemOf(p);
     if (t !== undefined) push(byTest, t, p);
   }
@@ -399,7 +403,7 @@ export function run(input: AdapterInput): AdapterOutput {
     for (const [test, outs] of o.paired) {
       if (!JS.test(test)) continue;
       const t = decode(bytes.get(test) ?? new Uint8Array(0));
-      for (const snap of outs.filter((x) => /\/__snapshots__\/[^/]+\.snap$/.test(x))) {
+      for (const snap of outs.filter((x) => /(?:^|\/)__snapshots__\/[^/]+\.snap$/.test(x))) {
         const sn = decode(bytes.get(snap) ?? new Uint8Array(0));
         if (sn === "" || t === "") continue;
         const e = snapshotEntries(sn, t);

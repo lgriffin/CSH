@@ -130,8 +130,24 @@ describe("snapshot entries (stage 71, A-266)", () => {
     expect(testNames(test)).toEqual({ names: [["c"]], unreadable: [1, 5] });
   });
 
-  it("reads a template title with no placeholder, and an each title with no format, as literals", () => {
-    expect(testNames("it(`a`, () => {});\nit.each([1])('b', () => {});").names).toEqual([["a"], ["b"]]);
+  it("reads a template title with no placeholder, an escaped one, and an each title with no format, as literals", () => {
+    expect(testNames("it(`a`, () => {});\nit(`\\${x}`, () => {});\nit.each([1])('b', () => {});").names).toEqual([["a"], ["${x}"], ["b"]]);
+  });
+
+  it("reads a title joined from strings as unreadable, and keeps a title's spaces as the runner does", () => {
+    expect(testNames('it("adds " + "tax", () => {});\nit("  two  spaces ", () => {});')).toEqual({ names: [["  two  spaces "]], unreadable: [1] });
+  });
+
+  it("reads Jest's x and f aliases, so a skipped or focused test keeps its name", () => {
+    expect(testNames('xdescribe("d", () => { xit("a", () => {}); fit("b", () => {}); });\nfdescribe("e", () => { xtest("c", () => {}); });').names).toEqual([["d", "a"], ["d", "b"], ["e", "c"]]);
+  });
+
+  it("reads the entries of a snapshot directory at the root of the checkout", () => {
+    const enc = (t: string) => new TextEncoder().encode(t);
+    const files = [{ path: "a.test.ts", digest: "", bytes: enc('it("a", () => {});') }, { path: "__snapshots__/a.test.ts.snap", digest: "", bytes: enc("exports[`a 1`] = `1`;\nexports[`gone 1`] = `2`;\n") }];
+    const out = run({ source: { name: "Outputs", kind: "Outputs", at: "." }, vocabulary: { states: [], events: [] }, bindings: [], files } as never);
+    expect(out.items?.[0]?.attrs?.entries).toBe("2");
+    expect(JSON.parse(out.items?.[0]?.attrs?.obsolete ?? "{}").key).toBe("gone 1");
   });
 
   it("leaves a snapshot whose test file was read by name unread", () => {
@@ -144,9 +160,15 @@ describe("snapshot entries (stage 71, A-266)", () => {
 });
 
 describe("outputs named after a test file (stage 71, A-267)", () => {
-  it("reads a test file's stem less its affix in each language", () => {
-    expect(["a_test.go", "a.test.ts", "a.spec.tsx", "a-test.js", "test_a.py", "ATest.java", "ATests.cs", "TestA.java", "a_spec.rb"].map(testStemOf)).toEqual(["a", "a", "a", "a", "a", "A", "A", "A", "a"]);
-    expect(["a.go", "contest.ts", "Test.java", "test.py", "a_test.txt"].map(testStemOf)).toEqual([undefined, undefined, undefined, undefined, undefined]);
+  it("reads a test file's stem less its affix, for the files the proposal reads as tests", () => {
+    expect(["a_test.go", "a.test.ts", "a.spec.tsx", "test_a.py", "a_test.py", "ATest.java", "ATests.java"].map(testStemOf)).toEqual(["a", "a", "a", "a", "a", "A", "A"]);
+    expect(["a.go", "contest.ts", "Test.java", "TestA.java", "test.py", "a_test.txt", "a-test.js", "a_spec.rb"].map(testStemOf)).toEqual([undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined]);
+  });
+
+  it("never takes an accepted output for a test file, even with a test's affix", () => {
+    const o = dir(["base/baselines/reference/a.test.ts"], "base/baselines/reference")!;
+    expect(o.paired.size).toBe(0);
+    expect(o.unpaired).toEqual(["base/baselines/reference/a.test.ts"]);
   });
 
   it("pairs an output only where the conventions of section 2 left it unpaired, and leaves a stem two test files share unpaired", () => {

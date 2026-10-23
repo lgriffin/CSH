@@ -135,16 +135,19 @@ file and the test it names, as the runner reads them.
 **Reading the names** (A-266). A Jest or Vitest key is read as the runner writes it, with `` \` ``, `\\` and `\${`
 unescaped. A test's full name is the titles of the describes around it and its own, joined by a space in Jest and by
 ` > ` in Vitest, as the file's first line (`// Jest Snapshot v1`, `// Vitest Snapshot v1`) says; a skipped or
-todo test still has its name, since the runner keeps the entries of a test it skips. A title is unreadable when it is
-not a literal, is a template with a placeholder, or is a `.each` or `.for` title with a `%` or `$` format, and every
+todo test still has its name, since the runner keeps the entries of a test it skips, and Jest's aliases `xit`, `fit`,
+`xtest`, `xdescribe` and `fdescribe` are read as the calls they stand for. A title is read exactly, its spaces kept. It
+is unreadable when it is not a literal standing alone as the first argument, is a template with a placeholder that no
+backslash escapes, or is a `.each` or `.for` title with a `%` or `$` format, and every
 name beneath an unreadable describe is unreadable too. An entry names a test when the key, less its counter, is the
 test's full name, or that name followed by a hint: `: hint` in Jest, ` > hint` in Vitest. A file with neither first
 line is read both ways.
 
 **Named after a test file** (A-267). An output the conventions of section 2 left unpaired is named after a test file
 when its base name is the test file's stem less its affix, or that followed by `.` or `(`, the longest stem winning.
-The test files are every file of the checkout whose name has an affix: `x_test.go`, `x.test.ts`, `x.spec.ts`,
-`test_x.py`, `XTest.java`, `TestX.java`, and the like in the other languages. A stem two test files share pairs
+The test files are the files of the checkout the proposal reads as tests by their affix: `x.test.ts` and `x.spec.js`
+in any JavaScript or TypeScript extension, `test_x.py` and `x_test.py`, `XTest.java` and `XTests.java`, and
+`x_test.go`. A file that is itself an accepted output is never one. A stem two test files share pairs
 nothing, and its outputs stay unpaired, naming why. A test file whose stem names outputs of more than one suite keeps
 those of the suite its own directory's test files name most: TypeScript's fourslash test
 `rewriteRelativeImportExtensionsProjectReferences1_test.go` writes a fourslash baseline, and the `tsc` baseline of

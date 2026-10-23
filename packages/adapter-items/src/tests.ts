@@ -166,17 +166,28 @@ export function declarations(text: string): { line: number; at: number; describe
   return out;
 }
 
+/** A test call as Jest and Vitest name it, with Jest's `x` and `f` aliases (`xit`, `fit`, `xtest`, `xdescribe`, `fdescribe`). */
+const NAMED_CALL = /(?<![.\w$])([xf]?(?:describe|it)|x?test)((?:\.\w+)*)\s*(?:<[^<>()]*>)?\s*(\(|`)/g;
+
+/** Whether a template's text has a placeholder: a `${` that no backslash escapes. */
+const placeholder = (raw: string) => /(?:^|[^\\])(?:\\\\)*\$\{/.test(raw);
+
 /**
  * The names a runner gives the tests of a file (Reading test suites as evidence, section 3; stage 71, A-266): for each
  * test, the titles of the describes around it and its own, outermost first, as Jest and Vitest join them into a full
- * name. A skipped or todo test keeps its name, since the runner keeps its snapshot entries. A title is unreadable when it
- * is not a literal, is a template with a placeholder, or is the title of an `each` or `for` with a `%` or `$` format;
- * every test beneath an unreadable describe is unreadable too, and each is counted by the line of the title that is.
+ * name, each exactly as the runner reads it. A skipped or todo test keeps its name, since the runner keeps its snapshot
+ * entries. A title is unreadable when it is not a literal standing alone as the first argument, is a template with a
+ * placeholder, or is the title of an `each` or `for` with a `%` or `$` format; every test beneath an unreadable describe
+ * is unreadable too, and each is counted by the line of the title that is.
  */
 export function testNames(text: string): { names: string[][]; unreadable: number[] } {
   const { code, strings } = lex(text);
-  const calls: { from: number; to: number; describe: boolean; title: string | undefined; line: number }[] = [];
-  for (const m of code.matchAll(CALL)) {
+  const starts = lineStarts(text);
+  const names: string[][] = [];
+  const unreadable = new Set<number>();
+  // The describes open at each call, innermost last: a call's span holds the calls inside its callback.
+  const open: { to: number; title: string | undefined; line: number }[] = [];
+  for (const m of code.matchAll(NAMED_CALL)) {
     let at = m.index + m[0].length;
     const each = /\.(each|for)\b/.test(m[2]!);
     if (m[3] === "`") {
@@ -191,21 +202,20 @@ export function testNames(text: string): { names: string[][]; unreadable: number
       at++;
     }
     at = skipSpace(code, at);
+    while (open.length > 0 && open.at(-1)!.to <= at) open.pop();
     const raw = strings.get(at);
-    const quote = text[at];
-    const readable = raw !== undefined && !(quote === "`" && raw.includes("${")) && !((each || m[3] === "`") && /[%$]/.test(raw));
-    calls.push({ from: at, to: pastClose(code, at), describe: m[1] === "describe" || /^\.describe\b/.test(m[2]!), title: readable ? titleKey(unescapeJs(raw)) : undefined, line: code.slice(0, at).split("\n").length });
+    const alone = raw !== undefined && /[,)]/.test(code[skipSpace(code, at + raw.length + 2)] ?? "");
+    const readable = alone && !(text[at] === "`" && placeholder(raw)) && !((each || m[3] === "`") && /[%$]/.test(raw));
+    const call = { to: pastClose(code, at), title: readable ? unescapeJs(raw) : undefined, line: lineIndex(starts, at) + 1 };
+    if (/describe$/.test(m[1]!) || /^\.describe\b/.test(m[2]!)) {
+      open.push(call);
+      continue;
+    }
+    const blind = [...open, call].find((d) => d.title === undefined);
+    if (blind !== undefined) unreadable.add(blind.line);
+    else names.push([...open.map((d) => d.title!), call.title!]);
   }
-  const names: string[][] = [];
-  const unreadable: number[] = [];
-  for (const c of calls) {
-    if (c.describe) continue;
-    const around = calls.filter((d) => d.describe && d.from < c.from && d.to >= c.to).sort((a, b) => a.from - b.from);
-    const blind = [...around, c].find((d) => d.title === undefined);
-    if (blind !== undefined) unreadable.push(blind.line);
-    else names.push([...around.map((d) => d.title!), c.title!]);
-  }
-  return { names, unreadable: [...new Set(unreadable)].sort((a, b) => a - b) };
+  return { names, unreadable: [...unreadable].sort((a, b) => a - b) };
 }
 
 /** A Cucumber step definition: Given, When, Then, And, But, Step or defineStep, called with a string or a regular expression. */
