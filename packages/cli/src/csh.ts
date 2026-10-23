@@ -1,7 +1,7 @@
 // The csh command (Joint evaluation, section 7; Authority tab, sections 3.4 and 6; Anchor, harnesses and A3, section 7.1).
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { a3Dir, readJudgments } from "@csh/a3";
 import { checkExpected, claimEvidence, lineStating, linesStatingVersion, DIVERGENCE_READINGS, type Finding, ladderOf, overviewOf, renderLadder, parseExpected, renderExpect, renderEntry, renderGaps, renderOverview, renderOverviewHtml, renderReport, type Report, type SentenceAt } from "@csh/check";
 import { exitCode, formatDecision as formatGate, type GateDecision, type Mode } from "@csh/gate";
@@ -66,8 +66,20 @@ function reportFor(p: Project, a: Args, stored: { report: string } | undefined, 
 
 /** A path as a person reads it: relative to where they are, unless that climbs out of it, then absolute. */
 function shown(cwd: string, path: string): string {
-  const rel = relative(cwd, path);
+  // Compared as real paths: git names the root in its own spelling (C:/Users/... for a Windows short name), never the
+  // working directory's.
+  const rel = relative(real(cwd), real(path));
   return (rel === "" || rel.startsWith("..") || isAbsolute(rel) ? path : rel).replace(/\\/g, "/");
+}
+
+/** The real path of a file or of where it would be: the nearest existing ancestor resolved, the rest kept. */
+function real(path: string): string {
+  try {
+    return realpathSync.native(path);
+  } catch {
+    const up = dirname(path);
+    return up === path ? path : join(real(up), basename(path));
+  }
 }
 
 /** A JSON file read, or why it could not be. */
@@ -244,6 +256,12 @@ export async function csh(argv: string[], io: Io): Promise<number> {
     return 2;
   }
   if (cmd === "help") {
+    // help is checked like any command, so that csh help status extra is refused rather than half read.
+    const problems = [...a.errors, ...argProblems(a, command)];
+    if (problems.length > 0) {
+      io.err(`${problems.map((x) => `csh help: ${x}`).join("\n")}\nusage: csh help [command]\n`);
+      return 2;
+    }
     const about = a.positional[0];
     if (about === undefined) {
       io.out(USAGE);
@@ -262,15 +280,22 @@ export async function csh(argv: string[], io: Io): Promise<number> {
     return 0;
   }
   // Every argument is checked before anything is read or run: a misspelt option is named, never silently ignored.
-  const problems = [...a.errors, ...argProblems(a, command), ...valueProblems(a)];
+  // A command with subcommands (csh a3) is checked against what the one named takes.
+  const sub = command.subcommands === undefined ? undefined : a.positional[0];
+  const accepts = sub === undefined ? command : command.subcommands![sub];
+  const subNames = Object.keys(command.subcommands ?? {});
+  const problems = [...a.errors, ...(accepts === undefined ? [`no subcommand ${JSON.stringify(sub)}${hint(sub!, subNames, "")}; there are ${subNames.join(", ")}`] : argProblems(a, accepts)), ...valueProblems(a)];
   if (problems.length > 0) {
     io.err(`${problems.map((x) => `csh ${cmd}: ${x}`).join("\n")}\nusage: ${synopsis(command).join("\n       ")}\nRun csh help ${cmd} for more.\n`);
     return 2;
   }
   for (const k of ["root", "subject"] as const) {
     const dir = a.options[k];
+    const at = dir === undefined ? undefined : resolve(io.cwd, dir);
+    // csh init writes its manifest under a root it may create, so a root that does not exist yet is not refused there;
     // csh init --subject names the checkout to propose from, which must exist as much as any other.
-    if (dir !== undefined && !(existsSync(resolve(io.cwd, dir)) && statSync(resolve(io.cwd, dir)).isDirectory())) {
+    const creates = cmd === "init" && k === "root" && at !== undefined && !existsSync(at);
+    if (at !== undefined && !creates && !(existsSync(at) && statSync(at).isDirectory())) {
       io.err(`csh ${cmd}: --${k} ${dir} is not a directory\n`);
       return 2;
     }

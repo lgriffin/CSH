@@ -6,6 +6,8 @@ import type { Accepts } from "./args.ts";
 export interface Command extends Accepts {
   /** The names it answers to: approve, reject and retire share one entry. */
   names: readonly string[];
+  /** What each subcommand takes, its name counted among the positionals; the command's own fields are their union. */
+  subcommands?: Readonly<Record<string, Accepts>>;
   /** Its lines in csh help, each synopsis at two spaces and its description at column 35. */
   help: string;
 }
@@ -163,6 +165,12 @@ export const COMMANDS: readonly Command[] = [
     options: ["at", "stage", "mode", ...RUN_OPTIONS],
     flags: ["check", "no-cache"],
     positional: [2, 3],
+    subcommands: {
+      open: { options: ["at", "stage", "mode", ...RUN_OPTIONS], flags: ["no-cache"], positional: [2, 2] },
+      stage: { options: ["at", "mode", ...RUN_OPTIONS], flags: ["no-cache"], positional: [3, 3] },
+      build: { flags: ["check"], positional: [2, 2] },
+      verify: { options: [...RUN_OPTIONS], flags: ["no-cache"], positional: [2, 2] },
+    },
     help: `  csh a3 open <slug> [--at <commit>] [--stage <id>]
                                   Record a run as an A3's first stage and write an empty judgments skeleton under
                                   csh/a3/<slug>/. Never overwrites judgments.

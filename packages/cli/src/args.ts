@@ -56,7 +56,8 @@ export interface Accepts {
 
 /** Accepted by every command. */
 export const COMMON_OPTIONS: readonly string[] = ["root", "subject"];
-const COMMON_FLAGS: readonly string[] = ["help", "version"];
+// --version is asked of csh itself (csh --version), never of a command, so a command refuses it.
+const COMMON_FLAGS: readonly string[] = ["help"];
 
 /**
  * The problems with arguments a command does not accept: an unknown option or flag, named with the nearest one it does
@@ -84,7 +85,7 @@ export function argProblems(a: Args, accepts: Accepts): string[] {
 export function valueProblems(a: Args): string[] {
   const problems: string[] = [];
   const budget = a.options.budget;
-  if (budget !== undefined && !/^[1-9][0-9]{0,8}$/.test(budget)) problems.push(`--budget is a whole number of milliseconds above 0, not ${JSON.stringify(budget)}`);
+  if (budget !== undefined && !(/^[1-9][0-9]*$/.test(budget) && Number.isSafeInteger(Number(budget)))) problems.push(`--budget is a whole number of milliseconds above 0, not ${JSON.stringify(budget)}`);
   const mode = a.options.mode;
   if (mode !== undefined && mode !== "advisory" && mode !== "enforcing") problems.push(`--mode is advisory or enforcing, not ${JSON.stringify(mode)}`);
   return problems;

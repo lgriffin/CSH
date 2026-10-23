@@ -60,6 +60,14 @@ describe("csh help and version", () => {
     expect(r).toMatchObject({ code: 2, out: "", err: 'csh help: no command "overveiw"; did you mean overview?\n' });
   });
 
+  it("refuses help with more than a command, and --version asked of a command", async () => {
+    expect(await cshIn(dir, "help", "status", "extra")).toMatchObject({ code: 2, err: 'csh help: takes at most 1 argument; "extra" is extra\nusage: csh help [command]\n' });
+    expect((await cshIn(dir, "help", "status", "--bogus")).code).toBe(2);
+    const v = await cshIn(dir, "status", "--version");
+    expect(v.code).toBe(2);
+    expect(v.err).toMatch(/^csh status: unknown option --version\n/);
+  });
+
   it("prints the version", async () => {
     const r = await cshIn(dir, "--version");
     expect(r.code).toBe(0);
@@ -92,6 +100,29 @@ describe("csh usage errors", () => {
       expect(r.code, cmd).toBe(2);
       expect(r.err, cmd).toMatch(new RegExp(`^csh ${cmd}: expects 1 argument, and has 0\\nusage: csh ${cmd} `));
     }
+  });
+
+  it("checks each a3 subcommand against what it takes", async () => {
+    const extra = await cshIn(dir, "a3", "open", "slug", "extra");
+    expect(extra.code).toBe(2);
+    expect(extra.err).toMatch(/^csh a3: takes at most 2 arguments; "extra" is extra\n/);
+    expect((await cshIn(dir, "a3", "build", "slug", "--at", "HEAD")).err).toMatch(/^csh a3: unknown option --at\n/);
+    expect((await cshIn(dir, "a3", "biuld", "slug")).err).toMatch(/^csh a3: no subcommand "biuld"; did you mean build\?; there are open, stage, build, verify\n/);
+    expect((await cshIn(dir, "a3", "stage", "slug")).err).toMatch(/^csh a3: expects 3 arguments, and has 2\n/);
+  });
+
+  it("takes any whole budget a number holds exactly, and no more", async () => {
+    expect((await cshIn(dir, "check", "--budget", "1000000000", "--root", join(dir, "nowhere"))).err).not.toMatch(/--budget/);
+    expect((await cshIn(dir, "check", "--budget", "99999999999999999999")).err).toMatch(/--budget is a whole number/);
+  });
+
+  it("lets csh init name a root it will create, and refuses one that is a file", async () => {
+    const created = join(dir, "new-profile");
+    const r = await cshIn(dir, "init", "--root", created, "--subject", join(dir, "nowhere"));
+    expect(r.err).not.toMatch(/--root/);
+    expect(r).toMatchObject({ code: 2, err: `csh init: --subject ${join(dir, "nowhere")} is not a directory\n` });
+    writeFileSync(join(dir, "a-root-file"), "");
+    expect((await cshIn(dir, "init", "--root", "a-root-file")).err).toBe("csh init: --root a-root-file is not a directory\n");
   });
 
   it("refuses a --root or --subject that is not a directory", async () => {
@@ -201,6 +232,10 @@ describe.skipIf(process.platform === "win32")("the bin scripts", () => {
     const r = spawnSync("bash", ["-c", `set -o pipefail; "${process.execPath}" --input-type=module -e '${script}' | head -n 1 >/dev/null`], { encoding: "utf8" });
     expect(r.stderr).toBe("");
     expect(r.status).toBe(0);
+    // A command still working when the pipe closes runs to its end, and its own code is the exit: a block stays a block.
+    const late = `import { main } from ${JSON.stringify(exit)}; await main("t", async (_, io) => { for (let i = 0; i < 4000; i++) io.out("x".repeat(100) + "\\n"); await new Promise((r) => setTimeout(r, 50)); io.out("done\\n"); return 3; });`;
+    const blocked = spawnSync("bash", ["-c", `"${process.execPath}" --input-type=module -e '${late}' | head -n 1 >/dev/null; echo "\${PIPESTATUS[0]}"`], { encoding: "utf8" });
+    expect(blocked.stdout.trim()).toBe("3");
   });
 
   it("print an error nothing expected as one line, and its stack with CSH_DEBUG=1", () => {

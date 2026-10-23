@@ -51,3 +51,13 @@ Run as a person would, before the stage:
 `csh help` also listed `csh subject fetch` twice, and the README's command list had fallen behind it (`--expected`
 for `csh analyse`, `--stage` for `csh a3 open`, `--match` for `csh history`). Both now come from one table, and a test
 fails when the guide and `csh help` differ or the README leaves out a command.
+
+## After review
+
+The review of the stage found six places where the checks fell short, each now covered by a test. `csh a3` checks
+each subcommand against what it takes, so `csh a3 open <slug> extra` and `csh a3 build <slug> --at HEAD` are refused
+rather than half read. `csh help` checks its own argument. `--version` is asked of csh alone, so `csh run --version`
+is refused instead of running. A budget may be any whole number a JavaScript number holds exactly. `csh init` may
+name a `--root` it will create. A pipe closed while a command is still working no longer ends it with 0: the command
+runs to its end and exits with its own code. Paths are compared as real paths, so on Windows, where git spells the
+root differently from the working directory, a report is still named relative to where the person is.

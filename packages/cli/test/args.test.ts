@@ -65,7 +65,7 @@ describe("argProblems", () => {
 describe("valueProblems", () => {
   it("wants a budget that is a whole number of milliseconds above 0", () => {
     expect(valueProblems(parseArgs(["--budget", "5000"]))).toEqual([]);
-    for (const b of ["0", "-1", "1.5", "abc", "1e3", "99999999999"]) expect(valueProblems(parseArgs([`--budget=${b}`]))).toHaveLength(1);
+    for (const b of ["0", "-1", "1.5", "abc", "1e3", "99999999999999999999"]) expect(valueProblems(parseArgs([`--budget=${b}`]))).toHaveLength(1);
   });
 
   it("wants a mode that is advisory or enforcing", () => {
