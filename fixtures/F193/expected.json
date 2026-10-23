@@ -1,0 +1,34 @@
+{
+  "fixture": "F193",
+  "section": "Symbols in prose, and task runners, section 2; A-225, A-226",
+  "stage": 68,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "entries": [
+        {
+          "outcome": "gap",
+          "kind": "dangling-reference",
+          "subject": "Documents/docs/dev.md",
+          "detailIncludes": [
+            "hereby release",
+            "make docs",
+            "just publish",
+            "verify"
+          ],
+          "detailExcludes": [
+            "hereby test",
+            "hereby build",
+            "make lint",
+            "just fmt",
+            "just d;",
+            "just deploy",
+            "check",
+            "make seed"
+          ]
+        }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

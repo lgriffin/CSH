@@ -152,7 +152,7 @@ describe("the Java reader", () => {
     expect(exported).toEqual(["Service.java Service", "Base.java Base", "Order.java Order", "Shape.java Shape"]);
   });
 
-  it("declares nested types under their dotted names, and exports only top-level ones (A-170)", async () => {
+  it("declares nested types and methods under their dotted names, and exports only top-level types (A-170, stage 67)", async () => {
     const src = `package demo;
 public class Runner {
   public interface Callback extends java.util.EventListener {
@@ -170,7 +170,9 @@ public class Runner {
     const declared = out.facts!.flatMap((f) => (f.kind === "declare" && f.module.endsWith("Runner.java") ? [[f.at.slice(f.at.lastIndexOf(":") + 1), f.symbol, f.declares, f.base ?? null, f.value ?? null]] : []));
     expect(declared).toEqual([
       ["2", "Runner", "class", null, null],
+      ["8", "Runner.run", "method", null, null],
       ["3", "Runner.Callback", "interface", "java.util.EventListener", null],
+      ["5", "Runner.Callback.done", "method", null, null],
       ["4", "Runner.Callback.Kind", "enum", null, null],
       ["4", "Runner.Callback.Kind.N", "const", null, "2"],
       ["7", "Runner.Limits", "class", null, null],

@@ -1,0 +1,17 @@
+{
+  "fixture": "F194",
+  "section": "Symbols in prose, and task runners, sections 2 and 4; A-225, A-226",
+  "stage": 68,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "entriesAbsent": [
+        {
+          "kind": "dangling-reference",
+          "subject": "Documents/docs/dev.md"
+        }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

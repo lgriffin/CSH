@@ -63,6 +63,25 @@ const ABSENT = /\b(?:retired|removed|deleted|no longer|leftover|optional|none is
  * The past ("we created `x.ts`") says the file is there, and so does a negated verb ("do not touch `x.ts`").
  */
 const MAKES = /\b(?:create|creates|touch|scaffold|generate|generates|write|writes)(?:\s+(?:a|an|the|new|empty|file))*(?:\s+(?:called|named))?\s*$/i;
+/**
+ * A name shaped as code names are (Symbols in prose, and task runners, section 1): camelCase or PascalCase of at least
+ * two words, a lower-case letter followed by a capital somewhere, optionally called with `()`.
+ */
+const CODE_NAME = /^([A-Za-z][A-Za-z0-9]*[a-z][A-Z][A-Za-z0-9]*|[a-z][A-Z][A-Za-z0-9]*)(?:\(\))?$/;
+/**
+ * A sentence about what is not built yet (Symbols in prose, and task runners, section 2): one that says planned, a
+ * phased plan, plans to, roadmap, upcoming, not yet, yet to, to come, in the future, or TODO. "Next" alone is not
+ * enough: "Next, run `make x`" is an instruction.
+ */
+const PLANNED = /\b(?:planned|phased plan|plans? to|roadmap|upcoming|not yet|yet to|to come|in (?:the )?future|TODO)\b/i;
+/** A change log, whose names are of code as it was. */
+const CHANGE_LOG = /^(?:CHANGELOG|CHANGES|HISTORY|NEWS|RELEASES)(?:\.[^/]*)?$/i;
+/**
+ * A task runner's command and its task (section 2): the first word after `hereby`, `npx hereby`, `make` or `just`, when
+ * it is not an option, up to the end of the token or a space.
+ */
+const TASK_COMMAND = /^(?:npx\s+)?(hereby|make|just)\s+([\w:.\/][\w:.\/-]*)(?=$|\s)/;
+
 /** A negation among the three words before the verb of making, in its clause. */
 const NEGATED = /(?:\b(?:not|never|no)\b|n't\b)(?:\s+\S+){0,2}\s*$/i;
 
@@ -255,6 +274,8 @@ export function run(input: AdapterInput): AdapterOutput {
     const text = decode(file.bytes);
     const lines = text.split(/\r?\n/);
     const doc: SourceItem = { id: file.path, kind: "document", text: file.path, span: `${file.path}:1`, textDigest: digestOf(text) };
+    // The package a document below the root describes, its directory; a change log describes the past (stage 67).
+    const packageDir = file.path.includes("/") && !CHANGE_LOG.test(posix.basename(file.path)) ? posix.dirname(file.path) : undefined;
     add(doc);
     let open: Open | undefined;
     // The open fence's character and length: only a fence of the same character, at least as long, closes it.
@@ -280,22 +301,46 @@ export function run(input: AdapterInput): AdapterOutput {
       }
       verifying = undefined;
     };
+    // Whether every sentence naming the backticked token says it is gone, or not there yet (stages 67 and 68).
+    const gone = (text: string, span: string, t: string) => {
+      const own = sentencesAt(text, span).filter((x) => x.text.includes(`\`${t}\``));
+      return own.length > 0 && own.every((x) => ABSENT.test(x.text.replace(/`[^`]*`/g, " ")) || PLANNED.test(x.text.replace(/`[^`]*`/g, " ")));
+    };
     // A symbol beside a code path ("`buildError` in `src/core/util/error.ts`") says the file declares it, and `npm run x`
     // says the script exists (stage 24). Only these two shapes are read: a symbol elsewhere on the line is not.
     const codeMentions = (text: string, from: string, span: string) => {
       const sym = "([A-Za-z_$][\\w$]*)(?:\\(\\))?";
+      // A name read beside its file is not read again as a name of the package.
+      const beside = new Set<string>();
       for (const m of text.matchAll(new RegExp(`\`${sym}\`\\s+(?:in|from|of|exported by|declared in)\\s+\`([^\`]+)\``, "g"))) {
         const p = pathToken(m[2]!);
-        if (p !== undefined && CODE_FILE.test(p)) edges.push({ from, rel: "mentions-symbol", to: `symbol:${p}#${m[1]}`, span });
+        if (p === undefined || !CODE_FILE.test(p)) continue;
+        edges.push({ from, rel: "mentions-symbol", to: `symbol:${p}#${m[1]}`, span });
+        beside.add(m[1]!);
       }
       for (const m of text.matchAll(new RegExp(`\`([^\`]+)\`\\s+(?:exports|declares|defines)\\s+\`${sym}\``, "g"))) {
         const p = pathToken(m[1]!);
-        if (p !== undefined && CODE_FILE.test(p)) edges.push({ from, rel: "mentions-symbol", to: `symbol:${p}#${m[2]}`, span });
+        if (p === undefined || !CODE_FILE.test(p)) continue;
+        edges.push({ from, rel: "mentions-symbol", to: `symbol:${p}#${m[2]}`, span });
+        beside.add(m[2]!);
       }
       for (const t of backticked(text)) {
         // The name ends the token or a word: `npm run test:<name>` is a pattern of names, not a script.
-        const s = /^npm run ([\w:.\-]+)(?=$|\s)/.exec(t);
+        const s = /^(?:npm|pnpm|yarn) run ([\w:.\-]+)(?=$|\s)/.exec(t);
         if (s !== null) edges.push({ from, rel: "mentions-script", to: `script:${s[1]}`, span });
+        // A task runner's command names its task (stage 68): `npx hereby test`, `make lint`, `just fmt`.
+        const task = TASK_COMMAND.exec(t);
+        if (task !== null) edges.push({ from, rel: "mentions-script", to: `task:${task[1]}#${task[2]}`, span, ...(gone(text, span, t) ? { absent: true } : {}) });
+      }
+      // A name of the package's code that its own document gives in backticks (stage 67).
+      if (packageDir !== undefined) {
+        const named = new Set<string>();
+        for (const t of backticked(text)) {
+          const m = CODE_NAME.exec(t.trim());
+          if (m === null || named.has(m[1]!) || beside.has(m[1]!)) continue;
+          named.add(m[1]!);
+          edges.push({ from, rel: "mentions-symbol", to: `symbol:${packageDir}/#${m[1]}`, span, ...(gone(text, span, t) ? { absent: true } : {}) });
+        }
       }
     };
     // Each path is read with its sentence (section 5), which may run over several lines of its paragraph: one that says

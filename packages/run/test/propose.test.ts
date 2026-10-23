@@ -168,6 +168,18 @@ describe("proposals for csh analyse (stage 55)", () => {
     expect(r.guesses.join("\n")).toContain("and go.mod, go.work, svc/pom.xml, tools/go.mod");
   });
 
+  it("reads the task runner files at the root as code, and none below it (stage 68)", () => {
+    const dir = checkout({ "Makefile": "a:\n", "justfile": "b:\n", "Herebyfile.mjs": "export {};\n", "tools/Makefile": "c:\n", "main.go": "package main\n" });
+    expect(reads(dir, propose(dir), "Code")).toEqual(["Herebyfile.mjs", "Makefile", "justfile", "main.go"]);
+  });
+
+  it("proposes a Code source for a task runner's file where no code is read (stage 68)", () => {
+    const dir = checkout({ "Makefile": "a:\n", "justfile": "b:\n", "README.md": "Run `make a`.\n" });
+    const r = propose(dir);
+    expect(reads(dir, r, "Code")).toEqual(["Makefile", "justfile"]);
+    expect(r.guesses.join("\n")).toContain("Code: no source files, and Makefile, justfile");
+  });
+
   it("proposes a Mermaid C4Container diagram in a file of its own as an Architecture source", () => {
     const dir = checkout({ "docs/c4.mmd": "%% the containers\n\nC4Container\nContainer(a, \"A\", \"pkg-a\")\n", "docs/flow.mmd": "flowchart LR\n  a --> b\n", "a.ts": "export {};\n" });
     const r = propose(dir);

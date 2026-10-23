@@ -135,6 +135,37 @@ describe("facts-ts", () => {
   });
 });
 
+describe("methods, and files the parser cannot read (stage 67)", () => {
+  it("declares the methods of a class and an interface as Owner.name, never a field, a computed or a private name", () => {
+    const text = [
+      "export class TaskService {",
+      "  moveTask(id: string) {}",
+      "  get count() { return 1; }",
+      "  onDone = () => {};",
+      "  limit = 3;",
+      "  #secret() {}",
+      "  [Symbol.iterator]() {}",
+      "  moveTask(id: number): void;",
+      "}",
+      "export interface Repo {",
+      "  save(t: unknown): void;",
+      "  load: (id: string) => unknown;",
+      "  name: string;",
+      "}",
+    ].join("\n");
+    const out = run(input({ "src/s.ts": text }, "c"));
+    expect(out.facts!.flatMap((f) => (f.kind === "declare" ? [`${f.declares} ${f.symbol}`] : []))).toEqual(["class TaskService", "method TaskService.moveTask", "method TaskService.count", "method TaskService.onDone", "interface Repo", "method Repo.save", "method Repo.load"]);
+    expect(out.facts!.flatMap((f) => (f.kind === "export" ? [f.symbol] : []))).toEqual(["TaskService", "Repo"]);
+  });
+
+  it("writes a skipped fact for a file the parser cannot read, and reads the rest", () => {
+    const deep = `export const x = ${"1 + ".repeat(200000)}1;\n`;
+    const out = run(input({ "a/deep.ts": deep, "a/ok.ts": "export function ok() {}\n" }, "c"));
+    expect(out.facts!.filter((f) => f.kind === "skipped").map((f) => (f.kind === "skipped" ? [f.from, f.reason.startsWith("unparsed: ")] : []))).toEqual([["a/deep.ts", true]]);
+    expect(out.facts!.some((f) => f.kind === "declare" && f.symbol === "ok")).toBe(true);
+  });
+});
+
 describe("declarations and data files (stage 24)", () => {
   it("reads what each top-level declaration declares, a class's base and a constant's literal value", () => {
     const out = run(

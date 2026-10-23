@@ -1,0 +1,7 @@
+{
+  "name": "subject",
+  "private": true,
+  "scripts": {
+    "check": "node src/main.js"
+  }
+}

@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { COMPONENT_SCHEMA_V2, type ComponentManifest, type DeclaredSource, type Practice } from "@csh/component";
 import { isBaseline } from "@csh/adapter-items/markdown";
+import { runnerOf } from "@csh/facts-code";
 import { compareCodePoints, globRegExp } from "@csh/kernel";
 import { trackedFiles } from "./sources.ts";
 
@@ -334,11 +335,17 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   const stepFile = (p: string) => stepSet.has(p) || (ext(p) !== "py" && stepConvention(p) !== undefined);
   const code = files.filter((p) => CODE_EXT.includes(ext(p)) && testConvention(p) === undefined && !stepFile(p) && !fixtures(p));
   // A nested manifest names a module of its own; one in a fixture or a dot-directory is test data or tooling.
-  const manifests = files.filter((p) => MANIFESTS.includes(posix.basename(p)) && !fixtures(p) && (p.includes("/") ? !underAny(p, TEST_DIRS) : true));
+  // A task runner's file at the root is read for its tasks (stage 68).
+  const manifests = files.filter((p) => (MANIFESTS.includes(posix.basename(p)) && !fixtures(p) && (p.includes("/") ? !underAny(p, TEST_DIRS) : true)) || (runnerOf(p) !== undefined && !code.includes(p)));
+  // A repository with no code CSH reads but a task runner's file still has a Code source, for the runner's tasks.
+  const runners = manifests.filter((p) => runnerOf(p) !== undefined);
   if (code.length > 0) {
     const g = globsFor(code, files, undefined, [...testGlobs, ...stepGlobs, "**/fixtures/**", "**/__fixtures__/**"]);
     add({ name: "Code", kind: "Code", at: ".", include: [...g.include, ...manifests], exclude: g.exclude }, { id: "code", name: "Code facts", kind: "facts", unit: "the module" });
     guesses.push(`Code: ${code.length} source files in ${[...new Set(code.map((p) => ext(p)))].sort(compareCodePoints).join(", ")}${manifests.length > 0 ? `, and ${manifests.join(", ")}` : ""}`);
+  } else if (runners.length > 0) {
+    add({ name: "Code", kind: "Code", at: ".", include: runners, exclude: [] }, { id: "code", name: "Code facts", kind: "facts", unit: "the module" });
+    guesses.push(`Code: no source files, and ${runners.join(", ")}`);
   }
 
   // A Mermaid container diagram in a file of its own (stage 55): the first line that is not blank or a comment says C4Container.

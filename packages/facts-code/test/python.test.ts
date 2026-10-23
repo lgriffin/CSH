@@ -204,10 +204,11 @@ describe("python exports", () => {
     expect(facts.filter((f) => f.kind === "export").every((f) => f.kind === "export" && f.typeOnly === false && f.at === f.module)).toBe(true);
   });
 
-  it("declares a class nested in a class body under its dotted name, and exports only top-level names (A-170)", async () => {
+  it("declares a class nested in a class body, and a method, under its dotted name, and exports only top-level names (A-170, stage 67)", async () => {
     const facts = await read({ "m.py": "class Updater(Base):\n    class Signals(QObject):\n        @dataclass\n        class Payload: pass\n    def run(self):\n        class Local: pass\ndef make():\n    class Inner: pass\n" });
     expect(decls(facts)).toEqual([
       ["Updater", "class", "Base", null],
+      ["Updater.run", "method", null, null],
       ["Updater.Signals", "class", "QObject", null],
       ["Updater.Signals.Payload", "class", null, null],
       ["make", "function", null, null],
