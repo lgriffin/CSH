@@ -3,7 +3,9 @@ C4Component
   title Command line: components
   Container_Boundary(cl, "Command line (cli)") {
     Component(csl, "csl command", "cli/src/csl.ts", "emit, print, lock")
-    Component(csh, "csh command", "cli/src/csh.ts", "run, check, gaps, coverage, overview, ladder, expect, explain, results import, subject fetch, approve, reject, retire, waive, countersign, gate, status, queue")
+    Component(csh, "csh command", "cli/src/csh.ts", "run, check, gaps, coverage, overview, ladder, expect, explain, results import, subject fetch, approve, reject, retire, waive, countersign, gate, status, queue, help")
+    Component(commands, "Commands and arguments", "cli/src/commands.ts, args.ts", "The table of commands: help, usage, and the check of every argument before a command runs")
+    Component(exit, "Process", "cli/src/exit.ts", "bin scripts: an unexpected error in one line, quiet on a closed pipe, exit once output drains")
     Component(init, "Init", "cli/src/init.ts", "Asks for each manifest field and never overwrites; with --subject, prints a proposed profile beside what each guess was read from")
     Component(diff, "Diff", "cli/src/diff.ts", "csh diff: two sides, each a stored run, a commit or the working tree")
     Component(analyse, "Analyse", "cli/src/analyse.ts", "csh analyse: a repository read cold, the analysis written under --out")
@@ -16,6 +18,9 @@ C4Component
   Container_Ext(a3c, "A3", "a3", "Stage records and judgments")
   Rel(csh, run, "Evaluates, runs, decides")
   Rel(csh, check, "overview, ladder, expect over a report")
+  Rel(csh, commands, "Checks arguments, prints help")
+  Rel(csl, commands, "Checks arguments")
+  Rel(exit, csh, "Runs as a process")
   Rel(csh, init, "csh init")
   Rel(csh, diff, "csh diff")
   Rel(csh, a3, "csh a3, csh history")

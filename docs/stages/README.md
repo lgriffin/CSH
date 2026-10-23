@@ -55,6 +55,15 @@ One note per stage (Architecture tab, section 6): what was built, the effort, wh
 - [Stage 52: Diagrams and the deck](stage-52.md)
 - [Stage 53: The third round of real runs](stage-53.md)
 - [Stage 54: The fourth round of real runs](stage-54.md)
+- [Stage 55: The analyse command](stage-55.md)
+- [Stage 56: The danger view](stage-56.md)
+- [Stage 57: Grain](stage-57.md)
+- [Stage 58: Polyglot containers](stage-58.md)
+- [Stage 59: Evidence per ecosystem](stage-59.md)
+- [Stage 60: Calibrate and ship](stage-60.md)
+- [Stage 61: What the tutors-mono-repo run asked for](stage-61.md)
+- [Stage 62: What the Toads run asked for](stage-62.md)
+- [Stage 64: The command line, hardened](stage-64.md)
 
 Stages 10 to 16 build the anchor design ([09](../spec/09-anchor-harness-a3.md)): a component to anchor on, harnesses,
 runs and the A3. Their fixtures, F80 to F96, were written before any of their code, and the fixture runner reports
@@ -85,3 +94,7 @@ file mentions, dependency-cruiser checks, baselines and specification prose. Its
 Stage 62 answers what a cold read of Toads, a Python repository, asked for ([18](../spec/18-from-the-toads-run.md),
 [issue 87](https://github.com/lgriffin/CSH/issues/87)): ignored files, pytest-bdd's bindings and step definitions,
 import-linter contracts, and what a told rule is not. Its fixtures are F184 to F188.
+
+Stage 64 hardens the command line for use outside this repository: every argument is checked before a command runs,
+each mistake is named with the command's usage, files that cannot be used are said rather than thrown, and the README
+and [the command line guide](../guides/cli.md) say how to use it. It changes no result, so it has no fixtures.
