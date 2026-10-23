@@ -1,7 +1,9 @@
 // Accepted outputs (Reading test suites as evidence, section 2; stage 70): what the pairing of each directory of
 // accepted outputs found, as results. A suite whose cases have outputs converges on what the names show; a case with
 // no output and an output with no case are gaps; a stem two cases share, and outputs no convention pairs, are
-// indeterminate. CSH never compares an output with what the code would write today: that is the runner's verdict.
+// indeterminate. CSH never compares an output with what the code would write today: that is the runner's verdict. A
+// snapshot entry that names no test of its file is a gap, and one CSH cannot match to a title it can read is
+// indeterminate (section 3; stage 71).
 import type { SourceItem } from "@csh/witness";
 import type { Gap } from "./types.ts";
 
@@ -21,8 +23,24 @@ export function outputGaps(items: readonly (SourceItem & { source: string })[]):
     const caseDir = a.caseDir;
     const outDir = a.outDir ?? it.id;
     if (paired > 0) {
-      const where = caseDir !== undefined ? `under ${caseDir}` : `in ${it.id}`;
-      gaps.push({ kind: "accepted-outputs", subject: at(it.id), fragments: [], detail: `${conventions}: ${paired} of ${plural(cases, "case")} ${where} ${paired === 1 ? "has" : "have"} accepted outputs, ${plural(Number(a.outputs ?? "0"), "file")}${caseDir !== undefined ? ` under ${outDir}` : ""}; the runner compares each case with them` });
+      const files = plural(Number(a.outputs ?? "0"), "file");
+      const entries = a.entries === undefined ? "" : `; ${a.entriesMatched ?? "0"} of ${plural(Number(a.entries), "snapshot entry", "snapshot entries")} ${a.entriesMatched === "1" ? "names" : "name"} a test of the file`;
+      const have = paired === 1 ? "has" : "have";
+      const how = caseDir !== undefined
+        ? `${paired} of ${plural(cases, "case")} under ${caseDir} ${have} accepted outputs, ${files} under ${outDir}`
+        : a.elsewhere === "true"
+          ? `${paired} of ${plural(cases, "case")} ${have} accepted outputs, ${files} in ${it.id}`
+          : `${paired} of ${plural(cases, "case")} in ${it.id} ${have} accepted outputs, ${files}`;
+      gaps.push({ kind: "accepted-outputs", subject: at(it.id), fragments: [], detail: `${conventions}: ${how}${entries}; the runner compares each case with them` });
+    }
+    // One JSON record a line, as a key may hold any character.
+    for (const line of lines(a.obsolete)) {
+      const { snapshot, key, test } = JSON.parse(line) as { snapshot: string; key: string; test: string };
+      gaps.push({ kind: "obsolete-snapshot", subject: `${at(snapshot)}::${key}`, fragments: [], detail: `${key.replace(/ \d+$/, "")}: no test of ${test} has this name, and every title in it is a literal; the runner keeps the entry and no test reads it` });
+    }
+    for (const line of lines(a.undecided)) {
+      const { snapshot, test, entries, lines: at_ } = JSON.parse(line) as { snapshot: string; test: string; entries: number; lines: number[] };
+      gaps.push({ kind: "snapshot-undecided", subject: at(snapshot), fragments: [], detail: `${plural(entries, "entry", "entries")} name no test CSH can read in ${test}, whose titles at ${at_.map((l) => `${test}:${l}`).join(", ")} it cannot read; which test each names is not decided` });
     }
     for (const c of lines(a.unaccepted)) {
       gaps.push({ kind: "unaccepted-case", subject: at(c), fragments: [], detail: `${c}: no accepted output under ${outDir} has its stem; the runner may skip it on purpose, or accept that it writes nothing, or it has never accepted what the case writes` });

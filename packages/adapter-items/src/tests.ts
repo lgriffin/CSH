@@ -166,6 +166,48 @@ export function declarations(text: string): { line: number; at: number; describe
   return out;
 }
 
+/**
+ * The names a runner gives the tests of a file (Reading test suites as evidence, section 3; stage 71, A-266): for each
+ * test, the titles of the describes around it and its own, outermost first, as Jest and Vitest join them into a full
+ * name. A skipped or todo test keeps its name, since the runner keeps its snapshot entries. A title is unreadable when it
+ * is not a literal, is a template with a placeholder, or is the title of an `each` or `for` with a `%` or `$` format;
+ * every test beneath an unreadable describe is unreadable too, and each is counted by the line of the title that is.
+ */
+export function testNames(text: string): { names: string[][]; unreadable: number[] } {
+  const { code, strings } = lex(text);
+  const calls: { from: number; to: number; describe: boolean; title: string | undefined; line: number }[] = [];
+  for (const m of code.matchAll(CALL)) {
+    let at = m.index + m[0].length;
+    const each = /\.(each|for)\b/.test(m[2]!);
+    if (m[3] === "`") {
+      const table = strings.get(at - 1);
+      if (table === undefined) continue;
+      at = skipSpace(code, at + table.length + 1);
+      if (code[at] !== "(") continue;
+      at++;
+    } else if (each) {
+      at = skipSpace(code, pastClose(code, at));
+      if (code[at] !== "(") continue;
+      at++;
+    }
+    at = skipSpace(code, at);
+    const raw = strings.get(at);
+    const quote = text[at];
+    const readable = raw !== undefined && !(quote === "`" && raw.includes("${")) && !((each || m[3] === "`") && /[%$]/.test(raw));
+    calls.push({ from: at, to: pastClose(code, at), describe: m[1] === "describe" || /^\.describe\b/.test(m[2]!), title: readable ? titleKey(unescapeJs(raw)) : undefined, line: code.slice(0, at).split("\n").length });
+  }
+  const names: string[][] = [];
+  const unreadable: number[] = [];
+  for (const c of calls) {
+    if (c.describe) continue;
+    const around = calls.filter((d) => d.describe && d.from < c.from && d.to >= c.to).sort((a, b) => a.from - b.from);
+    const blind = [...around, c].find((d) => d.title === undefined);
+    if (blind !== undefined) unreadable.push(blind.line);
+    else names.push([...around.map((d) => d.title!), c.title!]);
+  }
+  return { names, unreadable: [...new Set(unreadable)].sort((a, b) => a - b) };
+}
+
 /** A Cucumber step definition: Given, When, Then, And, But, Step or defineStep, called with a string or a regular expression. */
 const STEP = /(?<![.\w$])(Given|When|Then|And|But|Step|defineStep)\s*\(/g;
 /** jest-cucumber's step functions, read only in a file that loads a feature, where they cannot be anything else (stage 42). */

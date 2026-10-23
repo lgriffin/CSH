@@ -39,6 +39,6 @@ The cold read of lgriffin/TypeScript at `a91e938`, before and after the stage:
 | `orphan-output` | not read | 0 |
 
 The two refuted findings of the cold run are unchanged; stage 63 answers them. The read takes 50 seconds rather than 33,
-for twice the files. ESI.ts, read cold at its pinned commit, has two Vitest snapshot directories, both paired.
+for twice the files. ESI.ts, read cold at its pinned commit, has two Jest snapshot directories, both paired.
 
 No subject's expected results change.

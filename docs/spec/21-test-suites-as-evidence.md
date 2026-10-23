@@ -145,7 +145,10 @@ line is read both ways.
 when its base name is the test file's stem less its affix, or that followed by `.` or `(`, the longest stem winning.
 The test files are every file of the checkout whose name has an affix: `x_test.go`, `x.test.ts`, `x.spec.ts`,
 `test_x.py`, `XTest.java`, `TestX.java`, and the like in the other languages. A stem two test files share pairs
-nothing, and its outputs stay unpaired, naming why.
+nothing, and its outputs stay unpaired, naming why. A test file whose stem names outputs of more than one suite keeps
+those of the suite its own directory's test files name most: TypeScript's fourslash test
+`rewriteRelativeImportExtensionsProjectReferences1_test.go` writes a fourslash baseline, and the `tsc` baseline of
+the same name is written by a scenario of `tsc_test.go`.
 
 A Jest or Vitest test that calls `toMatchSnapshot()` and has no entry is not reported: the runner writes the entry on
 its next run, and fails in `--ci` mode. That is the runner's verdict to give, not CSH's. An inline snapshot lives in
