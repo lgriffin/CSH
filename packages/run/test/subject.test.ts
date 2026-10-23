@@ -3,6 +3,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createZ3Solver, type SolverPort } from "@csh/solver";
 import { componentStatus, fetchSubject, renameRetrying, loadProject, runAt, runComponent, subjectCheckout } from "../src/index.ts";
@@ -174,6 +175,32 @@ describe("a subject profile", () => {
     const p = loadProject(subject, subject, { subject });
     expect(p.component).toBeUndefined();
     expect(p.componentProblems.map((x) => x.code)).toEqual(["no-subject"]);
+  });
+});
+
+describe("a subject whose history was rewritten", () => {
+  it("fetches a pinned commit that no branch reaches by its hash", () => {
+    const dir = mkdtempSync(join(REPO, ".csh-cache", "rewritten-"));
+    try {
+      const upstream = join(dir, "upstream");
+      repoAt(upstream);
+      mkdirSync(join(upstream, "docs"));
+      writeFileSync(join(upstream, "docs", "requirements.md"), "| REQ-1 | The service shall log every request. |\n");
+      commitAll(upstream, "first");
+      writeFileSync(join(upstream, "docs", "requirements.md"), "| REQ-1 | The service shall answer. |\n");
+      const lost = commitAll(upstream, "rewritten away");
+      // Upstream keeps the commit under a ref a clone does not take, as GitHub keeps a pull request's.
+      git(upstream, "update-ref", "refs/pull/1/head", lost);
+      git(upstream, "reset", "-q", "--hard", "HEAD~1");
+      const prof = join(dir, "profile");
+      mkdirSync(join(prof, "csh"), { recursive: true });
+      writeFileSync(join(prof, "csh", "component.json"), JSON.stringify({ ...manifest(lost), subject: { repo: pathToFileURL(upstream).href, commit: lost } }, null, 2));
+      const f = fetchSubject(loadProject(prof, prof));
+      if (!f.ok) throw new Error(f.message);
+      expect(git(subjectCheckout(prof, lost), "rev-parse", "HEAD")).toBe(lost);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 

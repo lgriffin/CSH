@@ -195,6 +195,12 @@ export function fetchSubject(p: Project, at?: string): { ok: true; dir: string; 
     mkdirSync(dirname(dir), { recursive: true });
     // core.longpaths: a subject on Windows may hold paths past MAX_PATH, and a checkout that silently drops them reads as "dirty".
     execFileSync("git", ["-c", "core.longpaths=true", "-c", "core.autocrlf=false", "clone", "--quiet", "--no-checkout", repo, fresh], { stdio: ["ignore", "ignore", "pipe"] });
+    // A pinned commit no branch reaches any more, as when the subject rewrote its history, is still served by its hash.
+    try {
+      execFileSync("git", ["cat-file", "-e", `${commit}^{commit}`], { cwd: fresh, stdio: "ignore" });
+    } catch {
+      execFileSync("git", ["fetch", "--quiet", "origin", commit], { cwd: fresh, stdio: ["ignore", "ignore", "pipe"] });
+    }
     execFileSync("git", ["-c", "core.longpaths=true", "-c", "core.autocrlf=false", "-c", "advice.detachedHead=false", "checkout", "--quiet", "--detach", commit], { cwd: fresh, stdio: ["ignore", "ignore", "pipe"] });
   } catch (err) {
     rmSync(fresh, { recursive: true, force: true });
