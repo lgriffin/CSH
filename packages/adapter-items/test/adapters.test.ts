@@ -330,6 +330,54 @@ describe("code mentions in prose (stage 24)", () => {
   });
 });
 
+describe("names of a package's code, and task runners (stages 67 and 68)", () => {
+  const edges = (files: Record<string, string>, rel: string) => markdown(input(files)).edges!.filter((e) => e.rel === rel).map((e) => [e.to, e.span, ...(e.absent === true ? ["absent"] : [])]);
+
+  it("reads a code-shaped name in a document below the root as a name of its directory's code", () => {
+    const doc = [
+      "Rules come from `createRulesMap` and `buildRulesMap()`; `FormatSpan` starts it. `iPhone` too.",
+      "A word such as `Format`, `rules`, `HTTP`, `max_size` or `a.b` is prose; so is `call(x)`.",
+      "The `oldHelper` function was removed.",
+      "```",
+      "`fencedName`",
+      "```",
+    ].join("\n");
+    expect(edges({ "src/format/README.md": doc }, "mentions-symbol")).toEqual([
+      ["symbol:src/format/#createRulesMap", "src/format/README.md:1"],
+      ["symbol:src/format/#buildRulesMap", "src/format/README.md:1"],
+      ["symbol:src/format/#FormatSpan", "src/format/README.md:1"],
+      ["symbol:src/format/#iPhone", "src/format/README.md:1"],
+      ["symbol:src/format/#oldHelper", "src/format/README.md:3", "absent"],
+    ]);
+  });
+
+  it("reads no name in a document at the root, or in a change log", () => {
+    expect(edges({ "README.md": "Call `createRulesMap`.", "src/CHANGELOG.md": "Renamed `oldName`.", "src/HISTORY.txt.md": "`oldName`" }, "mentions-symbol")).toEqual([]);
+  });
+
+  it("reads a task runner's command, and pnpm and yarn scripts, but not an option or a fence", () => {
+    const doc = [
+      "Run `npx hereby test`, `hereby build --watch`, `make lint`, `make out/app.js` and `just deploy production`.",
+      "Use `pnpm run check` or `yarn run verify`; `npx hereby --tasks` and `make -C tools x` name no task, nor does `make`.",
+      "```sh",
+      "make fenced",
+      "```",
+      "Next, per the phased plan, seed data for `just seed`. A `make old` target was removed.",
+    ].join("\n");
+    expect(edges({ "docs/dev.md": doc }, "mentions-script")).toEqual([
+      ["task:hereby#test", "docs/dev.md:1"],
+      ["task:hereby#build", "docs/dev.md:1"],
+      ["task:make#lint", "docs/dev.md:1"],
+      ["task:make#out/app.js", "docs/dev.md:1"],
+      ["task:just#deploy", "docs/dev.md:1"],
+      ["script:check", "docs/dev.md:2"],
+      ["script:verify", "docs/dev.md:2"],
+      ["task:just#seed", "docs/dev.md:6", "absent"],
+      ["task:make#old", "docs/dev.md:6", "absent"],
+    ]);
+  });
+});
+
 describe("the structured trace adapter (stage 28)", () => {
   const MODEL = [
     "# A security model",

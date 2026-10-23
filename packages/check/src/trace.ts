@@ -39,6 +39,8 @@ const DESCRIBING = new Set(["mentions-file", "verified-by", "mentions-symbol"]);
 /** Statuses that say a requirement is checked by something (A-111). */
 const ASSERTED = new Set(["Enforced"]);
 const DOCUMENT = /\.(md|markdown)$/i;
+/** A manifest makes its directory a package, its code under it (stage 67). */
+const PACKAGE_MANIFEST = /^(?:package\.json|Cargo\.toml|pyproject\.toml|setup\.py|go\.mod|pom\.xml|build\.gradle(?:\.kts)?)$/;
 
 /** A path read from the directory of the file a span names, or undefined when that file is at the root. */
 function relativeTo(span: string, path: string): string | undefined {
@@ -90,9 +92,23 @@ export function trace(input: TraceInput): TraceResult {
   // A module that re-exports with * may supply any name, and the re-export is not followed (A-106).
   const starred = new Set(facts.flatMap((f) => (f.kind === "export" && f.symbol === "*" ? [f.module] : [])));
   const scripts = facts.filter((f) => f.kind === "field" && f.file === "package.json");
+  // The tasks of each task runner at the root (stage 68), and whether its file may name tasks its text does not show.
+  const tasks = new Map<string, Set<string>>();
+  for (const f of facts) if (f.kind === "task") (tasks.get(f.runner) ?? tasks.set(f.runner, new Set()).get(f.runner)!).add(f.name);
+  // The names each module declares or exports, by the last part of a member's name (stage 67).
+  const declaredIn = new Map<string, string[]>();
+  for (const f of facts) if (f.kind === "declare" || f.kind === "export") {
+    const n = f.symbol.slice(f.symbol.lastIndexOf(".") + 1);
+    declaredIn.set(n, [...(declaredIn.get(n) ?? []), f.module]);
+  }
+  const packages = new Set([...[...modules].map((m) => m.slice(0, m.lastIndexOf("/") + 1)), ...(input.files ?? []).filter((f) => PACKAGE_MANIFEST.test(f.slice(f.lastIndexOf("/") + 1))).map((f) => f.slice(0, f.lastIndexOf("/") + 1))]);
+  const unparsed = new Set(facts.flatMap((f) => (f.kind === "skipped" && f.reason.startsWith("unparsed") ? [f.from] : [])));
+  // A tracked file's name before its extension, which names a component such as `TutorsShell.svelte`.
+  const stems = new Set((input.files ?? []).map((f) => f.slice(f.lastIndexOf("/") + 1).replace(/\..*$/, "")));
   /** The tracked file an edge that resolved to "file" names: the file, a bare name's only match, or a symbol's module. */
   const fileOf = (to: string): string | undefined => {
-    if (to.startsWith("symbol:")) return to.slice(7).split("#")[0];
+    // A name of a package names no one file, so it is never dated (stage 67).
+    if (to.startsWith("symbol:")) return to.slice(7).split("#")[0]!.endsWith("/") ? undefined : to.slice(7).split("#")[0];
     if (!to.startsWith("file:")) return undefined;
     const p = to.slice(5).replace(/\/$/, "");
     // A directory changes whenever anything under it does: only a file is dated.
@@ -101,13 +117,34 @@ export function trace(input: TraceInput): TraceResult {
     const found = byBase.get(p);
     return found?.length === 1 ? found[0] : undefined;
   };
+  /**
+   * A name a package's document gives (stage 67): "file" when a module under the package declares it; unchecked when no
+   * module under it was read, when code elsewhere declares it, a tracked file is named after it, or its sentence says it
+   * is gone; otherwise undecided, since it may name code outside the repository.
+   */
+  const packageSymbol = (e: ItemEdge): "file" | null | "undecided" => {
+    const [dir, name] = e.to.slice(7).split("#") as [string, string];
+    // A package is a directory that holds a module read or a manifest; a module under it that could not be parsed may
+    // declare the name.
+    if (!packages.has(dir) || [...unparsed].some((m) => m.startsWith(dir))) return null;
+    const where = declaredIn.get(name) ?? [];
+    if (where.some((m) => m.startsWith(dir))) return "file";
+    return where.length > 0 || stems.has(name) || e.absent === true ? null : "undecided";
+  };
   const resolve = (source: string, e: ItemEdge): string | undefined | null => {
     if (e.to.startsWith("text:")) return null;
     // A symbol resolves when its module was read and declares or exports it; a module not read cannot be checked.
+    if (e.to.startsWith("symbol:") && e.to.includes("/#")) return packageSymbol(e);
     if (e.to.startsWith("symbol:")) {
       const ref = e.to.slice(7);
       const m = ref.split("#")[0]!;
       return !modules.has(m) ? null : named.has(ref) ? "file" : starred.has(m) ? null : undefined;
+    }
+    // A task resolves when its runner's file names it; with no file of the runner read, or an open set, it is unchecked.
+    if (e.to.startsWith("task:")) {
+      const [runner, name] = e.to.slice(5).split("#") as [string, string];
+      const known = tasks.get(runner);
+      return known === undefined ? null : known.has(name) ? "file" : known.has("*") || e.absent === true ? null : undefined;
     }
     if (e.to.startsWith("script:")) {
       const name = e.to.slice(7).replace(/~/g, "~0").replace(/\//g, "~1");
@@ -143,6 +180,7 @@ export function trace(input: TraceInput): TraceResult {
   const incoming = new Map<string, Set<string>>();
   const verifiedBy = new Set<string>();
   const dangling = new Map<string, string[]>();
+  const undecided = new Map<string, string[]>();
   const supported = new Set<string>();
   const unresolvedAt = new Set<string>();
   const scriptsAt = new Set<string>();
@@ -159,15 +197,17 @@ export function trace(input: TraceInput): TraceResult {
   const stale = new Map<string, Map<string, string>>();
   const h = input.history;
   for (const e of edges) {
-    const r = resolve(e.source, e);
+    const resolved = resolve(e.source, e);
     const from = `${e.source}/${e.from}`;
+    if (resolved === "undecided") undecided.set(from, [...(undecided.get(from) ?? []), `${e.span} ${e.to.slice(e.to.indexOf("#") + 1)}`]);
+    const r = resolved === "undecided" ? null : resolved;
     const row: TraceResult["edges"][number] = { source: e.source, from: e.from, rel: e.rel, to: e.to, span: e.span };
     if (r !== undefined && r !== null && r !== "file") row.target = r;
     if (r === undefined && e.rel !== "mentions") {
       row.dangling = true;
       // With history, a file that does not exist now is told apart: deleted since it was written, or never tracked at all.
       const gone = h?.existed !== undefined && e.to.startsWith("file:") ? (h.existed(e.to.slice(5).replace(/\/$/, "")) ? " (deleted)" : " (never tracked)") : "";
-      dangling.set(from, [...(dangling.get(from) ?? []), `${e.span} ${e.rel} ${/^(file|symbol|script):/.test(e.to) ? e.to.slice(e.to.indexOf(":") + 1) : e.to}${gone}`]);
+      dangling.set(from, [...(dangling.get(from) ?? []), `${e.span} ${e.rel} ${e.to.startsWith("task:") ? e.to.slice(5).replace("#", " ") : /^(file|symbol|script):/.test(e.to) ? e.to.slice(e.to.indexOf(":") + 1) : e.to}${gone}`]);
     }
     out.push(row);
     if (e.rel === "verified-by") verifiedBy.add(from);
@@ -187,9 +227,10 @@ export function trace(input: TraceInput): TraceResult {
       if (kind === "test-file" || kind === "scenario") citations.set(r, [...(citations.get(r) ?? []), { span: e.span, ...(e.observes !== undefined ? { observes: e.observes } : {}), ...(e.reader !== undefined ? { reader: e.reader } : {}) }]);
     }
     // The command and the script are matched by name, so another script on the same line supports nothing.
-    const command = e.rel === "verified-by" && r === null ? /^text:npm run ([\w:.\-]+)(?=$|\s)/.exec(e.to) : null;
-    if (command !== null) unresolvedAt.add(`${from}\u0000${e.span}\u0000${command[1]}`);
-    if (e.rel === "mentions-script" && r === "file") scriptsAt.add(`${from}\u0000${e.span}\u0000${e.to.slice(7)}`);
+    // A task runner's command is matched the same way, by its runner and task (stage 68).
+    const command = e.rel === "verified-by" && r === null ? /^text:(?:(?:npm|pnpm|yarn) run ([\w:.\-]+)|(?:npx\s+)?(hereby|make|just)\s+([\w:./][\w:./-]*))(?=$|\s)/.exec(e.to) : null;
+    if (command !== null) unresolvedAt.add(`${from}\u0000${e.span}\u0000${command[1] ?? `${command[2]}#${command[3]}`}`);
+    if (e.rel === "mentions-script" && r === "file") scriptsAt.add(`${from}\u0000${e.span}\u0000${e.to.slice(e.to.indexOf(":") + 1)}`);
     // Only a test file's citation counts as a test citing a requirement: a tagged scenario cites without testing.
     if (e.rel === "cites" && typeof r === "string" && r !== "file" && byQualified.get(from)?.kind === "test-file") testCited.add(r);
     // Stale prose (stage 25): the line naming a file was last changed before the file was. Documents are not code.
@@ -222,7 +263,11 @@ export function trace(input: TraceInput): TraceResult {
   for (const k of unresolvedAt) if (scriptsAt.has(k)) {
     const item = k.slice(0, k.indexOf("\u0000"));
     supported.add(item);
-    check(item, `verified by npm run ${k.slice(k.lastIndexOf("\u0000") + 1)}`);
+    const name = k.slice(k.lastIndexOf("\u0000") + 1);
+    check(item, `verified by ${name.includes("#") ? name.replace("#", " ") : `npm run ${name}`}`);
+  }
+  for (const [subject, refs] of undecided) {
+    gaps.push({ kind: "symbol-undecided", subject, fragments: [], detail: `names in backticks that no code of the repository declares: ${refs.join("; ")}` });
   }
   for (const [subject, refs] of stale) {
     gaps.push({ kind: "stale-prose", subject, fragments: [], detail: [...refs.keys()].sort(compareCodePoints).map((k) => refs.get(k)!).join("; ") });

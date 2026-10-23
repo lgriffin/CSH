@@ -193,7 +193,7 @@ const hasDefault = (n: ts.Node) => ts.canHaveModifiers(n) && (ts.getModifiers(n)
 
 export interface Declaration {
   symbol: string;
-  declares: "class" | "function" | "const" | "let" | "var" | "interface" | "type" | "enum" | "namespace";
+  declares: "class" | "function" | "const" | "let" | "var" | "interface" | "type" | "enum" | "namespace" | "method";
   line: number;
   base?: string;
   value?: string;
@@ -265,6 +265,21 @@ function literalValue(n: ts.Expression | undefined): string | undefined {
   return undefined;
 }
 
+/**
+ * The methods a class or an interface declares, as `Owner.name` (stage 67), as Go's are: methods, accessors, method
+ * signatures, and properties whose value is a function. A computed or private (`#x`) name is none.
+ */
+function methodsOf(sf: ts.SourceFile, owner: string, members: ts.NodeArray<ts.ClassElement | ts.TypeElement>): Declaration[] {
+  const out: Declaration[] = [];
+  for (const m of members) {
+    if (m.name === undefined || !(ts.isIdentifier(m.name) || ts.isStringLiteral(m.name))) continue;
+    const fn = ts.isMethodDeclaration(m) || ts.isMethodSignature(m) || ts.isGetAccessorDeclaration(m) || ts.isSetAccessorDeclaration(m) || (ts.isPropertyDeclaration(m) && m.initializer !== undefined && (ts.isArrowFunction(m.initializer) || ts.isFunctionExpression(m.initializer))) || (ts.isPropertySignature(m) && m.type !== undefined && ts.isFunctionTypeNode(m.type));
+    const symbol = `${owner}.${m.name.text}`;
+    if (fn && !out.some((d) => d.symbol === symbol)) out.push({ symbol, declares: "method", line: lineOf(sf, m) });
+  }
+  return out;
+}
+
 /** The names a file declares at its top level. */
 function declarationsOf(sf: ts.SourceFile): Declaration[] {
   const out: Declaration[] = [];
@@ -274,6 +289,7 @@ function declarationsOf(sf: ts.SourceFile): Declaration[] {
       const heritage = n.heritageClauses?.find((h) => h.token === ts.SyntaxKind.ExtendsKeyword)?.types[0]?.expression;
       const symbol = n.name?.text ?? (hasDefault(n) ? "default" : undefined);
       if (symbol !== undefined) out.push({ symbol, declares: "class", line, ...(heritage !== undefined ? { base: heritage.getText(sf) } : {}) });
+      if (symbol !== undefined) out.push(...methodsOf(sf, symbol, n.members));
     } else if (ts.isFunctionDeclaration(n)) {
       const symbol = n.name?.text ?? (hasDefault(n) ? "default" : undefined);
       if (symbol !== undefined) out.push({ symbol, declares: "function", line });
@@ -285,7 +301,7 @@ function declarationsOf(sf: ts.SourceFile): Declaration[] {
         const over = declares === "const" && ts.isIdentifier(d.name) ? totalOver(d) : undefined;
         for (const symbol of bindingNames(d.name)) out.push({ symbol, declares, line, ...(value !== undefined ? { value } : {}), ...(over !== undefined ? { total: [over] } : {}) });
       }
-    } else if (ts.isInterfaceDeclaration(n)) out.push({ symbol: n.name.text, declares: "interface", line });
+    } else if (ts.isInterfaceDeclaration(n)) out.push({ symbol: n.name.text, declares: "interface", line }, ...methodsOf(sf, n.name.text, n.members));
     else if (ts.isTypeAliasDeclaration(n)) {
       const members = (n.typeParameters ?? []).length === 0 ? literalMembers(n.type) : undefined;
       out.push({ symbol: n.name.text, declares: "type", line, ...(members !== undefined ? { members } : {}) });
@@ -402,7 +418,15 @@ export function run(input: AdapterInput): AdapterOutput {
     if (!code.has(f.path)) continue;
     facts.push({ ...base, kind: "module", at: f.path, name: f.path });
     // A Svelte component is read as the TypeScript of its script elements, at the lines they have in the component.
-    const r = f.path.endsWith(".svelte") ? readFile(`${f.path}.ts`, svelteScript(text)) : readFile(f.path, text);
+    // A file the parser cannot read, such as a compiler's stress test, is a skipped fact, as in Go, never the end of
+    // the read (stage 67).
+    let r: ReturnType<typeof readFile>;
+    try {
+      r = f.path.endsWith(".svelte") ? readFile(`${f.path}.ts`, svelteScript(text)) : readFile(f.path, text);
+    } catch (err) {
+      facts.push({ ...base, kind: "skipped", at: f.path, from: f.path, reason: `unparsed: ${(err as Error).message}` });
+      continue;
+    }
     for (const ref of r.refs) {
       const at = `${f.path}:${ref.line}`;
       // SvelteKit's generated types (./$types) are no file of the repository: not a dependency, and not unresolved.

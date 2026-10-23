@@ -1,0 +1,49 @@
+{
+  "fixture": "F192",
+  "section": "Symbols in prose, and task runners, section 1; A-223",
+  "stage": 67,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "entries": [
+        {
+          "outcome": "indeterminate",
+          "kind": "symbol-undecided",
+          "subject": "Documents/src/format/README.md",
+          "detailIncludes": [
+            "createRulesMap",
+            "ReadDirectoryChangesW"
+          ],
+          "detailExcludes": [
+            "buildRulesMap",
+            "FormatSpan",
+            "SourceFile",
+            "TutorsShell",
+            "oldHelper",
+            "fencedName",
+            "Format "
+          ]
+        }
+      ],
+      "entriesAbsent": [
+        {
+          "kind": "symbol-undecided",
+          "subject": "Documents/src/format/CHANGELOG.md"
+        },
+        {
+          "kind": "symbol-undecided",
+          "subject": "Documents/README.md"
+        },
+        {
+          "kind": "symbol-undecided",
+          "subject": "Documents/docs/guide.md"
+        },
+        {
+          "kind": "dangling-reference",
+          "subject": "Documents/src/format/README.md"
+        }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

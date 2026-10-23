@@ -23,7 +23,7 @@ const CARGO_TABLES = ["package", "workspace", "lib", "bin", "dependencies", "dev
 /** The crates every Rust program can name without a dependency. */
 const STD = new Set(["std", "core", "alloc", "proc_macro", "test"]);
 
-type RustDeclares = "struct" | "enum" | "trait" | "function" | "const" | "static" | "type" | "module" | "macro";
+type RustDeclares = "struct" | "enum" | "trait" | "function" | "const" | "static" | "type" | "module" | "macro" | "method";
 
 interface ModDecl {
   name: string;
@@ -193,6 +193,15 @@ export function readTree(root: Node): FileData {
       if (c.type === "impl_item" && inline.length === 0 && n.type === "source_file") {
         const owner = text(c.childForFieldName("type")).replace(/<[\s\S]*$/, "");
         for (const m of matchesIn(c, owner)) d.matches.push({ owner, ...m });
+      }
+      // The functions of an impl or a trait, as `Type.name` (stage 67).
+      if ((c.type === "impl_item" || c.type === "trait_item") && n.type === "source_file") {
+        const owner = text(c.childForFieldName(c.type === "impl_item" ? "type" : "name")).replace(/<[\s\S]*$/, "");
+        for (const f of c.childForFieldName("body")?.namedChildren ?? []) {
+          if (f === null || (f.type !== "function_item" && f.type !== "function_signature_item")) continue;
+          const symbol = `${owner}.${text(f.childForFieldName("name"))}`;
+          if (!d.declarations.some((x) => x.symbol === symbol)) d.declarations.push({ symbol, declares: "method", line: lineOf(f) });
+        }
       }
       const declares = ITEMS[c.type];
       if (declares === undefined) {

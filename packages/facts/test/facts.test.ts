@@ -19,4 +19,11 @@ describe("the fact format", () => {
     expect(out.facts).toHaveLength(1);
     expect(out.diagnostics).toEqual([expect.objectContaining({ code: "malformed-fact", span: "f.ndjson:1" })]);
   });
+
+  it("reads a task fact, and refuses one with no runner it knows (stage 68)", () => {
+    const v2 = { ...base, schema: "csh-facts/v2" as const };
+    expect(validateFact({ ...v2, kind: "task", runner: "make", file: "Makefile", name: "lint", at: "Makefile" })).toBeUndefined();
+    expect(validateFact({ ...v2, kind: "task", runner: "rake", file: "Rakefile", name: "lint", at: "Rakefile" })).toMatch(/runner/);
+    expect(validateFact({ ...base, kind: "task", runner: "make", file: "Makefile", name: "lint", at: "Makefile" })).toMatch(/csh-facts\/v2/);
+  });
 });

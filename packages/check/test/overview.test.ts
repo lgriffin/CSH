@@ -36,4 +36,10 @@ describe("overview detail", () => {
     expect(got).toContainEqual(["converged", "target-selects-nothing", "S/Layering/Rule", note]);
     expect(got).toContainEqual(["converged", "satisfied", "S/Layering/Other", null]);
   });
+
+  it("shows a failed adapter, and a name no code declares, as indeterminate with what would decide each (stage 67)", () => {
+    const r = { ...report([]), diagnostics: [{ code: "adapter-failed", severity: "error", source: "Code", message: "Maximum call stack size exceeded" }] } as unknown as Report;
+    expect(overviewOf(r).entries.map((x) => [x.outcome, x.kind, x.subject, x.detail])).toEqual([["indeterminate", "adapter-failed", "Code", "Maximum call stack size exceeded"]]);
+    expect(INDETERMINATE_NEXT["symbol-undecided"]).toMatch(/by hand/);
+  });
 });

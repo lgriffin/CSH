@@ -11,6 +11,7 @@ import { goReader } from "./go.ts";
 import { javaReader } from "./java.ts";
 import { packageFacts } from "./packages.ts";
 import { python } from "./python.ts";
+import { taskFacts } from "./tasks.ts";
 
 export const TOOL = { id: "facts-code", version: "0.1.0" } as const;
 export const SCHEMA = "csh-facts/v2";
@@ -42,6 +43,14 @@ export interface LanguageReader {
 /** The readers, by language. Stages 31 to 34 add Python, Java, Go and Rust. */
 export const READERS: LanguageReader[] = [python, javaReader, goReader, rust];
 
+/**
+ * Add `more` to `to` one at a time: a large repository's facts number hundreds of thousands, more than a spread's
+ * arguments may (From the TypeScript run, section 3).
+ */
+function append<T>(to: T[], more: readonly T[]): void {
+  for (const x of more) to.push(x);
+}
+
 export async function run(input: AdapterInput, readers: readonly LanguageReader[] = READERS): Promise<AdapterOutput> {
   const commit = input.config?.commit ?? "unknown";
   const ctx: FactContext = { commit, base: (tool) => ({ schema: SCHEMA, subject: { commit }, tool: { id: tool.id, version: tool.version } }) };
@@ -60,17 +69,19 @@ export async function run(input: AdapterInput, readers: readonly LanguageReader[
   }
   // facts-ts warns when no commit is given; its diagnostics stand for every reader's.
   const t = runTs({ ...input, files: ts });
-  facts.push(...(t.facts ?? []));
-  diagnostics.push(...t.diagnostics);
+  append(facts, t.facts ?? []);
+  append(diagnostics, t.diagnostics);
   for (const r of readers) {
     const own = mine.get(r)!;
     if (own.length === 0) continue;
     const out = await r.read(own, ctx);
-    facts.push(...out.facts);
-    diagnostics.push(...out.diagnostics);
+    append(facts, out.facts);
+    append(diagnostics, out.diagnostics);
   }
   // What each Maven module, Go module, crate and distribution builds, and the dependencies between them (stage 58).
-  facts.push(...packageFacts(facts, ctx));
+  append(facts, packageFacts(facts, ctx));
+  // The tasks of the task runners at the root (stage 68).
+  append(facts, taskFacts(files, ctx));
   return { facts, diagnostics };
 }
 

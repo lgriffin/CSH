@@ -93,6 +93,7 @@ export const INDETERMINATE_NEXT: Record<string, string> = {
   "unconstrained-after": "Say what the event leaves unchanged",
   "steps-undecided": "Check by hand whether a definition CSH cannot read (a custom parameter type, a computed pattern) matches the step",
   "binding-undecided": "Write the scenario's title as a literal in its @scenario call, or check by hand which scenarios the computed title binds",
+  "symbol-undecided": "Check each name by hand: rename it in the prose if the code renamed it, or leave it if it names code outside the repository",
 };
 /** Signal kinds that are a convergence: the source states a silence and its reason, and nothing contradicts it. */
 export const CONVERGED_NEXT: Record<string, string> = {
@@ -194,6 +195,8 @@ export function overviewOf(report: Report, manifest?: PracticeMap): Overview {
     entries.push({ outcome: "converged", kind: "tests-pass", practice: practiceOf[source] ?? "-", subject: source, detail: `${c.tests} tests in ${c.files} test files pass`, next: "Every test the runner reported for these files passed", anchor: anchorOf("tests-pass", source) });
   }
   for (const d of report.diagnostics) {
+    // An adapter that failed read nothing of its source, so nothing that rests on the source was decided (stage 67).
+    if (d.code === "adapter-failed") entries.push({ outcome: "indeterminate", kind: d.code, practice: practiceOf[d.source] ?? "-", subject: d.source, detail: d.message, next: "Nothing of this source was read: report the failure, or narrow the source to the files its adapter can read", anchor: anchorOf(d.code, d.source) });
     if (d.code !== "results-missing" && d.code !== "no-results") continue;
     entries.push({ outcome: "indeterminate", kind: d.code, practice: practiceOf[d.source] ?? "-", subject: d.source, detail: d.message, next: "Run the tests these files hold and name their results file", anchor: anchorOf(d.code, d.source) });
   }

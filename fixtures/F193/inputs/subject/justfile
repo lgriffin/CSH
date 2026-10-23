@@ -1,0 +1,9 @@
+set shell := ["bash", "-c"]
+
+alias d := deploy
+
+fmt:
+    echo fmt
+
+deploy env="staging":
+    echo {{env}}
