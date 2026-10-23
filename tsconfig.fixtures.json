@@ -11,6 +11,8 @@
     "fixtures/F09/**",
     "fixtures/F151/inputs/project/src/**",
     "fixtures/F179/inputs/subject/**",
-    "fixtures/F180/inputs/subject/**"
+    "fixtures/F180/inputs/subject/**",
+    "fixtures/F215/inputs/subject/**",
+    "fixtures/F216/inputs/subject/**"
   ]
 }
