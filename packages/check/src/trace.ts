@@ -99,7 +99,9 @@ export function trace(input: TraceInput): TraceResult {
   const declaredIn = new Map<string, string[]>();
   for (const f of facts) if (f.kind === "declare" || f.kind === "export") {
     const n = f.symbol.slice(f.symbol.lastIndexOf(".") + 1);
-    declaredIn.set(n, [...(declaredIn.get(n) ?? []), f.module]);
+    const where = declaredIn.get(n);
+    if (where === undefined) declaredIn.set(n, [f.module]);
+    else where.push(f.module);
   }
   const packages = new Set([...[...modules].map((m) => m.slice(0, m.lastIndexOf("/") + 1)), ...(input.files ?? []).filter((f) => PACKAGE_MANIFEST.test(f.slice(f.lastIndexOf("/") + 1))).map((f) => f.slice(0, f.lastIndexOf("/") + 1))]);
   const unparsed = new Set(facts.flatMap((f) => (f.kind === "skipped" && f.reason.startsWith("unparsed") ? [f.from] : [])));

@@ -14,14 +14,61 @@ export function runnerOf(path: string): TaskFact["runner"] | undefined {
   return undefined;
 }
 
-/** A hereby file's tasks: each `name` property written as a string literal; any other `name` property opens the set. */
+const STRING_OR_COMMENT = /("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\[\s\S])*`)|\/\/[^\n]*|\/\*[\s\S]*?\*\//g;
+const STRING = /"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\[\s\S])*`/y;
+
+/** The value of a string literal's body, its escapes decoded. */
+function unescape(body: string): string {
+  const simple: Record<string, string> = { n: "\n", t: "\t", r: "\r", b: "\b", f: "\f", v: "\v", 0: "\0" };
+  return body.replace(/\\(?:u\{([0-9a-fA-F]+)\}|u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|\r?\n|([\s\S]))/g, (_, cp, u, x, c) =>
+    cp !== undefined || u !== undefined || x !== undefined
+      ? String.fromCodePoint(parseInt(cp ?? u ?? x, 16))
+      : c === undefined
+        ? ""
+        : (simple[c] ?? c),
+  );
+}
+
+/** The arguments of each `task(...)` call in `text`, comments already removed: up to the parenthesis that closes it. */
+function taskCalls(text: string): string[] {
+  const calls: string[] = [];
+  for (const m of text.matchAll(/(?<![\w$.])task\s*\(/g)) {
+    let depth = 1;
+    let i = m.index + m[0].length;
+    while (i < text.length && depth > 0) {
+      STRING.lastIndex = i;
+      const literal = STRING.exec(text);
+      if (literal !== null) {
+        i += literal[0].length;
+        continue;
+      }
+      if (text[i] === "(") depth++;
+      else if (text[i] === ")") depth--;
+      i++;
+    }
+    calls.push(text.slice(m.index + m[0].length, i - 1));
+  }
+  return calls;
+}
+
+/**
+ * A hereby file's tasks: each `name` property of a `task(...)` call whose whole value is a string literal. Any other
+ * `name` property of a call (a shorthand `name,`, a variable, a template with `${`, or a literal joined to more), or a
+ * file with no call at all, opens the set. Comments are not read.
+ */
 export function herebyTasks(text: string): string[] {
+  const code = text.replace(STRING_OR_COMMENT, (_, literal: string | undefined) => literal ?? " ");
+  const calls = taskCalls(code);
   const names: string[] = [];
-  let open = false;
-  for (const m of text.matchAll(/(?<![\w$.])name\s*(:\s*(?:"([^"\\\n]*)"|'([^'\\\n]*)'|`([^`\\$]*)`|)|[,}])/g)) {
-    const literal = m[2] ?? m[3] ?? m[4];
-    if (literal !== undefined) names.push(literal);
-    else open = true;
+  let open = calls.length === 0;
+  for (const call of calls) {
+    const literals: string[] = [];
+    const bare = call.replace(new RegExp(STRING.source, "g"), (literal) => `\0${literals.push(literal) - 1}\0`);
+    for (const m of bare.matchAll(/(?<![\w$.])name\s*(?::\s*\0(\d+)\0(?=\s*(?:[,}]|$))|[:,}]|$)/g)) {
+      const literal = m[1] === undefined ? undefined : literals[Number(m[1])]!;
+      if (literal === undefined || (literal.startsWith("`") && literal.includes("${"))) open = true;
+      else names.push(unescape(literal.slice(1, -1)));
+    }
   }
   return open ? [...names, "*"] : names;
 }
@@ -50,12 +97,16 @@ export function makeTargets(text: string): string[] {
   return open ? [...names, "*"] : names;
 }
 
-/** A justfile's recipes and aliases. An import, a module or an include opens the set. */
+/**
+ * A justfile's recipes and aliases. A recipe's attributes (`[private]`) are not part of its name. An import
+ * (`import 'x.just'`), a module (`mod x`) or an include opens the set.
+ */
 export function justRecipes(text: string): string[] {
   const names: string[] = [];
   let open = false;
-  for (const raw of text.split(/\r?\n/)) {
-    if (/^(?:import|mod)\b|^!include\b/.test(raw)) {
+  for (const line of text.split(/\r?\n/)) {
+    const raw = line.replace(/^(?:\[[^\]]*\]\s*)+/, "");
+    if (/^import\??\s+['"]|^mod\??\s+[A-Za-z_]|^!include\s/.test(raw)) {
       open = true;
       continue;
     }
@@ -64,7 +115,7 @@ export function justRecipes(text: string): string[] {
       names.push(alias[1]!);
       continue;
     }
-    if (/^(?:set|export)\b/.test(raw)) continue;
+    if (/^(?:set|export)\s/.test(raw)) continue;
     const recipe = /^@?([A-Za-z_][\w-]*)(?:\s+[^:]*)?:(?!=)/.exec(raw);
     if (recipe !== null) names.push(recipe[1]!);
   }

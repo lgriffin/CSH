@@ -69,10 +69,11 @@ const MAKES = /\b(?:create|creates|touch|scaffold|generate|generates|write|write
  */
 const CODE_NAME = /^([A-Za-z][A-Za-z0-9]*[a-z][A-Z][A-Za-z0-9]*|[a-z][A-Z][A-Za-z0-9]*)(?:\(\))?$/;
 /**
- * A sentence about what is not built yet (Symbols in prose, and task runners, section 2): one that opens with "Next",
- * or says planned, a plan to, on the roadmap, upcoming, not yet, yet to, to come, in the future, or TODO.
+ * A sentence about what is not built yet (Symbols in prose, and task runners, section 2): one that says planned, a
+ * phased plan, plans to, roadmap, upcoming, not yet, yet to, to come, in the future, or TODO. "Next" alone is not
+ * enough: "Next, run `make x`" is an instruction.
  */
-const PLANNED = /^\W*next\b|\b(?:planned|phased plan|plans? to|roadmap|upcoming|not yet|yet to|to come|in (?:the )?future|TODO)\b/i;
+const PLANNED = /\b(?:planned|phased plan|plans? to|roadmap|upcoming|not yet|yet to|to come|in (?:the )?future|TODO)\b/i;
 /** A change log, whose names are of code as it was. */
 const CHANGE_LOG = /^(?:CHANGELOG|CHANGES|HISTORY|NEWS|RELEASES)(?:\.[^/]*)?$/i;
 /**

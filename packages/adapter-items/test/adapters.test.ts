@@ -363,6 +363,7 @@ describe("names of a package's code, and task runners (stages 67 and 68)", () =>
       "make fenced",
       "```",
       "Next, per the phased plan, seed data for `just seed`. A `make old` target was removed.",
+      "Next, run `make missing`.",
     ].join("\n");
     expect(edges({ "docs/dev.md": doc }, "mentions-script")).toEqual([
       ["task:hereby#test", "docs/dev.md:1"],
@@ -374,6 +375,7 @@ describe("names of a package's code, and task runners (stages 67 and 68)", () =>
       ["script:verify", "docs/dev.md:2"],
       ["task:just#seed", "docs/dev.md:6", "absent"],
       ["task:make#old", "docs/dev.md:6", "absent"],
+      ["task:make#missing", "docs/dev.md:7"],
     ]);
   });
 });

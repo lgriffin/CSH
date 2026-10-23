@@ -75,15 +75,18 @@ other runner, so a guide that names a task the runner no longer has is never fou
 **What changes** (A-225, A-226). The code facts read the task runner files at the repository's root (A-225), as text,
 never run:
 
-- `Herebyfile.js`, `.mjs`, `.cjs`, `.ts` or `.mts` (hereby): each `name` property written as a string literal is a task.
-  When any `name` property is not a literal (a shorthand `name,`, a variable, or a template with `${`), tasks may be
-  named that the text does not show, so the set is open.
+- `Herebyfile.js`, `.mjs`, `.cjs`, `.ts` or `.mts` (hereby): each `name` property of a `task(...)` call whose whole
+  value is a string literal is a task, its escapes decoded. Comments are not read, nor a `name` outside a `task(...)`
+  call. When any `name` property of a call is not a literal (a shorthand `name,`, a variable, a template with `${`, or a
+  literal joined to more, as `"build" + suffix`), or the file has no `task(...)` call, tasks may be named that the text
+  does not show, so the set is open.
 - `Makefile`, `makefile` or `GNUmakefile` (make): each target of a rule line, a line starting with no tab whose first
   `:` is not part of `:=` or `::=`. A target starting with `.` is special and is no task. A target holding `%` or `$`,
   or an `include`, `-include` or `sinclude` line, makes the set open.
 - `justfile`, `Justfile` or `.justfile` (just): each recipe, a line starting at the first column with a name, its
-  parameters, and a `:` that is not `:=`; and each `alias x := y`. An `import`, `mod` or `!include` line makes the set
-  open.
+  parameters, and a `:` that is not `:=`, after any attributes such as `[private]`; and each `alias x := y`. An import
+  (`import 'x.just'` or `import? ...`), a module (`mod x` or `mod? x`) or an `!include` line makes the set open; a
+  recipe named `import-data` or `mod` is a recipe.
 
 Each task is a `task` fact naming its runner, its file and its name; an open set adds a task named `*`.
 
@@ -99,9 +102,9 @@ the command names no task. The name ends at the end of the token or at a space.
 
 The mention resolves when the runner's file declares the task. It is unchecked when no file of that runner was read,
 when the set is open, or when every sentence naming the command says it is gone (A-210) or not built yet. A sentence
-says something is not built yet when it opens with "Next", or says planned, a phased plan, plans to, roadmap,
-upcoming, not yet, yet to, to come, in the future, or TODO: Toads' README says "Next, per the phased plan: ...
-seed data for `just seed`", and its justfile has no `seed` recipe yet. Otherwise it is a dangling reference, as
+says something is not built yet when it says planned, a phased plan, plans to, roadmap, upcoming, not yet, yet to,
+to come, in the future, or TODO: Toads' README says "Next, per the phased plan: ... seed data for `just seed`", and its
+justfile has no `seed` recipe yet. "Next" alone is not enough, since "Next, run `make x`" is an instruction. Otherwise it is a dangling reference, as
 `npm run x` naming no script is. A Verified by field that
 names a command the runner declares supports the requirement's status, as `npm run x` does.
 
