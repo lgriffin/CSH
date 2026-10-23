@@ -23,6 +23,7 @@ each `package.json`, and `pnpm-lock.yaml` pins the full tree. The kernel has no 
 | --- | --- | --- |
 | [pnpm](https://pnpm.io) | 10.28.0 | Workspace-aware package manager, chosen once ([ADR-17](docs/adr/ADR-17-toolchain.md)). Pinned in `packageManager`. |
 | [vitest](https://www.npmjs.com/package/vitest) | 3.2.7 | The one test runner. |
+| [@vitest/coverage-v8](https://www.npmjs.com/package/@vitest/coverage-v8) | 3.2.7 | Line, branch and function coverage from V8 for `pnpm test:coverage`, held to `coverage-floors.json` in CI (stage 65). Its version moves with vitest's. |
 | [fast-check](https://www.npmjs.com/package/fast-check) | 4.10.2 | Property tests: typing soundness, evaluator against solver, printer round trip. |
 | [@types/node](https://www.npmjs.com/package/@types/node) | 22.20.5 | Node type definitions for the workspace's type checking. |
 

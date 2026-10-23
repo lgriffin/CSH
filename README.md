@@ -101,7 +101,7 @@ value stops. (These were once called a ladder; that word now means [the Assertio
 Read these in order:
 
 1. [The context diagram](docs/architecture/context.mmd): who uses the harness and what it touches.
-2. [The container diagram](docs/architecture/containers.mmd): the eleven runtime containers and every package by name, with [a component diagram for each](docs/architecture/README.md).
+2. [The container diagram](docs/architecture/containers.mmd): the fourteen runtime containers and every package by name, with [a component diagram for each](docs/architecture/README.md).
 3. A package README, such as [run](packages/run/README.md), [check](packages/check/README.md) or [a3](packages/a3/README.md): purpose, interface, invariants, tests and limits, in the same eight sections for every package.
 4. [The deck](docs/deck/csh.md): twenty-two Marp slides on what CSH is, how it works, how it is designed and what it reports.
 5. The decision records in [docs/adr](docs/adr), such as [ADR-15](docs/adr/ADR-15-ledger-of-signed-commits.md) on authority.
@@ -379,11 +379,11 @@ Its security model is read as a structured trace, its test results are committed
 - **Unknown is common.** A solver timeout, a missing binding or an unapproved binding all give unknown. That is a correct answer, not a malfunction.
 - **Protection depends on keys.** It also depends on where the gate runs: CI should pin the root maintainers commit with `CSH_ROOT_COMMIT`, outside the repository ([A-28](ASSUMPTIONS.md)).
 - **SSH signatures are untested.** Their verification is implemented through git but no fixture covers it ([Q-16](QUESTIONS.md)).
-- **Choices made during the build are registered.** They are in [ASSUMPTIONS.md](ASSUMPTIONS.md). The owner decided every question in [QUESTIONS.md](QUESTIONS.md), Q-01 to Q-20, on 3 October 2026.
+- **Choices made during the build are registered.** They are in [ASSUMPTIONS.md](ASSUMPTIONS.md). The owner decided Q-01 to Q-20 in [QUESTIONS.md](QUESTIONS.md) on 3 October 2026; each later question records the option the build took.
 
 ## Status of the build
 
-Stages 1 to 63 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 137 golden
+Stages 1 to 65 are built, including the four of [the next layers](docs/spec/10-next-layers.md). All 137 golden
 fixtures pass (F01 to F16, F20 to F24, F30 to F35, F40 to F46, F50 to F52, F60 to F64, F70 to F78, F80 to F125, F130 to F132, F140 to F142, F150 to F155, F160 to F165, F170 to F191), as do
 the unit, property and fault-injection tests; F118 to F125 cover [polyglot code](docs/spec/12-polyglot-code.md),
 stages 29 to 35, F130 to F132 [what real runs asked for](docs/spec/13-from-real-runs.md), stages 38 to 44, F140
@@ -398,15 +398,17 @@ pnpm test
 ```
 
 `pnpm typecheck` is strict TypeScript over every package and test; `pnpm test` runs every unit, property,
-fault-injection, documentation and fixture test. `node packages/testkit/src/run-fixtures.ts` runs the fixtures alone,
+fault-injection, documentation and fixture test. `pnpm test:coverage` runs the same suite with coverage and fails when the workspace or
+any package falls below its floor in [coverage-floors.json](coverage-floors.json); CI runs it in the job `Coverage`
+([stage 65](docs/stages/stage-65.md)). `node packages/testkit/src/run-fixtures.ts` runs the fixtures alone,
 with a summary.
 
 ## Repository
 
 | Path | Contents |
 | --- | --- |
-| `packages/` | Twenty-six packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `arch`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `adapter-gherkin`, `adapter-c4-mermaid`, `adapter-items`, `facts`, `facts-ts`, `facts-imports`, `ledger`, `gate`, `component`, `run`, `review`, `agent`, `harness`, `a3`, `cli`, `testkit` |
-| `docs/guides/` | How to write a component manifest, a probe, a step table, an A3 and architecture rules, and the owner's runbook for authority |
+| `packages/` | Twenty-seven packages, each with a README: `kernel`, `csl`, `emit`, `print`, `solver`, `check`, `arch`, `witness`, `adapter-witness-files`, `adapter-ears-markdown`, `adapter-gherkin`, `adapter-c4-mermaid`, `adapter-items`, `facts`, `facts-ts`, `facts-code`, `facts-imports`, `ledger`, `gate`, `component`, `run`, `review`, `agent`, `harness`, `a3`, `cli`, `testkit` |
+| `docs/guides/` | How to use [the command line](docs/guides/cli.md); how to write a component manifest, a probe, a step table, an A3 and architecture rules; how to review a change, climb the Assertion Ladder and work as an agent; and the owner's runbook for authority |
 | `csh/` | The `Workspace` component: the repository's own architecture rules, read against its container diagram and its imports ([examples/workspace](examples/workspace/README.md)) |
 | `fixtures/` | Golden fixtures, one directory each, plus the shared bases and the test pack |
 | `examples/lockout/` | Three practices on one behaviour, run in four stages, and its A3 |

@@ -69,3 +69,14 @@ describe("assumptions and questions", () => {
     for (const m of text.matchAll(/\bQ-\d\d\b/g)) expect(questions.has(m[0]), `${m[0]} is cited but not asked`).toBe(true);
   });
 });
+
+describe("coverage floors", () => {
+  it("hold every package with sources to a floor of its own, and name no package that is gone (stage 65)", () => {
+    const floors = JSON.parse(readFileSync(join(repo, "coverage-floors.json"), "utf8")) as Record<string, unknown>;
+    const keys = new Set(Object.keys(floors).filter((k) => k.startsWith("packages/")));
+    const expected = new Set(packages.filter((p) => existsSync(join(repo, "packages", p, "src"))).map((p) => `packages/${p}/src/**`));
+    expect([...expected].filter((k) => !keys.has(k)), "packages with no floor in coverage-floors.json").toEqual([]);
+    expect([...keys].filter((k) => !expected.has(k)), "floors for packages that do not exist").toEqual([]);
+    for (const k of ["lines", "statements", "functions", "branches"]) expect(floors[k], `workspace ${k}`).toBeTypeOf("number");
+  });
+});
