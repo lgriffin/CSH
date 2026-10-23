@@ -55,7 +55,8 @@ export function globPattern(glob: string): RegExp {
   for (let k = 0; k < glob.length; k++) {
     const c = glob[k]!;
     if (c === "*" && glob[k + 1] === "*") {
-      body += "(?:.*/)?";
+      // A trailing ** is everything under the directory, files too (stage 63): `.beads/**` holds `.beads/issues.jsonl`.
+      body += k + 2 === glob.length ? ".*" : "(?:.*/)?";
       k += glob[k + 2] === "/" ? 2 : 1;
     } else if (c === "*") body += "[^/]*";
     else if (c === "?") body += "[^/]";

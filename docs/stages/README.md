@@ -85,3 +85,7 @@ file mentions, dependency-cruiser checks, baselines and specification prose. Its
 Stage 62 answers what a cold read of Toads, a Python repository, asked for ([18](../spec/18-from-the-toads-run.md),
 [issue 87](https://github.com/lgriffin/CSH/issues/87)): ignored files, pytest-bdd's bindings and step definitions,
 import-linter contracts, and what a told rule is not. Its fixtures are F184 to F188.
+
+Stage 63 answers what a cold read of microsoft/TypeScript asked for ([19](../spec/19-from-the-typescript-run.md),
+[issue 89](https://github.com/lgriffin/CSH/issues/89)): a file the reader is told to create, test titles in a repository
+with no identifier scheme, and relative Markdown links. Its fixtures are F189 to F191.

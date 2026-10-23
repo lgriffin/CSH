@@ -9,6 +9,9 @@ describe("history globs", () => {
     expect(globPattern("docs/adr/*.md").test("docs/adr/sub/0001-x.md")).toBe(false);
     expect(globPattern("**/features").test("tests/bdd/features/a.feature")).toBe(true);
     expect(globPattern("a.b").test("axb")).toBe(false);
+    expect(globPattern(".beads/**").test(".beads/issues.jsonl")).toBe(true);
+    expect(globPattern(".beads/**").test(".beads/sub/x.json")).toBe(true);
+    expect(globPattern(".beads/**").test(".beadsx/issues.jsonl")).toBe(false);
   });
 });
 

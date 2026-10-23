@@ -59,7 +59,10 @@
     }
   ],
   "history": {
-    "since": "previous-tag"
+    "since": "previous-tag",
+    "volatile": [
+      ".beads/**"
+    ]
   },
   "practices": [
     {
