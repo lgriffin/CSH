@@ -1,0 +1,24 @@
+{
+  "fixture": "F226",
+  "section": "Reading test suites as evidence, section 8; A-268",
+  "stage": 75,
+  "expect": {
+    "init": {
+      "sources": {
+        "Documents": { "kind": "Documents", "files": ["README.md"] },
+        "Tests": { "kind": "TestFiles", "files": ["internal/execute/build/build_test.go"] },
+        "Code": { "kind": "Code", "files": ["go.mod", "internal/execute/build/build.go", "main.go", "web/package.json", "web/src/index.ts", "web/src/out/format.ts"] }
+      },
+      "coverage": {
+        "tracked": 11,
+        "read": 8,
+        "eligible": 8,
+        "byName": 0,
+        "parsed": 8,
+        "unread": [".github/workflows/ci.yml", "build/app.js", "web/dist/index.js"],
+        "skipped": { "build output": 2, "with no reader": 1 },
+        "linesInclude": ["coverage: all 8 eligible files read (100%), all parsed; 3 of 11 tracked skipped: 2 build output, 1 with no reader"]
+      }
+    }
+  }
+}

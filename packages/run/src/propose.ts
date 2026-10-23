@@ -17,10 +17,46 @@ export interface Proposal {
   guesses: string[];
 }
 
-/** Directories never proposed for any source: installed, built or vendored files. */
+/** Directories never proposed for any source, wherever they are: installed or vendored files. */
 // A Python virtual environment is installed code, as node_modules is, even when someone committed it (stage 46).
-export const NEVER_PROPOSED = ["node_modules", "dist", "build", "out", "coverage", "vendor", "target", ".venv", "venv", "site-packages", "__pycache__"];
-const NEVER_GLOBS = NEVER_PROPOSED.map((d) => `**/${d}/**`);
+export const INSTALLED_DIRS = ["node_modules", "coverage", "vendor", ".venv", "venv", "site-packages", "__pycache__"];
+/** Directories that hold a build's output where a build writes them: at the root or beside a build manifest (A-268). */
+export const OUTPUT_DIRS = ["dist", "build", "out", "target"];
+/** The files beside which a directory of OUTPUT_DIRS is a build's output. */
+export const BUILD_MANIFESTS = ["package.json", "tsconfig.json", "pyproject.toml", "setup.py", "pom.xml", "build.gradle", "build.gradle.kts", "go.mod", "go.work", "Cargo.toml"];
+export const NEVER_PROPOSED = [...INSTALLED_DIRS, ...OUTPUT_DIRS];
+
+/**
+ * The directories of `tracked` that hold a build's output, and globs that exclude them with the installed ones. A
+ * directory named `build` with no manifest beside it is source, as Go's `tsc/internal/execute/build` is (stage 75).
+ * While no such directory is tracked the globs are the plain `**\/build/**`, so a profile still passes over a build
+ * written later.
+ */
+export function buildOutputsOf(tracked: readonly string[]): { dirs: Set<string>; globs: string[] } {
+  const manifestDirs = new Set(tracked.filter((p) => BUILD_MANIFESTS.includes(posix.basename(p))).map((p) => posix.dirname(p)));
+  const dirs = new Set<string>();
+  const source = new Set<string>();
+  for (const p of tracked) {
+    const segs = segments(p);
+    for (let i = 0; i < segs.length - 1; i++) {
+      if (!OUTPUT_DIRS.includes(segs[i]!)) continue;
+      const parent = i === 0 ? "." : segs.slice(0, i).join("/");
+      const dir = segs.slice(0, i + 1).join("/");
+      if (i === 0 || manifestDirs.has(parent)) {
+        dirs.add(dir);
+        break;
+      }
+      source.add(segs[i]!);
+    }
+  }
+  const generic = (d: string) => `**/${d}/**`;
+  // Where a name is also source, every place a build could write it is excluded: the root and beside each manifest,
+  // with files there or not, so a build committed later is still passed over.
+  const places = [".", ...manifestDirs].filter((m, i, a) => a.indexOf(m) === i).sort(compareCodePoints);
+  const beside = (d: string) => places.map((m) => (m === "." ? `${d}/**` : `${m}/${d}/**`));
+  const globs = [...INSTALLED_DIRS.map(generic), ...OUTPUT_DIRS.flatMap((d) => (source.has(d) ? beside(d) : [generic(d)]))];
+  return { dirs, globs };
+}
 
 /** A pattern that matches no text: the citations of tests in a repository with no identifier scheme (A-221). */
 export const NO_CITATION = "(?!)";
@@ -28,10 +64,10 @@ export const NO_CITATION = "(?!)";
 /** Prefixes of identifiers that belong to the world, not to the repository: UTF-8, SHA-256, RFC-9110. */
 export const EXTERNAL_FAMILIES = ["UTF", "SHA", "ISO", "RFC", "CVE", "AES", "RSA", "TLS", "SSL", "HTTP", "ES", "ECMA", "PEP", "JSR", "GPL", "LGPL", "AGPL", "MIT", "BSD", "CC"];
 
-const CODE_EXT = ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "svelte", "py", "pyi", "java", "go", "rs"];
+export const CODE_EXT = ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "svelte", "py", "pyi", "java", "go", "rs"];
 const JS_EXT = ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs"];
 /** Language manifests read as code: at the root, and since stage 55 at any depth (a Maven module, a nested Go module). */
-const MANIFESTS = ["package.json", "pyproject.toml", "pom.xml", "go.mod", "go.work", "Cargo.toml"];
+export const MANIFESTS = ["package.json", "pyproject.toml", "pom.xml", "go.mod", "go.work", "Cargo.toml"];
 const TEST_DIRS = ["test", "tests", "__tests__"];
 /** The files an agent's tooling loads at the start of every session, by name, anywhere in the tree (stage 50). */
 export const INSTRUCTION_FILES = ["AGENTS.md", "CLAUDE.md", "GEMINI.md"];
@@ -47,7 +83,6 @@ const ext = (p: string) => {
   const i = b.lastIndexOf(".");
   return i <= 0 ? "" : b.slice(i + 1);
 };
-const never = (p: string) => segments(p).slice(0, -1).some((s) => NEVER_PROPOSED.includes(s));
 const underAny = (p: string, dirs: string[]) => segments(p).slice(0, -1).some((s) => dirs.includes(s));
 
 /** A test file's convention, as the glob that selects every file of it; undefined for a file that is not one. */
@@ -83,10 +118,10 @@ const matches = (p: string, globs: string[]) => globs.some((g) => (compiled.get(
  * Include and exclude globs that select exactly `intended` out of `universe`: the given includes (or one glob per
  * top-level directory and extension), less the given excludes, then any file still selected wrongly named by itself.
  */
-function globsFor(intended: string[], universe: string[], include?: string[], exclude: string[] = []): { include: string[]; exclude: string[] } {
+function globsFor(never: readonly string[], intended: string[], universe: string[], include?: string[], exclude: string[] = []): { include: string[]; exclude: string[] } {
   const inc = include ?? [...new Set(intended.map((p) => (p.includes("/") ? `${segments(p)[0]}/**/*.${ext(p)}` : `*.${ext(p)}`)))].sort(compareCodePoints);
   const want = new Set(intended);
-  const exc = [...NEVER_GLOBS, ...exclude.filter((g) => {
+  const exc = [...never, ...exclude.filter((g) => {
     const r = globRegExp(g);
     return universe.some((p) => r.test(p) && !want.has(p));
   })];
@@ -171,6 +206,12 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   const tracked = trackedFiles(dir);
   const commit = git(dir, "rev-parse", "HEAD");
   if (tracked === undefined || commit === undefined) return { error: `${dir} is not a git checkout with a commit` };
+  const outputs = buildOutputsOf(tracked);
+  const neverGlobs = outputs.globs;
+  const never = (p: string) => {
+    const segs = segments(p);
+    return segs.slice(0, -1).some((x, i) => INSTALLED_DIRS.includes(x) || outputs.dirs.has(segs.slice(0, i + 1).join("/")));
+  };
   const files = tracked.filter((p) => !never(p));
   const read = (p: string) => {
     try {
@@ -243,7 +284,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   const changelog = (p: string) => /^(CHANGELOG|HISTORY)/i.test(posix.basename(p));
   const documents = markdown.filter((p) => !requirements.includes(p) && !instructions.includes(p) && !changelog(p) && !underAny(p, TEST_DIRS) && !dataOrSuite(p));
   if (documents.length > 0) {
-    const g = globsFor(documents, files, undefined, ["**/CHANGELOG*", "**/HISTORY*", ...TEST_DIRS.map((d) => `**/${d}/**`), "**/testdata/**", ...requirements, ...instructions]);
+    const g = globsFor(neverGlobs, documents, files, undefined, ["**/CHANGELOG*", "**/HISTORY*", ...TEST_DIRS.map((d) => `**/${d}/**`), "**/testdata/**", ...requirements, ...instructions]);
     add({ name: "Documents", kind: "Documents", at: ".", include: [...g.include, ...cruisers], exclude: g.exclude }, { id: "docs", name: "Documents", kind: "documents", unit: "the document", settings: { ...idSettings } });
     guesses.push(`Documents: ${documents.length} other Markdown files, leaving out changelogs and test directories`);
   }
@@ -295,7 +336,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
       guesses.push(`tagCites ${settings.tagCites}: the documents' identifiers appear as scenario tags`);
     }
     const left = allFeatures.filter((p) => fixtures(p));
-    add({ name: "Features", kind: "Features", at: ".", include: ["**/*.feature"], exclude: [...NEVER_GLOBS, ...(left.length > 0 ? ["**/fixtures/**", "**/__fixtures__/**", "**/.*/**"] : [])] }, { id: "bdd", name: "BDD", kind: "scenarios", unit: "the rule", ...(Object.keys(settings).length > 0 ? { settings } : {}) });
+    add({ name: "Features", kind: "Features", at: ".", include: ["**/*.feature"], exclude: [...neverGlobs, ...(left.length > 0 ? ["**/fixtures/**", "**/__fixtures__/**", "**/.*/**"] : [])] }, { id: "bdd", name: "BDD", kind: "scenarios", unit: "the rule", ...(Object.keys(settings).length > 0 ? { settings } : {}) });
     guesses.push(`Features: ${features.length} .feature files${left.length > 0 ? `, leaving out ${left.length} in fixtures or dot-directories, which are test data` : ""}`);
   }
 
@@ -340,7 +381,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
       const command = runner === "vitest" ? `npx vitest run --reporter=json --outputFile=${report}` : `npx jest --json --outputFile=${report}`;
       guesses.push(`executions csh/results.json: package.json names ${runner}; in the subject run ${command}, then csh results import tdd <subject>/${report}`);
     }
-    add({ name: "Tests", kind: "TestFiles", at: ".", ...globsFor([...tests, ...steps, ...conftests], files, [...testGlobs, ...stepGlobs, ...(conftests.length > 0 ? ["**/conftest.py"] : [])], ["**/fixtures/**", "**/__fixtures__/**", "**/testdata/**"]) }, testPractice);
+    add({ name: "Tests", kind: "TestFiles", at: ".", ...globsFor(neverGlobs, [...tests, ...steps, ...conftests], files, [...testGlobs, ...stepGlobs, ...(conftests.length > 0 ? ["**/conftest.py"] : [])], ["**/fixtures/**", "**/__fixtures__/**", "**/testdata/**"]) }, testPractice);
     guesses.push(`Tests: ${tests.length} files by the conventions ${testGlobs.join(", ") || "none"}${steps.length > 0 ? `, and ${steps.length} step definition files` : ""}`);
   }
 
@@ -356,7 +397,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   // A repository with no code CSH reads but a task runner's file still has a Code source, for the runner's tasks.
   const runners = manifests.filter((p) => runnerOf(p) !== undefined);
   if (code.length > 0) {
-    const g = globsFor(code, files, undefined, [...testGlobs, ...stepGlobs, "**/fixtures/**", "**/__fixtures__/**", "**/testdata/**"]);
+    const g = globsFor(neverGlobs, code, files, undefined, [...testGlobs, ...stepGlobs, "**/fixtures/**", "**/__fixtures__/**", "**/testdata/**"]);
     add({ name: "Code", kind: "Code", at: ".", include: [...g.include, ...manifests], exclude: g.exclude }, { id: "code", name: "Code facts", kind: "facts", unit: "the module" });
     guesses.push(`Code: ${code.length} source files in ${[...new Set(code.map((p) => ext(p)))].sort(compareCodePoints).join(", ")}${manifests.length > 0 ? `, and ${manifests.join(", ")}` : ""}`);
   } else if (runners.length > 0) {
@@ -373,7 +414,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
     const treeGlobs = [...new Set(trees)].sort(compareCodePoints);
     const inTree = (p: string) => matches(p, treeGlobs);
     const rest = suiteFiles.filter((p) => !inTree(p));
-    const g = globsFor(suiteFiles, files, [...treeGlobs, ...rest]);
+    const g = globsFor(neverGlobs, suiteFiles, files, [...treeGlobs, ...rest]);
     const snapshot = (p: string) => underAny(p, ["__snapshots__"]) || (segments(p).at(-2) === "snapshots" && ext(p) === "snap");
     // A snapshot file's entries are read with the test file it names (stage 71), so both are read whole.
     const snapshotTests = new Set(outputDirs.flatMap((o) => [...o.paired].filter(([, outs]) => outs.some(snapshot)).map(([t]) => t)));

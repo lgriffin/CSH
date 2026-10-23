@@ -148,7 +148,7 @@ export async function analyse(o: AnalyseOptions): Promise<AnalyseResult> {
       subject: { path: top, repo, commit },
       profile: analysisProfile,
       guesses,
-      ...(c !== undefined ? { coverage: { tracked: c.tracked, read: c.read, ...(c.byName > 0 ? { byName: c.byName } : {}), unread: c.unread } } : {}),
+      ...(c !== undefined ? { coverage: { tracked: c.tracked, read: c.read, ...(c.byName > 0 ? { byName: c.byName } : {}), eligible: c.eligible, unread: c.unread, skipped: c.skipped, missed: c.missed } } : {}),
       told,
       overview,
     };

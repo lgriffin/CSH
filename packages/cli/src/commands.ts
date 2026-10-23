@@ -67,7 +67,7 @@ export const COMMANDS: readonly Command[] = [
     names: ["coverage"],
     flags: ["json"],
     positional: [0, 0],
-    help: "  csh coverage [--json]           What each source reads, and the tracked files no source reads, by extension.",
+    help: "  csh coverage [--json]           What each source reads, what is skipped and why, and the eligible files no source reads.",
   },
   {
     names: ["overview"],

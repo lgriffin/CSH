@@ -13,7 +13,7 @@ import { authorship, formatDecision, gitVcs, LEDGER_PATH, MAINTAINERS_PATH, read
 import { printModule } from "@csh/print";
 import type { SolverPort } from "@csh/solver";
 import { createTestRepo, gpgAvailable, type TestRepo } from "./git.ts";
-import { analyse, writeAnalysis, checkModule, componentQueue, componentStatus, coverageOfSources, emitProject, evaluateProject, evaluateSpec, type FixtureConfig, loadProject, proposeProfile, readConfig, readStoredRun, selectFiles, specPathOf } from "@csh/run";
+import { analyse, writeAnalysis, checkModule, componentQueue, componentStatus, coverageLine, coverageOfSources, emitProject, evaluateProject, evaluateSpec, type FixtureConfig, loadProject, proposeProfile, readConfig, readStoredRun, selectFiles, specPathOf } from "@csh/run";
 import { verifyCounterexample, verifyNoOutcome } from "./verify.ts";
 import { type ComponentProblem, parseComponent, validateManifest } from "@csh/component";
 import { type DiffContext, diffRuns, type ManifestView, renderDiff, type RunSide, type Unavailable } from "@csh/review";
@@ -38,7 +38,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 71;
+export const BUILT_THROUGH_STAGE = 75;
 
 const AGENT_BIN = resolve(import.meta.dirname, "../../agent/bin/csh-agent.js");
 
@@ -801,6 +801,17 @@ export class FixtureRunner {
           const read = new Set(sources.flatMap((s) => selectFiles(subject, s.at, s.include, s.exclude).map((f) => f.path)));
           const unread = tracked.filter((f) => !read.has(f)).sort();
           if (JSON.stringify(unread) !== JSON.stringify([...x.coverage.unread].sort())) failures.push(`unread ${JSON.stringify(unread)}, expected ${JSON.stringify(x.coverage.unread)}`);
+          // Touched is parsed plus by name (Reading test suites as evidence, section 8; stage 75).
+          if (x.coverage.byName !== undefined && c.byName !== x.coverage.byName) failures.push(`${c.byName} files read by name, expected ${x.coverage.byName}`);
+          if (x.coverage.parsed !== undefined && c.read - c.byName !== x.coverage.parsed) failures.push(`${c.read - c.byName} files parsed, expected ${x.coverage.parsed}`);
+          if (x.coverage.eligible !== undefined && c.eligible !== x.coverage.eligible) failures.push(`${c.eligible} eligible files, expected ${x.coverage.eligible}`);
+          if (x.coverage.skipped !== undefined) {
+            const got = Object.fromEntries(c.skipped.map((k) => [k.reason, k.files]).sort());
+            const want = Object.fromEntries(Object.entries(x.coverage.skipped as Record<string, number>).sort());
+            if (JSON.stringify(got) !== JSON.stringify(want)) failures.push(`skipped ${JSON.stringify(got)}, expected ${JSON.stringify(want)}`);
+          }
+          const line = coverageLine(c);
+          for (const want of (x.coverage.linesInclude ?? []) as string[]) if (!line.includes(want)) failures.push(`the coverage line is ${JSON.stringify(line)}, expected it to include ${JSON.stringify(want)}`);
         }
       }
       if (x.run !== undefined) {

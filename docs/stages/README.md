@@ -119,3 +119,7 @@ Stages 70 to 73 read a repository's test suites as evidence ([21](../spec/21-tes
 entries with their tests, and what prose names with the tests that exercise it. Stage 70 pairs by path. Its fixtures
 are F210 to F216. Stage 71 reads Jest and Vitest snapshot entries and the outputs named after a test file, TypeScript
 first; stage 74 brings the other languages' snapshot entries. Its fixtures are F217 to F219.
+
+Stage 75 answers Leigh's question about what the TypeScript run read ([21](../spec/21-test-suites-as-evidence.md),
+section 8): the coverage line counts the eligible files read, parsed and read by name, says why every other tracked
+file was skipped, and a directory named `build` is passed over only where a build writes it. Its fixture is F226.

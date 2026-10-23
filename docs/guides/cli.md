@@ -45,7 +45,7 @@ reading commands then read its report without running anything again:
 | `csh explain <id>` | One finding or overview entry in full, members printed |
 | `csh ladder` | Every told rule on the Assertion Ladder, weakest first |
 | `csh gaps` | The gap view only (this one checks again) |
-| `csh coverage` | What each source reads, and the tracked files nothing reads |
+| `csh coverage` | What each source reads, what is skipped and why, and the eligible files nothing reads |
 | `csh status` | What is and is not protected |
 | `csh queue` | What awaits the owner's decision |
 
@@ -141,7 +141,7 @@ csh: the Composable Specification Harness
   csh check [spec] [--out report.json] [--json] [--budget ms] [--no-cache]
                                   Run every check and write the report. Exits 0 when the run completed.
   csh gaps [spec]                 Print the gap view only.
-  csh coverage [--json]           What each source reads, and the tracked files no source reads, by extension.
+  csh coverage [--json]           What each source reads, what is skipped and why, and the eligible files no source reads.
   csh overview [--run <dir|commit>] [--signal <id>] [--out <file>] [--json]
                                   Place every result of the last report in one of three outcomes: gaps (suggestions,
                                   with what would close each), indeterminate (with what would decide it) and
