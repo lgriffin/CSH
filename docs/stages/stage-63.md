@@ -19,6 +19,14 @@ in CI still meets its expected results and its `analysis-expected.json`. A cold 
 - `testkit`: an analyse fixture's entry may name `detailExcludes`, text its detail must not hold.
 - [Q-62](../../QUESTIONS.md) records the choice of A-221.
 
+## After review
+
+The review of the stage found link and verb readings it missed, each now covered by a test, and by F189 and F191. A
+verb of making negated in its clause ("do not touch `x`") keeps the path a claim. A link from a root-level document is
+checked at its resolved path, not as a bare name, so a broken one is reported. A link in a Verified by field is read. A
+link in a double-backtick code span, or to a scheme-less host (`npmjs.com`), is not. A target with balanced
+parentheses is read whole, and a link written with spaces inside its parentheses keeps its sentence.
+
 ## What the run revealed
 
 | | Before | After |
@@ -30,7 +38,9 @@ The read still finds little else, because TypeScript has little prose to test: 6
 no layering sentences. What CSH does not reach there (symbols named in plain prose, task runners such as `hereby`, and
 baseline test suites) is listed on issue 89 for later stages.
 
-No subject's expected results change, and neither do the cold reads of Toads at `6f7256e` or tutors-mono-repo at
+One subject's cold read gains a gap, and it is real: hexarch's README shows a banner image,
+`public/hexagonal-architecture-og.jpg`, that the repository does not track. Its `analysis-expected.json` now expects
+it. No other subject's expected results change, and neither do the cold reads of Toads at `6f7256e` or tutors-mono-repo at
 `1279669`. ESI.ts's guides link `.beads/issues.jsonl`, an export of its issue tracker, which CSH did not read before
 because the backticked path starts with a dot. Read through the link, it made the lines that name it stale prose each
 time the export changed. The ESI.ts profile now lists `.beads/**` as volatile, as a file that changes all the time

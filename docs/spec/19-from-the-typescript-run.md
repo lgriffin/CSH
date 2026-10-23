@@ -28,7 +28,8 @@ before the backticked path or with only `a`, `an`, `the`, `new`, `empty` and `fi
 `called` or `named` after those words. "Create `x.ts`", "create a new file `x.ts`" and "the build writes
 `out/report.json`" make the path. A path that the same sentence uses as a source is still read: in "Copy
 `config/local.example.yaml` to create `config/local.yaml`", only the second path is made. The past tense ("we created
-`x.ts`") still says the file is there, so it is still checked.
+`x.ts`") still says the file is there, so it is still checked, and so does a verb negated in its own clause: "do not
+touch `x.ts`" and "never write `x.ts`" name a file that should exist, while "if it is not there, create `x.ts`" makes it.
 
 ## 2. A test title cites nothing when the repository has no identifier scheme (D2)
 
@@ -50,15 +51,21 @@ as before.
 target of a link, so it missed a real dangling reference.
 
 **What changes** (A-222). In a Markdown document, outside fences and inline code, the target of an inline link or image
-(`[text](target)`, `![alt](target)`) and of a link reference definition (`[label]: target`) names a file when:
+(`[text](target)`, `![alt](target)`, a target holding balanced parentheses one deep) and of a link reference definition
+(`[label]: target`) names a file when:
 
 - it is relative: no scheme such as `https:` or `mailto:`, and it does not start with `/`, `#` or `<`;
 - once a title, a `#fragment` and a `?query` are taken off and `%` escapes decoded, its last segment has an extension
   other than `.html` or `.htm`. A link with no extension, such as `../guide`, may be a page of a documentation site, so
   it is not read.
+- its first segment is not a host written without its scheme: one starting `www.`, or ending in `.com`, `.org`,
+  `.net`, `.io`, `.dev`, `.co`, `.ai`, `.app`, `.edu` or `.gov` (`npmjs.com`, `github.com/a/b.ts`).
 
-The path is resolved from the document's directory, as GitHub resolves it. A target that leaves the repository is not
-read. The path is then checked as a backticked path is: missing and not ignored, it is a dangling reference, and a
+The path is resolved from the document's directory, as GitHub resolves it, and is then checked exactly as resolved: a
+link from a root-level document to `./main.ts` names `main.ts` at the root, never a bare name to look for elsewhere. A
+target that leaves the repository is not read. Inline code is any span opened and closed by the same run of backticks,
+so a link inside ``` ``code`` ``` is not read. A link in a requirement's Verified by field names a file of that
+requirement. The path is then checked as a backticked path is: missing and not ignored, it is a dangling reference, and a
 sentence that says the file is absent or names another repository leaves it unchecked (A-210).
 
 ## 4. Limits kept

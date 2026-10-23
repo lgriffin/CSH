@@ -546,22 +546,37 @@ describe("what the TypeScript run asked for (stage 63)", () => {
     expect(makes("The runner reads `a/b.ts`.", "a/b.ts")).toBe(false);
     // Named twice, made once: the other mention still claims it.
     expect(makes("Create `a/b.ts`, then run `a/b.ts`.", "a/b.ts")).toBe(false);
+    // A negated verb says the file is there.
+    expect(makes("Do not create `a/b.ts` by hand.", "a/b.ts")).toBe(false);
+    expect(makes("Never write `a/b.ts` yourself.", "a/b.ts")).toBe(false);
+    expect(makes("Don't touch `a/gen.ts`.", "a/gen.ts")).toBe(false);
+    expect(makes("If it is not there, create `a/b.ts`.", "a/b.ts")).toBe(true);
   });
 
   it("reads a relative link's target from the document's directory (A-222)", () => {
-    expect(linkTargets("See [rules](./rules.ts) and ![pic](../d.png \"Pic\").")).toEqual(["./rules.ts", "../d.png"]);
-    expect(linkTargets("`[code](./ghost.ts)` is code.")).toEqual([]);
-    expect(linkTargets("[ref]: ./missing.go")).toEqual(["./missing.go"]);
+    const targets = (line: string) => linkTargets(line).map((l) => l.target);
+    expect(targets("See [rules](./rules.ts) and ![pic](../d.png \"Pic\").")).toEqual(["./rules.ts", "../d.png"]);
+    expect(targets("`[code](./ghost.ts)` is code.")).toEqual([]);
+    expect(targets("``[code](./ghost.ts)`` and ``a ` b`` are code.")).toEqual([]);
+    expect(targets("[ref]: ./missing.go")).toEqual(["./missing.go"]);
+    expect(targets("[rules](./sub/rules(v2).ts)")).toEqual(["./sub/rules(v2).ts"]);
+    expect(targets("[spaced](  ./old.ts )")).toEqual(["./old.ts"]);
     expect(linkPath("./rules.ts", "src/format/README.md")).toBe("src/format/rules.ts");
     expect(linkPath("../scanner/scanner.go#L3", "src/format/README.md")).toBe("src/scanner/scanner.go");
     expect(linkPath("old%20rules.ts?raw=1", "docs/a.md")).toBe("docs/old rules.ts");
     expect(linkPath("../../outside.ts", "docs/a.md")).toBeUndefined();
-    for (const t of ["https://x.dev/a.ts", "mailto:a@b.c", "/index.ts", "#usage", "../guide", "page.html", "%E0%A4%A.ts"]) expect(linkPath(t, "docs/a.md")).toBeUndefined();
+    expect(linkPath("./rules.ts", "README.md")).toBe("rules.ts");
+    for (const t of ["https://x.dev/a.ts", "mailto:a@b.c", "/index.ts", "#usage", "../guide", "page.html", "%E0%A4%A.ts", "npmjs.com", "www.example.org/x.js", "github.com/a/b.ts"]) expect(linkPath(t, "docs/a.md")).toBeUndefined();
   });
 
   it("emits a mentions-file edge for a relative link, absent in a sentence that says so", () => {
-    const out = markdown(input({ "docs/a.md": "# A\n\nThe rules are in [rules](./rules.ts).\n\nThe old [one](./old.ts) was removed.\n" }));
-    const files = (out.edges ?? []).filter((e) => e.rel === "mentions-file").map((e) => [e.to, e.absent === true]);
-    expect(files).toEqual([["file:docs/rules.ts", false], ["file:docs/old.ts", true]]);
+    const out = markdown(input({ "docs/a.md": "# A\n\nThe rules are in [rules](./rules.ts).\n\nThe old [one](  ./old.ts) was removed.\n" }));
+    const files = (out.edges ?? []).filter((e) => e.rel === "mentions-file").map((e) => [e.to, e.absent === true, e.exact === true]);
+    expect(files).toEqual([["file:docs/rules.ts", false, true], ["file:docs/old.ts", true, true]]);
+  });
+
+  it("reads a relative link in a Verified by field as a file the requirement names", () => {
+    const out = markdown(input({ "docs/reqs.md": "# Reqs\n\n## REQ-1 Login\n\nThe user logs in.\n\n- **Verified by:** [the test](../tests/login.test.ts)\n" }, { idPattern: "REQ-[0-9]+" }, "Requirements"));
+    expect((out.edges ?? []).filter((e) => e.rel === "mentions-file").map((e) => [e.from, e.to, e.exact])).toEqual([["REQ-1", "file:tests/login.test.ts", true]]);
   });
 });

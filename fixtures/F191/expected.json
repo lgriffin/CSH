@@ -10,13 +10,45 @@
           "outcome": "gap",
           "kind": "dangling-reference",
           "subject": "Documents/src/format/README.md",
-          "detailIncludes": ["src/format/rules.ts", "docs/diagram.png", "src/format/missing-ref.go"],
-          "detailExcludes": ["rulesmap.go", "scanner.go", "overview.md", "example.com", "index.html", "docs/guide", "old rules.ts", "ghost.ts", "fence.ts", "outside.ts"]
+          "detailIncludes": [
+            "src/format/rules.ts",
+            "docs/diagram.png",
+            "src/format/missing-ref.go"
+          ],
+          "detailExcludes": [
+            "rulesmap.go",
+            "scanner.go",
+            "overview.md",
+            "example.com",
+            "index.html",
+            "docs/guide",
+            "old rules.ts",
+            "ghost.ts",
+            "fence.ts",
+            "outside.ts"
+          ]
+        },
+        {
+          "outcome": "gap",
+          "kind": "dangling-reference",
+          "subject": "Documents/GUIDE.md",
+          "detailIncludes": [
+            "mentions-file main.ts"
+          ],
+          "detailExcludes": [
+            "src/format/README.md"
+          ]
         }
       ],
       "entriesAbsent": [
-        { "kind": "dangling-reference", "subject": "Documents/README.md" },
-        { "kind": "dangling-reference", "subject": "Documents/docs/overview.md" }
+        {
+          "kind": "dangling-reference",
+          "subject": "Documents/README.md"
+        },
+        {
+          "kind": "dangling-reference",
+          "subject": "Documents/docs/overview.md"
+        }
       ],
       "subjectUntouched": true
     }

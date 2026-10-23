@@ -1,9 +1,21 @@
 {
   "schema": "csh-expected/v1",
   "counts": {
-    "gap": 0,
+    "gap": 1,
     "indeterminate": 0,
     "converged": 0
   },
-  "rows": []
+  "rows": [
+    {
+      "row": 1,
+      "title": "The README's banner image links public/hexagonal-architecture-og.jpg, which is not tracked (stage 63, A-222)",
+      "expect": [
+        {
+          "outcome": "gap",
+          "kind": "dangling-reference",
+          "subject": "Documents/README.md"
+        }
+      ]
+    }
+  ]
 }

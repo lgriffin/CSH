@@ -20,10 +20,10 @@ export interface Proposal {
 export const NEVER_PROPOSED = ["node_modules", "dist", "build", "out", "coverage", "vendor", "target", ".venv", "venv", "site-packages", "__pycache__"];
 const NEVER_GLOBS = NEVER_PROPOSED.map((d) => `**/${d}/**`);
 
-/** Prefixes of identifiers that belong to the world, not to the repository: UTF-8, SHA-256, RFC-9110. */
 /** A pattern that matches no text: the citations of tests in a repository with no identifier scheme (A-221). */
 export const NO_CITATION = "(?!)";
 
+/** Prefixes of identifiers that belong to the world, not to the repository: UTF-8, SHA-256, RFC-9110. */
 export const EXTERNAL_FAMILIES = ["UTF", "SHA", "ISO", "RFC", "CVE", "AES", "RSA", "TLS", "SSL", "HTTP", "ES", "ECMA", "PEP", "JSR", "GPL", "LGPL", "AGPL", "MIT", "BSD", "CC"];
 
 const CODE_EXT = ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs", "svelte", "py", "pyi", "java", "go", "rs"];

@@ -16,4 +16,7 @@ A relative Markdown link names a file ([19](../../docs/spec/19-from-the-typescri
 
 The root `README.md` links two files that exist, so it is no dangling reference.
 
+The root `GUIDE.md` links `./main.ts`, which is missing: a link from a root-level document names `main.ts` at the root,
+not a bare name to look for elsewhere. Its link to `./src/format/README.md` resolves.
+
 The expected result was written from the specification before the code.

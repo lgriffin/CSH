@@ -60,28 +60,46 @@ const ABSENT = /\b(?:retired|removed|deleted|no longer|leftover|optional|none is
 /**
  * A verb of making right before a backticked path (From the TypeScript run, section 1): "Create `x.ts`", "create a new
  * file `x.ts`", "the build writes `out/report.json`". The sentence makes the file, so its being missing is expected.
- * The past ("we created `x.ts`") says the file is there.
+ * The past ("we created `x.ts`") says the file is there, and so does a negated verb ("do not touch `x.ts`").
  */
 const MAKES = /\b(?:create|creates|touch|scaffold|generate|generates|write|writes)(?:\s+(?:a|an|the|new|empty|file))*(?:\s+(?:called|named))?\s*$/i;
+/** A negation among the three words before the verb of making, in its clause. */
+const NEGATED = /(?:\b(?:not|never|no)\b|n't\b)(?:\s+\S+){0,2}\s*$/i;
 
 /** Whether the sentence makes the backticked token at each place it names it. */
 export function makes(sentence: string, token: string): boolean {
   const quoted = `\`${token}\``;
   const at: number[] = [];
   for (let i = sentence.indexOf(quoted); i >= 0; i = sentence.indexOf(quoted, i + 1)) at.push(i);
-  return at.length > 0 && at.every((i) => MAKES.test(sentence.slice(0, i).replace(/`[^`]*`/g, "x")));
+  return (
+    at.length > 0 &&
+    at.every((i) => {
+      const before = sentence.slice(0, i).replace(/`[^`]*`/g, "x");
+      const verb = MAKES.exec(before);
+      // The negation must stand in the verb's own clause: "If it is not there, create `x`" makes it.
+      return verb !== null && !NEGATED.test(before.slice(0, verb.index).replace(/^.*[,;:]/, ""));
+    })
+  );
 }
 
-/** An inline link or image, `[text](target "title")`, and a link reference definition, `[label]: target`. */
-const LINK = /!?\[(?:[^\]\\]|\\.)*\]\(\s*([^()\s]+)(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*\)/g;
+/**
+ * An inline link or image, `[text](target "title")`, its target holding balanced parentheses one deep, and a link
+ * reference definition, `[label]: target`.
+ */
+const LINK = /!?\[(?:[^\]\\]|\\.)*\]\(\s*((?:[^()\s]|\([^()\s]*\))+)(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*\)/g;
 const REFERENCE = /^\s{0,3}\[[^\]]+\]:\s*(\S+)/;
+/** An inline code span, opened and closed by the same run of backticks. */
+const CODE_SPAN = /(`+)[\s\S]*?(?<!`)\1(?!`)/g;
 
-/** The targets of a line's links, outside inline code. */
-export function linkTargets(line: string): string[] {
-  const text = line.replace(/`[^`]*`/g, (m) => " ".repeat(m.length));
+/** The links of a line outside inline code: each target, and the link as written, by which its sentence is found. */
+export function linkTargets(line: string): { target: string; written: string }[] {
+  const text = line.replace(CODE_SPAN, (m) => " ".repeat(m.length));
   const ref = REFERENCE.exec(text);
-  return [...[...text.matchAll(LINK)].map((m) => m[1]!), ...(ref !== null ? [ref[1]!] : [])];
+  return [...[...text.matchAll(LINK)].map((m) => ({ target: m[1]!, written: m[0] })), ...(ref !== null ? [{ target: ref[1]!, written: ref[0].trim() }] : [])];
 }
+
+/** A host written without its scheme, such as `npmjs.com` or `www.example.org/x.js`, is not a path. */
+const HOST = /^(?:www\.|[\w-]+(?:\.[\w-]+)*\.(?:com|org|net|io|dev|co|ai|app|edu|gov)$)/i;
 
 /**
  * The repository path a link target names, from the directory of the document `from` (From the TypeScript run,
@@ -98,7 +116,7 @@ export function linkPath(target: string, from: string): string | undefined {
     return undefined;
   }
   const last = path.slice(path.lastIndexOf("/") + 1);
-  if (!/\.[A-Za-z0-9]+$/.test(last) || /\.html?$/i.test(last)) return undefined;
+  if (!/\.[A-Za-z0-9]+$/.test(last) || /\.html?$/i.test(last) || HOST.test(path.split("/")[0]!)) return undefined;
   const joined = posix.normalize(posix.join(posix.dirname(from), path));
   return joined === ".." || joined.startsWith("../") ? undefined : joined;
 }
@@ -283,19 +301,23 @@ export function run(input: AdapterInput): AdapterOutput {
     // Each path is read with its sentence (section 5), which may run over several lines of its paragraph: one that says
     // the file is absent, or names another repository.
     const paragraphs = paragraphsOf(lines);
-    const mentions = (text: string, from: string, span: string) => {
+    // The sentences of the line at `span`, read whole over the line breaks of its paragraph.
+    const sentencesAt = (text: string, span: string) => {
       const line = Number(span.slice(span.lastIndexOf(":") + 1)) - 1;
       const para = paragraphs.get(line);
-      const sentences = para === undefined ? sentencesOf(text) : sentencesOf(para.text).filter((x) => x.offset < para.start + para.length && x.offset + x.text.length > para.start);
+      return para === undefined ? sentencesOf(text) : sentencesOf(para.text).filter((x) => x.offset < para.start + para.length && x.offset + x.text.length > para.start);
+    };
+    const mentions = (text: string, from: string, span: string) => {
+      const sentences = sentencesAt(text, span);
       const seen = new Set<string>();
       const paths = new Set<string>();
-      const mention = (p: string, own: { text: string }[], made: (sentence: string) => boolean) => {
+      const mention = (p: string, own: { text: string }[], made: (sentence: string) => boolean, exact = false) => {
         paths.add(p);
         // Every sentence on the line that mentions the path must say so: one that only uses it is a claim.
         const absent = own.length > 0 && own.every((x) => ABSENT.test(x.text.replace(/`[^`]*`/g, " ")) || made(x.text));
         const named = own.map((x) => repoTokens(x.text).filter((r) => r !== p.replace(/\/$/, "")));
         const others = named.length > 0 && named.every((n) => n.length > 0) ? [...new Set(named.flat())] : [];
-        edges.push({ from, rel: "mentions-file", to: `file:${p}`, span, ...(absent ? { absent: true } : {}), ...(others.length > 0 ? { repos: others } : {}) });
+        edges.push({ from, rel: "mentions-file", to: `file:${p}`, span, ...(absent ? { absent: true } : {}), ...(others.length > 0 ? { repos: others } : {}), ...(exact ? { exact: true } : {}) });
       };
       for (const t of backticked(text)) {
         const p = pathOf(t);
@@ -303,12 +325,23 @@ export function run(input: AdapterInput): AdapterOutput {
         seen.add(t);
         mention(p, sentences.filter((x) => x.text.includes(`\`${t}\``)), (s) => makes(s, t));
       }
-      // A relative link names a file from the document's directory (From the TypeScript run, section 3).
+      links(text, from, span, sentences, paths, mention);
+    };
+    // A relative link names a file from the document's directory (From the TypeScript run, section 3), by its exact path,
+    // so a link from a root-level document is not read as a bare name. A link in a Verified by field is read too.
+    const links = (text: string, from: string, span: string, sentences = sentencesAt(text, span), paths = new Set<string>(), mention?: (p: string, own: { text: string }[], made: (sentence: string) => boolean, exact?: boolean) => void) => {
       const doc = span.slice(0, span.lastIndexOf(":"));
-      for (const target of linkTargets(text)) {
+      for (const { target, written } of linkTargets(text)) {
         const p = linkPath(target, doc);
         if (p === undefined || paths.has(p)) continue;
-        mention(p, sentences.filter((x) => x.text.includes(`(${target}`) || x.text.includes(`]: ${target}`)), () => false);
+        paths.add(p);
+        const own = sentences.filter((x) => x.text.includes(written));
+        const found = own.length > 0 ? own : sentences.filter((x) => x.text.includes(target));
+        if (mention !== undefined) mention(p, found, () => false, true);
+        else {
+          const absent = found.length > 0 && found.every((x) => ABSENT.test(x.text.replace(/`[^`]*`/g, " ")));
+          edges.push({ from, rel: "mentions-file", to: `file:${p}`, span, exact: true, ...(absent ? { absent: true } : {}) });
+        }
       }
     };
     const close = () => {
@@ -412,8 +445,10 @@ export function run(input: AdapterInput): AdapterOutput {
           if (!open.textDone) open.paragraph.push(line);
         }
       }
-      if (verifying !== undefined) for (const t of backticked(line)) verifying.tokens.push({ t, span });
-      else mentions(line, fromId(), span);
+      if (verifying !== undefined) {
+        for (const t of backticked(line)) verifying.tokens.push({ t, span });
+        links(line, verifying.item.id, span);
+      } else mentions(line, fromId(), span);
       codeMentions(line, verifying?.item.id ?? fromId(), span);
     });
     close();

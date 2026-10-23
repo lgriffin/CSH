@@ -10,13 +10,26 @@
           "outcome": "gap",
           "kind": "dangling-reference",
           "subject": "Documents/docs/missing.md",
-          "detailIncludes": ["tests/cases/settings.json", "config/local.example.yaml", "tests/cases/legacy.ts"],
-          "detailExcludes": ["config/local.yaml"]
+          "detailIncludes": [
+            "tests/cases/settings.json",
+            "config/local.example.yaml",
+            "tests/cases/legacy.ts",
+            "tests/cases/generated.ts"
+          ],
+          "detailExcludes": [
+            "config/local.yaml"
+          ]
         }
       ],
       "entriesAbsent": [
-        { "kind": "dangling-reference", "subject": "Documents/docs/guide.md" },
-        { "kind": "dangling-reference", "subject": "Documents/README.md" }
+        {
+          "kind": "dangling-reference",
+          "subject": "Documents/docs/guide.md"
+        },
+        {
+          "kind": "dangling-reference",
+          "subject": "Documents/README.md"
+        }
       ],
       "subjectUntouched": true
     }
