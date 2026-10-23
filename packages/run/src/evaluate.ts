@@ -65,6 +65,8 @@ export function emitProject(p: Project, o: EvaluateOptions): Promise<Emission> {
 export async function evaluateProject(p: Project, o: EvaluateOptions): Promise<Evaluation> {
   if (p.componentProblems.length > 0) return { ok: false, message: formatProblems("the component manifest cannot be used", p.componentProblems) };
   const spec = specPathOf(p, o.spec);
+  // Said as a result, never thrown: a directory with nothing to evaluate is the commonest mistake on the command line.
+  if (spec === undefined && p.component === undefined) return { ok: false, message: `nothing to evaluate in ${p.root}: no specification given and neither csh/component.json nor csh/config.json names one; csh init writes a manifest, and --root names another directory\n` };
   const budget = o.budgetMs ?? p.config.budgetMs;
   const cacheFile = join(p.root, CACHE_DIR, "solver.json");
   const evidenceFile = join(p.root, CACHE_DIR, "evidence.json");

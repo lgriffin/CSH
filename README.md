@@ -243,73 +243,66 @@ terms on which they collide. It offers three readings and chooses none: a member
 the intent is undecided. Claims in different units are reported as not comparable, never as a conflict. Two examples
 from different practices whose inputs can coincide and whose outcomes cannot both hold are a divergence.
 
-## Commands
+## Using the command line
 
-```
-csl emit <spec.csl.ts> [--out model.json]   Emit the model and print its digest. Non-zero on any rule or error.
-csl print <model.json | spec.csl.ts>        Print the canonical TypeScript.
-csl lock <spec.csl.ts>                      Write csh/lock.json from the packs the specification uses.
+CSH is two commands: `csh` reads, checks, decides and reports, and `csl` emits and prints a specification. In a clone,
+run them as `node packages/cli/bin/csh.js` and `node packages/cli/bin/csl.js`; installed from the packed tarballs or
+a release, as `npx csh` and `npx csl`. Below, `csh` stands for either. Every command explains itself:
 
-csh init                                    Write csh/component.json by asking for each field. Guesses nothing.
-                                            Writes under --root, or the git top level, as every command reads.
-csh analyse <path> [--at <commit>] [--json] [--out <dir>] [--profile <dir>] [--budget ms]
-                                            Read a repository cold: propose a profile, lift told rules from its prose,
-                                            check, and write reports/csh-analysis.html and .json, danger first. Never
-                                            writes into the repository or reads a ledger; exits 0 when it completes.
-csh init --subject <dir>                    Propose csh/component.json from a checkout's tracked files, printing
-                                            every guess and what the proposal leaves unread.
-csh run [--at <commit>] [--mode advisory|enforcing] [--budget ms] [--no-cache]
-                                            Run each practice's harness, check, decide, and store the run under
-                                            .csh-cache/runs/<snapshot digest>/. Non-zero only on block in enforcing mode,
-                                            or 3 when a past commit needs other dependencies than the installed ones.
-csh a3 open <slug> [--at <commit>]         Record a run as the first stage of an A3 under csh/a3/<slug>/, with an
-                                            empty judgments skeleton in which every signal is unclassified.
-csh a3 stage <slug> <id> --at <commit>      Record the run of a commit as a stage, running it if no run is stored.
-csh a3 build <slug> [--check]               Build a3.json, a3.md and a3.html; with --check, fail when they differ.
-csh a3 verify <slug>                        Re-run every stage at its commit and report any that differs.
-csh check [spec] [--json] [--budget ms] [--no-cache]
-                                            Run every check; write reports/csh-report.json. Exits 0 when it completes.
-csh gaps [spec]                             Print the gap view only.
-csh overview [--run <dir|commit>] [--signal <id>] [--out <file>] [--json]
-                                            Place every result of the last report as a gap (a suggestion, with what
-                                            would close it), indeterminate (with what would decide it) or converged;
-                                            write reports/csh-overview.html, which opens on any #<id>.
-csh coverage                                What each source reads, and the tracked files no source reads, by extension
-csh ladder [--run <dir|commit>] [--json]   Every told rule on the Assertion Ladder, weakest first: its rung, the
-                                            mechanisms that establish it, and the outcomes it landed in. Reads only.
-csh explain <finding-id> [--run <dir|commit>]
-                                            Print one finding, members rendered through the printer; with
-                                            --run, from a stored run (csh run --at writes no reports/ files).
-csh approve | reject | retire <fragment | #a3/slug> --actor <name> --rationale <text>
-csh waive <fragment> --scope <finding|obligation> --expires <YYYY-MM-DD> --actor <name> --rationale <text>
-csh countersign <seq> --actor <name> --rationale <text>
-                                            Draft one ledger line. The tool never commits or signs.
-csh status [--json]                         What is and is not protected, for one component. Reads only.
-csh diff <base> <head> [--json] [--out <dir>]
-                                            What a change did to the results, between two runs of one component.
-                                            Each side is a stored run's directory, a commit, or . for the working tree.
-                                            Decides nothing; non-zero only when the head cannot be run.
-csh queue [--json]                          What awaits the owner's decision, ordered by what approving it unlocks.
-csh subject fetch [--at <tag|commit>]      Clone the subject a csh-component/v2 manifest names, at its pinned commit
-                                            or another, under .csh-cache/subjects/. Every command takes --subject <dir>
-                                            to read another checkout of it instead.
-csh results import <practice> <runner-report> [--base <dir>]
-                                            Reduce a Jest or Vitest JSON report to paths, counts and the identifiers
-                                            each test cites, at the commit, and write it where the practice reads it.
-csh expect [--expected <file>] [--run <dir|commit>]
-                                            Compare the overview with csh/expected.json; non-zero on any mismatch.
-csh history <slug> [--from <tag>] [--to <tag>]
-                                            Run a subject at each release tag in the range and record each run as a
-                                            stage of the A3 <slug>.
-csh-agent [--root <component>]              The agent tool server, over the Model Context Protocol on stdio.
-csh gate [--mode advisory|enforcing]        Check and decide for the current snapshot. Non-zero only on block in enforcing mode.
-csh gate --verify <decision.json>           Recompute; refuse a decision for another snapshot or one that differs.
+```sh
+node packages/cli/bin/csh.js --version
+node packages/cli/bin/csh.js help overview
 ```
 
-In a clone, run them as `node packages/cli/bin/csh.js` and `node packages/cli/bin/csl.js`; installed from the packed
-tarballs, as `npx csh` and `npx csl`. A component is described by
-`csh/component.json`: its practices, the sources each owns and the command that runs each practice's tests. A project
-keeps its other settings in `csh/config.json`, its ledger in `csh/ledger.ndjson` and its maintainers in `csh/maintainers.json`.
+A first session on a repository you already have needs one command, and nothing in the repository changes:
+
+```
+csh analyse ../my-service              # read it cold; writes reports/csh-analysis.html and .json here
+```
+
+A component you keep checking, with its own `csh/component.json`, goes round this loop:
+
+```
+csh init                               # write csh/component.json by answering one question per field
+csh run                                # run each practice's tests, check, decide, and store the run
+csh overview                           # every result as a gap, indeterminate or converged
+csh explain <id>                       # one finding or entry in full
+csh queue                              # what awaits your decision
+csh approve <fragment> --actor <you> --rationale <why>
+git add csh/ledger.ndjson && git commit -S -m "approve <fragment>"
+csh run --mode enforcing               # in CI: exit 1 when an approved rule is broken
+```
+
+Options take their value as `--name value` or `--name=value`. `--root <dir>` names the component's directory (by
+default the git repository's top level), and `--json` gives most reading commands' output to scripts. A misspelt
+command or option is named with the nearest one, never ignored. Results go to standard output, problems and test
+output to standard error.
+
+| Exit code | Meaning |
+| --- | --- |
+| 0 | The command did its work, whatever it found: a report full of gaps still exits 0 |
+| 1 | It could not do its work, or an enforcing gate blocked, or results did not meet what was expected |
+| 2 | A usage error, named on standard error with the command's usage |
+| 3 | A decision refused by `csh gate --verify`, or a past commit that needs other dependencies (`csh run --at`) |
+
+[The command line guide](docs/guides/cli.md) has every option, the files each command writes, the environment
+variables and the full reference. The commands, by what they are for:
+
+| For | Commands |
+| --- | --- |
+| Reading a repository cold | `csh analyse <path>` |
+| Describing a component | `csh init`, `csh init --subject <dir>`, `csh subject fetch`, `csh results import` |
+| Running and checking | `csh run`, `csh check`, `csh gaps`, `csh coverage` |
+| Reading the results | `csh overview`, `csh explain <id>`, `csh ladder`, `csh expect`, `csh status`, `csh queue` |
+| Deciding | `csh approve`, `csh reject`, `csh retire`, `csh waive`, `csh countersign` |
+| Gating and reviewing a change | `csh gate`, `csh gate --verify <decision.json>`, `csh diff <base> <head>` |
+| Following a problem | `csh a3 open \| stage \| build \| verify`, `csh history <slug>` |
+| The specification | `csl emit`, `csl print`, `csl lock` |
+| Agents | `csh-agent --root <component>`, a tool server over the Model Context Protocol ([Agents](#agents)) |
+
+A component is described by `csh/component.json`: its practices, the sources each owns and the command that runs each
+practice's tests. A project keeps its other settings in `csh/config.json`, its ledger in `csh/ledger.ndjson` and its
+maintainers in `csh/maintainers.json`.
 
 ## How to read a report
 
