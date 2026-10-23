@@ -77,7 +77,7 @@ and keeps their baselines flat. Mirrored directories pair only at the same path 
 **Snapshot names.** In a `__snapshots__` directory, `a.test.ts.snap` names the test file `a.test.ts` (Jest, Vitest)
 and `test_a.ambr` names `test_a.py` (syrupy), as does a directory `test_a/` of single-file snapshots. In a
 `snapshots` directory, an insta snapshot `crate__module__name.snap` names its test by its header (section 3), so it is
-paired in stage 71 and is unpaired until then.
+paired in stage 74 and is unpaired until then.
 
 **Suites.** A reference tree has one suite for each child `S` of `R` that has a namesake child of `C`. The other
 conventions have one suite for each directory that holds accepted outputs.
@@ -108,7 +108,7 @@ of the conventions above. Its `include` names each suite's files; its `names` na
 or mirrored directories, whose content stage 70 to 73 never read. Snapshot and approved files are read with their
 content, which stage 71 needs. The guess says how many suites, cases and outputs, and the convention of each.
 
-## 3. Snapshot entries and outputs named after a test (stage 71)
+## 3. Snapshot entries and outputs named after a test (stages 71 and 74)
 
 A snapshot file holds an entry for each snapshot assertion, keyed by the name of the test that made it. Some golden
 files are named after their test rather than after a case. Each language's convention is read from the snapshot
@@ -116,7 +116,7 @@ file and the test it names, as the runner reads them.
 
 | Language | Snapshot or output | The test it names |
 |---|---|---|
-| TypeScript | Jest and Vitest `.snap`: each ``exports[`name n`]``, where `name` is the test's full name (its describe titles and its own, joined by spaces), optionally `: hint`, and `n` a counter | a test of the paired test file with that full name |
+| TypeScript | Jest and Vitest `.snap`: each ``exports[`name n`]``, where `name` is the test's full name (its describe titles and its own, joined by spaces in Jest and by ` > ` in Vitest), optionally a hint, and `n` a counter | a test of the paired test file with that full name |
 | Python | syrupy `.ambr`: each `# name: test_x`, `# name: TestC.test_x`, with any `[params]` and `.n` | a `test_` function of the paired module, or a method of a `Test` class in it |
 | Rust | insta `.snap`: the header's `source:` names the file; the name after the last `__` is the snapshot's name, less a `-n` suffix | a function of that file whose name is the snapshot's name, or `test_` and it; or a literal first argument of an `assert_*snapshot!` call in that file |
 | Java | ApprovalTests `X.m.approved.<ext>` | a method `m` of the test class `X` |
@@ -131,6 +131,21 @@ file and the test it names, as the runner reads them.
 | An entry that names no test of its file, and the file declares every test title as a literal | `obsolete-snapshot`: the runner keeps it and no test reads it | gap |
 | An entry that names no literal test, in a file with a title CSH cannot read (a template with a placeholder, `each`, `parametrize` with ids it cannot read) | `snapshot-undecided`, naming the file | indeterminate |
 | A snapshot file whose test file does not exist | `orphan-output`, as in section 2 | gap |
+
+**Reading the names** (A-266). A Jest or Vitest key is read as the runner writes it, with `` \` ``, `\\` and `\${`
+unescaped. A test's full name is the titles of the describes around it and its own, joined by a space in Jest and by
+` > ` in Vitest, as the file's first line (`// Jest Snapshot v1`, `// Vitest Snapshot v1`) says; a skipped or
+todo test still has its name, since the runner keeps the entries of a test it skips. A title is unreadable when it is
+not a literal, is a template with a placeholder, or is a `.each` or `.for` title with a `%` or `$` format, and every
+name beneath an unreadable describe is unreadable too. An entry names a test when the key, less its counter, is the
+test's full name, or that name followed by a hint: `: hint` in Jest, ` > hint` in Vitest. A file with neither first
+line is read both ways.
+
+**Named after a test file** (A-267). An output the conventions of section 2 left unpaired is named after a test file
+when its base name is the test file's stem less its affix, or that followed by `.` or `(`, the longest stem winning.
+The test files are every file of the checkout whose name has an affix: `x_test.go`, `x.test.ts`, `x.spec.ts`,
+`test_x.py`, `XTest.java`, `TestX.java`, and the like in the other languages. A stem two test files share pairs
+nothing, and its outputs stay unpaired, naming why.
 
 A Jest or Vitest test that calls `toMatchSnapshot()` and has no entry is not reported: the runner writes the entry on
 its next run, and fails in `--ci` mode. That is the runner's verdict to give, not CSH's. An inline snapshot lives in
@@ -198,9 +213,14 @@ directs, never upstream to microsoft/TypeScript by CSH.
 | Stage | Exit | Fixtures |
 |---|---|---|
 | 70 | Accepted outputs paired by path in every language; test data leaves Code and Documents; files read by name | F210 to F216 |
-| 71 | Snapshot entries and outputs named after a test, in every language | F217 to F222 |
+| 71 | Snapshot entries in TypeScript (Jest and Vitest), and outputs named after a test file, in every language | F217 to F219 |
 | 72 | What prose names, tests exercise, in every language | F223 to F225 |
-| 73 | Calibrate on lgriffin/TypeScript and the CI subjects | none of its own |
+| 73 | Calibrate on lgriffin/TypeScript, ESI.ts and the CI subjects | none of its own |
+| 74 | Snapshot entries and outputs named after a test in Python, Rust, Java and Go | F220 to F222 |
+
+TypeScript comes first (Leigh, 23 October 2026): stage 71 reads Jest and Vitest snapshot entries and the outputs
+named after a test file, which TypeScript's fourslash baselines are, and stage 74 brings the other languages' rows of
+section 3 to the same standard, each with fixtures of its own.
 
 - F210: a reference tree (section 2): paired, unaccepted, orphan, shared stem, unpaired.
 - F211: Go golden siblings.
@@ -209,3 +229,7 @@ directs, never upstream to microsoft/TypeScript by CSH.
 - F214: Python mirrored directories and syrupy snapshot directories.
 - F215: Jest snapshot directories, in TypeScript.
 - F216: the proposal: an Outputs source, test data out of Code and Documents, files read by name in the coverage.
+- F217: Jest snapshot entries: nested describes, a hint, a counter, a skipped test, and an obsolete entry.
+- F218: Vitest snapshot entries with a title CSH cannot read: `test.each` with a placeholder, a template with one.
+- F219: outputs named after a test file: a Go and a TypeScript test of the stem, a stem two test files share, and an
+  output no test file names.

@@ -13,6 +13,9 @@
     "fixtures/F179/inputs/subject/**",
     "fixtures/F180/inputs/subject/**",
     "fixtures/F215/inputs/subject/**",
-    "fixtures/F216/inputs/subject/**"
+    "fixtures/F216/inputs/subject/**",
+    "fixtures/F217/inputs/subject/**",
+    "fixtures/F218/inputs/subject/**",
+    "fixtures/F219/inputs/subject/**"
   ]
 }

@@ -1,0 +1,7 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`case > lower 1`] = `"a"`;
+
+exports[`case > upper > shouts 1`] = `"A"`;
+
+exports[`case > upper > shouts > loud 2`] = `"B"`;
