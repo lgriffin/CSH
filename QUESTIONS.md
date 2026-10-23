@@ -565,3 +565,27 @@ Raised in stage 62. Toads binds 52 scenarios through helpers that compute each t
 - **Read the helper's idiom,** a number or identifier passed beside a feature name. That decides more, at the cost of a reading specific to one repository.
 
 Built as the first on 23 October 2026.
+
+## Q-80 A case with no accepted output that the runner may skip
+
+Raised in stage 70 ([21](docs/spec/21-test-suites-as-evidence.md), section 2). A case of a reference tree or of mirrored
+directories with no accepted output checks nothing the runner can compare. A runner may skip such a case on purpose:
+TypeScript's skips cases by name, and others by an option it no longer supports. CSH does not read the runner.
+
+- **A gap that says the runner may skip it (chosen):** each one is addressable, by accepting its output or removing the
+  case, and the detail says why it might be deliberate.
+- **Indeterminate.** Nothing is called a gap that the runner might skip, at the cost of hiding cases that check nothing
+  by accident.
+
+Built as the first on 23 October 2026.
+
+## Q-81 Whether an orphan output or an obsolete snapshot is masked danger
+
+Raised in stage 70 ([21](docs/spec/21-test-suites-as-evidence.md), section 6). An accepted output no case produces, and
+a snapshot entry no test reads, look like checked behaviour and check nothing. That is the shape of masked danger
+([16](docs/spec/16-analyse-danger-grain.md), section 3), but it is not among the shapes the owner listed.
+
+- **A gap, not danger (chosen for now):** the danger view keeps the shapes the owner decided.
+- **Masked danger,** with the green it names being the committed output.
+
+Built as the first on 23 October 2026.

@@ -1,0 +1,21 @@
+{
+  "fixture": "F212",
+  "section": "Reading test suites as evidence, section 2; A-262, A-263",
+  "stage": 70,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["Outputs", "UI outputs"],
+      "entries": [
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/tests/ui", "detailIncludes": ["UI outputs", "1 of 1 case"] },
+        { "outcome": "gap", "kind": "orphan-output", "subject": "Outputs/tests/ui/renamed.stderr", "detailIncludes": ["renamed.rs"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "unaccepted-case", "subject": "Outputs/tests/ui/compiles.rs" },
+        { "kind": "unaccepted-case", "subject": "Outputs/tests/ui/missing_field.rs" },
+        { "kind": "orphan-output", "subject": "Outputs/tests/ui/missing_field.stderr" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

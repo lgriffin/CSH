@@ -1,0 +1,24 @@
+{
+  "fixture": "F214",
+  "section": "Reading test suites as evidence, section 2; A-263",
+  "stage": 70,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["Outputs", "mirrored directories", "snapshot directories"],
+      "entries": [
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/tests/data", "detailIncludes": ["mirrored directories", "1 of 2 cases", "tests/data/input"] },
+        { "outcome": "gap", "kind": "unaccepted-case", "subject": "Outputs/tests/data/input/menu.json", "detailIncludes": ["tests/data/expected"] },
+        { "outcome": "gap", "kind": "orphan-output", "subject": "Outputs/tests/data/expected/footer.html", "detailIncludes": ["tests/data/input"] },
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/tests/__snapshots__", "detailIncludes": ["snapshot directories", "1 of 1 case"] },
+        { "outcome": "gap", "kind": "orphan-output", "subject": "Outputs/tests/__snapshots__/test_removed.ambr", "detailIncludes": ["tests/test_removed.py"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "unaccepted-case", "subject": "Outputs/tests/data/input/page.json" },
+        { "kind": "orphan-output", "subject": "Outputs/tests/data/expected/page.html" },
+        { "kind": "orphan-output", "subject": "Outputs/tests/__snapshots__/test_render.ambr" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

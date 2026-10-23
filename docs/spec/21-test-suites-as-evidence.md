@@ -1,0 +1,208 @@
+# 21. Reading test suites as evidence
+
+`csh analyse` read [lgriffin/TypeScript](https://github.com/lgriffin/TypeScript) at `a91e938` cold, on 23 October 2026.
+It is the Go port of the TypeScript compiler. CSH read 31,872 of its 67,927 tracked files and understood a thin slice of
+them. 62,185 of the tracked files sit under `tsc/testdata`: 12,974 compiler test cases in `tests/cases`, and their
+accepted outputs in `baselines/reference`, 26,038 `.symbols` and `.types` files, `.js` and `.errors.txt` files, and
+fourslash `.baseline` files. The compiler's runner compiles each case and compares what it writes with the accepted
+output. A difference fails the test, and a person accepts the new output by committing it. These files are the
+compiler's specification more than any prose in the repository is, and CSH read none of them as evidence. Worse, it
+read the 12,974 cases as the compiler's own code, and 42 accepted outputs written in Markdown as its documents.
+
+[Issue 89](https://github.com/lgriffin/CSH/issues/89), gap 6, records this. Leigh asked for it to be a capability of
+its own: CSH reads a repository's tests as evidence for what its documents and its code say, in every language. This
+document states the behaviour stages 70 to 73 are built from. Its fixtures start at F210.
+
+**What a test suite is evidence of.** Three things, each read without running anything:
+
+1. **That a case has an accepted output.** A golden, snapshot or baseline suite pairs each case with the output a
+   person accepted. A case with no accepted output checks nothing, and an accepted output that no case produces is
+   evidence of nothing. Both are found from the files' names (section 2).
+2. **That each snapshot entry belongs to a test.** A snapshot file holds one entry per assertion, keyed by the test's
+   name. An entry whose test is gone is obsolete: it reads as checked behaviour and checks none (section 3).
+3. **That what prose names, a test exercises.** A sentence that names a symbol of the code is borne out by the tests
+   only as far as a test mentions that symbol. A symbol no test mentions is described and not exercised (section 4).
+
+**What does not change.** Converged, gap and indeterminate stay the three outcomes, and every result here lands in
+exactly one. Nothing is scored. A test that mentions a symbol exercises it; it does not verify a sentence, so nothing
+here raises a rung on the Assertion Ladder, and a test still cites only what its title names
+([18](18-from-the-toads-run.md), section 6, and A-221 hold). CSH never runs a suite and never compares an output with
+what the code would write today: that is the runner's job, and a results file is how its verdict reaches CSH (A-115).
+Where a convention cannot be read from the files, the result is indeterminate and says what would decide it.
+
+## 1. A suite, its cases and its accepted outputs
+
+A **suite** is a set of **cases** and a set of **accepted outputs**, with a convention that pairs them. A case is the
+input a runner reads: a source file, a test file, a directory of inputs. An accepted output is a file the runner
+compares what it writes with: a baseline, a golden file, an approved file, a snapshot file.
+
+**The Outputs source** (A-260). A source of kind `Outputs` is read by the adapter `@csh/adapter-items/outputs`. Its
+files are every case and every accepted output of the suites it reads. It belongs to the practice that owns the
+repository's tests.
+
+**Files read by name** (A-261). A declared source may name `names`: globs, relative to its `at`, of files whose bytes
+are never opened. The adapter is handed their paths with no content. A suite pairs by name, so a tree of accepted
+outputs is read whole without reading it: TypeScript's 289 MB of baselines cost CSH their paths. A file read by name
+counts as read in the coverage line, which says how many were read by name. Any source may use `names`; a source
+whose adapter needs the content of a file it reads by name sees an empty file, and the adapter's own documentation
+says which of its files it needs.
+
+**Test data is not code** (A-262). The proposal leaves out of the Code and Documents sources every file of a suite,
+and every file under a directory named `testdata`, which Go's tooling ignores by definition and every other language
+uses for the same purpose. A `.ts` case is not a module of the compiler, and a `.baseline.md` is not a document. A
+file under `testdata` that no suite pairs is read by no source, and is counted as not read.
+
+## 2. Accepted outputs paired by path (stage 70)
+
+The adapter reads five conventions from the paths of its files. Each is a common way a language's runners keep
+accepted outputs.
+
+| Convention | Accepted outputs | Their cases | Typical of |
+|---|---|---|---|
+| Reference tree | every file under `R/S`, where `R` ends in `baselines/reference` | every file under `C/S`, where `C` is a directory named `cases` whose parent is the directory holding `baselines`, or a child of it | the TypeScript compiler, in TypeScript and in Go |
+| Mirrored directories | every file under `D/expected`, `D/output`, `D/outputs`, `D/golden` or `D/goldens` | every file under `D/input` or `D/inputs`, the same directory `D` | Python and Java data-driven suites |
+| Golden siblings | a file `F.golden` or `F.expected` | the sibling `F`, or else the one sibling whose stem is `F` | Go (`gofmt`'s `x.input` and `x.golden`), analyzers' `x.go.golden` |
+| UI outputs | a `.stderr` or `.stdout` file under a directory named `ui` beneath `tests` | the sibling `.rs` file of the same stem | Rust (`trybuild`, `compiletest`) |
+| Snapshot directories | a file in a directory named `__snapshots__` or `snapshots` | the test file in the directory above that the file's name names (below) | Jest and Vitest, syrupy, insta |
+| Approved files | a file `X.m.approved.<ext>` | the sibling test file whose stem is `X` | ApprovalTests in Java, Python and others |
+
+**Stems.** A file's stem is its base name less its last extension. An output of a reference tree or of mirrored
+directories belongs to a case of its suite when the output's base name is the case's stem, or the stem followed by
+`.` or `(`: `2dArrays.ts` accepts `2dArrays.types`, `2dArrays.errors.txt` and `2dArrays(strict=false).js`. When the
+names of two cases both fit, the longer stem wins (`a.b.ts` takes `a.b.js` from `a.ts`). In a reference tree the
+case and the output may sit at different depths below `C/S` and `R/S`, since TypeScript nests its conformance cases
+and keeps their baselines flat. Mirrored directories pair only at the same path below `input` and `expected`.
+
+**Snapshot names.** In a `__snapshots__` directory, `a.test.ts.snap` names the test file `a.test.ts` (Jest, Vitest)
+and `test_a.ambr` names `test_a.py` (syrupy), as does a directory `test_a/` of single-file snapshots. In a
+`snapshots` directory, an insta snapshot `crate__module__name.snap` names its test by its header (section 3), so it is
+paired in stage 71 and is unpaired until then.
+
+**Suites.** A reference tree has one suite for each child `S` of `R` that has a namesake child of `C`. The other
+conventions have one suite for each directory that holds accepted outputs.
+
+**What the pairing decides,** with each result in one outcome:
+
+| What the files show | Signal | Outcome |
+|---|---|---|
+| A suite with cases that have accepted outputs | `accepted-outputs`: how many cases, how many with outputs, how many outputs, where | converged |
+| A case of a reference tree or of mirrored directories with no accepted output | `unaccepted-case`: the case checks nothing the runner can compare | gap |
+| An accepted output of a reference tree, mirrored directories, UI outputs or a snapshot directory that no case of its suite produces | `orphan-output`: it reads as checked behaviour and nothing produces it | gap |
+| Two cases of one suite with the same stem | `shared-stem`: which case wrote the outputs of that stem is not decided; neither is a gap | indeterminate |
+| Accepted outputs no convention pairs: a child of `R` with no namesake case directory, a golden file with no sibling, an approved file with no sibling test, an insta snapshot | `unpaired-outputs`, one per directory, with how many files and an example | indeterminate |
+
+`unaccepted-case` says why it matters and what would close it: accept the case's output, or remove the case if the
+runner is meant to skip it. A runner may skip a case on purpose, as TypeScript's skips 51 cases by name and others by
+an option it no longer supports. CSH does not read a runner's skip list, so the gap says that the runner may skip it
+([Q-80](../../QUESTIONS.md)). A golden sibling, a UI output and an approved file are found from the output, so a case
+with none is not a case of the suite, and is never reported. A trybuild case that must compile has no `.stderr`.
+
+**What a suite is not.** `accepted-outputs` is converged on what the names show: a person committed an output for
+each case. It does not say the output is right, nor that the runner passed. The tests that compare them are the
+runner's; their results, joined as any results are (A-115), say whether they pass.
+
+**The proposal.** `csh analyse` and `csh init --subject` propose an `Outputs` source when the tracked files hold any
+of the conventions above. Its `include` names each suite's files; its `names` names every file of a reference tree
+or mirrored directories, whose content stage 70 to 73 never read. Snapshot and approved files are read with their
+content, which stage 71 needs. The guess says how many suites, cases and outputs, and the convention of each.
+
+## 3. Snapshot entries and outputs named after a test (stage 71)
+
+A snapshot file holds an entry for each snapshot assertion, keyed by the name of the test that made it. Some golden
+files are named after their test rather than after a case. Each language's convention is read from the snapshot
+file and the test it names, as the runner reads them.
+
+| Language | Snapshot or output | The test it names |
+|---|---|---|
+| TypeScript | Jest and Vitest `.snap`: each ``exports[`name n`]``, where `name` is the test's full name (its describe titles and its own, joined by spaces), optionally `: hint`, and `n` a counter | a test of the paired test file with that full name |
+| Python | syrupy `.ambr`: each `# name: test_x`, `# name: TestC.test_x`, with any `[params]` and `.n` | a `test_` function of the paired module, or a method of a `Test` class in it |
+| Rust | insta `.snap`: the header's `source:` names the file; the name after the last `__` is the snapshot's name, less a `-n` suffix | a function of that file whose name is the snapshot's name, or `test_` and it; or a literal first argument of an `assert_*snapshot!` call in that file |
+| Java | ApprovalTests `X.m.approved.<ext>` | a method `m` of the test class `X` |
+| Go | a golden file named `TestX.golden` or `x.golden` beside a package's tests, or in its `testdata` | a function `TestX` of a `_test.go` file of that package |
+| Any | an output whose stem is a test file's stem less its test affix (`_test`, `.test`, `.spec`, `test_`, `Test`), when exactly one test file has that stem | that test file, as TypeScript's fourslash baselines name theirs |
+
+**What the entries decide:**
+
+| What the files show | Signal | Outcome |
+|---|---|---|
+| A snapshot file whose every entry names a test of its file, or an output named after a test that exists | `accepted-outputs`, one per snapshot file or directory | converged |
+| An entry that names no test of its file, and the file declares every test title as a literal | `obsolete-snapshot`: the runner keeps it and no test reads it | gap |
+| An entry that names no literal test, in a file with a title CSH cannot read (a template with a placeholder, `each`, `parametrize` with ids it cannot read) | `snapshot-undecided`, naming the file | indeterminate |
+| A snapshot file whose test file does not exist | `orphan-output`, as in section 2 | gap |
+
+A Jest or Vitest test that calls `toMatchSnapshot()` and has no entry is not reported: the runner writes the entry on
+its next run, and fails in `--ci` mode. That is the runner's verdict to give, not CSH's. An inline snapshot lives in
+the test file and is not an accepted output.
+
+## 4. What prose names, tests exercise (stage 72)
+
+A sentence that names a symbol of the code, such as "`createRulesMap` in `rules.ts` builds the table", says something
+about that symbol. Stage 24 and later stages resolve such names against the code's facts, and a name that resolves to
+nothing is a `dangling-reference`. A name that resolves says the symbol exists. It does not say the symbol is tested.
+
+**The tests' mentions** (A-264). The run reads every test file of every `TestFiles` source for the identifiers its
+code mentions, with comments and strings left out, by the same lexers that read each language's tests. That is the
+grain of a test (stage 57) for every test, not only one that cites an item. It is a port the run supplies to the
+check, as history is, so no adapter reads another source's files.
+
+**What it decides,** for each document or told rule that names code symbols that resolve:
+
+| What the tests show | Signal | Outcome |
+|---|---|---|
+| Every symbol it names is mentioned by a test | `exercised`: each symbol with the tests that mention it, the first three by path | converged |
+| A symbol it names that no test mentions | `unexercised`: the symbols no test mentions, and those a test does | gap |
+| A symbol whose module is in a language whose tests CSH does not read, or whose test files could not be read | `exercise-undecided`, naming the language or file | indeterminate |
+
+A mention is the weakest evidence a test can give: the test touches the symbol and may observe nothing of what the
+sentence says. That is why it is `exercised` and never `verified`, and why the rung is unchanged. The gap it closes is
+real: a described symbol that no test mentions is behaviour the repository's words promise and nothing exercises.
+
+**`unverified` names its nearest tests.** A requirement or told rule with no citation is `unverified`. When tests
+mention every backticked term it writes, the gap names up to three of them as the tests that could cite it. It stays
+a gap: the citation is the input that would close it (A-265).
+
+## 5. Calibration (stage 73)
+
+The cold reads of every subject in CI keep their expected results, changed only where this document says. The cold
+read of lgriffin/TypeScript at `a91e938`:
+
+- reads every file under `tsc/testdata` that a suite pairs, by name, and reads no case as code and no baseline as a
+  document;
+- reports the compiler, conformance and transpile suites as `accepted-outputs`, and the fourslash baselines as named
+  after their tests;
+- reports each case with no accepted output as `unaccepted-case`, every one of which the runner skips, by name or by
+  an option it does not support;
+- reports the two cases that share a stem with a `.js` file the runner never compiles as `shared-stem`.
+
+Each finding is checked by hand before it is called real, and each real one is reported to the repository as Leigh
+directs, never upstream to microsoft/TypeScript by CSH.
+
+## 6. Limits
+
+- **The runner is not read.** A skip list, a filter, a generated test, a custom file pattern: CSH reads conventions,
+  not the runner's code. A case it calls unaccepted may be skipped on purpose; the gap says so ([Q-80](../../QUESTIONS.md)).
+- **Content is not compared.** An accepted output can be wrong, and a case can produce something other than what was
+  accepted. Only the runner decides that.
+- **Variants are not checked.** TypeScript names an output for each variant of a case's options, as
+  `x(strict=false).js`. CSH pairs it with `x` and does not check that the case still declares that variant.
+- **Mentions are not observations.** A test that mentions a symbol exercises it; whether it observes what the
+  sentence says is grain (stage 57), read only where a test cites the sentence.
+- **Danger is unchanged.** An orphan output and an obsolete snapshot read as checked behaviour that checks nothing,
+  which is the shape of masked danger. They are gaps, not danger, until the owner decides ([Q-81](../../QUESTIONS.md)).
+
+## 7. Stages
+
+| Stage | Exit | Fixtures |
+|---|---|---|
+| 70 | Accepted outputs paired by path in every language; test data leaves Code and Documents; files read by name | F210 to F216 |
+| 71 | Snapshot entries and outputs named after a test, in every language | F217 to F222 |
+| 72 | What prose names, tests exercise, in every language | F223 to F225 |
+| 73 | Calibrate on lgriffin/TypeScript and the CI subjects | none of its own |
+
+- F210: a reference tree (section 2): paired, unaccepted, orphan, shared stem, unpaired.
+- F211: Go golden siblings.
+- F212: Rust UI outputs.
+- F213: Java approved files.
+- F214: Python mirrored directories and syrupy snapshot directories.
+- F215: Jest snapshot directories, in TypeScript.
+- F216: the proposal: an Outputs source, test data out of Code and Documents, files read by name in the coverage.

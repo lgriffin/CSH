@@ -1,0 +1,20 @@
+{
+  "fixture": "F213",
+  "section": "Reading test suites as evidence, section 2; A-263",
+  "stage": 70,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["Outputs", "approved files"],
+      "entries": [
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/src/test/java/demo", "detailIncludes": ["approved files", "1 of 1 case", "2 files"] },
+        { "outcome": "indeterminate", "kind": "unpaired-outputs", "subject": "Outputs/src/test/java/demo", "detailIncludes": ["1 file", "ReceiptTest.prints.approved.txt"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "orphan-output", "subject": "Outputs/src/test/java/demo/ReceiptTest.prints.approved.txt" },
+        { "kind": "orphan-output", "subject": "Outputs/src/test/java/demo/InvoiceTest.rendersTotals.approved.txt" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

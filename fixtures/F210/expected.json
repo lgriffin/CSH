@@ -1,0 +1,32 @@
+{
+  "fixture": "F210",
+  "section": "Reading test suites as evidence, section 2; A-260, A-263",
+  "stage": 70,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["Outputs", "reference tree"],
+      "entries": [
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/testdata/baselines/reference/compiler", "detailIncludes": ["reference tree", "2 of 5 cases", "testdata/tests/cases/compiler"] },
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/testdata/baselines/reference/conformance", "detailIncludes": ["1 of 1 case", "testdata/tests/cases/conformance"] },
+        { "outcome": "gap", "kind": "unaccepted-case", "subject": "Outputs/testdata/tests/cases/compiler/skipped.ts", "detailIncludes": ["testdata/baselines/reference/compiler", "may skip"] },
+        { "outcome": "gap", "kind": "orphan-output", "subject": "Outputs/testdata/baselines/reference/compiler/removed.types", "detailIncludes": ["testdata/tests/cases/compiler"] },
+        { "outcome": "indeterminate", "kind": "shared-stem", "subject": "Outputs/testdata/tests/cases/compiler/twin", "detailIncludes": ["twin.js", "twin.ts", "twin.types"] },
+        { "outcome": "indeterminate", "kind": "unpaired-outputs", "subject": "Outputs/testdata/baselines/reference/fourslash", "detailIncludes": ["1 file", "closing/tag.baseline"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "unaccepted-case", "subject": "Outputs/testdata/tests/cases/compiler/arrays.ts" },
+        { "kind": "unaccepted-case", "subject": "Outputs/testdata/tests/cases/compiler/arrays.b.ts" },
+        { "kind": "unaccepted-case", "subject": "Outputs/testdata/tests/cases/compiler/twin.ts" },
+        { "kind": "unaccepted-case", "subject": "Outputs/testdata/tests/cases/compiler/twin.js" },
+        { "kind": "unaccepted-case", "subject": "Outputs/testdata/tests/cases/conformance/types/classes/classes.ts" },
+        { "kind": "orphan-output", "subject": "Outputs/testdata/baselines/reference/compiler/arrays.b.js" },
+        { "kind": "orphan-output", "subject": "Outputs/testdata/baselines/reference/compiler/arrays(strict=false).js" },
+        { "kind": "orphan-output", "subject": "Outputs/testdata/baselines/reference/compiler/twin.types" },
+        { "kind": "orphan-output", "subject": "Outputs/testdata/baselines/reference/fourslash/closing/tag.baseline" },
+        { "kind": "accepted-outputs", "subject": "Outputs/testdata/baselines/reference/fourslash" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}
