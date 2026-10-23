@@ -44,6 +44,10 @@ export interface OutputDir {
 const ORDER: Convention[] = ["reference tree", "mirrored directories", "golden siblings", "UI outputs", "snapshot directories", "approved files"];
 const MIRRORED_IN = ["input", "inputs"];
 const MIRRORED_OUT = ["expected", "output", "outputs", "golden", "goldens"];
+// Mirrored directories are a suite only beneath a directory of tests or test data: a program's own input and output
+// packages (src/io/input beside src/io/output) are code, not cases and their outputs.
+const TEST_ROOTS = ["test", "tests", "__tests__", "spec", "specs", "testdata", "testing", "fixtures", "__fixtures__", "e2e"];
+const testRoot = (seg: string) => TEST_ROOTS.includes(seg) || /[-_.]tests?$/i.test(seg);
 
 const dirOf = (p: string) => posix.dirname(p) === "." ? "" : posix.dirname(p);
 const join = (a: string, b: string) => (a === "" ? b : `${a}/${b}`);
@@ -159,7 +163,7 @@ export function outputDirsOf(paths: readonly string[]): OutputDir[] {
   }
 
   // Mirrored directories: D/input beside D/expected (or output, outputs, golden, goldens), paired at the same path.
-  for (const d of [...dirs, ""].sort(compareCodePoints)) {
+  for (const d of [...dirs].filter((x) => x.split("/").some(testRoot)).sort(compareCodePoints)) {
     const kids = new Set(childDirs(d).map((x) => posix.basename(x)));
     const i = MIRRORED_IN.find((n) => kids.has(n));
     const e = MIRRORED_OUT.find((n) => kids.has(n));
@@ -283,7 +287,7 @@ export function run(input: AdapterInput): AdapterOutput {
     if (o.outDir !== undefined) attrs.outDir = o.outDir;
     if (o.unaccepted.length > 0) attrs.unaccepted = o.unaccepted.join("\n");
     if (o.orphans.length > 0) attrs.orphans = o.orphans.map((x) => `${x.output}\t${x.names}`).join("\n");
-    if (o.shared.length > 0) attrs.shared = o.shared.map((x) => [x.stem, x.cases.join(" "), x.outputs.join(" ")].join("\t")).join("\n");
+    if (o.shared.length > 0) attrs.shared = o.shared.map((x) => JSON.stringify({ stem: x.stem, cases: x.cases, outputs: x.outputs })).join("\n");
     if (o.unpaired.length > 0) {
       attrs.unpaired = String(o.unpaired.length);
       attrs.unpairedSample = o.unpaired[0]!;

@@ -213,4 +213,21 @@ describe("proposals the tutors run taught (From the tutors run, sections 3 and 6
     expect(reads(dir, r, "Baselines")).toEqual(["tests/arch/known.txt"]);
     expect(r.manifest.practices.find((p) => p.id === "docs")?.sources).toEqual(["Baselines"]);
   });
+
+  it("reads test data and suite files as none of Requirements, Instructions or Baselines (stage 70, A-262)", () => {
+    const dir = checkout({
+      "README.md": "# App\n\n## REQ-1 One\n\n## REQ-2 Two\n",
+      "src/a.ts": "export const a = 1;\n",
+      "testdata/AGENTS.md": "# Agent instructions in a case\n",
+      "testdata/spec.md": "## REQ-3 Three\n\nREQ-1 REQ-2\n",
+      "testdata/known.txt": "# baseline: this list may only shrink\nsrc/a.ts\n",
+      "tests/input/x.md": "## REQ-4 Four\n",
+      "tests/expected/x.md": "## REQ-4 Four\n",
+    });
+    const r = propose(dir);
+    expect(reads(dir, r, "Requirements")).toEqual(["README.md"]);
+    expect(reads(dir, r, "Instructions")).toBeUndefined();
+    expect(reads(dir, r, "Baselines")).toBeUndefined();
+    expect(reads(dir, r, "Outputs")).toEqual(expect.arrayContaining(["tests/expected/x.md", "tests/input/x.md"]));
+  });
 });

@@ -102,7 +102,7 @@ export const INDETERMINATE_NEXT: Record<string, string> = {
 /** Signal kinds that are a convergence: the source states a silence and its reason, and nothing contradicts it. */
 export const CONVERGED_NEXT: Record<string, string> = {
   "justified-gap": "The silence is recorded with its reason: revisit the reason when the design changes",
-  "accepted-outputs": "Each case has an output a person accepted: the runner's results say whether the cases still produce it",
+  "accepted-outputs": "The cases it counts have outputs a person accepted, and any without one is a gap of its own: the runner's results say whether the cases still produce them",
 };
 const OTHER_NEXT = "No rule places this kind yet: read its detail";
 

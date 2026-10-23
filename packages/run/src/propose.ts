@@ -194,7 +194,8 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   const suite = new Set(suiteFiles);
   const uiCases = new Set(outputDirs.filter((o) => o.conventions.includes("UI outputs")).flatMap((o) => [...o.paired.keys()]));
   const dataOrSuite = (p: string) => testData(p) || (suite.has(p) && testConvention(p) === undefined);
-  const markdown = files.filter((p) => ext(p) === "md");
+  // Test data and suite files are never opened here: a baseline in Markdown is no requirement or instruction.
+  const markdown = files.filter((p) => ext(p) === "md" && !dataOrSuite(p));
   // A feature file in a fixture is test data for the subject's own tooling (From the tutors run, section 3).
   const allFeatures = files.filter((p) => ext(p) === "feature");
   const features = allFeatures.filter((p) => !fixtures(p));
@@ -218,7 +219,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   // Markdown source reads it, since a told rule may sit in any of them; the adapter reads only its check names.
   // An import-linter configuration names the contracts a told rule may name, read the same way (From the Toads run,
   // section 4): a pyproject.toml with a [tool.importlinter] table, an .importlinter, or a setup.cfg with [importlinter].
-  const linters = files.filter((p) => !fixtures(p) && ((posix.basename(p) === "pyproject.toml" && /^\s*\[tool\.importlinter\]/m.test(read(p))) || posix.basename(p) === ".importlinter" || (posix.basename(p) === "setup.cfg" && /^\s*\[importlinter\]/m.test(read(p)))));
+  const linters = files.filter((p) => !fixtures(p) && !dataOrSuite(p) && ((posix.basename(p) === "pyproject.toml" && /^\s*\[tool\.importlinter\]/m.test(read(p))) || posix.basename(p) === ".importlinter" || (posix.basename(p) === "setup.cfg" && /^\s*\[importlinter\]/m.test(read(p)))));
   const cruisers = [...files.filter((p) => DEPENDENCY_CRUISER.test(posix.basename(p)) && !underAny(p, ["fixtures", "__fixtures__"])), ...linters];
 
   // Instructions: the files an agent reads at the start of every session (The Assertion Ladder, stage 50).
@@ -250,7 +251,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   if (linters.length > 0 && sources.some((s) => s.include?.some((p) => linters.includes(p)))) guesses.push(`${linters.join(", ")}: an import-linter configuration, read for the contracts it defines`);
   // Baselines: text files a repository says may only shrink, the gaps it already records (section 6). They belong to
   // the documents practice, made for them when no other document is read.
-  const baselines = files.filter((p) => ext(p) === "txt" && !fixtures(p) && isBaseline(read(p)));
+  const baselines = files.filter((p) => ext(p) === "txt" && !fixtures(p) && !dataOrSuite(p) && isBaseline(read(p)));
   if (baselines.length > 0) {
     if (!practices.some((p) => p.id === "docs")) practices.push({ id: "docs", name: "Documents", kind: "documents", unit: "the document", sources: [], settings: { ...idSettings } });
     sources.push({ name: "Baselines", kind: "Documents", at: ".", include: [...baselines] });

@@ -31,16 +31,23 @@ describe("reference trees", () => {
 });
 
 describe("mirrored directories", () => {
-  it("pairs only at the same path below each root, and reads a pair at the root of the checkout", () => {
-    const o = dir(["input/a/x.json", "input/b/x.json", "expected/a/x.html"], ".")!;
-    expect([...o.paired.keys()]).toEqual(["input/a/x.json"]);
-    expect(o.unaccepted).toEqual(["input/b/x.json"]);
-    expect(o.outDir).toBe("expected");
+  it("pairs only at the same path below each root", () => {
+    const o = dir(["tests/input/a/x.json", "tests/input/b/x.json", "tests/expected/a/x.html"], "tests")!;
+    expect([...o.paired.keys()]).toEqual(["tests/input/a/x.json"]);
+    expect(o.unaccepted).toEqual(["tests/input/b/x.json"]);
+    expect(o.outDir).toBe("tests/expected");
   });
 
   it("is a suite only when an input directory has an expected one beside it", () => {
-    expect(outputDirsOf(["d/input/a.json", "d/expected/.keep"]).find((o) => o.dir === "d")?.unaccepted).toEqual(["d/input/a.json"]);
-    expect(outputDirsOf(["d/input/a.json", "d/notes/a.txt"]).length).toBe(0);
+    expect(outputDirsOf(["test/d/input/a.json", "test/d/expected/.keep"]).find((o) => o.dir === "test/d")?.unaccepted).toEqual(["test/d/input/a.json"]);
+    expect(outputDirsOf(["test/d/input/a.json", "test/d/notes/a.txt"]).length).toBe(0);
+  });
+
+  it("is a suite only beneath a directory of tests or test data, so a program's own input and output stay code", () => {
+    expect(outputDirsOf(["src/io/input/a.ts", "src/io/output/a.ts"]).length).toBe(0);
+    expect(outputDirsOf(["input/a.json", "expected/a.html"]).length).toBe(0);
+    expect(dir(["src/test/resources/input/a.json", "src/test/resources/expected/a.json"], "src/test/resources")?.paired.size).toBe(1);
+    expect(dir(["it-tests/input/a.json", "it-tests/output/a.json"], "it-tests")?.paired.size).toBe(1);
   });
 });
 
@@ -94,5 +101,13 @@ describe("the adapter and the check", () => {
     ]);
     expect(gaps[0]!.detail).toBe("reference tree: 1 of 4 cases under cases/s has accepted outputs, 1 file under baselines/reference/s; the runner compares each case with them");
     expect(suiteFilesOf(outputDirsOf(paths))).toEqual([...paths].sort());
+  });
+
+  it("keeps a path with a space whole in a shared stem", () => {
+    const paths = ["b/baselines/reference/s/my case.js", "b/cases/s/my case.ts", "b/cases/s/x/my case.ts"];
+    const out = run({ source: { name: "Outputs", kind: "Outputs", at: "." }, vocabulary: { states: [], events: [] }, bindings: [], files: paths.map((path) => ({ path, digest: "", bytes: new Uint8Array(0) })) } as never);
+    const shared = outputGaps((out.items ?? []).map((i) => ({ ...i, source: "Outputs" }))).find((g) => g.kind === "shared-stem")!;
+    expect(shared.subject).toBe("Outputs/b/cases/s/my case");
+    expect(shared.detail).toBe("b/cases/s/my case.ts, b/cases/s/x/my case.ts share the stem my case; which of them wrote b/baselines/reference/s/my case.js is not decided");
   });
 });

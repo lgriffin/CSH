@@ -32,10 +32,10 @@ export function outputGaps(items: readonly (SourceItem & { source: string })[]):
       const why = names === caseDir ? `no case under ${names} has its stem` : `it names ${names}, which does not exist`;
       gaps.push({ kind: "orphan-output", subject: at(output!), fragments: [], detail: `${output}: ${why}, so nothing produces it and it checks nothing` });
     }
+    // One JSON record a line, since a path may hold a space or a tab.
     for (const line of lines(a.shared)) {
-      const [stem, cs, outs] = line.split("\t");
-      const outputs = (outs ?? "").split(" ").filter((x) => x !== "");
-      gaps.push({ kind: "shared-stem", subject: at(stem!), fragments: [], detail: `${(cs ?? "").split(" ").join(", ")} share the stem ${stem!.slice(stem!.lastIndexOf("/") + 1)}; which of them wrote ${outputs.length === 0 ? "its outputs" : outputs.join(", ")} is not decided` });
+      const { stem, cases: cs, outputs } = JSON.parse(line) as { stem: string; cases: string[]; outputs: string[] };
+      gaps.push({ kind: "shared-stem", subject: at(stem), fragments: [], detail: `${cs.join(", ")} share the stem ${stem.slice(stem.lastIndexOf("/") + 1)}; which of them wrote ${outputs.length === 0 ? "its outputs" : outputs.join(", ")} is not decided` });
     }
     const unpaired = Number(a.unpaired ?? "0");
     if (unpaired > 0) {

@@ -61,7 +61,7 @@ accepted outputs.
 | Convention | Accepted outputs | Their cases | Typical of |
 |---|---|---|---|
 | Reference tree | every file under `R/S`, where `R` ends in `baselines/reference` | every file under `C/S`, where `C` is a directory named `cases` whose parent is the directory holding `baselines`, or a child of it | the TypeScript compiler, in TypeScript and in Go |
-| Mirrored directories | every file under `D/expected`, `D/output`, `D/outputs`, `D/golden` or `D/goldens` | every file under `D/input` or `D/inputs`, the same directory `D` | Python and Java data-driven suites |
+| Mirrored directories | every file under `D/expected`, `D/output`, `D/outputs`, `D/golden` or `D/goldens`, where `D` is or sits beneath a directory of tests or test data (`test`, `tests`, `__tests__`, `spec`, `specs`, `testdata`, `testing`, `fixtures`, `__fixtures__`, `e2e`, or a name ending in `-test`, `_tests` and the like), so that a program's own `src/io/input` and `src/io/output` stay code | every file under `D/input` or `D/inputs`, the same directory `D` | Python and Java data-driven suites |
 | Golden siblings | a file `F.golden` or `F.expected` | the sibling `F`, or else the one sibling whose stem is `F` | Go (`gofmt`'s `x.input` and `x.golden`), analyzers' `x.go.golden` |
 | UI outputs | a `.stderr` or `.stdout` file under a directory named `ui` beneath `tests` | the sibling `.rs` file of the same stem | Rust (`trybuild`, `compiletest`) |
 | Snapshot directories | a file in a directory named `__snapshots__` or `snapshots` | the test file in the directory above that the file's name names (below) | Jest and Vitest, syrupy, insta |
