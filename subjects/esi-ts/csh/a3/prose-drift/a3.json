@@ -1893,7 +1893,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -3288,7 +3288,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -4647,7 +4647,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -5994,7 +5994,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -7341,7 +7341,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -8716,7 +8716,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -10079,7 +10079,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:728 mentions-file etc/doc-metrics.json (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
+          "detail": "names what does not exist: guides/CHARTER.md:728 mentions-file scripts/doc-metrics.ts (never tracked); guides/CHARTER.md:729 mentions-file scripts/sync-docs.ts (never tracked)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",

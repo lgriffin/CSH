@@ -38,7 +38,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 62;
+export const BUILT_THROUGH_STAGE = 63;
 
 const AGENT_BIN = resolve(import.meta.dirname, "../../agent/bin/csh-agent.js");
 
@@ -846,7 +846,7 @@ export class FixtureRunner {
       for (const item of (x.toldAbsent ?? []) as string[]) if (a.told.some((y) => y.item === item)) failures.push(`${item} should not be a told rule`);
       const entries = a.overview.entries;
       const list = () => entries.map((y) => `${y.outcome} ${y.kind} ${y.subject}`).join("; ") || "none";
-      for (const w of x.entries ?? []) if (!entries.some((y) => y.outcome === w.outcome && y.kind === w.kind && y.subject === w.subject && ((w.detailIncludes ?? []) as string[]).every((d) => (y.detail ?? "").includes(d)))) failures.push(`no ${w.outcome} ${w.kind} for ${w.subject}${w.detailIncludes !== undefined ? ` with ${w.detailIncludes.join(", ")}` : ""}; entries: ${list()}; detail: ${entries.find((y) => y.kind === w.kind && y.subject === w.subject)?.detail ?? "none"}`);
+      for (const w of x.entries ?? []) if (!entries.some((y) => y.outcome === w.outcome && y.kind === w.kind && y.subject === w.subject && ((w.detailIncludes ?? []) as string[]).every((d) => (y.detail ?? "").includes(d)) && !((w.detailExcludes ?? []) as string[]).some((d) => (y.detail ?? "").includes(d)))) failures.push(`no ${w.outcome} ${w.kind} for ${w.subject}${w.detailIncludes !== undefined ? ` with ${w.detailIncludes.join(", ")}` : ""}${w.detailExcludes !== undefined ? ` without ${w.detailExcludes.join(", ")}` : ""}; entries: ${list()}; detail: ${entries.find((y) => y.kind === w.kind && y.subject === w.subject)?.detail ?? "none"}`);
       for (const w of x.entriesAbsent ?? []) if (entries.some((y) => y.kind === w.kind && y.subject === w.subject)) failures.push(`${w.kind} for ${w.subject} should be absent`);
       const rungs = new Map((a.overview.rungs ?? []).map((y) => [y.item, y.rung]));
       for (const [item, want] of Object.entries((x.rungs ?? {}) as Record<string, string>)) if (rungs.get(item) !== want) failures.push(`${item} is at ${rungs.get(item) ?? "no rung"}, expected ${want}`);

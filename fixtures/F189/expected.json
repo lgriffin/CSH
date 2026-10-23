@@ -1,0 +1,37 @@
+{
+  "fixture": "F189",
+  "section": "From the TypeScript run, section 1; A-220",
+  "stage": 63,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "entries": [
+        {
+          "outcome": "gap",
+          "kind": "dangling-reference",
+          "subject": "Documents/docs/missing.md",
+          "detailIncludes": [
+            "tests/cases/settings.json",
+            "config/local.example.yaml",
+            "tests/cases/legacy.ts",
+            "tests/cases/generated.ts"
+          ],
+          "detailExcludes": [
+            "config/local.yaml"
+          ]
+        }
+      ],
+      "entriesAbsent": [
+        {
+          "kind": "dangling-reference",
+          "subject": "Documents/docs/guide.md"
+        },
+        {
+          "kind": "dangling-reference",
+          "subject": "Documents/README.md"
+        }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}
