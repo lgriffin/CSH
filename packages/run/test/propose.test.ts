@@ -243,6 +243,24 @@ describe("proposals the tutors run taught (From the tutors run, sections 3 and 6
     expect(reads(dir, r, "Baselines")).toBeUndefined();
     expect(reads(dir, r, "Outputs")).toEqual(expect.arrayContaining(["tests/expected/x.md", "tests/input/x.md"]));
   });
+
+  it("keeps the source an insta snapshot names as code, and reads whole each file whose text the pairing read (stage 74, A-269)", () => {
+    const dir = checkout({
+      "Cargo.toml": "[package]\nname = \"c\"\n",
+      "src/lib.rs": "fn test_one() {}\n",
+      "src/snapshots/c__tests__one.snap": "---\nsource: src/lib.rs\n---\n1\n",
+      "go.mod": "module m\n",
+      "p/p.go": "package p\n",
+      "p/p_test.go": "package p\n\nfunc TestPage(t *testing.T) {}\n",
+      "p/testdata/TestPage.golden": "page\n",
+    });
+    const r = propose(dir);
+    expect(reads(dir, r, "Code")).toEqual(expect.arrayContaining(["src/lib.rs", "p/p.go"]));
+    expect(reads(dir, r, "Outputs")).toEqual(expect.arrayContaining(["src/lib.rs", "src/snapshots/c__tests__one.snap", "p/p_test.go", "p/testdata/TestPage.golden"]));
+    const names = r.manifest.sources!.find((x) => x.name === "Outputs")!.names ?? [];
+    expect(names).not.toContain("p/p_test.go");
+    expect(names).not.toContain("src/lib.rs");
+  });
 });
 
 describe("build output (stage 75, A-268)", () => {

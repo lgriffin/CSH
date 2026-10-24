@@ -36,7 +36,10 @@ export function outputGaps(items: readonly (SourceItem & { source: string })[]):
     // One JSON record a line, as a key may hold any character.
     for (const line of lines(a.obsolete)) {
       const { snapshot, key, test } = JSON.parse(line) as { snapshot: string; key: string; test: string };
-      gaps.push({ kind: "obsolete-snapshot", subject: `${at(snapshot)}::${key}`, fragments: [], detail: `${key.replace(/ \d+$/, "")}: no test of ${test} has this name, and every title in it is a literal; the runner keeps the entry and no test reads it` });
+      // A Jest, Vitest or syrupy file holds many entries; any other output is one, named after its test (A-269).
+      const entry = /(?:^|\/)__snapshots__\/[^/]+\.(?:snap|ambr)$/.test(snapshot);
+      const why = entry ? "and every title in it is a literal; the runner keeps the entry and no test reads it" : "and CSH read every test it could be; the file stays and no test reads it";
+      gaps.push({ kind: "obsolete-snapshot", subject: `${at(snapshot)}::${key}`, fragments: [], detail: `${key.replace(/ \d+$/, "")}: no test of ${test} has this name, ${why}` });
     }
     for (const line of lines(a.undecided)) {
       const { snapshot, test, entries, lines: at_ } = JSON.parse(line) as { snapshot: string; test: string; entries: number; lines: number[] };
