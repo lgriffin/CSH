@@ -1,0 +1,22 @@
+{
+  "fixture": "F221",
+  "section": "Reading test suites as evidence, section 3; A-269",
+  "stage": 74,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["Outputs", "snapshot directories"],
+      "entries": [
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/src/snapshots", "detailIncludes": ["snapshot directories", "1 of 1 case", "3 files", "2 of 3 snapshot entries"] },
+        { "outcome": "gap", "kind": "obsolete-snapshot", "subject": "Outputs/src/snapshots/orders__tests__gone.snap::gone", "detailIncludes": ["gone", "src/lib.rs"] },
+        { "outcome": "gap", "kind": "orphan-output", "subject": "Outputs/tests/snapshots/integration__shown.snap", "detailIncludes": ["tests/integration.rs"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "obsolete-snapshot", "subject": "Outputs/src/snapshots/orders__tests__render_basic.snap::render_basic" },
+        { "kind": "obsolete-snapshot", "subject": "Outputs/src/snapshots/orders__tests__custom_name.snap::custom_name" },
+        { "kind": "unpaired-outputs", "subject": "Outputs/src/snapshots" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

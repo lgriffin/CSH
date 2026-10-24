@@ -231,11 +231,14 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   // under a testdata directory, which Go's tooling ignores by definition and other languages use the same way, and every
   // file of a suite, is read by the Outputs source alone, never as code, a document or a test.
   const testData = (p: string) => underAny(p, ["testdata"]);
-  const outputDirs = outputDirsOf(files.filter((p) => !fixtures(p) || testData(p)));
+  // The pairing reads an insta header and the tests a snapshot or an output names (stage 74), as the source then will.
+  const outputDirs = outputDirsOf(files.filter((p) => !fixtures(p) || testData(p)), read);
   const suiteFiles = suiteFilesOf(outputDirs);
   const suite = new Set(suiteFiles);
   const uiCases = new Set(outputDirs.filter((o) => o.conventions.includes("UI outputs")).flatMap((o) => [...o.paired.keys()]));
-  const dataOrSuite = (p: string) => testData(p) || (suite.has(p) && testConvention(p) === undefined);
+  // The source file an insta snapshot names holds its tests and stays code (A-269).
+  const suiteCode = new Set(outputDirs.flatMap((o) => o.code ?? []));
+  const dataOrSuite = (p: string) => testData(p) || (suite.has(p) && testConvention(p) === undefined && !suiteCode.has(p));
   // Test data and suite files are never opened here: a baseline in Markdown is no requirement or instruction.
   const markdown = files.filter((p) => ext(p) === "md" && !dataOrSuite(p));
   // A feature file in a fixture is test data for the subject's own tooling (From the tutors run, section 3).
@@ -418,7 +421,9 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
     const snapshot = (p: string) => underAny(p, ["__snapshots__"]) || (segments(p).at(-2) === "snapshots" && ext(p) === "snap");
     // A snapshot file's entries are read with the test file it names (stage 71), so both are read whole.
     const snapshotTests = new Set(outputDirs.flatMap((o) => [...o.paired].filter(([, outs]) => outs.some(snapshot)).map(([t]) => t)));
-    const names = [...treeGlobs, ...rest.filter((p) => !snapshot(p) && !snapshotTests.has(p))];
+    // So is every file whose text the pairing read (stage 74).
+    const opened = new Set(outputDirs.flatMap((o) => o.opened ?? []));
+    const names = [...treeGlobs, ...rest.filter((p) => !snapshot(p) && !snapshotTests.has(p) && !opened.has(p))];
     sources.push({ name: "Outputs", kind: "Outputs", at: ".", include: g.include, exclude: g.exclude, ...(names.length > 0 ? { names } : {}) });
     const owner = practices.find((p) => p.kind === "tests");
     if (owner !== undefined) owner.sources.push("Outputs");

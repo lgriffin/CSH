@@ -1,7 +1,7 @@
 // Accepted outputs paired by path (Reading test suites as evidence, section 2; A-263): the edges of each convention
 // that the fixtures F210 to F216 do not reach.
 import { describe, expect, it } from "vitest";
-import { outputDirsOf, run, snapshotEntries, snapshotKeys, suiteFilesOf, testStemOf } from "../src/outputs.ts";
+import { goTestFunctions, instaName, instaSource, javaDeclares, outputDirsOf, pythonTestNames, run, rustSnapshotNames, snapshotEntries, snapshotKeys, suiteFilesOf, syrupyKeys, syrupyName, testFunctionOf, testStemOf } from "../src/outputs.ts";
 import { testNames } from "../src/tests.ts";
 import { outputGaps } from "../../check/src/outputs.ts";
 
@@ -71,8 +71,9 @@ describe("files found from their output", () => {
     expect(o.unpaired).toEqual(["t/__snapshots__/notes", "t/__snapshots__/plain.snap", "t/__snapshots__/test_gone/x.raw"]);
   });
 
-  it("leaves an insta snapshot unpaired until its header is read", () => {
-    expect(dir(["src/snapshots/crate__tests__name.snap"], "src/snapshots")!.why).toBe("an insta snapshot, named by its header (stage 74)");
+  it("leaves an insta snapshot unpaired when its header is not read, or names no source", () => {
+    expect(dir(["src/snapshots/crate__tests__name.snap"], "src/snapshots")!.why).toBe("an insta snapshot CSH did not read");
+    expect(outputDirsOf(["src/snapshots/c__t__n.snap"], () => "no header\n").find((o) => o.dir === "src/snapshots")!.why).toBe("an insta snapshot with no source: in its header");
   });
 
   it("leaves an approved file with two siblings of its name unpaired, and ignores received files", () => {
@@ -189,5 +190,119 @@ describe("outputs named after a test file (stage 71, A-267)", () => {
     expect(tsc.paired.size).toBe(0);
     expect(tsc.unpaired).toEqual(["t/baselines/reference/tsc/a.js"]);
     expect(tsc.why).toBe("a stem of a test file whose directory's tests write another suite");
+  });
+});
+
+describe("snapshot entries and outputs named after a test, beyond TypeScript (stage 74, A-269)", () => {
+  const texts = (m: Record<string, string>) => (p: string) => m[p];
+
+  it("reads syrupy's names, less their parameters and counters, and a module's tests by class", () => {
+    expect(syrupyKeys("# serializer version: 1\n# name: TestC.test_x[a-b]\n  1\n# ---\n# name: test_y.1\n  2\n# ---\n")).toEqual(["TestC.test_x[a-b]", "test_y.1"]);
+    expect(["TestC.test_x[a-b]", "test_y.1", "test_z[p].2", "test_w"].map(syrupyName)).toEqual(["TestC.test_x", "test_y", "test_z", "test_w"]);
+    const names = pythonTestNames("def test_a():\n    pass\nclass TestB:\n    def test_c(self):\n        def test_inner(): pass\n    class TestD:\n        async def test_e(self): pass\ndef helper(): pass\ndef test_f(): pass\n");
+    expect([...names].sort()).toEqual(["TestB.TestD.test_e", "TestB.test_c", "test_a", "test_f"]);
+    // pytest collects no method of a class whose name does not begin Test.
+    expect([...pythonTestNames("class Helper:\n    def test_x(self): pass\nclass TestK:\n    class Inner:\n        def test_y(self): pass\n")]).toEqual([]);
+  });
+
+  it("reads an insta header's source and a snapshot's name", () => {
+    expect(instaSource("---\nsource: src/lib.rs\nexpression: x\n---\nbody\n")).toBe("src/lib.rs");
+    expect(instaSource("---\r\nsource: tests/a.rs \r\n---\r\n")).toBe("tests/a.rs");
+    expect(instaSource("body\n")).toBeUndefined();
+    expect(["s/c__tests__render.snap", "s/c__m__shown-2.snap", "s/plain.snap", "s/m__tests__render@input.txt.snap", "s/m__tests__render@a__b-3.snap"].map(instaName)).toEqual(["render", "shown", "plain", "render", "render"]);
+  });
+
+  it("reads a Rust file's snapshot names, and says where a name is not a literal", () => {
+    const r = rustSnapshotNames('fn test_a() { insta::assert_snapshot!(x); }\nfn b() {\n  insta::assert_debug_snapshot!("named", f(1, 2));\n  insta::assert_snapshot!(format!("n{}", i), y);\n}\n');
+    expect([...r.names].sort()).toEqual(["a", "b", "named", "test_a"]);
+    expect(r.unreadable).toEqual([4]);
+  });
+
+  it("reads a Java method by its class, and a Go file's test functions", () => {
+    const j = "class ReceiptTest {\n  @Test\n  void printsTotal() throws IOException {\n  }\n  private String helper(int a) { return \"\"; }\n}\n";
+    expect(javaDeclares(j, "ReceiptTest", "printsTotal")).toBe(true);
+    expect(javaDeclares(j, "ReceiptTest", "helper")).toBe(true);
+    expect(javaDeclares(j, "ReceiptTest", "printsTax")).toBe(false);
+    expect(javaDeclares(j, "OtherTest", "printsTotal")).toBe(false);
+    // The method must be the named class's, and a parameter's annotation may hold parentheses.
+    expect(javaDeclares("class ReceiptTest {\n  void other() {}\n}\nclass Helper {\n  void printsTotal() {}\n}\n", "ReceiptTest", "printsTotal")).toBe(false);
+    expect(javaDeclares('class ReceiptTest {\n  void printsTotal(@ForAll("prices") int p) {\n  }\n}\n', "ReceiptTest", "printsTotal")).toBe(true);
+    expect([...goTestFunctions("func TestA(t *testing.T) {}\nfunc helper() {}\nfunc TestB_c(t *testing.T) {}\n")]).toEqual(["TestA", "TestB_c"]);
+    expect(["d/TestPage.golden", "d/header.golden", "d/completionsBasic1.baseline.jsonc", "d/Testify.golden"].map(testFunctionOf)).toEqual(["TestPage", "TestHeader", "TestCompletionsBasic1", "TestTestify"]);
+  });
+
+  it("pairs a lone golden file with its package's test function, and finds an obsolete one only where every test file was read", () => {
+    const paths = ["p/p_test.go", "p/q_test.go", "p/testdata/TestA.golden", "p/testdata/b.golden", "p/testdata/TestGone.golden"];
+    const read = texts({ "p/p_test.go": "func TestA(t *testing.T) {}\n", "p/q_test.go": "func TestB(t *testing.T) {}\n" });
+    const o = outputDirsOf(paths, read).find((d) => d.dir === "p/testdata")!;
+    expect([...o.paired]).toEqual([["p/p_test.go", ["p/testdata/TestA.golden"]], ["p/q_test.go", ["p/testdata/b.golden"]]]);
+    expect(o.unpaired).toEqual([]);
+    expect(o.why).toBeUndefined();
+    expect(o.entries?.find((e) => e.snapshot === "p/testdata/TestGone.golden")).toEqual({ snapshot: "p/testdata/TestGone.golden", test: "p/p_test.go, p/q_test.go", entries: 1, matched: 0, unmatched: ["TestGone"], unreadable: [] });
+    expect(o.opened).toEqual(["p/p_test.go", "p/q_test.go"]);
+    expect(suiteFilesOf([o])).toContain("p/testdata/TestGone.golden");
+    // One test file the source could not read: the golden file stays unpaired, never obsolete.
+    const half = outputDirsOf(paths, texts({ "p/p_test.go": "func TestA(t *testing.T) {}\n" })).find((d) => d.dir === "p/testdata")!;
+    expect(half.unpaired).toEqual(["p/testdata/TestGone.golden", "p/testdata/b.golden"]);
+    expect(half.entries?.some((e) => e.matched === 0)).toBe(false);
+  });
+
+  it("leaves a lone golden file undecided where a test names it, or builds golden paths as CSH cannot read", () => {
+    const paths = ["p/p_test.go", "p/testdata/header-v2.golden"];
+    const table = 'func TestHeader(t *testing.T) {\n\tfor _, c := range cases {\n\t\tgolden := filepath.Join("testdata", c.name+".golden")\n\t\t_ = golden\n\t}\n}\n';
+    const o = outputDirsOf(paths, texts({ "p/p_test.go": table })).find((d) => d.dir === "p/testdata")!;
+    expect(o.entries).toEqual([{ snapshot: "p/testdata/header-v2.golden", test: "p/p_test.go", entries: 1, matched: 0, unmatched: ["TestHeader-v2"], unreadable: [3] }]);
+    const named = outputDirsOf(paths, texts({ "p/p_test.go": 'func TestX(t *testing.T) {\n\tread("header-v2.golden")\n}\n' })).find((d) => d.dir === "p/testdata")!;
+    expect(named.entries?.[0]?.unreadable).toEqual([2]);
+  });
+
+  it("never pairs a golden file with two siblings of its stem by a test function elsewhere", () => {
+    const paths = ["d/page.html", "d/page.txt", "d/page.golden", "e/e_test.go"];
+    const os = outputDirsOf(paths, texts({ "e/e_test.go": "func TestPage(t *testing.T) {}\n" }));
+    expect(os.find((d) => d.dir === "d")!.unpaired).toEqual(["d/page.golden"]);
+    expect(os.some((d) => d.conventions.includes("named after a test function"))).toBe(false);
+  });
+
+  it("pairs an output no test file names with the one Go test function its stem names, anywhere", () => {
+    const paths = ["t/baselines/reference/fs/c/caseOne.baseline", "t/baselines/reference/fs/c/caseTwo.baseline", "t/baselines/reference/fs/c/shared.baseline", "g/gen_test.go", "h/other_test.go", "x/shared_test.go"];
+    const read = texts({ "g/gen_test.go": "func TestCaseOne(t *testing.T) {}\nfunc TestCaseTwo(t *testing.T) {}\n", "h/other_test.go": "func TestCaseTwo(t *testing.T) {}\n", "x/shared_test.go": "func TestShared(t *testing.T) {}\n" });
+    const o = outputDirsOf(paths, read).find((d) => d.dir === "t/baselines/reference/fs")!;
+    // caseTwo is declared twice, and shared is named by a test file's stem already: neither is paired by function.
+    expect(o.paired.get("g/gen_test.go")).toEqual(["t/baselines/reference/fs/c/caseOne.baseline"]);
+    expect(o.unpaired).toEqual(["t/baselines/reference/fs/c/caseTwo.baseline"]);
+    expect(o.conventions).toEqual(["named after a test file", "named after a test function"]);
+    // Only the files declaring a function an output names are read whole, not every Go test of the checkout.
+    expect(o.opened).toEqual(["g/gen_test.go", "h/other_test.go"]);
+    // Without the text, the pairing is stage 71's.
+    expect(outputDirsOf(paths).find((d) => d.dir === "t/baselines/reference/fs")!.conventions).toEqual(["named after a test file"]);
+  });
+
+  it("pairs an insta snapshot with the source its header names, from the crate's root, and keeps that source code", () => {
+    const paths = ["crates/a/Cargo.toml", "crates/a/src/lib.rs", "crates/a/src/snapshots/a__tests__one.snap", "crates/a/tests/snapshots/it__two.snap"];
+    const read = texts({ "crates/a/src/snapshots/a__tests__one.snap": "---\nsource: src/lib.rs\n---\n1\n", "crates/a/tests/snapshots/it__two.snap": "---\nsource: tests/it.rs\n---\n2\n", "crates/a/src/lib.rs": "fn test_one() {}\n" });
+    const os = outputDirsOf(paths, read);
+    const o = os.find((d) => d.dir === "crates/a/src/snapshots")!;
+    expect([...o.paired]).toEqual([["crates/a/src/lib.rs", ["crates/a/src/snapshots/a__tests__one.snap"]]]);
+    expect(o.code).toEqual(["crates/a/src/lib.rs"]);
+    expect(o.entries).toEqual([{ snapshot: "crates/a/src/snapshots/a__tests__one.snap", test: "crates/a/src/lib.rs", entries: 1, matched: 1, unmatched: [], unreadable: [] }]);
+    expect(os.find((d) => d.dir === "crates/a/tests/snapshots")!.orphans).toEqual([{ output: "crates/a/tests/snapshots/it__two.snap", names: "crates/a/tests/it.rs" }]);
+    // The source reads the crate's manifest by name, so given only the suite's files the adapter finds the same root.
+    expect(o.named).toEqual(["crates/a/Cargo.toml"]);
+    const again = outputDirsOf(suiteFilesOf(os), read);
+    expect(again.find((d) => d.dir === "crates/a/tests/snapshots")!.orphans).toEqual([{ output: "crates/a/tests/snapshots/it__two.snap", names: "crates/a/tests/it.rs" }]);
+  });
+
+  it("turns an unmatched entry into an obsolete snapshot, or an undecided one beside a name CSH cannot read", () => {
+    const enc = (s: string) => new TextEncoder().encode(s);
+    const files = [
+      { path: "src/lib.rs", bytes: enc('fn kept() { insta::assert_snapshot!(name_of(1), v); }\n') },
+      { path: "src/snapshots/c__tests__kept.snap", bytes: enc("---\nsource: src/lib.rs\n---\n1\n") },
+      { path: "src/snapshots/c__tests__gone.snap", bytes: enc("---\nsource: src/lib.rs\n---\n2\n") },
+      { path: "j/T.java", bytes: enc("class T { void m() {} }\n") },
+      { path: "j/T.gone.approved.txt", bytes: enc("x") },
+    ];
+    const gaps = outputGaps((run({ files } as never).items ?? []).map((i) => ({ ...i, source: "Outputs" })));
+    expect(gaps.map((g) => `${g.kind} ${g.subject}`).sort()).toEqual(["accepted-outputs Outputs/j", "accepted-outputs Outputs/src/snapshots", "obsolete-snapshot Outputs/j/T.gone.approved.txt::gone", "snapshot-undecided Outputs/src/snapshots/c__tests__gone.snap"]);
+    expect(gaps.find((g) => g.kind === "obsolete-snapshot")!.detail).toBe("gone: no test of j/T.java has this name, and CSH read every test it could be; the file stays and no test reads it");
   });
 });

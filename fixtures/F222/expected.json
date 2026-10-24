@@ -1,0 +1,22 @@
+{
+  "fixture": "F222",
+  "section": "Reading test suites as evidence, section 3; A-269",
+  "stage": 74,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["Outputs", "named after a test function"],
+      "entries": [
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/internal/render/testdata", "detailIncludes": ["named after a test function", "1 of 1 case", "2 files", "2 of 3 snapshot entries"] },
+        { "outcome": "gap", "kind": "obsolete-snapshot", "subject": "Outputs/internal/render/testdata/TestFooter.golden::TestFooter", "detailIncludes": ["TestFooter", "internal/render/render_test.go"] },
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/testdata/baselines/reference/fourslash", "detailIncludes": ["named after a test function", "1 of 1 case", "2 files"] },
+        { "outcome": "indeterminate", "kind": "unpaired-outputs", "subject": "Outputs/testdata/baselines/reference/fourslash", "detailIncludes": ["1 file", "completionsGone.baseline.jsonc"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "unpaired-outputs", "subject": "Outputs/internal/render/testdata" },
+        { "kind": "orphan-output", "subject": "Outputs/internal/render/testdata/TestFooter.golden" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

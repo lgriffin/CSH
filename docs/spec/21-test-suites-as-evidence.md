@@ -120,7 +120,8 @@ file and the test it names, as the runner reads them.
 | Python | syrupy `.ambr`: each `# name: test_x`, `# name: TestC.test_x`, with any `[params]` and `.n` | a `test_` function of the paired module, or a method of a `Test` class in it |
 | Rust | insta `.snap`: the header's `source:` names the file; the name after the last `__` is the snapshot's name, less a `-n` suffix | a function of that file whose name is the snapshot's name, or `test_` and it; or a literal first argument of an `assert_*snapshot!` call in that file |
 | Java | ApprovalTests `X.m.approved.<ext>` | a method `m` of the test class `X` |
-| Go | a golden file named `TestX.golden` or `x.golden` beside a package's tests, or in its `testdata` | a function `TestX` of a `_test.go` file of that package |
+| Go | a golden file named `TestX.golden` or `x.golden` beside a package's tests, or in its `testdata`, with no sibling of its stem | a function `TestX` of a `_test.go` file of that package |
+| Go, any output | an output no other row pairs and no test file's stem names, whose stem up to its first dot is `x` or `TestX` | the one `_test.go` file of the checkout that declares `TestX`, as TypeScript's fourslash baselines are when a test file declares several |
 | Any | an output whose stem is a test file's stem less its test affix (`_test`, `.test`, `.spec`, `test_`, `Test`), when exactly one test file has that stem | that test file, as TypeScript's fourslash baselines name theirs |
 
 **What the entries decide:**
@@ -152,6 +153,32 @@ nothing, and its outputs stay unpaired, naming why. A test file whose stem names
 those of the suite its own directory's test files name most: TypeScript's fourslash test
 `rewriteRelativeImportExtensionsProjectReferences1_test.go` writes a fourslash baseline, and the `tsc` baseline of
 the same name is written by a scenario of `tsc_test.go`.
+
+**Reading the other languages** (A-269, stage 74). The pairing reads a file's text only where a row needs it, and the
+proposal has the Outputs source read each such file whole, so the adapter reads what the proposal read:
+
+- **syrupy:** each `# name:` line of the `.ambr` file, less `[params]` and a `.n` counter, against the module's `test`
+  functions and the `test` methods of its `Test` classes, as `TestC.test_x`. A function defined inside a function, or a
+  method of a class pytest does not collect, is no test.
+- **insta:** the header's `source:` names the file, found from the crate's root (the nearest directory above the
+  snapshot with a `Cargo.toml`, which the source reads by name), or else from any directory above it. The snapshot's
+  name is what follows the last `__` of its stem, less an `@suffix` (`glob!`, `snapshot_suffix`) and a `-n` counter. That file is the case, and it stays code: it is
+  the crate's own source, holding its tests. A source that does not exist makes the snapshot an `orphan-output`. A
+  call `assert_*snapshot!` whose first of several arguments is not a literal makes its line unreadable, so an entry
+  with no name is undecided, not obsolete.
+- **ApprovalTests:** `X.m.approved.<ext>` names the method `m`, which the body of the class `X` of the paired test
+  file declares.
+- **Go:** a golden file with no sibling of its stem names `TestX`. When the package's test files declare none, and CSH
+  read every one of them, the file is `obsolete-snapshot`, unless a line of them may name it: one holding its name, or
+  building a golden file's path from parts (`".golden"`, `"testdata"`, `t.Name()`, goldie), as a table test does; then
+  it is `snapshot-undecided` at that line. When one could not be read, the file stays unpaired. A
+  golden file with two siblings of its stem stays the golden siblings' to decide, never named after a test. An output
+  any convention left unpaired whose stem no test file names is named after the one `TestX` function of the
+  checkout's Go test files; a function two files declare pairs nothing ([Q-83](../../QUESTIONS.md)). Only the files
+  declaring a function an output names are read whole.
+
+Each such output is an entry of one, so `accepted-outputs` counts the entries that name a test, and an
+`obsolete-snapshot` for an output says the file stays and no test reads it.
 
 A Jest or Vitest test that calls `toMatchSnapshot()` and has no entry is not reported: the runner writes the entry on
 its next run, and fails in `--ci` mode. That is the runner's verdict to give, not CSH's. An inline snapshot lives in

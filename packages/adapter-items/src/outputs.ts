@@ -20,7 +20,7 @@ export const manifest = {
   inputKinds: ["Outputs"],
 } as const;
 
-export type Convention = "reference tree" | "mirrored directories" | "golden siblings" | "UI outputs" | "snapshot directories" | "approved files" | "named after a test file";
+export type Convention = "reference tree" | "mirrored directories" | "golden siblings" | "UI outputs" | "snapshot directories" | "approved files" | "named after a test file" | "named after a test function";
 
 /** What the pairing found in one directory of accepted outputs. */
 export interface OutputDir {
@@ -45,9 +45,26 @@ export interface OutputDir {
   why?: string;
   /** Test files a stem two of them share names, which the source reads so that the adapter sees the same pairing. */
   named?: string[];
+  /** The files whose text the pairing read (stage 74), which the source reads whole so that the adapter reads them too. */
+  opened?: string[];
+  /** Cases that stay code as well: the source file an insta snapshot's header names, which holds its tests. */
+  code?: string[];
+  /** The entries of each snapshot or output named after a test, read from its text or its name (stage 74, A-269). */
+  entries?: Entries[];
 }
 
-const ORDER: Convention[] = ["reference tree", "mirrored directories", "golden siblings", "UI outputs", "snapshot directories", "approved files", "named after a test file"];
+/** What one snapshot file's entries, or one output named after a test, say of the test file they name. */
+export interface Entries {
+  snapshot: string;
+  test: string;
+  entries: number;
+  matched: number;
+  unmatched: string[];
+  /** Lines of the test file holding a name CSH cannot read: an unmatched entry there is undecided, not obsolete. */
+  unreadable: number[];
+}
+
+const ORDER: Convention[] = ["reference tree", "mirrored directories", "golden siblings", "UI outputs", "snapshot directories", "approved files", "named after a test file", "named after a test function"];
 const MIRRORED_IN = ["input", "inputs"];
 const MIRRORED_OUT = ["expected", "output", "outputs", "golden", "goldens"];
 // Mirrored directories are a suite only beneath a directory of tests or test data: a program's own input and output
@@ -86,11 +103,148 @@ function stemFor(base: string, stems: ReadonlySet<string>): string | undefined {
   return best;
 }
 
+/** The keys of a syrupy `.ambr` file, each `# name:` line's name as written. */
+export function syrupyKeys(text: string): string[] {
+  return [...text.matchAll(/^# name: (.+)$/gm)].map((m) => m[1]!.trimEnd());
+}
+
+/** A syrupy key less its parameters and its counter: `TestC.test_x[a].1` is `TestC.test_x`. */
+export const syrupyName = (key: string): string => key.replace(/\.\d+$/, "").replace(/\[.*\]$/, "");
+
+/**
+ * The tests of a Python module: each `test` function, and each `test` method of a `Test` class, as `TestC.test_x`. A
+ * function defined inside a function, or a method of a class pytest does not collect, is no test.
+ */
+export function pythonTestNames(text: string): Set<string> {
+  const names = new Set<string>();
+  const open: { indent: number; name: string; def: boolean }[] = [];
+  for (const line of text.split("\n")) {
+    const m = /^([ \t]*)(?:(?:async[ \t]+)?def[ \t]+(\w+)|class[ \t]+(\w+))/.exec(line);
+    if (m === null) continue;
+    const indent = m[1]!.length;
+    while (open.length > 0 && open.at(-1)!.indent >= indent) open.pop();
+    const def = m[2] !== undefined;
+    const name = (m[2] ?? m[3])!;
+    if (def && name.startsWith("test") && open.every((o) => !o.def && o.name.startsWith("Test"))) names.add([...open.map((o) => o.name), name].join("."));
+    open.push({ indent, name, def });
+  }
+  return names;
+}
+
+/** The file an insta snapshot's header names as its `source:`, or undefined when it has no header. */
+export function instaSource(text: string): string | undefined {
+  const head = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
+  return head === null ? undefined : /^source: *(.+?) *$/m.exec(head[1]!)?.[1];
+}
+
+/** An insta snapshot's name: what follows the last `__` of its stem, less an `@suffix` and a `-n` counter. */
+export const instaName = (path: string): string => {
+  const b = posix.basename(path).replace(/\.snap$/, "");
+  const at = b.lastIndexOf("__", b.includes("@") ? b.indexOf("@") : b.length);
+  return (at < 0 ? b : b.slice(at + 2)).replace(/@.*$/, "").replace(/-\d+$/, "");
+};
+
+/**
+ * The snapshot names a Rust file gives: each function's name, and its name less `test_`; and each literal first
+ * argument of an `assert_*snapshot!` call with more than one argument. A call whose first of several arguments is not a
+ * literal names its snapshot as CSH cannot read, and its line is unreadable.
+ */
+export function rustSnapshotNames(text: string): { names: Set<string>; unreadable: number[] } {
+  const names = new Set<string>();
+  for (const m of text.matchAll(/\bfn\s+([A-Za-z_][A-Za-z0-9_]*)/g)) {
+    names.add(m[1]!);
+    if (m[1]!.startsWith("test_")) names.add(m[1]!.slice(5));
+  }
+  const unreadable: number[] = [];
+  for (const m of text.matchAll(/\bassert_\w*snapshot!\s*\(/g)) {
+    const args = topLevelArgs(text, m.index + m[0].length);
+    if (args.length < 2) continue;
+    const lit = /^\s*"((?:[^"\\]|\\.)*)"\s*$/.exec(args[0]!);
+    if (lit !== null) names.add(lit[1]!);
+    else unreadable.push(text.slice(0, m.index).split("\n").length);
+  }
+  return { names, unreadable };
+}
+
+/** The arguments of a call from just past its open parenthesis, split at its top-level commas. */
+function topLevelArgs(text: string, from: number): string[] {
+  const args: string[] = [];
+  let depth = 0;
+  let start = from;
+  for (let i = from; i < text.length; i++) {
+    const c = text[i]!;
+    if (c === '"') {
+      for (i++; i < text.length && text[i] !== '"'; i++) if (text[i] === "\\") i++;
+    } else if (c === "(" || c === "[" || c === "{") depth++;
+    else if (c === ")" || c === "]" || c === "}") {
+      if (depth === 0) {
+        if (text.slice(start, i).trim() !== "") args.push(text.slice(start, i));
+        return args;
+      }
+      depth--;
+    } else if (c === "," && depth === 0) {
+      args.push(text.slice(start, i));
+      start = i + 1;
+    }
+  }
+  return args;
+}
+
+/** Whether a Java file's class `cls` declares a method `method` in its body (A-269 reads the name, not the method's body). */
+export function javaDeclares(text: string, cls: string, method: string): boolean {
+  const word = (w: string) => w.replace(/[$]/g, "\\$");
+  const head = new RegExp(`\\b(?:class|record|enum)\\s+${word(cls)}\\b[^{;]*\\{`).exec(text);
+  if (head === null) return false;
+  const body = text.slice(head.index + head[0].length, closing(text, head.index + head[0].length, "{", "}"));
+  for (const m of body.matchAll(new RegExp(`[\\w>\\]]\\s+${word(method)}\\s*\\(`, "g"))) {
+    const end = closing(body, m.index + m[0].length, "(", ")");
+    if (end < body.length && /^\s*(?:throws\s[^{;]*)?\{/.test(body.slice(end + 1))) return true;
+  }
+  return false;
+}
+
+/** The index of the bracket that closes one opened just before `from`, or the text's length when none does. */
+function closing(text: string, from: number, open: string, close: string): number {
+  let depth = 0;
+  for (let i = from; i < text.length; i++) {
+    const c = text[i]!;
+    if (c === '"') {
+      for (i++; i < text.length && text[i] !== '"'; i++) if (text[i] === "\\") i++;
+    } else if (c === open) depth++;
+    else if (c === close && depth-- === 0) return i;
+  }
+  return text.length;
+}
+
+/**
+ * The lines of a Go test file that may name the golden file `golden` as CSH cannot rule out: a literal holding its
+ * name, or one that builds a golden file's path from parts (`".golden"`, `"testdata"`, `t.Name()`, goldie).
+ */
+export function goGoldenLines(text: string, golden: string): number[] {
+  const b = posix.basename(golden);
+  const stem = b.replace(/\.golden$/, "");
+  return text.split("\n").flatMap((l, i) => (l.includes(b) || l.includes(`"${stem}"`) || /\bt\.Name\(\)|"\.golden"|"testdata\/?"|\bgoldie\b/.test(l) ? [i + 1] : []));
+}
+
+/** The `TestX` functions a Go test file declares. */
+export function goTestFunctions(text: string): Set<string> {
+  return new Set([...text.matchAll(/^func\s+(Test[A-Za-z0-9_]*)\s*\(/gm)].map((m) => m[1]!));
+}
+
+/** The test function an output named after one names: its stem up to its first dot, with `Test` before it if it has none. */
+export const testFunctionOf = (path: string): string => {
+  const b = posix.basename(path);
+  const stem = b.indexOf(".") > 0 ? b.slice(0, b.indexOf(".")) : b;
+  return /^Test(?![a-z])/.test(stem) ? stem : `Test${stem.slice(0, 1).toUpperCase()}${stem.slice(1)}`;
+};
+
 /**
  * Every directory of accepted outputs among `paths`, by the conventions of section 2. A file is claimed by the first
- * convention that reads it, in the order of the table, and a file no convention claims is no output at all.
+ * convention that reads it, in the order of the table, and a file no convention claims is no output at all. With
+ * `read`, the conventions of stage 74 read what they need of a file's text: an insta header, a syrupy file's names, a
+ * test file's tests (A-269). A file `read` cannot give, or gives empty, is one the pairing could not read.
  */
-export function outputDirsOf(paths: readonly string[]): OutputDir[] {
+export function outputDirsOf(paths: readonly string[], read?: (path: string) => string | undefined): OutputDir[] {
   const all = [...new Set(paths)].sort(compareCodePoints);
   const files = new Set(all);
   const dirs = new Set<string>();
@@ -114,6 +268,18 @@ export function outputDirsOf(paths: readonly string[]): OutputDir[] {
   for (const d of [...dirs].sort(compareCodePoints)) push(kids, dirOf(d), d);
   const inDir = new Map<string, string[]>();
   for (const p of all) push(inDir, dirOf(p), p);
+  // Every file whose text the pairing asked for, by the directory whose pairing asked (A-269).
+  const opened = new Map<string, Set<string>>();
+  const note = (o: OutputDir, p: string) => (opened.get(o.dir) ?? opened.set(o.dir, new Set()).get(o.dir)!).add(p);
+  const peek = (p: string): string | undefined => {
+    const t = read?.(p);
+    return t === undefined || t === "" ? undefined : t;
+  };
+  const text = (o: OutputDir, p: string): string | undefined => {
+    note(o, p);
+    return peek(p);
+  };
+  const entriesOf = (o: OutputDir, e: Entries) => (o.entries ??= []).push(e);
   const filesUnder = (dir: string): string[] => [...(inDir.get(dir) ?? []), ...(kids.get(dir) ?? []).flatMap(filesUnder)].sort(compareCodePoints);
   const childDirs = (dir: string) => kids.get(dir) ?? [];
 
@@ -215,7 +381,11 @@ export function outputDirsOf(paths: readonly string[]): OutputDir[] {
     else {
       const named = siblings(g).filter((x) => !/\.(golden|expected)$/.test(x) && stemOf(x) === posix.basename(f));
       if (named.length === 1) pairOne(o, "golden siblings", named[0]!, g);
-      else unpairedHere(o, g, named.length === 0 ? "a golden file with no sibling it names" : "a golden file with more than one sibling of its stem");
+      else {
+        unpairedHere(o, g, named.length === 0 ? "a golden file with no sibling it names" : "a golden file with more than one sibling of its stem");
+        // The source reads the siblings too, so the adapter sees two and does not take the golden file for a lone one.
+        if (named.length > 1) o.named = [...new Set([...(o.named ?? []), ...named])].sort(compareCodePoints);
+      }
     }
   }
 
@@ -256,7 +426,40 @@ export function outputDirsOf(paths: readonly string[]): OutputDir[] {
       }
       continue;
     }
-    if (segs.length >= 2 && segs[segs.length - 2] === "snapshots" && /\.snap$/.test(s)) unpairedHere(at(dirOf(s)), s, "an insta snapshot, named by its header (stage 74)");
+    if (segs.length >= 2 && segs[segs.length - 2] === "snapshots" && /\.snap$/.test(s)) {
+      // An insta snapshot names its test by its header's source:, a path from the crate's root (A-269). The source
+      // file holds the tests and stays code.
+      const o = at(dirOf(s));
+      const t = text(o, s);
+      const source = t === undefined ? undefined : instaSource(t);
+      if (source === undefined) {
+        unpairedHere(o, s, t === undefined ? "an insta snapshot CSH did not read" : "an insta snapshot with no source: in its header");
+        continue;
+      }
+      const crates = [];
+      for (let d = dirOf(s); ; d = dirOf(d)) {
+        crates.push(d);
+        if (d === "") break;
+      }
+      const crate = crates.find((d) => files.has(join(d, "Cargo.toml"))) ?? "";
+      // The source reads the manifest by name too, so the adapter finds the same crate root.
+      if (files.has(join(crate, "Cargo.toml")) && !(o.named ?? []).includes(join(crate, "Cargo.toml"))) o.named = [...(o.named ?? []), join(crate, "Cargo.toml")].sort(compareCodePoints);
+      const named = [crate, ...crates].map((d) => join(d, source)).find((x) => files.has(x));
+      if (named === undefined) {
+        uses(o, "snapshot directories");
+        o.orphans.push({ output: s, names: join(crate, source) });
+        claimed.add(s);
+        continue;
+      }
+      pairOne(o, "snapshot directories", named, s);
+      if (!(o.code ??= []).includes(named)) o.code.push(named);
+      const rs = text(o, named);
+      if (rs === undefined) continue;
+      const name = instaName(s);
+      const r = rustSnapshotNames(rs);
+      const matched = r.names.has(name);
+      entriesOf(o, { snapshot: s, test: named, entries: 1, matched: matched ? 1 : 0, unmatched: matched ? [] : [name], unreadable: r.unreadable });
+    }
   }
 
   // Approved files: X.m.approved.<ext> accepts the sibling test file whose stem is X.
@@ -301,6 +504,8 @@ export function outputDirsOf(paths: readonly string[]): OutputDir[] {
     named.set(k, (named.get(k) ?? 0) + 1);
   }
   const homeOf = (t: string) => [...dirsOf.get(t)!].sort((a, b) => (named.get(`${dirOf(t)}\t${b}`) ?? 0) - (named.get(`${dirOf(t)}\t${a}`) ?? 0) || compareCodePoints(a, b))[0]!;
+  // The outputs no test file's stem names, which stage 74 may find named after a test function.
+  const unnamed = new Set<string>();
   const tally = new Map<OutputDir, { left: string[]; twice: number; elsewhere: number; none: number }>();
   for (const f of found) {
     const t = tally.get(f.o) ?? tally.set(f.o, { left: [], twice: 0, elsewhere: 0, none: 0 }).get(f.o)!;
@@ -312,7 +517,10 @@ export function outputDirsOf(paths: readonly string[]): OutputDir[] {
         t.twice++;
         f.o.named = [...new Set([...(f.o.named ?? []), ...f.tests])].sort(compareCodePoints);
       } else if (f.tests.length === 1) t.elsewhere++;
-      else t.none++;
+      else {
+        t.none++;
+        unnamed.add(f.output);
+      }
     }
   }
   for (const [o, t] of tally) {
@@ -328,7 +536,94 @@ export function outputDirsOf(paths: readonly string[]): OutputDir[] {
     else o.why = reasons.join(", or ");
   }
 
+  // Named after a test function (section 3; stage 74, A-269). A golden file in a Go package's testdata, or beside its
+  // tests, names the function TestX of the package's test files: one that none declares, where CSH read them all, is
+  // obsolete. Any other output no convention paired is named after the one test function of the checkout's Go test
+  // files its stem names, as TypeScript's fourslash baselines are when a test file declares more than one.
+  if (read !== undefined) {
+    const goTests = all.filter((p) => /_test\.go$/.test(p) && !outputs.has(p));
+    const declared = new Map<string, Set<string>>();
+    // A file read only to find which file declares a function is not recorded; the files a pairing rests on are.
+    const fnsOf = (p: string) => {
+      let fs = declared.get(p);
+      if (fs === undefined) {
+        const t = peek(p);
+        if (t !== undefined) declared.set(p, (fs = goTestFunctions(t)));
+      }
+      return fs;
+    };
+    const done = new Set<string>();
+    const byFunction = (o: OutputDir, u: string, test: string) => {
+      pairOne(o, "named after a test function", test, u);
+      entriesOf(o, { snapshot: u, test, entries: 1, matched: 1, unmatched: [], unreadable: [] });
+      done.add(u);
+    };
+    const left: { o: OutputDir; u: string }[] = [];
+    for (const o of out.values()) for (const u of o.unpaired) {
+      const fn = testFunctionOf(u);
+      const d = dirOf(u);
+      const pkg = posix.basename(d) === "testdata" ? dirOf(d) : d;
+      // Only a golden file with no sibling of its stem: one with two is the golden siblings' to decide.
+      const f = u.replace(/\.golden$/, "");
+      const golden = /\.golden$/.test(u);
+      const lone = golden && !files.has(f) && !siblings(u).some((x) => !/\.(golden|expected)$/.test(x) && stemOf(x) === posix.basename(f));
+      const own = lone ? goTests.filter((p) => dirOf(p) === pkg) : [];
+      for (const p of own) note(o, p);
+      const fns = own.map(fnsOf);
+      const by = own.filter((_, i) => fns[i]?.has(fn) === true);
+      if (by.length === 1) byFunction(o, u, by[0]!);
+      else if (own.length > 0 && by.length === 0 && fns.every((f) => f !== undefined)) {
+        // The tests are the package's, so the golden file is theirs: obsolete, not unpaired (A-269), unless a test names
+        // it, or names golden files as CSH cannot read (a table case, t.Name()), when it is undecided.
+        uses(o, "named after a test function");
+        for (const p of own) if (!o.cases.includes(p)) o.cases.push(p);
+        const naming = own.map((p) => ({ p, lines: goGoldenLines(peek(p)!, u) })).find((x) => x.lines.length > 0);
+        if (naming === undefined) entriesOf(o, { snapshot: u, test: own.join(", "), entries: 1, matched: 0, unmatched: [fn], unreadable: [] });
+        else entriesOf(o, { snapshot: u, test: naming.p, entries: 1, matched: 0, unmatched: [fn], unreadable: naming.lines });
+        done.add(u);
+      } else if (unnamed.has(u) && (!golden || lone)) left.push({ o, u });
+    }
+    if (left.length > 0) {
+      const anywhere = new Map<string, string[]>();
+      for (const p of goTests) for (const fn of fnsOf(p) ?? []) push(anywhere, fn, p);
+      for (const { o, u } of left) {
+        const by = anywhere.get(testFunctionOf(u)) ?? [];
+        // Every file declaring the function is read whole, so the adapter sees one where CSH saw one, and two where two.
+        for (const p of by) note(o, p);
+        if (by.length === 1) byFunction(o, u, by[0]!);
+      }
+    }
+    for (const o of out.values()) {
+      if (!o.unpaired.some((u) => done.has(u))) continue;
+      o.unpaired = o.unpaired.filter((u) => !done.has(u));
+      if (o.unpaired.length === 0) delete o.why;
+    }
+  }
+
+  // The entries of a syrupy snapshot file and of an approved file, read with the test file each names (A-269).
+  if (read !== undefined) for (const o of out.values()) for (const [test, outs] of o.paired) {
+    if (/\.py$/.test(test)) for (const snap of outs.filter((x) => /(?:^|\/)__snapshots__\/[^/]+\.ambr$/.test(x))) {
+      const sn = text(o, snap);
+      const t = text(o, test);
+      if (sn === undefined || t === undefined) continue;
+      const names = pythonTestNames(t);
+      const keys = syrupyKeys(sn);
+      const unmatched = keys.filter((k) => !names.has(syrupyName(k)));
+      entriesOf(o, { snapshot: snap, test, entries: keys.length, matched: keys.length - unmatched.length, unmatched, unreadable: [] });
+    }
+    if (/\.java$/.test(test) && o.conventions.includes("approved files")) for (const a of outs.filter((x) => /\.approved\.[^./]+$/.test(x))) {
+      const t = text(o, test);
+      if (t === undefined) continue;
+      const [cls, method] = posix.basename(a).split(".");
+      const ok = method !== undefined && javaDeclares(t, cls!, method);
+      entriesOf(o, { snapshot: a, test, entries: 1, matched: ok ? 1 : 0, unmatched: ok ? [] : [method ?? cls!], unreadable: [] });
+    }
+  }
+
   for (const o of out.values()) {
+    const seen = opened.get(o.dir);
+    if (seen !== undefined && seen.size > 0) o.opened = [...seen].sort(compareCodePoints);
+    o.code?.sort(compareCodePoints);
     o.conventions.sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
     o.cases.sort(compareCodePoints);
     o.unaccepted.sort(compareCodePoints);
@@ -349,6 +644,8 @@ export function suiteFilesOf(dirs: readonly OutputDir[]): string[] {
     for (const x of o.shared) for (const y of [...x.cases, ...x.outputs]) s.add(y);
     for (const x of o.unpaired) s.add(x);
     for (const x of o.named ?? []) s.add(x);
+    for (const x of o.opened ?? []) s.add(x);
+    for (const e of o.entries ?? []) s.add(e.snapshot);
   }
   return [...s].sort(compareCodePoints);
 }
@@ -384,7 +681,11 @@ const JS = /\.(?:ts|tsx|js|jsx|mjs|cjs|mts|cts)$/;
 export function run(input: AdapterInput): AdapterOutput {
   const items: SourceItem[] = [];
   const bytes = new Map(input.files.map((f) => [f.path, f.bytes]));
-  for (const o of outputDirsOf(input.files.map((f) => f.path))) {
+  const read = (p: string) => {
+    const b = bytes.get(p);
+    return b === undefined || b.length === 0 ? undefined : decode(b);
+  };
+  for (const o of outputDirsOf(input.files.map((f) => f.path), read)) {
     const outputs = [...o.paired.values()].reduce((n, v) => n + v.length, 0);
     const first = [...o.paired.values()].flat()[0] ?? o.orphans[0]?.output ?? o.shared[0]?.outputs[0] ?? o.unpaired[0] ?? o.unaccepted[0] ?? o.dir;
     const attrs: Record<string, string> = { cases: String(o.cases.length), paired: String(o.paired.size), outputs: String(outputs) };
@@ -413,6 +714,14 @@ export function run(input: AdapterInput): AdapterOutput {
         if (e.unreadable.length === 0) for (const key of e.unmatched) obsolete.push(JSON.stringify({ snapshot: snap, key, test }));
         else undecided.push(JSON.stringify({ snapshot: snap, test, entries: e.unmatched.length, lines: e.unreadable }));
       }
+    }
+    // The entries stage 74 read with the pairing: syrupy, insta, approved files and outputs named after a test function.
+    for (const e of o.entries ?? []) {
+      entries += e.entries;
+      matched += e.matched;
+      if (e.unmatched.length === 0) continue;
+      if (e.unreadable.length === 0) for (const key of e.unmatched) obsolete.push(JSON.stringify({ snapshot: e.snapshot, key, test: e.test }));
+      else undecided.push(JSON.stringify({ snapshot: e.snapshot, test: e.test, entries: e.unmatched.length, lines: e.unreadable }));
     }
     if (entries > 0) {
       attrs.entries = String(entries);
