@@ -612,6 +612,21 @@ for "100% of eligible files" as the stat.
 
 Built as the first on 23 October 2026.
 
+## Q-83 Whether an output is named after a test function in another directory
+
+Raised in stage 74 ([21](docs/spec/21-test-suites-as-evidence.md), section 3). lgriffin/TypeScript keeps 217 fourslash
+baselines and the `api` and `astnav` baselines that no test file's stem names: `autoImportCompletion1.baseline.jsonc`
+is written by `TestAutoImportCompletion1`, which a test file of another name declares beside others.
+
+- **Paired with the one Go test file that declares `TestX` (chosen):** 163 fourslash baselines and all nine `api` and
+  `astnav` baselines are paired (the `api` and `astnav` pairs checked by hand against `encoder_test.go` and
+  `tokens_test.go`); a function two files declare pairs nothing, and an output a test file's stem names already is
+  left to that rule.
+- **Left unpaired:** no output is taken for a function's without the function's own body naming it, at the cost of
+  reporting every one as indeterminate.
+
+Built as the first on 23 October 2026.
+
 ## Q-63 What a name a package's document gives, and its code does not declare, is
 
 Raised in stage 67. `tsc/internal/format/README.md` names `createRulesMap`, which the Go port renamed `buildRulesMap`. Its sibling `tsc/internal/fswatch/README.md` names `ReadDirectoryChangesW`, a Windows API. Nothing in the text tells the two apart, and a measure over TypeScript, Toads, tutors-mono-repo and CSH found most undeclared names in backticks are of code outside the repository: OS APIs, JSON keys, framework types, other repositories' classes.

@@ -1,0 +1,25 @@
+{
+  "fixture": "F220",
+  "section": "Reading test suites as evidence, section 3; A-269",
+  "stage": 74,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["Outputs", "snapshot directories", "approved files"],
+      "entries": [
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/tests/__snapshots__", "detailIncludes": ["snapshot directories", "1 of 1 case", "3 of 4 snapshot entries"] },
+        { "outcome": "gap", "kind": "obsolete-snapshot", "subject": "Outputs/tests/__snapshots__/test_cart.ambr::test_removed_line", "detailIncludes": ["test_removed_line", "tests/test_cart.py"] },
+        { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/java/src/test/java/shop", "detailIncludes": ["approved files", "1 of 2 snapshot entries"] },
+        { "outcome": "gap", "kind": "obsolete-snapshot", "subject": "Outputs/java/src/test/java/shop/ReceiptTest.printsTax.approved.txt::printsTax", "detailIncludes": ["printsTax", "java/src/test/java/shop/ReceiptTest.java"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "obsolete-snapshot", "subject": "Outputs/tests/__snapshots__/test_cart.ambr::test_total" },
+        { "kind": "obsolete-snapshot", "subject": "Outputs/tests/__snapshots__/test_cart.ambr::test_total.1" },
+        { "kind": "obsolete-snapshot", "subject": "Outputs/tests/__snapshots__/test_cart.ambr::TestDiscount.test_ten_off[TENOFF]" },
+        { "kind": "obsolete-snapshot", "subject": "Outputs/java/src/test/java/shop/ReceiptTest.printsTotal.approved.txt::printsTotal" },
+        { "kind": "snapshot-undecided", "subject": "Outputs/tests/__snapshots__/test_cart.ambr" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

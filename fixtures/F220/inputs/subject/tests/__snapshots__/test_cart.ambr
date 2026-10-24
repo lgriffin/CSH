@@ -1,0 +1,13 @@
+# serializer version: 1
+# name: TestDiscount.test_ten_off[TENOFF]
+  90.0
+# ---
+# name: test_removed_line
+  5
+# ---
+# name: test_total
+  6
+# ---
+# name: test_total.1
+  0
+# ---
