@@ -112,8 +112,8 @@ export function syrupyKeys(text: string): string[] {
 export const syrupyName = (key: string): string => key.replace(/\.\d+$/, "").replace(/\[.*\]$/, "");
 
 /**
- * The tests of a Python module: each `test` function, and each `test` method of a class, as `Class.test_x`. A function
- * defined inside a function is no test pytest collects.
+ * The tests of a Python module: each `test` function, and each `test` method of a `Test` class, as `TestC.test_x`. A
+ * function defined inside a function, or a method of a class pytest does not collect, is no test.
  */
 export function pythonTestNames(text: string): Set<string> {
   const names = new Set<string>();
@@ -125,7 +125,7 @@ export function pythonTestNames(text: string): Set<string> {
     while (open.length > 0 && open.at(-1)!.indent >= indent) open.pop();
     const def = m[2] !== undefined;
     const name = (m[2] ?? m[3])!;
-    if (def && name.startsWith("test") && open.every((o) => !o.def)) names.add([...open.map((o) => o.name), name].join("."));
+    if (def && name.startsWith("test") && open.every((o) => !o.def && o.name.startsWith("Test"))) names.add([...open.map((o) => o.name), name].join("."));
     open.push({ indent, name, def });
   }
   return names;
@@ -137,11 +137,11 @@ export function instaSource(text: string): string | undefined {
   return head === null ? undefined : /^source: *(.+?) *$/m.exec(head[1]!)?.[1];
 }
 
-/** An insta snapshot's name: what follows the last `__` of its stem, less a `-n` counter. */
+/** An insta snapshot's name: what follows the last `__` of its stem, less an `@suffix` and a `-n` counter. */
 export const instaName = (path: string): string => {
-  const stem = stemOf(path);
-  const at = stem.lastIndexOf("__");
-  return (at < 0 ? stem : stem.slice(at + 2)).replace(/-\d+$/, "");
+  const b = posix.basename(path).replace(/\.snap$/, "");
+  const at = b.lastIndexOf("__", b.includes("@") ? b.indexOf("@") : b.length);
+  return (at < 0 ? b : b.slice(at + 2)).replace(/@.*$/, "").replace(/-\d+$/, "");
 };
 
 /**
@@ -190,10 +190,40 @@ function topLevelArgs(text: string, from: number): string[] {
   return args;
 }
 
-/** Whether a Java file declares the class `cls` and a method `method` (A-269 reads the name, not the body). */
+/** Whether a Java file's class `cls` declares a method `method` in its body (A-269 reads the name, not the method's body). */
 export function javaDeclares(text: string, cls: string, method: string): boolean {
   const word = (w: string) => w.replace(/[$]/g, "\\$");
-  return new RegExp(`\\b(?:class|record|enum)\\s+${word(cls)}\\b`).test(text) && new RegExp(`[\\w>\\]]\\s+${word(method)}\\s*\\([^)]*\\)\\s*(?:throws\\s[^{;]*)?\\{`).test(text);
+  const head = new RegExp(`\\b(?:class|record|enum)\\s+${word(cls)}\\b[^{;]*\\{`).exec(text);
+  if (head === null) return false;
+  const body = text.slice(head.index + head[0].length, closing(text, head.index + head[0].length, "{", "}"));
+  for (const m of body.matchAll(new RegExp(`[\\w>\\]]\\s+${word(method)}\\s*\\(`, "g"))) {
+    const end = closing(body, m.index + m[0].length, "(", ")");
+    if (end < body.length && /^\s*(?:throws\s[^{;]*)?\{/.test(body.slice(end + 1))) return true;
+  }
+  return false;
+}
+
+/** The index of the bracket that closes one opened just before `from`, or the text's length when none does. */
+function closing(text: string, from: number, open: string, close: string): number {
+  let depth = 0;
+  for (let i = from; i < text.length; i++) {
+    const c = text[i]!;
+    if (c === '"') {
+      for (i++; i < text.length && text[i] !== '"'; i++) if (text[i] === "\\") i++;
+    } else if (c === open) depth++;
+    else if (c === close && depth-- === 0) return i;
+  }
+  return text.length;
+}
+
+/**
+ * The lines of a Go test file that may name the golden file `golden` as CSH cannot rule out: a literal holding its
+ * name, or one that builds a golden file's path from parts (`".golden"`, `"testdata"`, `t.Name()`, goldie).
+ */
+export function goGoldenLines(text: string, golden: string): number[] {
+  const b = posix.basename(golden);
+  const stem = b.replace(/\.golden$/, "");
+  return text.split("\n").flatMap((l, i) => (l.includes(b) || l.includes(`"${stem}"`) || /\bt\.Name\(\)|"\.golden"|"testdata\/?"|\bgoldie\b/.test(l) ? [i + 1] : []));
 }
 
 /** The `TestX` functions a Go test file declares. */
@@ -240,10 +270,14 @@ export function outputDirsOf(paths: readonly string[], read?: (path: string) => 
   for (const p of all) push(inDir, dirOf(p), p);
   // Every file whose text the pairing asked for, by the directory whose pairing asked (A-269).
   const opened = new Map<string, Set<string>>();
-  const text = (o: OutputDir, p: string): string | undefined => {
-    (opened.get(o.dir) ?? opened.set(o.dir, new Set()).get(o.dir)!).add(p);
+  const note = (o: OutputDir, p: string) => (opened.get(o.dir) ?? opened.set(o.dir, new Set()).get(o.dir)!).add(p);
+  const peek = (p: string): string | undefined => {
     const t = read?.(p);
     return t === undefined || t === "" ? undefined : t;
+  };
+  const text = (o: OutputDir, p: string): string | undefined => {
+    note(o, p);
+    return peek(p);
   };
   const entriesOf = (o: OutputDir, e: Entries) => (o.entries ??= []).push(e);
   const filesUnder = (dir: string): string[] => [...(inDir.get(dir) ?? []), ...(kids.get(dir) ?? []).flatMap(filesUnder)].sort(compareCodePoints);
@@ -408,6 +442,8 @@ export function outputDirsOf(paths: readonly string[], read?: (path: string) => 
         if (d === "") break;
       }
       const crate = crates.find((d) => files.has(join(d, "Cargo.toml"))) ?? "";
+      // The source reads the manifest by name too, so the adapter finds the same crate root.
+      if (files.has(join(crate, "Cargo.toml")) && !(o.named ?? []).includes(join(crate, "Cargo.toml"))) o.named = [...(o.named ?? []), join(crate, "Cargo.toml")].sort(compareCodePoints);
       const named = [crate, ...crates].map((d) => join(d, source)).find((x) => files.has(x));
       if (named === undefined) {
         uses(o, "snapshot directories");
@@ -507,10 +543,11 @@ export function outputDirsOf(paths: readonly string[], read?: (path: string) => 
   if (read !== undefined) {
     const goTests = all.filter((p) => /_test\.go$/.test(p) && !outputs.has(p));
     const declared = new Map<string, Set<string>>();
-    const fnsOf = (o: OutputDir, p: string) => {
+    // A file read only to find which file declares a function is not recorded; the files a pairing rests on are.
+    const fnsOf = (p: string) => {
       let fs = declared.get(p);
       if (fs === undefined) {
-        const t = text(o, p);
+        const t = peek(p);
         if (t !== undefined) declared.set(p, (fs = goTestFunctions(t)));
       }
       return fs;
@@ -528,24 +565,31 @@ export function outputDirsOf(paths: readonly string[], read?: (path: string) => 
       const pkg = posix.basename(d) === "testdata" ? dirOf(d) : d;
       // Only a golden file with no sibling of its stem: one with two is the golden siblings' to decide.
       const f = u.replace(/\.golden$/, "");
-      const lone = /\.golden$/.test(u) && !files.has(f) && !siblings(u).some((x) => !/\.(golden|expected)$/.test(x) && stemOf(x) === posix.basename(f));
+      const golden = /\.golden$/.test(u);
+      const lone = golden && !files.has(f) && !siblings(u).some((x) => !/\.(golden|expected)$/.test(x) && stemOf(x) === posix.basename(f));
       const own = lone ? goTests.filter((p) => dirOf(p) === pkg) : [];
-      const fns = own.map((p) => fnsOf(o, p));
+      for (const p of own) note(o, p);
+      const fns = own.map(fnsOf);
       const by = own.filter((_, i) => fns[i]?.has(fn) === true);
       if (by.length === 1) byFunction(o, u, by[0]!);
       else if (own.length > 0 && by.length === 0 && fns.every((f) => f !== undefined)) {
-        // The tests are the package's, so the golden file is theirs: obsolete, not unpaired (A-269).
+        // The tests are the package's, so the golden file is theirs: obsolete, not unpaired (A-269), unless a test names
+        // it, or names golden files as CSH cannot read (a table case, t.Name()), when it is undecided.
         uses(o, "named after a test function");
         for (const p of own) if (!o.cases.includes(p)) o.cases.push(p);
-        entriesOf(o, { snapshot: u, test: own.join(", "), entries: 1, matched: 0, unmatched: [fn], unreadable: [] });
+        const naming = own.map((p) => ({ p, lines: goGoldenLines(peek(p)!, u) })).find((x) => x.lines.length > 0);
+        if (naming === undefined) entriesOf(o, { snapshot: u, test: own.join(", "), entries: 1, matched: 0, unmatched: [fn], unreadable: [] });
+        else entriesOf(o, { snapshot: u, test: naming.p, entries: 1, matched: 0, unmatched: [fn], unreadable: naming.lines });
         done.add(u);
-      } else if (unnamed.has(u)) left.push({ o, u });
+      } else if (unnamed.has(u) && (!golden || lone)) left.push({ o, u });
     }
     if (left.length > 0) {
       const anywhere = new Map<string, string[]>();
-      for (const p of goTests) for (const fn of fnsOf(left[0]!.o, p) ?? []) push(anywhere, fn, p);
+      for (const p of goTests) for (const fn of fnsOf(p) ?? []) push(anywhere, fn, p);
       for (const { o, u } of left) {
         const by = anywhere.get(testFunctionOf(u)) ?? [];
+        // Every file declaring the function is read whole, so the adapter sees one where CSH saw one, and two where two.
+        for (const p of by) note(o, p);
         if (by.length === 1) byFunction(o, u, by[0]!);
       }
     }

@@ -21,6 +21,13 @@ Vitest. Every subject in CI still meets its expected results and its `analysis-e
 - `check`: an `obsolete-snapshot` for a whole output (a golden, approved or insta file) says the file stays and no
   test reads it.
 
+The review of the change narrowed four readings: a syrupy name is a method only of a `Test` class; an approved file's
+method must sit in the body of its class, and its parameters may hold an annotation's parentheses; an insta name drops
+its `@suffix`, and the crate's `Cargo.toml` is read by name so the adapter finds the same root; and a lone Go golden
+file is obsolete only where no line of the package's tests may name it, else undecided at that line. A golden file
+with two siblings is never named after a function elsewhere, and only the Go test files that declare a function an
+output names are read whole, not every one in the checkout.
+
 F211 changes: `TestFormat.golden` is now named after `TestFormat` of `format_test.go`, as the Go row says, so three of
 three cases converge and one file (`twice.golden`, with two siblings) stays unpaired. F222's fourslash entries name
 the reference tree's child `fourslash` as their subject, as F219's do; its first draft named the subdirectory, which

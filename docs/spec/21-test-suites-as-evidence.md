@@ -158,18 +158,24 @@ the same name is written by a scenario of `tsc_test.go`.
 proposal has the Outputs source read each such file whole, so the adapter reads what the proposal read:
 
 - **syrupy:** each `# name:` line of the `.ambr` file, less `[params]` and a `.n` counter, against the module's `test`
-  functions and the `test` methods of its classes, as `Class.test_x`. A function defined inside a function is no test.
+  functions and the `test` methods of its `Test` classes, as `TestC.test_x`. A function defined inside a function, or a
+  method of a class pytest does not collect, is no test.
 - **insta:** the header's `source:` names the file, found from the crate's root (the nearest directory above the
-  snapshot with a `Cargo.toml`), or else from any directory above it. That file is the case, and it stays code: it is
+  snapshot with a `Cargo.toml`, which the source reads by name), or else from any directory above it. The snapshot's
+  name is what follows the last `__` of its stem, less an `@suffix` (`glob!`, `snapshot_suffix`) and a `-n` counter. That file is the case, and it stays code: it is
   the crate's own source, holding its tests. A source that does not exist makes the snapshot an `orphan-output`. A
   call `assert_*snapshot!` whose first of several arguments is not a literal makes its line unreadable, so an entry
   with no name is undecided, not obsolete.
-- **ApprovalTests:** `X.m.approved.<ext>` names the method `m`, which the class `X` of the paired test file declares.
+- **ApprovalTests:** `X.m.approved.<ext>` names the method `m`, which the body of the class `X` of the paired test
+  file declares.
 - **Go:** a golden file with no sibling of its stem names `TestX`. When the package's test files declare none, and CSH
-  read every one of them, the file is `obsolete-snapshot`; when one could not be read, the file stays unpaired. A
+  read every one of them, the file is `obsolete-snapshot`, unless a line of them may name it: one holding its name, or
+  building a golden file's path from parts (`".golden"`, `"testdata"`, `t.Name()`, goldie), as a table test does; then
+  it is `snapshot-undecided` at that line. When one could not be read, the file stays unpaired. A
   golden file with two siblings of its stem stays the golden siblings' to decide, never named after a test. An output
   any convention left unpaired whose stem no test file names is named after the one `TestX` function of the
-  checkout's Go test files; a function two files declare pairs nothing ([Q-83](../../QUESTIONS.md)).
+  checkout's Go test files; a function two files declare pairs nothing ([Q-83](../../QUESTIONS.md)). Only the files
+  declaring a function an output names are read whole.
 
 Each such output is an entry of one, so `accepted-outputs` counts the entries that name a test, and an
 `obsolete-snapshot` for an output says the file stays and no test reads it.
