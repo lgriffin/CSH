@@ -625,7 +625,9 @@ is written by `TestAutoImportCompletion1`, which a test file of another name dec
 - **Left unpaired:** no output is taken for a function's without the function's own body naming it, at the cost of
   reporting every one as indeterminate.
 
-Built as the first on 23 October 2026.
+Built as the first on 23 October 2026. Stage 73 tries a numbered or parameterised name's own function first
+(`x.1.…` is `TestX1`, `x=v` is `TestX=v`), which pairs 11 more fourslash baselines; the 43 left are written by table
+subtests and a shared helper, which no file name names.
 
 ## Q-63 What a name a package's document gives, and its code does not declare, is
 

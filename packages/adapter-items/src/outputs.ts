@@ -234,9 +234,24 @@ export function goTestFunctions(text: string): Set<string> {
 /** The test function an output named after one names: its stem up to its first dot, with `Test` before it if it has none. */
 export const testFunctionOf = (path: string): string => {
   const b = posix.basename(path);
-  const stem = b.indexOf(".") > 0 ? b.slice(0, b.indexOf(".")) : b;
-  return /^Test(?![a-z])/.test(stem) ? stem : `Test${stem.slice(0, 1).toUpperCase()}${stem.slice(1)}`;
+  return asTest(b.indexOf(".") > 0 ? b.slice(0, b.indexOf(".")) : b);
 };
+
+const asTest = (stem: string) => (/^Test(?![a-z])/.test(stem) ? stem : `Test${stem.slice(0, 1).toUpperCase()}${stem.slice(1)}`);
+
+/**
+ * The test functions an output may be named after, the most specific first (stage 73): `x.1.baseline` names `TestX1`
+ * before `TestX`, as fourslash's numbered baselines do, and `x=true.baseline` names `TestX`, a subtest's parameter
+ * left off.
+ */
+export function testFunctionsOf(path: string): string[] {
+  const b = posix.basename(path);
+  const first = b.indexOf(".") > 0 ? b.slice(0, b.indexOf(".")) : b;
+  const numbered = /^[^.]+\.(\d+)\./.exec(b);
+  const out = [...(numbered !== null ? [asTest(`${first}${numbered[1]}`)] : []), asTest(first)];
+  if (first.indexOf("=") > 0) out.push(asTest(first.slice(0, first.indexOf("="))));
+  return [...new Set(out)];
+}
 
 /**
  * Every directory of accepted outputs among `paths`, by the conventions of section 2. A file is claimed by the first
@@ -560,7 +575,6 @@ export function outputDirsOf(paths: readonly string[], read?: (path: string) => 
     };
     const left: { o: OutputDir; u: string }[] = [];
     for (const o of out.values()) for (const u of o.unpaired) {
-      const fn = testFunctionOf(u);
       const d = dirOf(u);
       const pkg = posix.basename(d) === "testdata" ? dirOf(d) : d;
       // Only a golden file with no sibling of its stem: one with two is the golden siblings' to decide.
@@ -570,6 +584,9 @@ export function outputDirsOf(paths: readonly string[], read?: (path: string) => 
       const own = lone ? goTests.filter((p) => dirOf(p) === pkg) : [];
       for (const p of own) note(o, p);
       const fns = own.map(fnsOf);
+      // The most specific name a package's test file declares, or else the plainest, which none does.
+      const names = testFunctionsOf(u);
+      const fn = names.find((n) => fns.some((f) => f?.has(n) === true)) ?? names.at(-1)!;
       const by = own.filter((_, i) => fns[i]?.has(fn) === true);
       if (by.length === 1) byFunction(o, u, by[0]!);
       else if (own.length > 0 && by.length === 0 && fns.every((f) => f !== undefined)) {
@@ -587,8 +604,9 @@ export function outputDirsOf(paths: readonly string[], read?: (path: string) => 
       const anywhere = new Map<string, string[]>();
       for (const p of goTests) for (const fn of fnsOf(p) ?? []) push(anywhere, fn, p);
       for (const { o, u } of left) {
-        const by = anywhere.get(testFunctionOf(u)) ?? [];
-        // Every file declaring the function is read whole, so the adapter sees one where CSH saw one, and two where two.
+        // The most specific name any test file declares decides: one file pairs, two pair nothing. Every file declaring
+        // it is read whole, so the adapter sees one where CSH saw one, and two where two.
+        const by = testFunctionsOf(u).map((fn) => anywhere.get(fn) ?? []).find((x) => x.length > 0) ?? [];
         for (const p of by) note(o, p);
         if (by.length === 1) byFunction(o, u, by[0]!);
       }

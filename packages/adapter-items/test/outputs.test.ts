@@ -1,7 +1,7 @@
 // Accepted outputs paired by path (Reading test suites as evidence, section 2; A-263): the edges of each convention
 // that the fixtures F210 to F216 do not reach.
 import { describe, expect, it } from "vitest";
-import { goTestFunctions, instaName, instaSource, javaDeclares, outputDirsOf, pythonTestNames, run, rustSnapshotNames, snapshotEntries, snapshotKeys, suiteFilesOf, syrupyKeys, syrupyName, testFunctionOf, testStemOf } from "../src/outputs.ts";
+import { goTestFunctions, instaName, instaSource, javaDeclares, outputDirsOf, pythonTestNames, run, rustSnapshotNames, snapshotEntries, snapshotKeys, suiteFilesOf, syrupyKeys, syrupyName, testFunctionOf, testFunctionsOf, testStemOf } from "../src/outputs.ts";
 import { testNames } from "../src/tests.ts";
 import { outputGaps } from "../../check/src/outputs.ts";
 
@@ -275,6 +275,22 @@ describe("snapshot entries and outputs named after a test, beyond TypeScript (st
     expect(o.opened).toEqual(["g/gen_test.go", "h/other_test.go"]);
     // Without the text, the pairing is stage 71's.
     expect(outputDirsOf(paths).find((d) => d.dir === "t/baselines/reference/fs")!.conventions).toEqual(["named after a test file"]);
+  });
+
+  it("takes a numbered or parameterised output for the most specific test function a file declares (stage 73)", () => {
+    expect(testFunctionsOf("d/amb.1.callHierarchy.txt")).toEqual(["TestAmb1", "TestAmb"]);
+    expect(testFunctionsOf("d/showAll=false.baseline.jsonc")).toEqual(["TestShowAll=false", "TestShowAll"]);
+    const paths = ["t/baselines/reference/fs/c/amb.1.txt", "t/baselines/reference/fs/c/amb.2.txt", "t/baselines/reference/fs/c/lens=true.jsonc", "t/baselines/reference/fs/c/table.baseline", "g/a_test.go", "g/b_test.go"];
+    const read = texts({ "g/a_test.go": "func TestAmb1(t *testing.T) {}\nfunc TestAmb(t *testing.T) {}\n", "g/b_test.go": "func TestAmb2(t *testing.T) {}\nfunc TestLens(t *testing.T) {}\nfunc TestTables(t *testing.T) {}\n" });
+    const o = outputDirsOf(paths, read).find((d) => d.dir === "t/baselines/reference/fs")!;
+    expect(o.paired.get("g/a_test.go")).toEqual(["t/baselines/reference/fs/c/amb.1.txt"]);
+    expect(o.paired.get("g/b_test.go")).toEqual(["t/baselines/reference/fs/c/amb.2.txt", "t/baselines/reference/fs/c/lens=true.jsonc"]);
+    expect(o.unpaired).toEqual(["t/baselines/reference/fs/c/table.baseline"]);
+    // A lone golden file in a package is read the same way: TestA.1 is TestA1's, and x=v is TestX's, never obsolete.
+    const pkg = ["p/a_test.go", "p/b_test.go", "p/testdata/TestA.1.golden", "p/testdata/x=v.golden"];
+    const q = outputDirsOf(pkg, texts({ "p/a_test.go": "func TestA(t *testing.T) {}\n", "p/b_test.go": "func TestA1(t *testing.T) {}\nfunc TestX(t *testing.T) {}\n" })).find((d) => d.dir === "p/testdata")!;
+    expect([...q.paired]).toEqual([["p/b_test.go", ["p/testdata/TestA.1.golden", "p/testdata/x=v.golden"]]]);
+    expect(q.entries?.every((e) => e.matched === 1)).toBe(true);
   });
 
   it("pairs an insta snapshot with the source its header names, from the crate's root, and keeps that source code", () => {
