@@ -120,7 +120,9 @@ entries with their tests, and what prose names with the tests that exercise it. 
 are F210 to F216. Stage 71 reads Jest and Vitest snapshot entries and the outputs named after a test file, TypeScript
 first; stage 74 brings the other languages' snapshot entries, syrupy, insta, ApprovalTests and Go golden files named
 after a test function, with fixtures F220 to F222. Stage 71's fixtures are F217 to F219. Stage 72 sets each
-symbol a document names against what the code of the tests of its language mentions. Its fixtures are F223 to F225.
+symbol a document names against what the code of the tests of its language mentions. Its fixtures are F223 to F225. Stage 73
+calibrates on lgriffin/TypeScript, ESI.ts and the CI subjects, and pairs numbered and parameterised outputs with the
+test function each names.
 
 Stage 75 answers Leigh's question about what the TypeScript run read ([21](../spec/21-test-suites-as-evidence.md),
 section 8): the coverage line counts the eligible files read, parsed and read by name, says why every other tracked
