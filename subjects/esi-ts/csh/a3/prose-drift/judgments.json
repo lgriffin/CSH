@@ -222,6 +222,15 @@
       ]
     },
     {
+      "id": "named-and-mentioned",
+      "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
+      "match": [
+        {
+          "kind": "exercised"
+        }
+      ]
+    },
+    {
       "id": "recorded-silence",
       "name": "A silence recorded with its reason",
       "match": [

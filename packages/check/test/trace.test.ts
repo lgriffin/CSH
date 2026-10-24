@@ -393,3 +393,41 @@ describe("From the Toads run (stage 62)", () => {
     expect(dangling("file:config/y.yaml", ["config/x.yaml"])).toBe(true);
   });
 });
+
+describe("what prose names, tests exercise (stage 72)", () => {
+  const fact = (f: Record<string, unknown>) => ({ schema: "csh-facts/v2", subject: { commit: "c" }, tool: { id: "facts-code", version: "1" }, ...f }) as never;
+  const docs = (edges: { to: string; span: string }[]): SourceRun[] => [
+    { source: "Docs", kind: "Documents", files: [], output: { diagnostics: [], items: [item("guide.md", "document")], edges: edges.map((e) => ({ from: "guide.md", rel: "mentions-symbol" as never, to: e.to, span: e.span })) } },
+  ];
+  const facts = [
+    fact({ kind: "module", name: "src/a.ts" }),
+    fact({ kind: "declare", module: "src/a.ts", symbol: "Shared", declares: "class", at: "src/a.ts:1" }),
+    fact({ kind: "declare", module: "src/a.ts", symbol: "Lonely", declares: "class", at: "src/a.ts:2" }),
+    fact({ kind: "module", name: "src/B.java" }),
+    fact({ kind: "declare", module: "src/B.java", symbol: "Shared", declares: "class", at: "src/B.java:1" }),
+  ];
+  const mentions = (byName: Record<string, string[]>, unread: Record<string, string[]> = {}) => ({ byName: new Map(Object.entries(byName)), languages: new Set(["typescript", "java"]), unread: new Map(Object.entries(unread)) });
+
+  it("counts a mention a readable test makes even when another test of its language could not be read", () => {
+    const r = trace({ prepared: prepare(module, docs([{ to: "symbol:src/a.ts#Shared", span: "g:1" }])), facts, mentions: mentions({ "typescript:Shared": ["t/a.test.ts"] }, { typescript: ["t/broken.test.ts"] }) });
+    expect(r.gaps.map((g) => g.kind)).toEqual(["exercised"]);
+  });
+
+  it("names the unread files when no test it read mentions the symbol, even when none of that language could be read", () => {
+    const m = { byName: new Map<string, string[]>(), languages: new Set<string>(), unread: new Map([["typescript", ["t/broken.test.ts"]]]) };
+    const r = trace({ prepared: prepare(module, docs([{ to: "symbol:src/a.ts#Lonely", span: "g:1" }])), facts, mentions: m });
+    expect(r.gaps).toEqual([{ kind: "exercise-undecided", subject: "Docs/guide.md", fragments: [], detail: "names `Lonely` (TypeScript code, and t/broken.test.ts could not be read)" }]);
+  });
+
+  it("takes a name two languages declare as exercised when a test of either mentions it", () => {
+    const r = trace({ prepared: prepare(module, docs([{ to: "symbol:src/#Shared", span: "g:1" }])), facts, mentions: mentions({ "java:Shared": ["t/BTest.java"] }) });
+    expect(r.gaps).toEqual([{ kind: "exercised", subject: "Docs/guide.md", fragments: [], detail: "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `Shared` (t/BTest.java)" }]);
+  });
+
+  it("names the tests that could cite an unverified rule, as it does an unverified requirement", () => {
+    const rule = { ...item("f#r", "rule"), text: "The `Lonely` class keeps `Shared` apart" };
+    const runs: SourceRun[] = [{ source: "Features", kind: "Features", files: [], output: { diagnostics: [], items: [rule], edges: [] } }];
+    const r = trace({ prepared: prepare(module, runs), mentions: mentions({ "typescript:Lonely": ["t/a.test.ts", "t/b.test.ts"], "typescript:Shared": ["t/b.test.ts"] }) });
+    expect(r.gaps[0]!.detail).toBe("f#r:1: no scenario sits under this rule; tests that mention every term it writes, and could cite it: t/b.test.ts");
+  });
+});

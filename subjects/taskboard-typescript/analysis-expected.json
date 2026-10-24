@@ -1,9 +1,9 @@
 {
   "schema": "csh-expected/v1",
   "counts": {
-    "gap": 1,
+    "gap": 3,
     "indeterminate": 1,
-    "converged": 0
+    "converged": 2
   },
   "rows": [
     {

@@ -11,7 +11,7 @@ import { prepare, type Prepared, type SourceRun } from "./pool.ts";
 import { buildPool, runQueries, sortFindings } from "./run.ts";
 import { testOutcomes } from "./results.ts";
 import { rungsOf } from "./ladder.ts";
-import { trace } from "./trace.ts";
+import { type TestMentions, trace } from "./trace.ts";
 import { ALL_CANDIDATE, type AuthorityInfo, type AuthorityResolver, type ComponentInfo, type Gap, type HistoryPort, type Report, TOOL_VERSION } from "./types.ts";
 
 export const DEFAULT_BUDGET_MS = 5000;
@@ -40,6 +40,8 @@ export interface CheckOptions {
   ignored?: string[];
   /** The repository's history at the commit evaluated (stage 25): stale-prose and untraced-change come from it. */
   history?: HistoryPort;
+  /** What the code of every test file mentions (Reading test suites as evidence, section 4; A-264). */
+  mentions?: TestMentions;
 }
 
 export interface CheckResult {
@@ -72,7 +74,7 @@ export async function check(opts: CheckOptions): Promise<CheckResult> {
   const outcome = await runQueries(pool, env, authority);
   const arch = evaluateArchitecture({ prepared, fragments: prepared.fragments, authority, live: (n) => pool.byName.has(n), ...(opts.files !== undefined ? { files: opts.files } : {}), ...(opts.snapshot !== undefined ? { snapshotCommit: opts.snapshot.commit } : {}), ...(opts.subjectCommit !== undefined ? { subjectCommit: opts.subjectCommit } : {}), ...(opts.history !== undefined ? { history: opts.history } : {}) });
   outcome.findings = sortFindings([...outcome.findings, ...arch.findings]);
-  const traced = trace({ prepared, facts: currentFacts(prepared.runs.flatMap((r) => r.output.facts ?? []), opts.snapshot?.commit, opts.subjectCommit), ...(opts.files !== undefined ? { files: opts.files } : {}), ...(opts.ignored !== undefined ? { ignored: opts.ignored } : {}), ...(opts.history !== undefined ? { history: opts.history } : {}) });
+  const traced = trace({ prepared, facts: currentFacts(prepared.runs.flatMap((r) => r.output.facts ?? []), opts.snapshot?.commit, opts.subjectCommit), ...(opts.files !== undefined ? { files: opts.files } : {}), ...(opts.ignored !== undefined ? { ignored: opts.ignored } : {}), ...(opts.history !== undefined ? { history: opts.history } : {}), ...(opts.mentions !== undefined ? { mentions: opts.mentions } : {}) });
   const tested = testOutcomes(prepared, traced.edges, opts.files);
   const gaps = await gapView({ prepared, pool, outcome, env, authority, archGaps: arch.gaps, traceGaps: [...traced.gaps, ...untracedChanges(opts.history), ...tested.gaps], ...(opts.component !== undefined ? { unowned: opts.component.unowned } : {}) });
   const tool = { version: TOOL_VERSION, solver: opts.solver.id, budgetMs };

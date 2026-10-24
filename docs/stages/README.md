@@ -118,7 +118,8 @@ Stages 70 to 73 read a repository's test suites as evidence ([21](../spec/21-tes
 [issue 89](https://github.com/lgriffin/CSH/issues/89), gap 6): cases paired with their accepted outputs, snapshot
 entries with their tests, and what prose names with the tests that exercise it. Stage 70 pairs by path. Its fixtures
 are F210 to F216. Stage 71 reads Jest and Vitest snapshot entries and the outputs named after a test file, TypeScript
-first; stage 74 brings the other languages' snapshot entries. Its fixtures are F217 to F219.
+first; stage 74 brings the other languages' snapshot entries. Its fixtures are F217 to F219. Stage 72 sets each
+symbol a document names against what the code of the tests of its language mentions. Its fixtures are F223 to F225.
 
 Stage 75 answers Leigh's question about what the TypeScript run read ([21](../spec/21-test-suites-as-evidence.md),
 section 8): the coverage line counts the eligible files read, parsed and read by name, says why every other tracked

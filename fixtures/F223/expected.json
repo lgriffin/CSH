@@ -1,0 +1,22 @@
+{
+  "fixture": "F223",
+  "section": "Reading test suites as evidence, section 4; A-264, A-265",
+  "stage": 72,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "entries": [
+        { "outcome": "converged", "kind": "exercised", "subject": "Documents/docs/pricing.md", "detailIncludes": ["`applyDiscount`", "src/cart/discount.test.ts"] },
+        { "outcome": "gap", "kind": "unexercised", "subject": "Documents/src/cart/README.md", "detailIncludes": ["`priceLine`", "no test mentions", "`computeTotal`", "src/cart/total.test.ts", "`applyDiscount`"] },
+        { "outcome": "gap", "kind": "unverified", "subject": "Requirements/REQ-1", "detailIncludes": ["tests that mention every term it writes", "src/cart/total.test.ts"] },
+        { "outcome": "gap", "kind": "unverified", "subject": "Requirements/REQ-2", "detailExcludes": ["tests that mention every term it writes"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "unexercised", "subject": "Documents/docs/pricing.md" },
+        { "kind": "exercised", "subject": "Documents/src/cart/README.md" },
+        { "kind": "exercise-undecided", "subject": "Documents/src/cart/README.md" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

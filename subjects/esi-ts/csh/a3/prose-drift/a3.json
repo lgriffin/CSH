@@ -265,7 +265,7 @@
     ]
   },
   "goal": "Every line that names a file is re-read when the file changes, and every fact the prose states about the code is either a claim CSH checks or generated from the code. The count of stale-prose items falls at each release instead of rising, and no claim the code refutes survives a release.",
-  "judgmentsDigest": "sha256:6b1fb0fbf0271bd1dec4d059b71eba9a1703f98e87a3e080f3a593e144677cd5",
+  "judgmentsDigest": "sha256:a48b8c60390d3dd6aaefa87be113ef285c46eaadc781580e62ee3f724dc9aa18",
   "lanes": [
     {
       "counts": [
@@ -799,37 +799,44 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.4246575342465753,
+          "cumulative": 0.40789473684210525,
           "n": 31,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.726027397260274,
+          "cumulative": 0.6973684210526315,
           "n": 22,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.8356164383561644,
+          "cumulative": 0.8026315789473685,
           "n": 8,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9315068493150684,
+          "cumulative": 0.8947368421052632,
           "n": 7,
           "name": "Names outlive the files and symbols they name",
           "vital": false
         },
         {
           "cause": "untraced",
-          "cumulative": 1,
+          "cumulative": 0.9605263157894737,
           "n": 5,
           "name": "Changes to src carry no test and no trace",
+          "vital": false
+        },
+        {
+          "cause": "named-and-mentioned",
+          "cumulative": 1,
+          "n": 3,
+          "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
           "vital": false
         }
       ],
@@ -839,30 +846,37 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.45588235294117646,
+          "cumulative": 0.43661971830985913,
           "n": 31,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.7794117647058824,
+          "cumulative": 0.7464788732394366,
           "n": 22,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.8970588235294118,
+          "cumulative": 0.8591549295774648,
           "n": 8,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9705882352941176,
+          "cumulative": 0.9295774647887324,
           "n": 5,
           "name": "Names outlive the files and symbols they name",
+          "vital": false
+        },
+        {
+          "cause": "named-and-mentioned",
+          "cumulative": 0.971830985915493,
+          "n": 3,
+          "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
           "vital": false
         },
         {
@@ -879,30 +893,37 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.4626865671641791,
+          "cumulative": 0.44285714285714284,
           "n": 31,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.7910447761194029,
+          "cumulative": 0.7571428571428571,
           "n": 22,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.9104477611940298,
+          "cumulative": 0.8714285714285714,
           "n": 8,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9850746268656716,
+          "cumulative": 0.9428571428571428,
           "n": 5,
           "name": "Names outlive the files and symbols they name",
+          "vital": false
+        },
+        {
+          "cause": "named-and-mentioned",
+          "cumulative": 0.9857142857142858,
+          "n": 3,
+          "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
           "vital": false
         },
         {
@@ -919,30 +940,37 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.4626865671641791,
+          "cumulative": 0.44285714285714284,
           "n": 31,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.7910447761194029,
+          "cumulative": 0.7571428571428571,
           "n": 22,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.9104477611940298,
+          "cumulative": 0.8714285714285714,
           "n": 8,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9850746268656716,
+          "cumulative": 0.9428571428571428,
           "n": 5,
           "name": "Names outlive the files and symbols they name",
+          "vital": false
+        },
+        {
+          "cause": "named-and-mentioned",
+          "cumulative": 0.9857142857142858,
+          "n": 3,
+          "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
           "vital": false
         },
         {
@@ -959,30 +987,37 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.463768115942029,
+          "cumulative": 0.4444444444444444,
           "n": 32,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.782608695652174,
+          "cumulative": 0.75,
           "n": 22,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.8985507246376812,
+          "cumulative": 0.8611111111111112,
           "n": 8,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9710144927536232,
+          "cumulative": 0.9305555555555556,
           "n": 5,
           "name": "Names outlive the files and symbols they name",
+          "vital": false
+        },
+        {
+          "cause": "named-and-mentioned",
+          "cumulative": 0.9722222222222222,
+          "n": 3,
+          "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
           "vital": false
         },
         {
@@ -999,30 +1034,37 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.47058823529411764,
+          "cumulative": 0.4507042253521127,
           "n": 32,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.7941176470588235,
+          "cumulative": 0.7605633802816901,
           "n": 22,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.9117647058823529,
+          "cumulative": 0.8732394366197183,
           "n": 8,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9852941176470589,
+          "cumulative": 0.9436619718309859,
           "n": 5,
           "name": "Names outlive the files and symbols they name",
+          "vital": false
+        },
+        {
+          "cause": "named-and-mentioned",
+          "cumulative": 0.9859154929577465,
+          "n": 3,
+          "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
           "vital": false
         },
         {
@@ -1039,30 +1081,37 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.47058823529411764,
+          "cumulative": 0.4507042253521127,
           "n": 32,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.7941176470588235,
+          "cumulative": 0.7605633802816901,
           "n": 22,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.9117647058823529,
+          "cumulative": 0.8732394366197183,
           "n": 8,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9852941176470589,
+          "cumulative": 0.9436619718309859,
           "n": 5,
           "name": "Names outlive the files and symbols they name",
+          "vital": false
+        },
+        {
+          "cause": "named-and-mentioned",
+          "cumulative": 0.9859154929577465,
+          "n": 3,
+          "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
           "vital": false
         },
         {
@@ -1079,37 +1128,44 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.6226415094339622,
+          "cumulative": 0.5945945945945946,
           "n": 66,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.7735849056603774,
+          "cumulative": 0.7387387387387387,
           "n": 16,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.8584905660377359,
+          "cumulative": 0.8198198198198198,
           "n": 9,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
           "vital": true
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9339622641509434,
+          "cumulative": 0.8918918918918919,
           "n": 8,
           "name": "Names outlive the files and symbols they name",
           "vital": false
         },
         {
           "cause": "untraced",
-          "cumulative": 1,
+          "cumulative": 0.954954954954955,
           "n": 7,
           "name": "Changes to src carry no test and no trace",
+          "vital": false
+        },
+        {
+          "cause": "named-and-mentioned",
+          "cumulative": 1,
+          "n": 5,
+          "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
           "vital": false
         }
       ],
@@ -1119,30 +1175,37 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.6666666666666666,
+          "cumulative": 0.6355140186915887,
           "n": 68,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.8235294117647058,
+          "cumulative": 0.7850467289719626,
           "n": 16,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.9117647058823529,
+          "cumulative": 0.8691588785046729,
           "n": 9,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
-          "vital": false
+          "vital": true
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9901960784313726,
+          "cumulative": 0.9439252336448598,
           "n": 8,
           "name": "Names outlive the files and symbols they name",
+          "vital": false
+        },
+        {
+          "cause": "named-and-mentioned",
+          "cumulative": 0.9906542056074766,
+          "n": 5,
+          "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
           "vital": false
         },
         {
@@ -1159,30 +1222,37 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.6666666666666666,
+          "cumulative": 0.6355140186915887,
           "n": 68,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.8235294117647058,
+          "cumulative": 0.7850467289719626,
           "n": 16,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.9117647058823529,
+          "cumulative": 0.8691588785046729,
           "n": 9,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
-          "vital": false
+          "vital": true
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9901960784313726,
+          "cumulative": 0.9439252336448598,
           "n": 8,
           "name": "Names outlive the files and symbols they name",
+          "vital": false
+        },
+        {
+          "cause": "named-and-mentioned",
+          "cumulative": 0.9906542056074766,
+          "n": 5,
+          "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
           "vital": false
         },
         {
@@ -1199,30 +1269,37 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.6635514018691588,
+          "cumulative": 0.6339285714285714,
           "n": 71,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.8130841121495327,
+          "cumulative": 0.7767857142857143,
           "n": 16,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.897196261682243,
+          "cumulative": 0.8571428571428571,
           "n": 9,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
-          "vital": false
+          "vital": true
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9719626168224299,
+          "cumulative": 0.9285714285714286,
           "n": 8,
           "name": "Names outlive the files and symbols they name",
+          "vital": false
+        },
+        {
+          "cause": "named-and-mentioned",
+          "cumulative": 0.9732142857142857,
+          "n": 5,
+          "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
           "vital": false
         },
         {
@@ -1239,35 +1316,42 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.6833333333333333,
+          "cumulative": 0.6507936507936508,
           "n": 82,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.8166666666666667,
+          "cumulative": 0.7777777777777778,
           "n": 16,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.8916666666666667,
+          "cumulative": 0.8492063492063492,
           "n": 9,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
-          "vital": false
+          "vital": true
         },
         {
           "cause": "names-outlive-files",
-          "cumulative": 0.9583333333333334,
+          "cumulative": 0.9126984126984127,
           "n": 8,
           "name": "Names outlive the files and symbols they name",
           "vital": false
         },
         {
+          "cause": "named-and-mentioned",
+          "cumulative": 0.9603174603174603,
+          "n": 6,
+          "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
+          "vital": false
+        },
+        {
           "cause": "recorded-silence",
-          "cumulative": 0.9833333333333333,
+          "cumulative": 0.9841269841269841,
           "n": 3,
           "name": "A silence recorded with its reason",
           "vital": false
@@ -1906,6 +1990,51 @@
             "Charter"
           ],
           "subject": "Charter/guides/CHARTER.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `PACKAGE_VERSION` (tests/tdd/core/constants.test.ts)",
+          "fragments": [],
+          "id": "c2815d737580b0d9",
+          "kind": "exercised",
+          "label": "exercised: QUALITY-GATES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/QUALITY-GATES.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `buildCacheKey` (tests/tdd/core/cacheKey.test.ts, tests/tdd/core/requestPipeline/cachePolicy.test.ts), `buildRequestHeaders` (tests/tdd/core/requestPipeline/headers.test.ts), `sanitizeUrl` (tests/tdd/core/error.test.ts), `validateBaseUrl` (tests/tdd/core/security.test.ts, tests/tdd/core/validation.test.ts)",
+          "fragments": [],
+          "id": "d49664522328ba2c",
+          "kind": "exercised",
+          "label": "exercised: SECURITY.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/SECURITY.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `MarketOrderSchema` (tests/tdd/schemas/schema-validation.test.ts, tests/tdd/schemas/schemaRejection.test.ts, tests/tdd/testing/TestDataFactory.schemas.test.ts)",
+          "fragments": [],
+          "id": "ef534a408365d594",
+          "kind": "exercised",
+          "label": "exercised: DESIGN-RULES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/DESIGN-RULES.md"
         },
         {
           "cause": "unchecked-claims",
@@ -3303,6 +3432,51 @@
           "subject": "Charter/guides/CHARTER.md"
         },
         {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `COMPATIBILITY_DATE` (tests/contract/replay/coverage.test.ts, tests/tdd/core/constants.test.ts, tests/tdd/scripts/generated-spec-date.test.ts), `PACKAGE_VERSION` (tests/tdd/core/constants.test.ts)",
+          "fragments": [],
+          "id": "c2815d737580b0d9",
+          "kind": "exercised",
+          "label": "exercised: QUALITY-GATES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/QUALITY-GATES.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `buildCacheKey` (tests/fuzz/cache-key.property.test.ts, tests/fuzz/etag-cache-model.property.test.ts, tests/tdd/core/cacheKey.test.ts, and 1 more), `buildRequestHeaders` (tests/tdd/core/requestPipeline/headers.test.ts), `sanitizeUrl` (tests/tdd/core/error.test.ts), `validateBaseUrl` (tests/tdd/core/security.test.ts, tests/tdd/core/validation.test.ts)",
+          "fragments": [],
+          "id": "d49664522328ba2c",
+          "kind": "exercised",
+          "label": "exercised: SECURITY.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/SECURITY.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `MarketOrderSchema` (tests/tdd/schemas/schema-validation.test.ts, tests/tdd/schemas/schemaRejection.test.ts, tests/tdd/testing/TestDataFactory.schemas.test.ts)",
+          "fragments": [],
+          "id": "ef534a408365d594",
+          "kind": "exercised",
+          "label": "exercised: DESIGN-RULES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/DESIGN-RULES.md"
+        },
+        {
           "cause": "unchecked-claims",
           "detail": "Q-CLAIM(ErrorsCircuitOpenIsAnEsiError)",
           "fragments": [
@@ -4662,6 +4836,51 @@
           "subject": "Charter/guides/CHARTER.md"
         },
         {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `COMPATIBILITY_DATE` (tests/contract/replay/coverage.test.ts, tests/tdd/core/constants.test.ts, tests/tdd/scripts/generated-spec-date.test.ts), `PACKAGE_VERSION` (tests/tdd/core/constants.test.ts)",
+          "fragments": [],
+          "id": "c2815d737580b0d9",
+          "kind": "exercised",
+          "label": "exercised: QUALITY-GATES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/QUALITY-GATES.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `buildCacheKey` (tests/fuzz/cache-key.property.test.ts, tests/fuzz/etag-cache-model.property.test.ts, tests/tdd/core/cacheKey.test.ts, and 1 more), `buildRequestHeaders` (tests/tdd/core/requestPipeline/headers.test.ts), `sanitizeUrl` (tests/tdd/core/error.test.ts), `validateBaseUrl` (tests/tdd/core/security.test.ts, tests/tdd/core/validation.test.ts)",
+          "fragments": [],
+          "id": "d49664522328ba2c",
+          "kind": "exercised",
+          "label": "exercised: SECURITY.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/SECURITY.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `MarketOrderSchema` (tests/tdd/schemas/schema-validation.test.ts, tests/tdd/schemas/schemaRejection.test.ts, tests/tdd/testing/TestDataFactory.schemas.test.ts)",
+          "fragments": [],
+          "id": "ef534a408365d594",
+          "kind": "exercised",
+          "label": "exercised: DESIGN-RULES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/DESIGN-RULES.md"
+        },
+        {
           "cause": "unchecked-claims",
           "detail": "Q-CLAIM(ErrorsCircuitOpenIsAnEsiError)",
           "fragments": [
@@ -6009,6 +6228,51 @@
           "subject": "Charter/guides/CHARTER.md"
         },
         {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `COMPATIBILITY_DATE` (tests/contract/replay/coverage.test.ts, tests/tdd/core/constants.test.ts, tests/tdd/scripts/generated-spec-date.test.ts), `PACKAGE_VERSION` (tests/tdd/core/constants.test.ts)",
+          "fragments": [],
+          "id": "c2815d737580b0d9",
+          "kind": "exercised",
+          "label": "exercised: QUALITY-GATES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/QUALITY-GATES.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `buildCacheKey` (tests/fuzz/cache-key.property.test.ts, tests/fuzz/etag-cache-model.property.test.ts, tests/tdd/core/cacheKey.test.ts, and 1 more), `buildRequestHeaders` (tests/tdd/core/requestPipeline/headers.test.ts), `sanitizeUrl` (tests/tdd/core/error.test.ts), `validateBaseUrl` (tests/tdd/core/security.test.ts, tests/tdd/core/validation.test.ts)",
+          "fragments": [],
+          "id": "d49664522328ba2c",
+          "kind": "exercised",
+          "label": "exercised: SECURITY.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/SECURITY.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `MarketOrderSchema` (tests/tdd/schemas/schema-validation.test.ts, tests/tdd/schemas/schemaRejection.test.ts, tests/tdd/testing/TestDataFactory.schemas.test.ts)",
+          "fragments": [],
+          "id": "ef534a408365d594",
+          "kind": "exercised",
+          "label": "exercised: DESIGN-RULES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/DESIGN-RULES.md"
+        },
+        {
           "cause": "unchecked-claims",
           "detail": "Q-CLAIM(ErrorsCircuitOpenIsAnEsiError)",
           "fragments": [
@@ -7354,6 +7618,51 @@
             "Charter"
           ],
           "subject": "Charter/guides/CHARTER.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `COMPATIBILITY_DATE` (tests/contract/replay/coverage.test.ts, tests/tdd/core/constants.test.ts, tests/tdd/scripts/generated-spec-date.test.ts), `PACKAGE_VERSION` (tests/tdd/core/constants.test.ts)",
+          "fragments": [],
+          "id": "c2815d737580b0d9",
+          "kind": "exercised",
+          "label": "exercised: QUALITY-GATES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/QUALITY-GATES.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `buildCacheKey` (tests/fuzz/cache-key.property.test.ts, tests/fuzz/etag-cache-model.property.test.ts, tests/tdd/core/cacheKey.test.ts, and 1 more), `buildRequestHeaders` (tests/tdd/core/requestPipeline/headers.test.ts), `sanitizeUrl` (tests/tdd/core/error.test.ts), `validateBaseUrl` (tests/tdd/core/security.test.ts, tests/tdd/core/validation.test.ts)",
+          "fragments": [],
+          "id": "d49664522328ba2c",
+          "kind": "exercised",
+          "label": "exercised: SECURITY.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/SECURITY.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `MarketOrderSchema` (tests/tdd/schemas/schema-validation.test.ts, tests/tdd/schemas/schemaRejection.test.ts, tests/tdd/testing/TestDataFactory.schemas.test.ts)",
+          "fragments": [],
+          "id": "ef534a408365d594",
+          "kind": "exercised",
+          "label": "exercised: DESIGN-RULES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/DESIGN-RULES.md"
         },
         {
           "cause": "unchecked-claims",
@@ -8731,6 +9040,51 @@
           "subject": "Charter/guides/CHARTER.md"
         },
         {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `COMPATIBILITY_DATE` (tests/contract/replay/coverage.test.ts, tests/tdd/core/constants.test.ts, tests/tdd/scripts/generated-spec-date.test.ts), `PACKAGE_VERSION` (tests/tdd/core/constants.test.ts)",
+          "fragments": [],
+          "id": "c2815d737580b0d9",
+          "kind": "exercised",
+          "label": "exercised: QUALITY-GATES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/QUALITY-GATES.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `buildCacheKey` (tests/fuzz/cache-key.property.test.ts, tests/fuzz/etag-cache-model.property.test.ts, tests/tdd/core/cacheKey.test.ts, and 1 more), `buildRequestHeaders` (tests/tdd/core/requestPipeline/headers.test.ts), `sanitizeUrl` (tests/tdd/core/error.test.ts), `validateBaseUrl` (tests/tdd/core/security.test.ts, tests/tdd/core/validation.test.ts)",
+          "fragments": [],
+          "id": "d49664522328ba2c",
+          "kind": "exercised",
+          "label": "exercised: SECURITY.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/SECURITY.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `MarketOrderSchema` (tests/tdd/schemas/schema-validation.test.ts, tests/tdd/schemas/schemaRejection.test.ts, tests/tdd/testing/TestDataFactory.schemas.test.ts)",
+          "fragments": [],
+          "id": "ef534a408365d594",
+          "kind": "exercised",
+          "label": "exercised: DESIGN-RULES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/DESIGN-RULES.md"
+        },
+        {
           "cause": "unchecked-claims",
           "detail": "Q-CLAIM(ErrorsCircuitOpenIsAnEsiError)",
           "fragments": [
@@ -10092,6 +10446,51 @@
             "Charter"
           ],
           "subject": "Charter/guides/CHARTER.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `COMPATIBILITY_DATE` (tests/contract/replay/coverage.test.ts, tests/tdd/core/constants.test.ts, tests/tdd/scripts/generated-spec-date.test.ts), `PACKAGE_VERSION` (tests/tdd/core/constants.test.ts)",
+          "fragments": [],
+          "id": "c2815d737580b0d9",
+          "kind": "exercised",
+          "label": "exercised: QUALITY-GATES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/QUALITY-GATES.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `buildCacheKey` (tests/fuzz/cache-key.property.test.ts, tests/fuzz/etag-cache-model.property.test.ts, tests/tdd/core/cacheKey.test.ts, and 1 more), `buildRequestHeaders` (tests/tdd/core/requestPipeline/headers.test.ts), `sanitizeUrl` (tests/tdd/core/error.test.ts), `validateBaseUrl` (tests/tdd/core/security.test.ts, tests/tdd/core/validation.test.ts)",
+          "fragments": [],
+          "id": "d49664522328ba2c",
+          "kind": "exercised",
+          "label": "exercised: SECURITY.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/SECURITY.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `MarketOrderSchema` (tests/tdd/schemas/schema-validation.test.ts, tests/tdd/schemas/schemaRejection.test.ts, tests/tdd/testing/TestDataFactory.schemas.test.ts)",
+          "fragments": [],
+          "id": "ef534a408365d594",
+          "kind": "exercised",
+          "label": "exercised: DESIGN-RULES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/DESIGN-RULES.md"
         },
         {
           "cause": "unchecked-claims",
@@ -11484,6 +11883,81 @@
             "Guides"
           ],
           "subject": "Guides/guides/DOCUMENTATION.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `COMPATIBILITY_DATE` (tests/contract/replay/coverage.test.ts, tests/tdd/core/constants.test.ts, tests/tdd/scripts/generated-spec-date.test.ts), `systemClock` (tests/tdd/ports/ports.test.ts, tests/tdd/sde/clock.test.ts)",
+          "fragments": [],
+          "id": "902dbb9ee3b09418",
+          "kind": "exercised",
+          "label": "exercised: ARCHITECTURE.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/ARCHITECTURE.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `SDE_FILE_REGISTRY` (tests/tdd/scripts/sde-drift.test.ts, tests/tdd/sde/ingestion/index.test.ts, tests/tdd/sde/ingestion/registry.test.ts)",
+          "fragments": [],
+          "id": "c1b4aeb81bd46061",
+          "kind": "exercised",
+          "label": "exercised: REFERENCE.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/sde/REFERENCE.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `COMPATIBILITY_DATE` (tests/contract/replay/coverage.test.ts, tests/tdd/core/constants.test.ts, tests/tdd/scripts/generated-spec-date.test.ts), `PACKAGE_VERSION` (tests/tdd/core/constants.test.ts)",
+          "fragments": [],
+          "id": "c2815d737580b0d9",
+          "kind": "exercised",
+          "label": "exercised: QUALITY-GATES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/QUALITY-GATES.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `buildCacheKey` (tests/fuzz/cache-key.property.test.ts, tests/fuzz/etag-cache-model.property.test.ts, tests/tdd/core/cacheKey.test.ts, and 1 more), `buildRequestHeaders` (tests/tdd/core/requestPipeline/headers.test.ts), `sanitizeUrl` (tests/tdd/core/error.test.ts, tests/tdd/core/redactLog.test.ts), `validateBaseUrl` (tests/tdd/core/security.test.ts, tests/tdd/core/validation.test.ts)",
+          "fragments": [],
+          "id": "d49664522328ba2c",
+          "kind": "exercised",
+          "label": "exercised: SECURITY.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/SECURITY.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `MarketOrderSchema` (tests/tdd/schemas/schema-validation.test.ts, tests/tdd/schemas/schemaRejection.test.ts, tests/tdd/testing/TestDataFactory.schemas.test.ts)",
+          "fragments": [],
+          "id": "ef534a408365d594",
+          "kind": "exercised",
+          "label": "exercised: DESIGN-RULES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/DESIGN-RULES.md"
         },
         {
           "cause": "unchecked-claims",
@@ -13434,6 +13908,81 @@
           "subject": "Guides/guides/DOCUMENTATION.md"
         },
         {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `COMPATIBILITY_DATE` (tests/contract/replay/coverage.test.ts, tests/tdd/core/constants.test.ts, tests/tdd/scripts/generated-spec-date.test.ts), `systemClock` (tests/tdd/ports/ports.test.ts, tests/tdd/sde/clock.test.ts)",
+          "fragments": [],
+          "id": "902dbb9ee3b09418",
+          "kind": "exercised",
+          "label": "exercised: ARCHITECTURE.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/ARCHITECTURE.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `SDE_FILE_REGISTRY` (tests/tdd/scripts/sde-drift.test.ts, tests/tdd/sde/ingestion/index.test.ts, tests/tdd/sde/ingestion/registry.test.ts)",
+          "fragments": [],
+          "id": "c1b4aeb81bd46061",
+          "kind": "exercised",
+          "label": "exercised: REFERENCE.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/sde/REFERENCE.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `COMPATIBILITY_DATE` (tests/contract/replay/coverage.test.ts, tests/tdd/core/constants.test.ts, tests/tdd/scripts/generated-spec-date.test.ts), `PACKAGE_VERSION` (tests/tdd/core/constants.test.ts)",
+          "fragments": [],
+          "id": "c2815d737580b0d9",
+          "kind": "exercised",
+          "label": "exercised: QUALITY-GATES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/QUALITY-GATES.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `buildCacheKey` (tests/fuzz/cache-key.property.test.ts, tests/fuzz/etag-cache-model.property.test.ts, tests/tdd/core/cacheKey.test.ts, and 1 more), `buildRequestHeaders` (tests/tdd/core/requestPipeline/headers.test.ts), `sanitizeUrl` (tests/tdd/core/error.test.ts, tests/tdd/core/redactLog.test.ts), `validateBaseUrl` (tests/tdd/core/security.test.ts, tests/tdd/core/validation.test.ts)",
+          "fragments": [],
+          "id": "d49664522328ba2c",
+          "kind": "exercised",
+          "label": "exercised: SECURITY.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/SECURITY.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `MarketOrderSchema` (tests/tdd/schemas/schema-validation.test.ts, tests/tdd/schemas/schemaRejection.test.ts, tests/tdd/testing/TestDataFactory.schemas.test.ts)",
+          "fragments": [],
+          "id": "ef534a408365d594",
+          "kind": "exercised",
+          "label": "exercised: DESIGN-RULES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/DESIGN-RULES.md"
+        },
+        {
           "cause": "unchecked-claims",
           "detail": "Q-CLAIM(CharterCircuitOpenIsNoEsiError)",
           "fragments": [
@@ -15342,6 +15891,81 @@
           "subject": "Guides/guides/DOCUMENTATION.md"
         },
         {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `COMPATIBILITY_DATE` (tests/contract/replay/coverage.test.ts, tests/tdd/core/constants.test.ts, tests/tdd/scripts/generated-spec-date.test.ts), `systemClock` (tests/tdd/ports/ports.test.ts, tests/tdd/sde/clock.test.ts)",
+          "fragments": [],
+          "id": "902dbb9ee3b09418",
+          "kind": "exercised",
+          "label": "exercised: ARCHITECTURE.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/ARCHITECTURE.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `SDE_FILE_REGISTRY` (tests/tdd/scripts/sde-drift.test.ts, tests/tdd/sde/ingestion/index.test.ts, tests/tdd/sde/ingestion/registry.test.ts)",
+          "fragments": [],
+          "id": "c1b4aeb81bd46061",
+          "kind": "exercised",
+          "label": "exercised: REFERENCE.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/sde/REFERENCE.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `COMPATIBILITY_DATE` (tests/contract/replay/coverage.test.ts, tests/tdd/core/constants.test.ts, tests/tdd/scripts/generated-spec-date.test.ts), `PACKAGE_VERSION` (tests/tdd/core/constants.test.ts)",
+          "fragments": [],
+          "id": "c2815d737580b0d9",
+          "kind": "exercised",
+          "label": "exercised: QUALITY-GATES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/QUALITY-GATES.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `buildCacheKey` (tests/fuzz/cache-key.property.test.ts, tests/fuzz/etag-cache-model.property.test.ts, tests/tdd/core/cacheKey.test.ts, and 1 more), `buildRequestHeaders` (tests/tdd/core/requestPipeline/headers.test.ts), `sanitizeUrl` (tests/tdd/core/error.test.ts, tests/tdd/core/redactLog.test.ts), `validateBaseUrl` (tests/tdd/core/security.test.ts, tests/tdd/core/validation.test.ts)",
+          "fragments": [],
+          "id": "d49664522328ba2c",
+          "kind": "exercised",
+          "label": "exercised: SECURITY.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/SECURITY.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `MarketOrderSchema` (tests/tdd/schemas/schema-validation.test.ts, tests/tdd/schemas/schemaRejection.test.ts, tests/tdd/testing/TestDataFactory.schemas.test.ts)",
+          "fragments": [],
+          "id": "ef534a408365d594",
+          "kind": "exercised",
+          "label": "exercised: DESIGN-RULES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/DESIGN-RULES.md"
+        },
+        {
           "cause": "unchecked-claims",
           "detail": "Q-CLAIM(CharterCircuitOpenIsNoEsiError)",
           "fragments": [
@@ -17248,6 +17872,81 @@
             "Guides"
           ],
           "subject": "Guides/guides/DOCUMENTATION.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `COMPATIBILITY_DATE` (tests/contract/replay/coverage.test.ts, tests/tdd/core/constants.test.ts, tests/tdd/scripts/generated-spec-date.test.ts), `systemClock` (tests/tdd/ports/ports.test.ts, tests/tdd/sde/clock.test.ts)",
+          "fragments": [],
+          "id": "902dbb9ee3b09418",
+          "kind": "exercised",
+          "label": "exercised: ARCHITECTURE.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/ARCHITECTURE.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `SDE_FILE_REGISTRY` (tests/tdd/scripts/sde-drift.test.ts, tests/tdd/sde/ingestion/index.test.ts, tests/tdd/sde/ingestion/registry.test.ts)",
+          "fragments": [],
+          "id": "c1b4aeb81bd46061",
+          "kind": "exercised",
+          "label": "exercised: REFERENCE.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/sde/REFERENCE.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `COMPATIBILITY_DATE` (tests/contract/replay/coverage.test.ts, tests/tdd/core/constants.test.ts, tests/tdd/scripts/generated-spec-date.test.ts), `PACKAGE_VERSION` (tests/tdd/core/constants.test.ts)",
+          "fragments": [],
+          "id": "c2815d737580b0d9",
+          "kind": "exercised",
+          "label": "exercised: QUALITY-GATES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/QUALITY-GATES.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `buildCacheKey` (tests/fuzz/cache-key.property.test.ts, tests/fuzz/etag-cache-model.property.test.ts, tests/tdd/core/cacheKey.test.ts, and 1 more), `buildRequestHeaders` (tests/tdd/core/requestPipeline/headers.test.ts), `sanitizeUrl` (tests/tdd/core/error.test.ts, tests/tdd/core/redactLog.test.ts), `validateBaseUrl` (tests/tdd/core/security.test.ts, tests/tdd/core/validation.test.ts)",
+          "fragments": [],
+          "id": "d49664522328ba2c",
+          "kind": "exercised",
+          "label": "exercised: SECURITY.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/SECURITY.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `MarketOrderSchema` (tests/tdd/schemas/schema-validation.test.ts, tests/tdd/schemas/schemaRejection.test.ts, tests/tdd/testing/TestDataFactory.schemas.test.ts)",
+          "fragments": [],
+          "id": "ef534a408365d594",
+          "kind": "exercised",
+          "label": "exercised: DESIGN-RULES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/DESIGN-RULES.md"
         },
         {
           "cause": "unchecked-claims",
@@ -19229,6 +19928,96 @@
             "Guides"
           ],
           "subject": "Guides/guides/DOCUMENTATION.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `COMPATIBILITY_DATE` (tests/contract/replay/coverage.test.ts, tests/tdd/core/constants.test.ts, tests/tdd/scripts/generated-spec-date.test.ts), `systemClock` (tests/tdd/ports/ports.test.ts, tests/tdd/sde/clock.test.ts)",
+          "fragments": [],
+          "id": "902dbb9ee3b09418",
+          "kind": "exercised",
+          "label": "exercised: ARCHITECTURE.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/ARCHITECTURE.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `SDE_FILE_REGISTRY` (tests/tdd/scripts/sde-drift.test.ts, tests/tdd/sde/ingestion/index.test.ts, tests/tdd/sde/ingestion/registry.test.ts)",
+          "fragments": [],
+          "id": "c1b4aeb81bd46061",
+          "kind": "exercised",
+          "label": "exercised: REFERENCE.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/sde/REFERENCE.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `COMPATIBILITY_DATE` (tests/contract/replay/coverage.test.ts, tests/tdd/core/constants.test.ts, tests/tdd/scripts/generated-spec-date.test.ts), `PACKAGE_VERSION` (tests/tdd/core/constants.test.ts)",
+          "fragments": [],
+          "id": "c2815d737580b0d9",
+          "kind": "exercised",
+          "label": "exercised: QUALITY-GATES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/QUALITY-GATES.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `validateQueryParam` (tests/fuzz/parameter-fuzz.test.ts, tests/tdd/core/security.test.ts, tests/tdd/core/validation.test.ts)",
+          "fragments": [],
+          "id": "d1490430a626f681",
+          "kind": "exercised",
+          "label": "exercised: SECURITY-MODEL.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/SECURITY-MODEL.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `buildCacheKey` (tests/fuzz/cache-key.property.test.ts, tests/fuzz/etag-cache-model.property.test.ts, tests/tdd/core/cacheKey.test.ts, and 1 more), `buildRequestHeaders` (tests/tdd/core/requestPipeline/headers.test.ts), `sanitizeUrl` (tests/tdd/core/error.test.ts, tests/tdd/core/redactLog.test.ts), `validateBaseUrl` (tests/tdd/core/security.test.ts, tests/tdd/core/validation.test.ts)",
+          "fragments": [],
+          "id": "d49664522328ba2c",
+          "kind": "exercised",
+          "label": "exercised: SECURITY.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/SECURITY.md"
+        },
+        {
+          "cause": "named-and-mentioned",
+          "detail": "each symbol it names is mentioned by a test, which exercises it and may observe nothing of what is said: `MarketOrderSchema` (tests/tdd/schemas/schema-validation.test.ts, tests/tdd/schemas/schemaRejection.test.ts, tests/tdd/testing/TestDataFactory.schemas.test.ts)",
+          "fragments": [],
+          "id": "ef534a408365d594",
+          "kind": "exercised",
+          "label": "exercised: DESIGN-RULES.md",
+          "practices": [
+            "guides"
+          ],
+          "sources": [
+            "Guides"
+          ],
+          "subject": "Guides/guides/DESIGN-RULES.md"
         },
         {
           "cause": "unchecked-claims",
