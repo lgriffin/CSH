@@ -286,6 +286,11 @@ describe("snapshot entries and outputs named after a test, beyond TypeScript (st
     expect(o.paired.get("g/a_test.go")).toEqual(["t/baselines/reference/fs/c/amb.1.txt"]);
     expect(o.paired.get("g/b_test.go")).toEqual(["t/baselines/reference/fs/c/amb.2.txt", "t/baselines/reference/fs/c/lens=true.jsonc"]);
     expect(o.unpaired).toEqual(["t/baselines/reference/fs/c/table.baseline"]);
+    // A lone golden file in a package is read the same way: TestA.1 is TestA1's, and x=v is TestX's, never obsolete.
+    const pkg = ["p/a_test.go", "p/b_test.go", "p/testdata/TestA.1.golden", "p/testdata/x=v.golden"];
+    const q = outputDirsOf(pkg, texts({ "p/a_test.go": "func TestA(t *testing.T) {}\n", "p/b_test.go": "func TestA1(t *testing.T) {}\nfunc TestX(t *testing.T) {}\n" })).find((d) => d.dir === "p/testdata")!;
+    expect([...q.paired]).toEqual([["p/b_test.go", ["p/testdata/TestA.1.golden", "p/testdata/x=v.golden"]]]);
+    expect(q.entries?.every((e) => e.matched === 1)).toBe(true);
   });
 
   it("pairs an insta snapshot with the source its header names, from the crate's root, and keeps that source code", () => {

@@ -120,7 +120,7 @@ file and the test it names, as the runner reads them.
 | Python | syrupy `.ambr`: each `# name: test_x`, `# name: TestC.test_x`, with any `[params]` and `.n` | a `test_` function of the paired module, or a method of a `Test` class in it |
 | Rust | insta `.snap`: the header's `source:` names the file; the name after the last `__` is the snapshot's name, less a `-n` suffix | a function of that file whose name is the snapshot's name, or `test_` and it; or a literal first argument of an `assert_*snapshot!` call in that file |
 | Java | ApprovalTests `X.m.approved.<ext>` | a method `m` of the test class `X` |
-| Go | a golden file named `TestX.golden` or `x.golden` beside a package's tests, or in its `testdata`, with no sibling of its stem | a function `TestX` of a `_test.go` file of that package |
+| Go | a golden file named `TestX.golden` or `x.golden` beside a package's tests, or in its `testdata`, with no sibling of its stem | a function `TestX` of a `_test.go` file of that package, a numbered or parameterised name read as in the next row (stage 73) |
 | Go, any output | an output no other row pairs and no test file's stem names, whose stem up to its first dot is `x` or `TestX`, with a numbered `x.1.…` or parameterised `x=v` name tried first as `TestX1` or `TestX=v` (stage 73) | the one `_test.go` file of the checkout that declares the most specific of those functions any file declares, as TypeScript's fourslash baselines are when a test file declares several |
 | Any | an output whose stem is a test file's stem less its test affix (`_test`, `.test`, `.spec`, `test_`, `Test`), when exactly one test file has that stem | that test file, as TypeScript's fourslash baselines name theirs |
 

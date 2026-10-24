@@ -575,7 +575,6 @@ export function outputDirsOf(paths: readonly string[], read?: (path: string) => 
     };
     const left: { o: OutputDir; u: string }[] = [];
     for (const o of out.values()) for (const u of o.unpaired) {
-      const fn = testFunctionOf(u);
       const d = dirOf(u);
       const pkg = posix.basename(d) === "testdata" ? dirOf(d) : d;
       // Only a golden file with no sibling of its stem: one with two is the golden siblings' to decide.
@@ -585,6 +584,9 @@ export function outputDirsOf(paths: readonly string[], read?: (path: string) => 
       const own = lone ? goTests.filter((p) => dirOf(p) === pkg) : [];
       for (const p of own) note(o, p);
       const fns = own.map(fnsOf);
+      // The most specific name a package's test file declares, or else the plainest, which none does.
+      const names = testFunctionsOf(u);
+      const fn = names.find((n) => fns.some((f) => f?.has(n) === true)) ?? names.at(-1)!;
       const by = own.filter((_, i) => fns[i]?.has(fn) === true);
       if (by.length === 1) byFunction(o, u, by[0]!);
       else if (own.length > 0 && by.length === 0 && fns.every((f) => f !== undefined)) {
