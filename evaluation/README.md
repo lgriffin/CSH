@@ -1,7 +1,7 @@
 # Evaluation
 
-The benchmark behind CSH 1.0 ([22](../docs/spec/22-analysis-a3-and-1.0.md), section 4). CI runs both jobs below on every
-push; neither writes into a subject.
+The benchmark behind CSH 1.0 ([22](../docs/spec/22-analysis-a3-and-1.0.md), section 4). CI runs the jobs below on every
+push; none leaves a change in a subject.
 
 ## Labelled subjects (stage 79)
 
@@ -26,6 +26,24 @@ CSH that adds, drops or renames an entry fails until its labels are updated by h
 
 Most false entries left are `unverified` sentences lifted as rules that describe rather than rule, and names declared
 in code outside the code practice (ESI.ts's `scripts/`).
+
+## Seeded drift (stage 80)
+
+Each file in `drifts/` lists edits that make one subject drift from its prose, each with the entry it should cause.
+`node evaluation/drift.ts <checkout> <drifts.json>` applies them all to the pinned commit, analyses cold, and fails
+unless every expected entry is reported and none was reported before. It then makes an unrelated change, to the
+file the drifts name as `stable`, and fails if any entry moves its anchor or a new one appears. The checkout is reset
+afterwards. The `labelled` job runs it after the labels.
+
+| Subject | Drifts | Reported | Entries | Kept their anchor |
+| --- | ---: | ---: | ---: | ---: |
+| `esi-ts` | 4 | 4 | 63 | 63 |
+| `tutors-mono-repo` | 4 | 4 | 79 | 79 |
+| `taskboard` | 3 | 3 | 6 | 6 |
+| `typescript-go` | 3 | 3 | 38 | 38 |
+
+A drift changes files of its own, so all of a subject's drifts are applied together; an expectation names the
+outcome, kind and subject of the entry, and words its detail must hold.
 
 ## Experimental benchmarks
 

@@ -1,0 +1,31 @@
+{
+  "schema": "csh-drifts/v1",
+  "subject": { "repo": "https://github.com/tutors-sdk/tutors-mono-repo", "commit": "d3504043ef2d56a06dd96e376394758415987fec" },
+  "drifts": [
+    {
+      "id": "deleted-file",
+      "what": "tests/bdd/support/reader-auth.ts, which the reader's README names, is deleted",
+      "edits": [{ "op": "delete", "path": "tests/bdd/support/reader-auth.ts" }],
+      "expect": { "outcome": "gap", "kind": "dangling-reference", "subject": "Documents/apps/reader/README.md", "detailIncludes": ["tests/bdd/support/reader-auth.ts"] }
+    },
+    {
+      "id": "renamed-function",
+      "what": "convertMdToHtml, which theme-customisation.md says is in markdown-utils.ts, is renamed markdownToHtml there",
+      "edits": [{ "op": "replace", "path": "packages/jsr/model/src/utils/markdown-utils.ts", "from": "convertMdToHtml", "to": "markdownToHtml" }],
+      "expect": { "outcome": "gap", "kind": "dangling-reference", "subject": "Documents/guides/specifications/theme-customisation.md", "detailIncludes": ["markdown-utils.ts#convertMdToHtml"] }
+    },
+    {
+      "id": "test-stops-exercising",
+      "what": "the release harness test stops naming DEFAULT_RUNS, which Release-Strategy.md describes",
+      "edits": [{ "op": "replace", "path": "tests/conformance/release-harness.test.ts", "from": "DEFAULT_RUNS", "to": "RUNS_BY_DEFAULT" }],
+      "expect": { "outcome": "gap", "kind": "unexercised", "subject": "Documents/guides/Release-Strategy.md", "detailIncludes": ["DEFAULT_RUNS"] }
+    },
+    {
+      "id": "removed-test-keeps-output",
+      "what": "tests/contract/gen-lib-api.test.ts is deleted and its accepted snapshot stays",
+      "edits": [{ "op": "delete", "path": "tests/contract/gen-lib-api.test.ts" }],
+      "expect": { "outcome": "gap", "kind": "orphan-output", "subject": "Outputs/tests/contract/__snapshots__/gen-lib-api.test.ts.snap" }
+    }
+  ],
+  "stable": "LICENSE"
+}

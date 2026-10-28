@@ -1,0 +1,31 @@
+{
+  "schema": "csh-drifts/v1",
+  "subject": { "repo": "https://github.com/lgriffin/ESI.ts", "commit": "2a2da8a626821bef77ad8726da2c8018e2961236" },
+  "drifts": [
+    {
+      "id": "deleted-file",
+      "what": "scripts/spec/spec-scope-tree.ts, which ARCHITECTURE.md names, is deleted",
+      "edits": [{ "op": "delete", "path": "scripts/spec/spec-scope-tree.ts" }],
+      "expect": { "outcome": "gap", "kind": "dangling-reference", "subject": "Documents/guides/ARCHITECTURE.md", "detailIncludes": ["scripts/spec/spec-scope-tree.ts"] }
+    },
+    {
+      "id": "renamed-function",
+      "what": "systemClock, which ARCHITECTURE.md says is in src/core/clock.ts, is renamed wallClock there",
+      "edits": [{ "op": "replace", "path": "src/core/clock.ts", "from": "systemClock", "to": "wallClock" }],
+      "expect": { "outcome": "gap", "kind": "dangling-reference", "subject": "Documents/guides/ARCHITECTURE.md", "detailIncludes": ["src/core/clock.ts#systemClock"] }
+    },
+    {
+      "id": "test-stops-exercising",
+      "what": "the soak test stops naming leakyInterceptor, which tests/benchmark/AGENTS.md describes",
+      "edits": [{ "op": "replace", "path": "tests/tdd/benchmark/soak.test.ts", "from": "leakyInterceptor", "to": "leakingInterceptor" }],
+      "expect": { "outcome": "gap", "kind": "unexercised", "subject": "Instructions/tests/benchmark/AGENTS.md", "detailIncludes": ["leakyInterceptor"] }
+    },
+    {
+      "id": "deleted-test",
+      "what": "tests/tdd/core/importSideEffects.test.ts, the test ARCH-06 is verified by, is deleted",
+      "edits": [{ "op": "delete", "path": "tests/tdd/core/importSideEffects.test.ts" }],
+      "expect": { "outcome": "gap", "kind": "dangling-reference", "subject": "Requirements/ARCH-06", "detailIncludes": ["tests/tdd/core/importSideEffects.test.ts"] }
+    }
+  ],
+  "stable": "CHANGELOG.md"
+}
