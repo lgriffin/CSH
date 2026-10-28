@@ -56,6 +56,11 @@ if (head !== spec.subject.commit) {
   console.error(`drift: the drifts are written for ${spec.subject.commit}, and the checkout is at ${head}`);
   process.exit(2);
 }
+// The checkout is committed to and reset, so local changes would be lost: it must be clean.
+if (git("status", "--porcelain", "--untracked-files=all") !== "") {
+  console.error(`drift: ${checkout} has local changes or untracked files, which the drifts would commit and the reset would remove`);
+  process.exit(2);
+}
 
 const analyse = (name: string): Entry[] => {
   const out = execFileSync("node", [cli, "analyse", checkout, "--out", resolve(`reports/drift-${name}`), "--json"], { encoding: "utf8", maxBuffer: 1 << 30 });
@@ -105,10 +110,18 @@ try {
   if (before.some((e) => (e.detail ?? "").includes(spec.stable) || e.subject.includes(spec.stable))) throw new Error(`${spec.stable} is named by an entry, so it cannot test stability`);
   appendFileSync(join(checkout, spec.stable), "\n");
   commit("unrelated change");
-  const again = new Map(analyse("stable").map((e) => [key(e), e.anchor]));
-  const moved = before.filter((e) => again.get(key(e)) !== e.anchor).map((e) => `${e.kind} ${e.subject}`);
-  const added = again.size - new Set(before.map(key)).size;
-  lines.push(`Stability: ${before.length - moved.length} of ${before.length} entries keep their anchor after a change to ${spec.stable}${added !== 0 ? `; ${added} entries more` : ""}`);
+  // Entries are compared as a multiset of key and anchor, since a subject may be reported more than once.
+  const again = new Map<string, number>();
+  const anchored = (e: Entry) => `${key(e)}\u0000${e.anchor}`;
+  for (const e of analyse("stable")) again.set(anchored(e), (again.get(anchored(e)) ?? 0) + 1);
+  const moved: string[] = [];
+  for (const e of before) {
+    const n = again.get(anchored(e)) ?? 0;
+    if (n === 0) moved.push(`${e.kind} ${e.subject}`);
+    else again.set(anchored(e), n - 1);
+  }
+  const added = [...again.values()].reduce((a, n) => a + n, 0);
+  lines.push(`Stability: ${before.length - moved.length} of ${before.length} entries keep their anchor after a change to ${spec.stable}${added !== 0 ? `; ${added} entries new or re-anchored` : ""}`);
   for (const m of moved) lines.push(`  moved or gone: ${m}`);
   if (moved.length > 0 || added !== 0) failed = true;
 } catch (err) {

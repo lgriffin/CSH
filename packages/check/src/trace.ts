@@ -254,6 +254,7 @@ export function trace(input: TraceInput): TraceResult {
         if (above === "file") return "file";
         // Written from the mentioning file's directory, which holds its first folder, it is dangling there (A-288).
         const beside = relativeTo(e.span, p.split("/")[0]!);
+        // A tracked path elsewhere that ends with it keeps it unchecked: ESI.ts's guides name tests from tests/ (A-281).
         if (above === null || beside === undefined || near === undefined || !dirs.has(beside)) return null;
         if (ignored.has(near) || ignored.has(`${near}/`) || e.absent === true || (e.repos ?? []).some((r) => !top.has(r.split("/")[0]!))) return null;
         return undefined;
