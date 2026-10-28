@@ -2,7 +2,7 @@
 // the command's usage and exit code 2, a file that cannot be read is said rather than thrown, and an error nothing
 // expected is one line, never a stack trace.
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -11,6 +11,10 @@ import { csh, csl } from "../src/index.ts";
 import { USAGE } from "../src/commands.ts";
 
 const BIN = resolve(import.meta.dirname, "../bin");
+// The version every bin prints, read from the manifest here rather than through the code under test.
+const VERSION = (JSON.parse(readFileSync(resolve(import.meta.dirname, "../package.json"), "utf8")) as { version: string }).version;
+// SemVer 2.0.0, with a prerelease and build part, as the release tag must give it.
+const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
 let dir: string;
 
 function io(cwd: string) {
@@ -71,7 +75,8 @@ describe("csh help and version", () => {
   it("prints the version", async () => {
     const r = await cshIn(dir, "--version");
     expect(r.code).toBe(0);
-    expect(r.out).toMatch(/^csh \d+\.\d+\.\d+\n$/);
+    expect(VERSION).toMatch(SEMVER);
+    expect(r.out).toBe(`csh ${VERSION}\n`);
   });
 });
 
@@ -197,7 +202,7 @@ describe("csl usage errors", () => {
 
   it("prints its usage for --help, its version for --version, and refuses no command", async () => {
     expect((await cslIn("--help")).code).toBe(0);
-    expect((await cslIn("--version")).out).toMatch(/^csl \d+\.\d+\.\d+\n$/);
+    expect((await cslIn("--version")).out).toBe(`csl ${VERSION}\n`);
     expect((await cslIn()).code).toBe(2);
   });
 
@@ -221,7 +226,7 @@ describe.skipIf(process.platform === "win32")("the bin scripts", () => {
     for (const bin of ["csh", "csl"]) {
       const r = spawnSync(process.execPath, [join(BIN, `${bin}.js`), "--version"], { encoding: "utf8" });
       expect(r.status).toBe(0);
-      expect(r.stdout).toMatch(new RegExp(`^${bin} \\d+\\.\\d+\\.\\d+\\n$`));
+      expect(r.stdout).toBe(`${bin} ${VERSION}\n`);
     }
   });
 
