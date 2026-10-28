@@ -18,8 +18,19 @@ unknown.
 | Know how it is built, and why | [Understand it](#understand-it): context, containers, a package, a decision |
 | Find the gaps in a codebase you already have | [Analyse it](#analyse-it): `csh analyse <path>`, cold, on any repository |
 
-You need Node 22.18 or later, pnpm, git and GnuPG (`csh analyse` needs no GnuPG). Every `sh` block in this file is executed in continuous
-integration (`node packages/testkit/src/triangle.ts readme`), so the commands below run as written.
+To use CSH on your own repositories, install it from npm. It needs Node 22.18 or later and git, and nothing else:
+
+```text
+npm install --global @lgriffin/csh
+csh analyse path/to/repo
+```
+
+`npx @lgriffin/csh analyse .` runs it once without installing. A global `csh` can shadow the C shell, so the same
+command is also installed as `cshx`. [The release guide](docs/guides/release.md) says how a version reaches npm.
+
+To work on CSH itself from this clone, you also need pnpm and GnuPG (`csh analyse` needs no GnuPG). Every `sh` block in
+this file is executed in continuous integration (`node packages/testkit/src/triangle.ts readme`), so the commands
+below run as written.
 
 ## See it
 
@@ -66,9 +77,9 @@ a test with no rule behind it, a requirement sentence nothing cites, and both ob
 ## Use it
 
 [examples/starter](examples/starter) is the smallest component: one function, one probe, one sentence, one rule.
-Copy it out of the repository and install the tool beside it, from tarballs packed from this clone. Nothing is
-published to npm ([ADR-32](docs/adr/ADR-32-local-only-distribution.md)); a tagged release on GitHub carries the same
-tarballs, bundled.
+Copy it out of the repository and install the tool beside it. Outside this clone, `npm install --save-dev @lgriffin/csh`
+does that ([ADR-36](docs/adr/ADR-36-npm-package.md)); here, the block below installs tarballs packed from the clone, so
+that it tests the code you have.
 
 ```sh
 packs=$(mktemp -d) project=$(mktemp -d)
@@ -257,8 +268,8 @@ from different practices whose inputs can coincide and whose outcomes cannot bot
 ## Using the command line
 
 CSH is two commands: `csh` reads, checks, decides and reports, and `csl` emits and prints a specification. In a clone,
-run them as `node packages/cli/bin/csh.js` and `node packages/cli/bin/csl.js`; installed from the packed tarballs or
-a release, as `npx csh` and `npx csl`. Below, `csh` stands for either. Every command explains itself:
+run them as `node packages/cli/bin/csh.js` and `node packages/cli/bin/csl.js`; installed from npm (`@lgriffin/csh`),
+the packed tarballs or a release, as `csh` and `csl`, or `npx csh` and `npx csl` in a project. Below, `csh` stands for either. Every command explains itself:
 
 ```sh
 node packages/cli/bin/csh.js --version

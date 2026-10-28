@@ -34,5 +34,5 @@ must run from `node_modules`, which Node will not strip types in, so packing nee
 
 ## Status
 
-Accepted. Decided by the owner on 3 October 2026. Revisited on 14 October 2026 (stage 60, Q-51 as proposed; issue 78
+Superseded by [ADR-36](ADR-36-npm-package.md) on 28 October 2026: the owner asked for `npm install`. Decided by the owner on 3 October 2026. Revisited on 14 October 2026 (stage 60, Q-51 as proposed; issue 78
 asks the owner to confirm).

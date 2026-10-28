@@ -1,9 +1,10 @@
 name: Release
 
-# A tagged tarball release (stage 60, Q-51, ADR-32 as revisited): pushing a tag v* packs every package into a tarball,
-# installs the tarballs into an empty directory and runs `csh analyse` from there, then attaches the tarballs and one
-# bundle of them to a GitHub release of that tag. Nothing is published to npm. Run by hand, it builds and tests the
-# tarballs and keeps them as a workflow artifact, with no release.
+# A tagged release (stage 60, Q-51; stage 76, ADR-36): pushing a tag v* packs every package into a tarball and the npm
+# package @lgriffin/csh at the tag's version, installs each outside the repository and runs `csh analyse` from there,
+# then attaches them all to a GitHub release of that tag. The npm package is published only when the repository has
+# the owner's NPM_TOKEN secret, from the `npm` environment, which the owner may set to wait for their approval. Run by
+# hand, it builds and tests the tarballs and keeps them as a workflow artifact, with no release and nothing published.
 on:
   push:
     tags: ["v*"]
@@ -43,6 +44,19 @@ jobs:
           npm install --save-dev --no-audit --no-fund ./packages/*.tgz
           npx csh analyse "$subject" --out report
           test -f report/csh-analysis.json
+      - name: Pack the npm package at the tag's version
+        run: |
+          version=$(node -p 'require("./packages/cli/package.json").version')
+          case "$GITHUB_REF" in refs/tags/v*)
+            if [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
+              echo "the tag $GITHUB_REF_NAME is not the version $version of packages/cli/package.json" >&2
+              exit 1
+            fi ;;
+          esac
+          node packages/testkit/src/npm-package.ts dist/npm --version "$version"
+          echo "NPM_VERSION=$version" >> "$GITHUB_ENV"
+      - name: Install the npm package three ways and analyse a repository with each
+        run: .github/scripts/npm-smoke.sh "dist/npm/lgriffin-csh-$NPM_VERSION.tgz" "$NPM_VERSION"
       - uses: actions/upload-artifact@v4
         with:
           name: csh-tarballs
@@ -64,4 +78,32 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "CSH $GITHUB_REF_NAME" --notes "Every package of CSH, packed. Install with: tar -xzf csh-$GITHUB_REF_NAME.tar.gz && npm install --save-dev ./packages/*.tgz, then npx csh analyse <path>. Needs Node 22.18 or later and git. Nothing is published to npm (ADR-32)." dist/*.tar.gz dist/packages/*.tgz
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "CSH $GITHUB_REF_NAME" --notes "Install with npm install --global @lgriffin/csh, then csh analyse <path>; the same package is attached here as lgriffin-csh-*.tgz. Every package of CSH is also attached, packed, as before. Needs Node 22.18 or later and git." dist/*.tar.gz dist/packages/*.tgz dist/npm/*.tgz
+
+  publish:
+    name: Publish to npm
+    needs: pack
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: csh-tarballs
+          path: dist
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org
+      - name: Publish @lgriffin/csh
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "No NPM_TOKEN secret: nothing is published. The package is attached to the release." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          npm publish dist/npm/lgriffin-csh-*.tgz --access public --provenance

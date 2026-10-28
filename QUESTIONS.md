@@ -638,3 +638,14 @@ Raised in stage 67. `tsc/internal/format/README.md` names `createRulesMap`, whic
 - **Read only a name with a code verb nearby** ("calls", "via", "returns"): fewer names, but the rule would be a guess at English, and `ReadDirectoryChangesW` sits in a table with none.
 
 Built as the first on 23 October 2026.
+
+## Q-84 Which name the npm package is published under
+
+Raised in stage 76, when the owner asked for `npm install` ([ADR-36](docs/adr/ADR-36-npm-package.md)). The name `csh` is
+held by npm's security team as a placeholder, and `csh-cli` belongs to another project.
+
+- **`@lgriffin/csh` (chosen):** free, needs no third party, and the scope says whose it is. Published with `--access public`.
+- **Ask npm for `csh`:** shorter to type, but waits on npm's support team.
+- **Another unscoped name.**
+
+Decided by the owner on 28 October 2026: `@lgriffin/csh`. Recorded as A-270.
