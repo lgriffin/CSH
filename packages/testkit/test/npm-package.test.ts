@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { afterEach, describe, expect, it } from "vitest";
-import { CARRIED, NPM_BINS, NPM_NAME, npmManifest, untar } from "../src/npm-package.ts";
+import { CARRIED, NPM_BINS, NPM_NAME, npmManifest, untar } from "../src/npm-manifest.ts";
 
 const bundled = [
   { name: "@csh/kernel", version: "1.0.0" },
