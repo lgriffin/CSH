@@ -118,6 +118,13 @@ function relativeTo(span: string, path: string): string | undefined {
   return parts.join("/");
 }
 
+/** The extensions a module path written without one may resolve to, as TypeScript and Node resolve it (A-278). */
+const MODULE_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".d.ts", ".js", ".jsx", ".mjs", ".cjs", "/index.ts", "/index.js"];
+/** A file whose path says it checks something: a test, or a lint or layering rule's configuration (A-280). */
+/** A script or task that checks something, by its name: `pnpm dev` or `build` names no check (A-280). */
+const CHECK_TASK = /(?:^|[:._-])(?:test|tests|lint|check|typecheck|types|verify|arch|architecture|layers|depcruise|cruise|e2e|knip|audit|spec|specs)(?:$|[:._-])/i;
+const MECHANISM_FILE = /(?:\.(?:test|spec)\.[cm]?[jt]sx?|_test\.go|(?:^|\/)test_[^/]*\.py|\.rules\.c?[jt]s|(?:^|\/)\.?eslint[^/]*|(?:^|\/)\.dependency-cruiser\.[cm]?js(?:on)?|(?:^|\/)\.?importlinter[^/]*)$/;
+
 export function trace(input: TraceInput): TraceResult {
   const { items, edges } = input.prepared;
   const gaps: Gap[] = [];
@@ -142,6 +149,26 @@ export function trace(input: TraceInput): TraceResult {
     byBase.set(b, [...(byBase.get(b) ?? []), f]);
   }
   const dirs = new Set((input.files ?? []).flatMap((f) => f.split("/").slice(0, -1).map((_, n, parts) => parts.slice(0, n + 1).join("/"))));
+  const dirsByBase = new Map<string, string[]>();
+  for (const d of dirs) {
+    const b = d.slice(d.lastIndexOf("/") + 1);
+    dirsByBase.set(b, [...(dirsByBase.get(b) ?? []), d]);
+  }
+  /** A path as written, or a module path written without its extension (A-278). */
+  const exists = (p: string): boolean => files!.has(p) || dirs.has(p) || (!/\.[^/]*$/.test(p.slice(p.lastIndexOf("/") + 1)) && MODULE_EXTENSIONS.some((x) => files!.has(`${p}${x}`)));
+  /**
+   * A path that names nothing from the root or the mentioning file's directory may be written from a folder further up,
+   * such as a fixture's own root, or from a folder the sentence names elsewhere: it names a tracked path that ends with
+   * it (A-281). From an ancestor of the mentioning file, it resolves; from elsewhere it is unchecked, never dangling.
+   */
+  const fromAbove = (span: string, p: string): "file" | null | undefined => {
+    const file = span.slice(0, span.lastIndexOf(":"));
+    const parts = file.split("/").slice(0, -1);
+    for (let n = parts.length - 1; n >= 1; n--) if (exists(`${parts.slice(0, n).join("/")}/${p}`)) return "file";
+    const base = p.slice(p.lastIndexOf("/") + 1);
+    const ends = (x: string) => x.endsWith(`/${p}`);
+    return (byBase.get(base) ?? []).some(ends) || (dirsByBase.get(base) ?? []).some(ends) || MODULE_EXTENSIONS.some((x) => (byBase.get(`${base}${x}`) ?? []).some((f) => f.endsWith(`/${p}${x}`))) ? null : undefined;
+  };
 
   /** The item an edge names, as Source/id, preferring the edge's own source; "file" for a tracked path; undefined
    * when it names nothing; null when it cannot be checked (a mechanism in prose, a path outside the repository's
@@ -210,25 +237,25 @@ export function trace(input: TraceInput): TraceResult {
     }
     if (e.to.startsWith("script:")) {
       const name = e.to.slice(7).replace(/~/g, "~0").replace(/\//g, "~1");
-      return scripts.length === 0 ? null : scripts.some((f) => f.kind === "field" && f.path === `/scripts/${name}`) ? "file" : undefined;
+      return scripts.length === 0 ? null : scripts.some((f) => f.kind === "field" && f.path === `/scripts/${name}`) ? "file" : e.absent === true ? null : undefined;
     }
     if (e.to.startsWith("file:")) {
       if (files === undefined) return null;
       const p = e.to.slice(5).replace(/\/$/, "");
       // A relative link's path is resolved already: checked as written (From the TypeScript run, section 3).
-      if (e.exact === true) return files.has(p) || dirs.has(p) ? "file" : ignored.has(p) || e.absent === true || (e.repos ?? []).some((r) => !top.has(r.split("/")[0]!)) ? null : undefined;
+      if (e.exact === true) return exists(p) ? "file" : ignored.has(p) || ignored.has(`${p}/`) || e.absent === true || (e.repos ?? []).some((r) => !top.has(r.split("/")[0]!)) ? null : undefined;
       // From the directory of the file that mentions it, when it names nothing from the root (section 5).
       const near = relativeTo(e.span, p);
-      if (near !== undefined && (files.has(near) || dirs.has(near)) && !files.has(p) && !dirs.has(p)) return "file";
+      if (near !== undefined && exists(near) && !exists(p)) return "file";
       // A bare name that is not a top-level file resolves when it is unique, and is unchecked otherwise: never dangling.
       if (!p.includes("/") && !files.has(p)) return byBase.get(p)?.length === 1 ? "file" : null;
-      if (!top.has(p.split("/")[0]!)) return null;
-      if (files.has(p) || dirs.has(p)) return "file";
+      if (!top.has(p.split("/")[0]!)) return fromAbove(e.span, p) === "file" ? "file" : null;
+      if (exists(p)) return "file";
       // Missing, in a sentence that says it is absent, or that names another repository: unchecked, not dangling.
       // So is a path the repository ignores, from the root or the mentioning file's directory (A-214).
       if ([p, near].some((x) => x !== undefined && (ignored.has(x) || ignored.has(`${x}/`)))) return null;
       if (e.absent === true || (e.repos ?? []).some((r) => !top.has(r.split("/")[0]!))) return null;
-      return undefined;
+      return fromAbove(e.span, p);
     }
     const head = e.to.split("/")[0]!;
     if (sources.has(head) && byQualified.has(e.to)) return e.to;
@@ -236,7 +263,16 @@ export function trace(input: TraceInput): TraceResult {
     const any = byId.get(e.to);
     if (any !== undefined) return [...any].sort(compareCodePoints)[0];
     const folded = byFolded.get(e.to.toLowerCase());
-    return folded?.length === 1 ? folded[0] : undefined;
+    if (folded?.length === 1) return folded[0];
+    // A feature a test loads may be written from a fixture's own root, further up than the repository's (A-281).
+    if (e.rel === "loads") {
+      const parts = e.span.slice(0, e.span.lastIndexOf(":")).split("/").slice(0, -1);
+      for (let n = parts.length - 1; n >= 1; n--) {
+        const up = byId.get(`${parts.slice(0, n).join("/")}/${e.to}`);
+        if (up !== undefined) return [...up].sort(compareCodePoints)[0];
+      }
+    }
+    return undefined;
   };
 
   // The test files whose code mentions every term a statement writes (A-265): the tests that could cite it.
@@ -272,6 +308,8 @@ export function trace(input: TraceInput): TraceResult {
     if (!seen.includes(how)) checks.set(item, [...seen, how]);
   };
   const stale = new Map<string, Map<string, string>>();
+  // What a line names that checks something and exists: a script or task, a test file, or a rule's configuration (A-280).
+  const mechanismAt = new Map<string, string>();
   // Each symbol a document names, once for each language that declares it, with a module that does.
   const namedSymbols = new Map<string, Map<string, { name: string; module: string }>>();
   const h = input.history;
@@ -289,6 +327,11 @@ export function trace(input: TraceInput): TraceResult {
       dangling.set(from, [...(dangling.get(from) ?? []), `${e.span} ${e.rel} ${e.to.startsWith("task:") ? e.to.slice(5).replace("#", " ") : /^(file|symbol|script):/.test(e.to) ? e.to.slice(e.to.indexOf(":") + 1) : e.to}${gone}`]);
     }
     out.push(row);
+    if (r === "file" && !mechanismAt.has(e.span)) {
+      const task = e.to.startsWith("task:") ? e.to.slice(e.to.indexOf("#") + 1) : e.to.slice(7);
+      if (e.rel === "mentions-script" && CHECK_TASK.test(task)) mechanismAt.set(e.span, e.to.startsWith("task:") ? e.to.slice(5).replace("#", " ") : `npm run ${e.to.slice(7)}`);
+      else if (e.rel === "mentions-file" && MECHANISM_FILE.test(e.to.slice(5))) mechanismAt.set(e.span, e.to.slice(5));
+    }
     // A symbol prose names that resolves to the code, and the module that declares it, for what the tests exercise.
     if (e.rel === "mentions-symbol" && r === "file") {
       const [where, symbol] = e.to.slice(7).split("#") as [string, string];
@@ -397,7 +440,10 @@ export function trace(input: TraceInput): TraceResult {
     if (h !== undefined && files !== undefined && it.kind !== undefined && VERIFYING.has(it.kind) && status !== undefined && ASSERTED.has(status) && !supported.has(q) && !testCited.has(q)) {
       gaps.push({ kind: "status-unsupported", subject: q, fragments: [], detail: `${it.span}: its stated status is ${status}, and nothing it names as a mechanism resolves, and no test cites it` });
     }
-    if (it.kind !== undefined && VERIFYING.has(it.kind) && !verifiedBy.has(q) && !into.has("cites")) {
+    // A told rule lifted from a sentence that names its own check, on its line, is verified by it (A-280).
+    const own = it.attrs?.lifted !== undefined ? mechanismAt.get(it.span) : undefined;
+    if (own !== undefined && !verifiedBy.has(q) && !into.has("cites")) check(q, `named on its line: ${own}`);
+    else if (it.kind !== undefined && VERIFYING.has(it.kind) && !verifiedBy.has(q) && !into.has("cites")) {
       const status = it.attrs?.status !== undefined ? `; its stated status is ${it.attrs.status}` : "";
       gaps.push({ kind: "unverified", subject: q, fragments: [], detail: `${it.span}: names no mechanism that verifies it, and no test cites it${status}${nearestTests(it.text)}` });
     } else if (it.kind === "rule" && !into.has("exemplifies")) {

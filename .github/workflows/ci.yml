@@ -277,3 +277,59 @@ jobs:
           expected: subjects/go-clean-arch/analysis-expected.json
           out: reports/action
       - run: jq -e '.schema == "csh-analysis/v1"' "${{ steps.csh.outputs.json }}"
+
+  # Labelled precision (The analysis A3 and 1.0, section 4; stage 79): each TypeScript subject fetched at the commit its
+  # labels judge and read cold. `--labels` prints the precision by kind, and fails the job when an open entry is
+  # unlabelled, a label names no entry, or a refuted entry is labelled false. Time and peak memory go to the summary.
+  labelled:
+    name: Labelled (${{ matrix.subject }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        subject: [esi-ts, tutors-mono-repo, taskboard, typescript-go]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Fetch the subject at the labelled commit
+        run: |
+          labels=evaluation/labels/${{ matrix.subject }}.json
+          bash evaluation/fetch.sh "$(jq -r .subject.repo "$labels")" "$(jq -r .subject.commit "$labels")" checkout
+      - name: Analyse cold and meet the labels
+        run: bash evaluation/measure.sh checkout --labels evaluation/labels/${{ matrix.subject }}.json
+
+  # Experimental benchmarks (section 4): Java read cold on two large pinned repositories. Their counts, time and memory
+  # are reported in the summary; they are not labelled and never fail the workflow.
+  benchmark:
+    name: Benchmark (${{ matrix.name }}, experimental)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Apache Camel 4.23.0
+            repo: https://github.com/apache/camel
+            commit: b2329103df8f5d1edfca2ad262be09e3be95ee68
+          - name: Hadur_Robot
+            repo: https://github.com/lgriffin/Hadur_Robot
+            commit: 91a3abff73205bbe68609b6433b381b43d4ef9cd
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Fetch the subject at the pinned commit
+        run: bash evaluation/fetch.sh "${{ matrix.repo }}" "${{ matrix.commit }}" checkout
+      - name: Analyse cold
+        run: bash evaluation/measure.sh checkout

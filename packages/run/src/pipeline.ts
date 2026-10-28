@@ -180,7 +180,8 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
       const named = runs.flatMap((r) => (r.output.edges ?? []).flatMap((e) => {
         if (!e.to.startsWith("file:")) return [];
         const p = e.to.slice(5).replace(/\/$/, "");
-        const dir = e.to.endsWith("/") ? "/" : "";
+        // A path with no extension may name a directory, and a pattern such as `dist/` matches only a directory (A-282).
+        const dir = e.to.endsWith("/") || !/\.[^/]*$/.test(p.slice(p.lastIndexOf("/") + 1)) ? "/" : "";
         return [p, ...nearPath(e.span, p)].flatMap((x) => (dir === "" ? [x] : [x, `${x}/`]));
       }));
       const ignored = ignoredPaths(opts.sourceRoot ?? opts.root, [...new Set(named.filter((p) => p !== "" && p !== "/" && !known.has(p.replace(/\/$/, "")) && !p.startsWith("/") && !p.split("/").includes("..")))]);

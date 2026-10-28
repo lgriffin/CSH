@@ -72,6 +72,11 @@ describe("steps files", () => {
     ]);
   });
 
+  it("reads a jest-cucumber file's strings as literals (A-284)", () => {
+    const text = ["import { defineFeature, loadFeature } from 'jest-cucumber';", "given('a body labelled text/plain', () => {});"].join("\n");
+    expect(stepDefinitions(`${text}\nconst feature = loadFeature("f.feature");`).map((d) => d.pattern)).toEqual([{ k: "literal", text: "a body labelled text/plain" }]);
+  });
+
   it("chooses the vitest-cucumber dialect by an import, not by a comment that names the library", () => {
     expect(stepDefinitions('// unlike @amiceli/vitest-cucumber, from "@amiceli/vitest-cucumber" is not imported here\nGiven("a/b", () => {});').map((d) => d.pattern.k)).toEqual(["expression"]);
   });

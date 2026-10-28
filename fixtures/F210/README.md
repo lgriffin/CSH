@@ -7,7 +7,7 @@ two of them, as the TypeScript compiler keeps them.
 
 - `compiler` has five cases. `arrays.ts` accepts `arrays.types`, `arrays.symbols` and the variant
   `arrays(strict=false).js`. `arrays.b.ts` has the longer stem, so it takes `arrays.b.js` and `arrays.b.types` from
-  `arrays.ts`. `skipped.ts` has no accepted output: `unaccepted-case`. `twin.ts` and `twin.js` share a stem, so which
+  `arrays.ts`. `skipped.ts` has no accepted output: the suite's one `unaccepted-case`, indeterminate since the runner may skip it (Q-85). `twin.ts` and `twin.js` share a stem, so which
   wrote `twin.types` is not decided: `shared-stem`, and neither is a gap. `removed.types` names no case:
   `orphan-output`. Two of its five cases have accepted outputs.
 - `conformance` nests its one case three directories deep and keeps its baseline flat. They pair.

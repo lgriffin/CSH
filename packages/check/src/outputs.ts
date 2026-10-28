@@ -1,7 +1,6 @@
 // Accepted outputs (Reading test suites as evidence, section 2; stage 70): what the pairing of each directory of
-// accepted outputs found, as results. A suite whose cases have outputs converges on what the names show; a case with
-// no output and an output with no case are gaps; a stem two cases share, and outputs no convention pairs, are
-// indeterminate. CSH never compares an output with what the code would write today: that is the runner's verdict. A
+// accepted outputs found, as results. A suite whose cases have outputs converges on what the names show; an output with
+// no case is a gap; cases with no output, a stem two cases share, and outputs no convention pairs, are indeterminate. CSH never compares an output with what the code would write today: that is the runner's verdict. A
 // snapshot entry that names no test of its file is a gap, and one CSH cannot match to a title it can read is
 // indeterminate (section 3; stage 71).
 import type { SourceItem } from "@csh/witness";
@@ -45,8 +44,13 @@ export function outputGaps(items: readonly (SourceItem & { source: string })[]):
       const { snapshot, test, entries, lines: at_ } = JSON.parse(line) as { snapshot: string; test: string; entries: number; lines: number[] };
       gaps.push({ kind: "snapshot-undecided", subject: at(snapshot), fragments: [], detail: `${plural(entries, "entry", "entries")} name no test CSH can read in ${test}, whose titles at ${at_.map((l) => `${test}:${l}`).join(", ")} it cannot read; which test each names is not decided` });
     }
-    for (const c of lines(a.unaccepted)) {
-      gaps.push({ kind: "unaccepted-case", subject: at(c), fragments: [], detail: `${c}: no accepted output under ${outDir} has its stem; the runner may skip it on purpose, or accept that it writes nothing, or it has never accepted what the case writes` });
+    // One entry for the suite (Q-85; A-287): a runner skips cases by name or option, or accepts that a case writes
+    // nothing, and CSH does not read it, so which of these cases checks nothing by accident is not decided.
+    const unaccepted = lines(a.unaccepted);
+    if (unaccepted.length > 0) {
+      const shown = unaccepted.length > 10 ? `${unaccepted.slice(0, 10).join(", ")} and ${unaccepted.length - 10} more` : unaccepted.join(", ");
+      const have = unaccepted.length === 1 ? "has" : "have";
+      gaps.push({ kind: "unaccepted-case", subject: at(it.id), fragments: [], detail: `${plural(unaccepted.length, "case")}${caseDir !== undefined ? ` under ${caseDir}` : ""} ${have} no accepted output under ${outDir} with its stem: ${shown}; the runner may skip each on purpose, by name or by an option, or accept that it writes nothing, or it never accepted what the case writes` });
     }
     for (const line of lines(a.orphans)) {
       const [output, names] = line.split("\t");

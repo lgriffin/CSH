@@ -48,6 +48,12 @@ describe("step gaps", () => {
     expect(gaps[0]!.detail).toContain("s.ts:2 the ${x} asks");
   });
 
+  it("matches a jest-cucumber string whole and ignoring case, with a slash as itself (A-284)", () => {
+    // As an expression `PAID/unpaid` would be an alternative; jest-cucumber compares the whole string.
+    const gaps = stepGaps(prepare(module, runs("1\tliteral\tA PAID order\n2\tliteral\tthe shopper asks for a refund\n3\tliteral\ta paid/unpaid order")));
+    expect(gaps.map((g) => [g.kind, g.detail])).toEqual([["unused-step-definition", 'no scenario step uses s.ts:3 "a paid/unpaid order"']]);
+  });
+
   it("says nothing when the run reads no definitions", () => {
     expect(stepGaps(prepare(module, runs("")))).toEqual([]);
   });

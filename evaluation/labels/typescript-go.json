@@ -1,0 +1,135 @@
+{
+  "schema": "csh-labels/v1",
+  "subject": {
+    "repo": "https://github.com/lgriffin/TypeScript",
+    "commit": "a91e93821feafd081641f9f5d161eba626d0b2ce"
+  },
+  "labels": [
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/tsc/internal/format/README.md",
+      "label": true,
+      "why": "line 22 names tsc/internal/format/rules.ts, which the Go port does not have; reported upstream as microsoft/TypeScript#64940"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unexercised",
+      "subject": "Documents/tsc/internal/format/README.md",
+      "label": true,
+      "why": "FormatSpan (api.go), processNode and processPair (span.go) are named by no _test.go file"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Documents/tsc/internal/format/README.md",
+      "label": true,
+      "why": "createRulesMap is buildRulesMap in rulesmap.go: a rename CSH rightly leaves to a reader, as Q-63 says"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Documents/tsc/internal/fswatch/README.md",
+      "label": true,
+      "why": "ReadDirectoryChangesW is a Windows API, outside the repository: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "shared-stem",
+      "subject": "Outputs/tsc/testdata/tests/cases/compiler/jsxNestedIndentation",
+      "label": true,
+      "why": "the runner compiles only the .ts case, which its Go code decides and CSH does not read: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "shared-stem",
+      "subject": "Outputs/tsc/testdata/tests/cases/conformance/parser/ecmascript5/Statements/ReturnStatements/parserReturnStatement4",
+      "label": true,
+      "why": "the runner compiles only the .ts case, which its Go code decides and CSH does not read: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "unaccepted-case",
+      "subject": "Outputs/tsc/testdata/baselines/reference/compiler",
+      "label": true,
+      "why": "the cases are skipped by skippedTests or SkipUnsupportedCompilerOptions, or write nothing, which only the Go runner decides: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "unaccepted-case",
+      "subject": "Outputs/tsc/testdata/baselines/reference/conformance",
+      "label": true,
+      "why": "the cases are skipped by skippedTests or SkipUnsupportedCompilerOptions, or write nothing, which only the Go runner decides: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "unpaired-outputs",
+      "subject": "Outputs/tsc/testdata/baselines/reference/config",
+      "label": true,
+      "why": "written by Go tests under names they compute, which no file name gives: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "unpaired-outputs",
+      "subject": "Outputs/tsc/testdata/baselines/reference/fourslash",
+      "label": true,
+      "why": "written by Go tests under names they compute, which no file name gives: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "unpaired-outputs",
+      "subject": "Outputs/tsc/testdata/baselines/reference/lsp",
+      "label": true,
+      "why": "written by Go tests under names they compute, which no file name gives: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "unpaired-outputs",
+      "subject": "Outputs/tsc/testdata/baselines/reference/project",
+      "label": true,
+      "why": "written by Go tests under names they compute, which no file name gives: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "unpaired-outputs",
+      "subject": "Outputs/tsc/testdata/baselines/reference/tsbuild",
+      "label": true,
+      "why": "written by Go tests under names they compute, which no file name gives: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "unpaired-outputs",
+      "subject": "Outputs/tsc/testdata/baselines/reference/tsbuildWatch",
+      "label": true,
+      "why": "written by Go tests under names they compute, which no file name gives: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "unpaired-outputs",
+      "subject": "Outputs/tsc/testdata/baselines/reference/tsc",
+      "label": true,
+      "why": "written by Go tests under names they compute, which no file name gives: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "unpaired-outputs",
+      "subject": "Outputs/tsc/testdata/baselines/reference/tscWatch",
+      "label": true,
+      "why": "written by Go tests under names they compute, which no file name gives: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "unpaired-outputs",
+      "subject": "Outputs/tsc/testdata/baselines/reference/tsoptions",
+      "label": true,
+      "why": "written by Go tests under names they compute, which no file name gives: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "unpaired-outputs",
+      "subject": "Outputs/tsc/testdata/fixtures/typescript/tests/baselines/reference/config",
+      "label": false,
+      "why": "copies of upstream baselines kept as test data under tsc/testdata/fixtures, not outputs of this repository's tests"
+    }
+  ]
+}

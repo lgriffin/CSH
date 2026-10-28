@@ -4,7 +4,7 @@
 import { writeFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { analysisSheet, renderStartHere, sheetFiles } from "@csh/a3";
-import { renderAnalysis } from "@csh/check";
+import { renderAnalysis, renderLabels } from "@csh/check";
 import { stableJson } from "@csh/kernel";
 import type { SolverPort } from "@csh/solver";
 import { analyse, writeAnalysis } from "@csh/run";
@@ -19,7 +19,7 @@ interface Io {
 export async function analyseCommand(a: Args, io: Io, solver: () => Promise<SolverPort>): Promise<number> {
   const path = a.positional[0];
   if (path === undefined || a.positional.length > 1) {
-    io.err("usage: csh analyse <path> [--at <commit>] [--json] [--out <dir>] [--profile <dir>] [--expected <file>] [--budget ms]\n");
+    io.err("usage: csh analyse <path> [--at <commit>] [--json] [--out <dir>] [--profile <dir>] [--expected <file>] [--labels <file>] [--budget ms]\n");
     return 2;
   }
   const r = await analyse({
@@ -28,6 +28,7 @@ export async function analyseCommand(a: Args, io: Io, solver: () => Promise<Solv
     ...(a.options.at !== undefined ? { at: a.options.at } : {}),
     ...(a.options.profile !== undefined ? { profile: resolve(io.cwd, a.options.profile) } : {}),
     ...(a.options.expected !== undefined ? { expected: resolve(io.cwd, a.options.expected) } : {}),
+    ...(a.options.labels !== undefined ? { labels: resolve(io.cwd, a.options.labels) } : {}),
     ...(a.options.budget !== undefined ? { budgetMs: Number(a.options.budget) } : {}),
   });
   if (!r.ok) {
@@ -42,9 +43,13 @@ export async function analyseCommand(a: Args, io: Io, solver: () => Promise<Solv
   for (const [name, text] of Object.entries(sheetFiles(sheet))) writeFileSync(join(dir, name), text);
   const shown = (p: string) => (relative(io.cwd, p) || p).replace(/\\/g, "/");
   if (a.flags.has("json")) io.out(stableJson(r.analysis));
-  else io.out(`${renderAnalysis(r.analysis)}\nwrote ${shown(files.html)} and ${shown(files.json)}, and the A3 as ${shown(join(dir, "csh-a3.html"))}, ${shown(join(dir, "csh-a3.md"))} and ${shown(join(dir, "csh-a3.json"))}\n\n${renderStartHere(sheet, shown(join(dir, "csh-a3.html")))}`);
+  else io.out(`${renderAnalysis(r.analysis)}\n${r.analysis.labels !== undefined ? `${renderLabels(r.analysis.labels)}\n` : ""}wrote ${shown(files.html)} and ${shown(files.json)}, and the A3 as ${shown(join(dir, "csh-a3.html"))}, ${shown(join(dir, "csh-a3.md"))} and ${shown(join(dir, "csh-a3.json"))}\n\n${renderStartHere(sheet, shown(join(dir, "csh-a3.html")))}`);
   if (a.options.expected !== undefined && (r.analysis.expect?.mismatches.length ?? 0) > 0) {
     io.err(`csh analyse: the analysis does not meet ${a.options.expected}:\n${r.analysis.expect!.mismatches.map((m) => `  ${m.row !== undefined ? `row ${m.row}: ` : ""}${m.message}\n`).join("")}`);
+    return 1;
+  }
+  if (a.options.labels !== undefined && (r.analysis.labels?.mismatches.length ?? 0) > 0) {
+    io.err(`csh analyse: the analysis does not meet the labels of ${a.options.labels}:\n${r.analysis.labels!.mismatches.map((m) => `  ${m}\n`).join("")}`);
     return 1;
   }
   return 0;

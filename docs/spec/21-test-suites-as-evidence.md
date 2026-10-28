@@ -87,7 +87,7 @@ conventions have one suite for each directory that holds accepted outputs.
 | What the files show | Signal | Outcome |
 |---|---|---|
 | A suite with cases that have accepted outputs | `accepted-outputs`: how many cases, how many with outputs, how many outputs, where | converged |
-| A case of a reference tree or of mirrored directories with no accepted output | `unaccepted-case`: the case checks nothing the runner can compare | gap |
+| Cases of a reference tree or of mirrored directories with no accepted output | `unaccepted-case`, one per suite listing them: each may check nothing the runner can compare, or be skipped on purpose (A-287) | indeterminate |
 | An accepted output of a reference tree, mirrored directories, UI outputs or a snapshot directory that no case of its suite produces | `orphan-output`: it reads as checked behaviour and nothing produces it | gap |
 | Two cases of one suite with the same stem | `shared-stem`, its subject the stem in the first case's directory: which case wrote the outputs of that stem is not decided; neither is a gap | indeterminate |
 | Accepted outputs no convention pairs: a child of `R` with no namesake case directory, a golden file with no sibling, an approved file with no sibling test, an insta snapshot | `unpaired-outputs`, one per directory, with how many files and an example | indeterminate |
@@ -95,8 +95,9 @@ conventions have one suite for each directory that holds accepted outputs.
 `unaccepted-case` says why it matters and what would close it: accept the case's output, or remove the case if the
 runner is meant to skip it. A runner may skip a case on purpose, as TypeScript's skips 42 cases by name and others by
 an option it no longer supports, and a runner may write nothing for a case that passes, as TypeScript's does for a
-case that asks for no emit and no type baselines and compiles clean. CSH does not read the runner, so the gap says
-both ([Q-80](../../QUESTIONS.md)). A golden sibling, a UI output and an approved file are found from the output, so a case
+case that asks for no emit and no type baselines and compiles clean. CSH does not read the runner, so which of the
+cases checks nothing by accident is not decided: the suite's cases are listed in one indeterminate entry
+([Q-85](../../QUESTIONS.md), which revisits [Q-80](../../QUESTIONS.md) after labelling found all 282 of TypeScript's skipped or empty). A golden sibling, a UI output and an approved file are found from the output, so a case
 with none is not a case of the suite, and is never reported. A trybuild case that must compile has no `.stderr`.
 
 **What a suite is not.** `accepted-outputs` is converged on what the names show: a person committed an output for
@@ -228,8 +229,8 @@ read of lgriffin/TypeScript at `a91e938`:
   document;
 - reports the compiler, conformance and transpile suites as `accepted-outputs`, and the fourslash baselines as named
   after their tests;
-- reports each case with no accepted output as `unaccepted-case`, each of which the runner skips, by name or by an
-  option it does not support, or writes nothing for when it compiles clean;
+- lists the cases with no accepted output in one `unaccepted-case` per suite, each of which the runner skips, by name
+  or by an option it does not support, or writes nothing for when it compiles clean;
 - reports the two cases that share a stem with a `.js` file the runner never compiles as `shared-stem`.
 
 Each finding is checked by hand before it is called real, and each real one is reported to the repository as Leigh
@@ -238,8 +239,8 @@ directs, never upstream to microsoft/TypeScript by CSH.
 ## 6. Limits
 
 - **The runner is not read.** A skip list, a filter, a generated test, a custom file pattern: CSH reads conventions,
-  not the runner's code. A case it calls unaccepted may be skipped on purpose, or accepted as writing nothing; the gap
-  says so ([Q-80](../../QUESTIONS.md)).
+  not the runner's code. A case it calls unaccepted may be skipped on purpose, or accepted as writing nothing, so the
+  entry is indeterminate ([Q-85](../../QUESTIONS.md)).
 - **Content is not compared.** An accepted output can be wrong, and a case can produce something other than what was
   accepted. Only the runner decides that.
 - **Variants are not checked.** TypeScript names an output for each variant of a case's options, as

@@ -116,6 +116,7 @@ function definitionsOf(source: string, file: string, encoded: string): (Definiti
     const [line, kind, text] = row.split("\t");
     if (line === undefined || kind === undefined || text === undefined) return [];
     const span = `${file}:${line}`;
+    if (kind === "literal") return [{ item: `${source}/${file}`, file, span, shown: `"${text}"`, match: new RegExp(`^${escape(text)}$`, "i") }];
     if (kind === "expression" || kind === "vitest") {
       try {
         return [{ item: `${source}/${file}`, file, span, shown: `"${text}"`, match: kind === "vitest" ? vitestExpression(text) : cucumberExpression(text) }];

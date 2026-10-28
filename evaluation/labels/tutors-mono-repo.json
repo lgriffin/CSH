@@ -1,0 +1,527 @@
+{
+  "schema": "csh-labels/v1",
+  "subject": {
+    "repo": "https://github.com/tutors-sdk/tutors-mono-repo",
+    "commit": "d3504043ef2d56a06dd96e376394758415987fec"
+  },
+  "labels": [
+    {
+      "outcome": "gap",
+      "kind": "baselined",
+      "subject": "Baselines/tests/architecture/known-knip.txt",
+      "label": true,
+      "why": "the baseline lists known findings the suite tolerates: each is a real open finding"
+    },
+    {
+      "outcome": "gap",
+      "kind": "baselined",
+      "subject": "Baselines/tests/architecture/known-manifest-drift.txt",
+      "label": true,
+      "why": "the baseline lists known findings the suite tolerates: each is a real open finding"
+    },
+    {
+      "outcome": "gap",
+      "kind": "baselined",
+      "subject": "Baselines/tests/architecture/known-violations.txt",
+      "label": true,
+      "why": "the baseline lists known findings the suite tolerates: each is a real open finding"
+    },
+    {
+      "outcome": "gap",
+      "kind": "baselined",
+      "subject": "Baselines/tests/bdd/ears-audit-baseline.txt",
+      "label": true,
+      "why": "the baseline lists known findings the suite tolerates: each is a real open finding"
+    },
+    {
+      "outcome": "gap",
+      "kind": "baselined",
+      "subject": "Baselines/tests/completeness/known-gaps.txt",
+      "label": true,
+      "why": "the baseline lists known findings the suite tolerates: each is a real open finding"
+    },
+    {
+      "outcome": "gap",
+      "kind": "baselined",
+      "subject": "Baselines/tests/data/schema/known-gaps.txt",
+      "label": true,
+      "why": "the baseline lists known findings the suite tolerates: each is a real open finding"
+    },
+    {
+      "outcome": "gap",
+      "kind": "baselined",
+      "subject": "Baselines/tests/security/known-response-gaps.txt",
+      "label": true,
+      "why": "the baseline lists known findings the suite tolerates: each is a real open finding"
+    },
+    {
+      "outcome": "gap",
+      "kind": "baselined",
+      "subject": "Baselines/tests/suite-health/known-findings.txt",
+      "label": true,
+      "why": "the baseline lists known findings the suite tolerates: each is a real open finding"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "no-results",
+      "subject": "Tests",
+      "label": true,
+      "why": "the practice names a results file and none is committed"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unexercised",
+      "subject": "Documents/docs/COURSE-PAGE-WALKTHROUGH.md",
+      "label": true,
+      "why": "markdownService and sanitizeHtml are named by no test file"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unexercised",
+      "subject": "Documents/guides/specifications/error-handling.md",
+      "label": true,
+      "why": "normalizeArgs is named by no test file"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/.claude/skills/ears-gherkin-dev/references/ears-rules.md#L34",
+      "label": true,
+      "why": "the obligation word is shall: a rule for requirements that no check holds"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/README.md#L207",
+      "label": true,
+      "why": "only identity-sveltekit imports auth providers: a layering rule with no check named"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/apps/catalogue/README.md#L30",
+      "label": false,
+      "why": "not a rule about the code: a note of how a declared dependency is used today"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/deploy/README.md#L445",
+      "label": true,
+      "why": "a behaviour claim (the request id is stored on event.locals) that no test cites"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/docs/COURSE-PAGE-WALKTHROUGH.md#L145",
+      "label": false,
+      "why": "not a rule about the code: a walkthrough describing which stylesheets the reader imports"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/docs/COURSE-PAGE-WALKTHROUGH.md#L149",
+      "label": false,
+      "why": "not a rule about the code: a walkthrough explaining why pnpm dev builds the UI packages first"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/docs/knowledge-graph/README.md#L16",
+      "label": false,
+      "why": "not a rule about the code: a description of the graph's contents"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/Release-Strategy.md#L233",
+      "label": true,
+      "why": "the harness never writes to a pull request: a rule with no check named and no citing test"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/WHITEBOARD.md#L36",
+      "label": false,
+      "why": "not a rule about the code: it describes a feature of the course toolbar"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/evolution/tutors-revolution.md#L1114",
+      "label": false,
+      "why": "not a rule about the code: a description of the release harness in a history of the project"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/identity-rollout.md#L108",
+      "label": true,
+      "why": "an identity boundary rule with no check named and no citing test"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/identity-rollout.md#L131",
+      "label": true,
+      "why": "an identity boundary rule with no check named and no citing test"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/accessibility.md#high-contrast-theme-support",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/accessibility.md#images-have-alternative-text",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/accessibility.md#keyboard-navigation-through-course-content",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/accessibility.md#semantic-navigation-landmarks",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/accessibility.md#skip-to-content-link",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/analytics-lab.md#compare-lab-activity-across-course",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/analytics-lab.md#handle-labs-with-no-student-activity",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/auth-integration.md#L33",
+      "label": true,
+      "why": "connect has no provider imports: a layering rule with no check named"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/auth-integration.md#handle-network-failure-during-auth",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/auth-integration.md#session-persists-across-page-navigation",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/authentication.md#view-profile-information",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/calendar-analytics.md#calculate-median-engagement",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/calendar-analytics.md#display-calendar-heatmap-for-a-course",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/calendar-analytics.md#identify-low-engagement-students",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/calendar-analytics.md#view-daily-activity-breakdown",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/calendar-analytics.md#view-weekly-aggregation",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/course-authoring.md#support-all-learning-object-types",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/course-discovery.md#navigate-from-catalogue-to-course-reader",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/course-discovery.md#search-for-a-course-by-keyword",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/error-handling.md#invalid-course-url",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/error-handling.md#malformed-course-json",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/error-handling.md#network-failure-during-course-load",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/error-handling.md#websocket-disconnection",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/lab-analytics.md#display-lab-completion-grid",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/lab-analytics.md#display-learning-records-for-a-student",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/lab-analytics.md#view-step-level-breakdown-for-a-lab",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/live-presence.md#handle-presence-connection-failure",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/live-presence.md#student-leaves-course-presence",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/offline-resilience.md#failed-api-call-does-not-corrupt-local-state",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/offline-resilience.md#reconnection-after-temporary-disconnect",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/offline-resilience.md#service-worker-caches-static-assets",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/offline-resilience.md#stale-data-indicator",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/presence-tracking.md#group-students-by-course",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/presence-tracking.md#handle-student-disconnect",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/responsive-layout.md#course-cards-reflow-on-narrow-screens",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/responsive-layout.md#desktop-layout-shows-sidebar",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/responsive-layout.md#mobile-layout-hides-sidebar",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/responsive-layout.md#touch-friendly-interaction-targets",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/student-engagement.md#aggregate-learning-records-per-student",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/student-engagement.md#handle-student-with-no-recorded-activity",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/theme-customisation.md#apply-custom-theme-to-a-course",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/theme-customisation.md#select-icon-library",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/specifications/whitelist-management.md#whitelist-check-handles-missing-data-gracefully",
+      "label": true,
+      "why": "a specified scenario that no test cites; tests may cover it without saying so (e.g. skip-to-content in tests/unit/utils/a11y.test.ts)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/testing/EARS-METHODOLOGY.md#L238",
+      "label": false,
+      "why": "not a rule about the code: it explains the method, it is no rule of the code"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/testing/TESTING.md#L104",
+      "label": false,
+      "why": "not a rule about the code: it describes the coverage configuration"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/testing/TESTING.md#L47",
+      "label": false,
+      "why": "names its check: the paragraph is about the test that protects the layering"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/observability/grafana/README.md#L107",
+      "label": false,
+      "why": "not a rule about the code: an answer about Grafana data sources"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/observability/grafana/README.md#L155",
+      "label": false,
+      "why": "not a rule about the code: a maintenance instruction for the reporting views"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/observability/grafana/README.md#L69",
+      "label": false,
+      "why": "not a rule about the code: why the dashboard is imported by hand"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/packages/jsr/types/README.md#L13",
+      "label": false,
+      "why": "not a rule about the code: a note that nothing imports the package yet"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/packages/jsr/types/README.md#L6",
+      "label": true,
+      "why": "a rule about what the package exports, with no check named"
+    }
+  ]
+}
