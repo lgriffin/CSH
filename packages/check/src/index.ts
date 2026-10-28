@@ -18,3 +18,4 @@ export * from "./ladder.ts";
 export * from "./danger.ts";
 export * from "./grain.ts";
 export * from "./analysis.ts";
+export * from "./names.ts";

@@ -11,6 +11,7 @@ const c: Coverage = {
   byName: 0,
   sources: [{ name: "Docs", kind: "Documents", files: 4 }, { name: "Code", kind: "Code", files: 2 }, { name: "Tests", kind: "TestFiles", files: 0 }],
   eligible: 9,
+  languages: [],
   unread: [{ ext: ".rs", files: 3, sample: "verify/src/lib.rs" }, { ext: ".sql", files: 1, sample: "db/a.sql" }],
   skipped: [{ reason: "with no reader", files: 1, sample: "db/a.sql" }],
   missed: [{ ext: ".rs", files: 3, sample: "verify/src/lib.rs" }],
@@ -67,6 +68,24 @@ describe("coverage", () => {
       expect(c.eligible).toBe(7);
       expect(c.skipped.map((k) => [k.reason, k.files])).toEqual([["build output", 1], ["installed or vendored", 1], ["test data no suite pairs", 1], ["with no reader", 1]]);
       expect(c.missed.map((m) => m.ext).sort()).toEqual([".jsonl", ".md", ".mmd", "Makefile"]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("counts as code only what a Code source read, and a language no reader reads as unread (stage 77, A-275)", () => {
+    const dir = mkdtempSync(join(tmpdir(), "csh-coverage-"));
+    try {
+      const git = (...a: string[]) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...a], { cwd: dir, stdio: "ignore" });
+      git("init", "-q");
+      for (const [f, text] of Object.entries({ "src/a.ts": "", "docs/example.py": "", "native/b.c": "", "vendor/c.c": "" })) {
+        mkdirSync(join(dir, f, ".."), { recursive: true });
+        writeFileSync(join(dir, f), text);
+      }
+      git("add", ".");
+      git("commit", "-q", "-m", "one");
+      const c = coverageOfSources(dir, [{ name: "Code", kind: "Code", at: ".", include: ["src/**"] }, { name: "Docs", kind: "Documents", at: ".", include: ["docs/**"] }])!;
+      expect(c.languages).toEqual([{ language: "typescript", files: 1, status: "supported" }, { language: "c", files: 1, status: "unread" }]);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

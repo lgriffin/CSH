@@ -31,7 +31,7 @@ git -C "$subject" add -A
 git -C "$subject" -c user.name=ci -c user.email=ci@example.invalid -c commit.gpgsign=false commit -qm "the subject"
 
 check_reports() {
-  for f in csh-analysis.json csh-analysis.html; do test -s "$1/$f" || { echo "missing $1/$f" >&2; exit 1; }; done
+  for f in csh-analysis.json csh-analysis.html csh-a3.json csh-a3.md csh-a3.html; do test -s "$1/$f" || { echo "missing $1/$f" >&2; exit 1; }; done
 }
 
 echo "== npm install --global"

@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { COMPONENT_SCHEMA_V2, type ComponentManifest, type DeclaredSource, type Practice } from "@csh/component";
-import { isBaseline } from "@csh/adapter-items/markdown";
+import { isBaseline, OBLIGES } from "@csh/adapter-items/markdown";
 import { outputDirsOf, suiteFilesOf } from "@csh/adapter-items/outputs";
 import { runnerOf } from "@csh/facts-code";
 import { compareCodePoints, globRegExp } from "@csh/kernel";
@@ -274,13 +274,17 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
     guesses.push(`Instructions: ${instructions.length} ${instructions.length === 1 ? "file" : "files"} an agent reads at the start of a session (${instructions.join(", ")}), read as documents in a practice of their own`);
   }
 
-  // Requirements: Markdown files with a heading, or a table row, that begins with an identifier.
+  // Requirements: Markdown files with a heading, a table row, or a list item stating shall or must (A-276), that begins
+  // with an identifier.
   const heading = idPattern === undefined ? undefined : new RegExp(`^#{1,6}\\s+(?:${idPattern})\\b`, "m");
   const tableRow = idPattern === undefined ? undefined : new RegExp(`^\\s*\\|\\s*(?:${idPattern})\\s*\\|`, "m");
-  const requirements = heading === undefined || tableRow === undefined ? [] : markdown.filter((p) => !instructions.includes(p) && (heading.test(mdText.get(p)!) || tableRow.test(mdText.get(p)!)));
+  // A list item at any indentation, as the adapter trims it, whose text says shall or must in any case (OBLIGES).
+  const listItem = idPattern === undefined ? undefined : new RegExp(`^\\s*[-*+]\\s+(?:\\*\\*)?(?:${idPattern})\\b(.*)$`, "gm");
+  const listed = (text: string) => [...text.matchAll(listItem!)].some((m) => OBLIGES.test(m[1]!));
+  const requirements = heading === undefined || tableRow === undefined || listItem === undefined ? [] : markdown.filter((p) => !instructions.includes(p) && (heading.test(mdText.get(p)!) || tableRow.test(mdText.get(p)!) || listed(mdText.get(p)!)));
   if (requirements.length > 0) {
     add({ name: "Requirements", kind: "Documents", at: ".", include: [...requirements, ...cruisers] }, { id: "requirements", name: "Requirements", kind: "requirements", adapter: "@csh/adapter-items/markdown", unit: "the requirement", settings: { ...idSettings } });
-    guesses.push(`Requirements: ${requirements.length} Markdown ${requirements.length === 1 ? "file has a heading or table row" : "files have headings or table rows"} that begin with an identifier, e.g. ${requirements[0]}`);
+    guesses.push(`Requirements: ${requirements.length} Markdown ${requirements.length === 1 ? "file has a heading, table row or list item" : "files have headings, table rows or list items"} that begin with an identifier, e.g. ${requirements[0]}`);
   }
 
   // Documents: every other Markdown file, less changelogs and those in test directories.

@@ -17,11 +17,58 @@ export interface Analysis {
   guesses: string[];
   /** Tracked files read and not read, when the profile declares its sources. */
   coverage?: CoverageCounts;
+  /** The code files read whole, by language, with what 1.0 promises of each (The analysis A3, section 3); absent before stage 78. */
+  languages?: LanguageCount[];
   /** Told rules lifted from prose, each an item at its line. */
   told: { item: string; lifted: string; span: string; text: string }[];
   overview: Overview;
   /** The profile's expected results compared with the overview, when the profile has them. */
   expect?: ExpectResult;
+}
+
+/**
+ * What CSH promises of a language's results (The analysis A3, section 3; A-275): TypeScript and JavaScript are read by
+ * the TypeScript compiler and supported; Python, Java, Go and Rust are read by experimental readers; a language CSH
+ * knows of and has no reader for is unread.
+ */
+export type LanguageStatus = "supported" | "experimental" | "unread";
+export interface LanguageCount {
+  language: string;
+  files: number;
+  status: LanguageStatus;
+}
+
+/** The language of a code file CSH reads, by its extension. */
+const READ_LANGUAGE: Record<string, string> = {
+  ts: "typescript", tsx: "typescript", mts: "typescript", cts: "typescript",
+  js: "javascript", jsx: "javascript", mjs: "javascript", cjs: "javascript", svelte: "svelte",
+  py: "python", pyi: "python", java: "java", go: "go", rs: "rust",
+};
+const EXPERIMENTAL = new Set(["python", "java", "go", "rust"]);
+const SUPPORTED = new Set(["typescript", "javascript", "svelte"]);
+const DISPLAY: Record<string, string> = { typescript: "TypeScript", javascript: "JavaScript", svelte: "Svelte", python: "Python", java: "Java", go: "Go", rust: "Rust" };
+
+/** The language CSH reads a file in, by its extension, or undefined when no reader of CSH reads it as code. The readers
+ * match extensions as written, so `Foo.PY` is not Python. */
+export function readLanguageOf(path: string): string | undefined {
+  const base = path.slice(path.lastIndexOf("/") + 1);
+  const dot = base.lastIndexOf(".");
+  return dot <= 0 ? undefined : READ_LANGUAGE[base.slice(dot + 1)];
+}
+
+/** What 1.0 promises of a language CSH reads: supported, or experimental. */
+export const languageStatus = (language: string): LanguageStatus => (EXPERIMENTAL.has(language) ? "experimental" : SUPPORTED.has(language) ? "supported" : "unread");
+
+/** A language's name as a person writes it. */
+export const languageName = (language: string): string => DISPLAY[language] ?? language;
+
+/** The one line said when a repository holds code only experimental readers read, or undefined when it holds none. */
+export function experimentalLine(languages: readonly LanguageCount[] | undefined): string | undefined {
+  const ex = (languages ?? []).filter((l) => l.status === "experimental" && l.files > 0);
+  if (ex.length === 0) return undefined;
+  const names = ex.map((l) => `${languageName(l.language)} (${l.files} ${l.files === 1 ? "file" : "files"})`);
+  const list = names.length === 1 ? names[0]! : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+  return `experimental: ${list} ${ex.length === 1 ? "is" : "are"} read by experimental readers; their results may be incomplete or wrong. TypeScript and JavaScript are supported.`;
 }
 
 /** Overview kinds that are two statements disagreeing: a joint conflict, or two examples that diverge. */
@@ -123,6 +170,8 @@ export function renderAnalysis(a: Analysis): string {
   const out = [`CSH analysis of ${a.subject.repo} at ${a.subject.commit.slice(0, 12)}`];
   out.push(a.profile.kind === "proposed" ? `  profile: proposed, ${`${a.guesses.length} ${a.guesses.length === 1 ? "guess" : "guesses"}`} (csh analyse --json lists them); nothing is written into the subject` : `  profile: ${a.profile.dir}`);
   if (a.coverage !== undefined) out.push(`  ${coverageLine(a.coverage)}`);
+  const ex = experimentalLine(a.languages);
+  if (ex !== undefined) out.push(`  ${ex}`);
   out.push(`  told rules lifted from prose: ${a.told.length} (${lifted("layering")} layering, ${lifted("ears")} EARS), each cited as its sentence`, "");
   out.push(`== Danger (${s.danger.length}): refuted or masked, never scored; each keeps its outcome`);
   if (s.danger.length === 0) out.push("  none established");
@@ -152,6 +201,7 @@ export function renderAnalysisHtml(a: Analysis, title: string): string {
       : `<ul>${es.map((e) => `<li id="${esc(e.anchor)}"><div class="subject"><code>${esc(e.kind)}</code> ${esc(e.subject)}${e.rung !== undefined ? ` <span class="rung ${e.rung}">${e.rung}</span>` : ""}</div>${e.danger !== undefined ? dangerHtml(e.danger) : ""}<ul class="detail">${(e.detail ?? "").split(/;\s+/).filter((x) => x !== "").map((x) => `<li>${esc(x)}</li>`).join("")}<li class="next">next: ${esc(e.next)}</li></ul></li>`).join("")}</ul>`;
   const before = [
     `<section class="read"><p>${esc(a.subject.repo)} at <code>${esc(a.subject.commit)}</code>; profile ${a.profile.kind === "proposed" ? "proposed for this run" : esc(a.profile.dir)}.</p>`,
+    experimentalLine(a.languages) !== undefined ? `<p class="experimental"><strong>Experimental.</strong> ${esc(experimentalLine(a.languages)!.replace(/^experimental: /, ""))}</p>` : "",
     a.guesses.length > 0 ? `<details><summary>${a.guesses.length} guesses</summary><ul>${a.guesses.map((g) => `<li>${esc(g)}</li>`).join("")}</ul></details>` : "",
     a.told.length > 0 ? `<details><summary>${a.told.length} told rules lifted from prose</summary><ul>${a.told.map((t) => `<li><code>${esc(t.span)}</code> ${esc(t.lifted)}: ${esc(t.text)}</li>`).join("")}</ul></details>` : "",
     `</section>`,

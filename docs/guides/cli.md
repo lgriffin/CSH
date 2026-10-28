@@ -23,7 +23,9 @@ prints the version.
 ## What you will do with it
 
 **Read a repository you already have.** `csh analyse <path>` reads any git repository cold, with no setup, and
-writes `reports/csh-analysis.html` and `.json` in the current directory: danger first, then conflicts, gaps,
+writes `reports/csh-analysis.html` and `.json` in the current directory, and the A3 beside them (`csh-a3.html`, `.md`
+and `.json`: the analysis read as one problem, with the few changes that close the most; [the A3 guide](a3.md)):
+danger first, then conflicts, gaps,
 indeterminate and converged. It never writes into the repository and never runs its tests. Open the HTML file, or
 add `--json` to read the analysis from a script.
 
@@ -131,9 +133,10 @@ csh: the Composable Specification Harness
                                   Read a repository cold: propose a profile, lift the layering and EARS sentences of
                                   its documents as told rules, read its code and tests, check, and place every result,
                                   danger first, then conflicts, gaps, indeterminate and converged. Writes
-                                  csh-analysis.html and .json under --out (reports). Never writes into the repository,
-                                  runs its tests or reads a ledger. Exits 0 when it completes; with --expected, 1 when
-                                  the analysis does not meet that csh-expected/v1 file.
+                                  csh-analysis.html and .json under --out (reports), and beside them the A3
+                                  (csh-a3.html, .md and .json), ending with where to start. Never writes into the
+                                  repository, runs its tests or reads a ledger. Exits 0 when it completes; with
+                                  --expected, 1 when the analysis does not meet that csh-expected/v1 file.
   csh run [--at <commit>] [--mode advisory|enforcing] [--budget ms] [--no-cache]
                                   Run each practice's harness, check and gate one snapshot of the component, and
                                   store the run under .csh-cache/runs/. Exits 1 only on block in enforcing mode, or

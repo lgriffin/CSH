@@ -6,8 +6,8 @@ import { compareCodePoints, globRegExp } from "@csh/kernel";
 import { selectFiles, trackedDirsOf, trackedFiles } from "./sources.ts";
 import type { Project } from "./project.ts";
 import type { DeclaredSource } from "@csh/component";
-import { coverageLine, type SkipReason } from "@csh/check";
-import { runnerOf } from "@csh/facts-code";
+import { coverageLine, type LanguageCount, languageStatus, readLanguageOf, type SkipReason } from "@csh/check";
+import { languageOf, runnerOf } from "@csh/facts-code";
 import { buildOutputsOf, CODE_EXT, INSTALLED_DIRS, MANIFESTS } from "./propose.ts";
 
 export { coverageLine };
@@ -25,6 +25,8 @@ export interface Coverage {
   skipped: { reason: SkipReason; files: number; sample: string }[];
   /** The unread files that are eligible, by extension: what the profile misses. */
   missed: { ext: string; files: number; sample: string }[];
+  /** The code files read whole, by language, and the eligible code of a language CSH has no reader for (stage 78). */
+  languages: LanguageCount[];
 }
 
 /** Extensions some source kind of CSH reads; a file of any other kind has no reader unless a source reads it. */
@@ -79,6 +81,7 @@ export function coverageOfSources(root: string, declared: readonly DeclaredSourc
   // A file one source reads by name and another reads whole is read whole.
   const named = new Set<string>();
   const whole = new Set<string>();
+  const code = new Set<string>();
   const sources: Coverage["sources"] = [];
   const dirs = trackedDirsOf(tracked);
   const isTracked = new Set(tracked);
@@ -89,6 +92,7 @@ export function coverageOfSources(root: string, declared: readonly DeclaredSourc
     const names = (s.names ?? []).map(globRegExp);
     for (const f of files) {
       read.add(f.path);
+      if (s.kind === "Code") code.add(f.path);
       if (names.some((r) => r.test(below(f.path)))) named.add(f.path);
       else whole.add(f.path);
     }
@@ -110,7 +114,17 @@ export function coverageOfSources(root: string, declared: readonly DeclaredSourc
     unread,
     skipped,
     missed: grouped(missed, extOf).map((g) => ({ ext: g.key, files: g.files, sample: g.sample })),
+    // Code read whole by a Code source, by language; then code in a language no reader reads, whether or not a source
+    // would have read it, but not code installed, built or kept as test data.
+    languages: languagesOf([...whole].filter((f) => code.has(f)), notRead.filter((f) => reasons.get(f) === undefined || reasons.get(f) === "with no reader")),
   };
+}
+
+/** Code files read whole by language, then unread files in a language with no reader; most files first. */
+function languagesOf(whole: readonly string[], notRead: readonly string[]): LanguageCount[] {
+  const read = grouped(whole.filter((f) => readLanguageOf(f) !== undefined), (f) => readLanguageOf(f)!);
+  const unread = grouped(notRead.filter((f) => readLanguageOf(f) === undefined && languageOf(f) !== undefined), (f) => languageOf(f)!);
+  return [...read.map((g) => ({ language: g.key, files: g.files, status: languageStatus(g.key) })), ...unread.map((g) => ({ language: g.key, files: g.files, status: "unread" as const }))];
 }
 
 export function renderCoverage(c: Coverage, name: string, top = 12): string {

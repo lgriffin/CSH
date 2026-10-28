@@ -1,0 +1,80 @@
+{
+  "fixture": "F227",
+  "section": "The analysis A3, section 1",
+  "stage": 77,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "entries": [
+        {
+          "outcome": "gap",
+          "kind": "unverified",
+          "subject": "Requirements/LED-2"
+        },
+        {
+          "outcome": "gap",
+          "kind": "unverified",
+          "subject": "Requirements/LED-3"
+        },
+        {
+          "outcome": "gap",
+          "kind": "dangling-reference",
+          "subject": "Documents/README.md",
+          "detailIncludes": [
+            "docs/design.md"
+          ]
+        },
+        {
+          "outcome": "indeterminate",
+          "kind": "no-results",
+          "subject": "Tests"
+        }
+      ],
+      "entriesAbsent": [
+        {
+          "kind": "unverified",
+          "subject": "Requirements/LED-1"
+        }
+      ],
+      "a3": {
+        "vital": [
+          "Claims nothing checks",
+          "Prose has drifted from the code",
+          "What CSH could not read or decide"
+        ],
+        "countermeasures": [
+          {
+            "id": "C1",
+            "kind": "dangling-reference",
+            "place": "README.md",
+            "clears": 1,
+            "danger": true
+          },
+          {
+            "id": "C2",
+            "kind": "unverified",
+            "place": "Requirements",
+            "clears": 2,
+            "danger": false
+          }
+        ],
+        "goalIncludes": [
+          "Close the 1 danger entry"
+        ],
+        "markdownIncludes": [
+          "## 1. Background",
+          "## 6. Countermeasures",
+          "csh-analysis.html#"
+        ]
+      },
+      "files": [
+        "csh-analysis.json",
+        "csh-analysis.html",
+        "csh-a3.json",
+        "csh-a3.md",
+        "csh-a3.html"
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

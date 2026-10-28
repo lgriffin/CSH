@@ -20,7 +20,9 @@ It is the "Command line" container, shown in the [containers diagram](../../docs
 - `diffCommand(project, args, io)`, `DiffIo`: `csh diff <base> <head>`. Each side is a stored run's directory, a commit (its stored run, else a run at that commit), `.` for the working tree (refused in CI when it is dirty) or `unavailable:<reason>`, which the CI job passes when the merge base cannot be run. It finds the paths changed between the two commits with git and hands everything to `@csh/review`; `--json` prints the model, and `--out <dir>` writes `diff.json` and `diff.md`.
 - `analyseCommand(args, io, solver)`: `csh analyse <path> [--at] [--json] [--out] [--profile] [--expected] [--budget]` (stage 55). It
   hands the path to `analyse` of `@csh/run`, writes `csh-analysis.html` and `csh-analysis.json` under `--out` (default
-  `reports`, from the working directory, never the subject's), and prints the analysis, or with `--json` the JSON. Exit
+  `reports`, from the working directory, never the subject's), and the A3 of the analysis beside them (`csh-a3.html`,
+  `.md`, `.json`, from `analysisSheet` of `@csh/a3`, stage 77). It prints the analysis and then the first three
+  countermeasures, or with `--json` the JSON. Exit
   0 when the analysis completes, 1 when the repository cannot be read or (stage 60) when it does not meet the
   `--expected` file, each mismatch on standard error, 2 on a usage error ([16](../../docs/spec/16-analyse-danger-grain.md), section 2).
 - `parseArgs(argv)`, `Args`: positionals, `--key value` and `--key=value` options, flags, and `--` to end the options. `argProblems(args, accepts)` and `valueProblems(args)` (stage 64) say what a command does not take, with the nearest option it does, and which values have the wrong form ([A-240](../../ASSUMPTIONS.md)).
