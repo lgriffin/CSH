@@ -118,12 +118,18 @@ Before 1.0 the calibration runs become a benchmark, with a number for each claim
   output, a path written from a fixture's root), false unverified rules (a rule that names its own check, a dated
   record), false step gaps (jest-cucumber's literal steps, named fixture directories, steps in a unit test), and 282
   false `unaccepted-case` gaps on lgriffin/TypeScript, each fixed in stage 79 (A-278 to A-287).
-- **Recall, from seeded drift (stage 80).** For each TypeScript subject, a set of drifts applied to a copy at the
-  pinned commit: a renamed function a document names, a deleted file a document links, a broken import rule, a
-  removed accepted output, a test that stops citing its requirement. CSH must report each one as the gap the drift
-  should cause. CI reports how many it found.
-- **Stability.** Two analyses of commits that differ only in an unrelated file have the same anchors for every
-  unchanged entry, so a countermeasure can be tracked across commits.
+- **Recall, from seeded drift (stage 80).** Each TypeScript subject has a drifts file, `evaluation/drifts/<subject>.json`
+  (`csh-drifts/v1`: the subject's repo and commit, then each drift's edits and the entry it should cause, by outcome,
+  kind, subject and words of its detail). `node evaluation/drift.ts <checkout> <drifts.json>` applies every drift to the
+  pinned commit at once, commits it, analyses cold, and requires each expected entry, which must be absent before the
+  drift. The drifts are the ways a repository drifts from its prose: a file a document names or links is deleted, a
+  function a document names is renamed, a test stops naming a symbol a document says is exercised, a test the
+  requirements cite is deleted, a case or test is deleted and its accepted output stays, a result file a document
+  cites is deleted. CI runs it on each subject and fails on a miss: 14 of 14 drifts are reported.
+  Seeding the taskboard found one miss, a path written from a package's own directory (`src/events/handlers.ts` in
+  `typescript/AGENTS.md`), which was unchecked once deleted; it is now dangling (A-288, F230).
+- **Stability.** The same script then appends a line to a file no entry names, commits it, and analyses again: every
+  entry must keep its anchor, and none may appear. It holds on all four subjects (186 of 186 entries).
 - **Cost.** CI records the time and peak memory of each subject's analysis.
 - **Experimental subjects.** Apache Camel (tag `camel-4.23.0`) and lgriffin/Hadur_Robot for Java, Toads and
   fastapi-clean-example for Python, go-clean-arch for Go, hexarch for Rust. They are pinned and run in CI, and their

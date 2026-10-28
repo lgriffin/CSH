@@ -1,0 +1,25 @@
+{
+  "schema": "csh-drifts/v1",
+  "subject": { "repo": "https://github.com/lgriffin/TypeScript", "commit": "a91e93821feafd081641f9f5d161eba626d0b2ce" },
+  "drifts": [
+    {
+      "id": "deleted-file",
+      "what": "tsc/internal/fswatch/CHANGES.md, which the fswatch README links, is deleted",
+      "edits": [{ "op": "delete", "path": "tsc/internal/fswatch/CHANGES.md" }],
+      "expect": { "outcome": "gap", "kind": "dangling-reference", "subject": "Documents/tsc/internal/fswatch/README.md", "detailIncludes": ["CHANGES.md"] }
+    },
+    {
+      "id": "test-stops-exercising",
+      "what": "the LSP watcher test stops naming ErrOverflow, which the fswatch README names",
+      "edits": [{ "op": "replace", "path": "tsc/internal/lsp/lspwatcher/lspwatcher_test.go", "from": "ErrOverflow", "to": "ErrOverrun" }],
+      "expect": { "outcome": "gap", "kind": "unexercised", "subject": "Documents/tsc/internal/fswatch/README.md", "detailIncludes": ["`ErrOverflow`"] }
+    },
+    {
+      "id": "deleted-case",
+      "what": "the compiler case 2dArrays is deleted and its accepted baselines stay",
+      "edits": [{ "op": "delete", "path": "tsc/testdata/tests/cases/compiler/2dArrays.ts" }],
+      "expect": { "outcome": "gap", "kind": "orphan-output", "subject": "Outputs/tsc/testdata/baselines/reference/compiler/2dArrays.types" }
+    }
+  ],
+  "stable": "SUPPORT.md"
+}

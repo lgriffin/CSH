@@ -249,7 +249,16 @@ export function trace(input: TraceInput): TraceResult {
       if (near !== undefined && exists(near) && !exists(p)) return "file";
       // A bare name that is not a top-level file resolves when it is unique, and is unchecked otherwise: never dangling.
       if (!p.includes("/") && !files.has(p)) return byBase.get(p)?.length === 1 ? "file" : null;
-      if (!top.has(p.split("/")[0]!)) return fromAbove(e.span, p) === "file" ? "file" : null;
+      if (!top.has(p.split("/")[0]!)) {
+        const above = fromAbove(e.span, p);
+        if (above === "file") return "file";
+        // Written from the mentioning file's directory, which holds its first folder, it is dangling there (A-288).
+        const beside = relativeTo(e.span, p.split("/")[0]!);
+        // A tracked path elsewhere that ends with it keeps it unchecked: ESI.ts's guides name tests from tests/ (A-281).
+        if (above === null || beside === undefined || near === undefined || !dirs.has(beside)) return null;
+        if (ignored.has(near) || ignored.has(`${near}/`) || e.absent === true || (e.repos ?? []).some((r) => !top.has(r.split("/")[0]!))) return null;
+        return undefined;
+      }
       if (exists(p)) return "file";
       // Missing, in a sentence that says it is absent, or that names another repository: unchecked, not dangling.
       // So is a path the repository ignores, from the root or the mentioning file's directory (A-214).

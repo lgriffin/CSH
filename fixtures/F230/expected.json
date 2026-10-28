@@ -1,0 +1,21 @@
+{
+  "fixture": "F230",
+  "section": "The analysis A3 and 1.0, section 4; A-288",
+  "stage": 80,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "entries": [
+        {
+          "outcome": "gap",
+          "kind": "dangling-reference",
+          "subject": "Documents/typescript/README.md",
+          "detailIncludes": ["src/events/handlers.ts"],
+          "detailExcludes": ["src/app.ts", "schema/task.json"]
+        }
+      ],
+      "entriesAbsent": [{ "kind": "dangling-reference", "subject": "Documents/java/README.md" }],
+      "subjectUntouched": true
+    }
+  }
+}

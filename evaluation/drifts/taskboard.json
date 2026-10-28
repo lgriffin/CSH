@@ -1,0 +1,25 @@
+{
+  "schema": "csh-drifts/v1",
+  "subject": { "repo": "https://github.com/lgriffin/AI-Reference-Projects", "commit": "ce2767cadf01aa9cd664d718d057cd6431a01489" },
+  "drifts": [
+    {
+      "id": "deleted-file",
+      "what": "typescript/src/events/handlers.ts, which typescript/AGENTS.md names, is deleted",
+      "edits": [{ "op": "delete", "path": "typescript/src/events/handlers.ts" }],
+      "expect": { "outcome": "gap", "kind": "dangling-reference", "subject": "Instructions/typescript/AGENTS.md", "detailIncludes": ["src/events/handlers.ts"] }
+    },
+    {
+      "id": "deleted-result",
+      "what": "evaluation/results.json, which the Assertion Ladder cites, is deleted",
+      "edits": [{ "op": "delete", "path": "evaluation/results.json" }],
+      "expect": { "outcome": "gap", "kind": "dangling-reference", "subject": "Documents/docs/assertion-ladder.md", "detailIncludes": ["evaluation/results.json"] }
+    },
+    {
+      "id": "test-stops-exercising",
+      "what": "the task service test stops naming moveTask, the slice typescript/AGENTS.md says to copy",
+      "edits": [{ "op": "replace", "path": "typescript/tests/unit/task-service.test.ts", "from": "moveTask", "to": "relocateTask" }],
+      "expect": { "outcome": "gap", "kind": "unexercised", "subject": "Instructions/typescript/AGENTS.md", "detailIncludes": ["`moveTask`, which no test mentions"] }
+    }
+  ],
+  "stable": "paper/references.bib"
+}
