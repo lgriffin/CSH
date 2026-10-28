@@ -20,7 +20,7 @@ import { type DiffContext, diffRuns, type ManifestView, renderDiff, type RunSide
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { unquotedStrings } from "@csh/agent";
-import { buildA3, readJudgments, readStage, stageDir, stageIntegrity, type StageRecord } from "@csh/a3";
+import { analysisSheet, type AnalysisSheet, buildA3, readJudgments, readStage, renderSheetMarkdown, sheetFiles, stageDir, stageIntegrity, type StageRecord } from "@csh/a3";
 
 export interface FixtureResult {
   id: string;
@@ -38,7 +38,7 @@ export interface FixtureResult {
  * The last stage whose code exists. Fixtures for later stages are written first and reported as pending, never as
  * passing, until their stage raises this number.
  */
-export const BUILT_THROUGH_STAGE = 75;
+export const BUILT_THROUGH_STAGE = 77;
 
 const AGENT_BIN = resolve(import.meta.dirname, "../../agent/bin/csh-agent.js");
 
@@ -872,9 +872,11 @@ export class FixtureRunner {
         const headings = renderAnalysis(a).split("\n").filter((l) => l.startsWith("== ")).map((l) => l.slice(3).split(/[ (:]/)[0]);
         if (JSON.stringify(headings) !== JSON.stringify(x.sections)) failures.push(`sections ${JSON.stringify(headings)}, expected ${JSON.stringify(x.sections)}`);
       }
+      if (x.a3 !== undefined) this.sheetExpect(analysisSheet(a), x.a3, failures);
       if (x.files !== undefined) {
         const out = join(work, "out");
         writeAnalysis(out, a);
+        for (const [name, text] of Object.entries(sheetFiles(analysisSheet(a)))) writeFileSync(join(out, name), text);
         for (const f of x.files as string[]) if (!existsSync(join(out, f))) failures.push(`${f} not written`);
       }
       if (x.subjectUntouched === true) {
@@ -884,6 +886,20 @@ export class FixtureRunner {
     } finally {
       rmSync(work, { recursive: true, force: true });
     }
+  }
+
+  /** The analysis A3 (The analysis A3 and 1.0, section 1): its vital causes, its first countermeasures, its goal and its Markdown. */
+  private sheetExpect(sheet: AnalysisSheet, x: Exp, failures: string[]): void {
+    const vital = sheet.pareto.filter((p) => p.vital).map((p) => p.cause);
+    if (x.vital !== undefined && JSON.stringify(vital) !== JSON.stringify(x.vital)) failures.push(`a3: vital causes ${JSON.stringify(vital)}, expected ${JSON.stringify(x.vital)}; pareto ${JSON.stringify(sheet.pareto)}`);
+    (x.countermeasures ?? []).forEach((w: Exp, i: number) => {
+      const got = sheet.countermeasures[i];
+      const differs = got === undefined || Object.entries(w).some(([k, v]) => JSON.stringify((got as unknown as Record<string, unknown>)[k]) !== JSON.stringify(v));
+      if (differs) failures.push(`a3: countermeasure ${i + 1} is ${JSON.stringify(got)}, expected ${JSON.stringify(w)}`);
+    });
+    for (const g of (x.goalIncludes ?? []) as string[]) if (!sheet.goal.some((l) => l.includes(g))) failures.push(`a3: no goal says ${g}; goal: ${sheet.goal.join(" | ")}`);
+    const md = renderSheetMarkdown(sheet);
+    for (const m of (x.markdownIncludes ?? []) as string[]) if (!md.includes(m)) failures.push(`a3: the Markdown has no ${m}`);
   }
 
   /** A loaded project evaluated as csh run evaluates it, and its report compared with the expectation. */

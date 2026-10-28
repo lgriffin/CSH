@@ -219,6 +219,9 @@ export function cruiserChecks(text: string): string[] {
   return [...new Set([...text.matchAll(/["']?\bname["']?\s*:\s*(["'`])([^"'`\n]+)\1/g)].map((m) => m[2]!))];
 }
 
+/** A list item's text states an obligation: it says shall or must. */
+export const OBLIGES = /\b(?:shall|must)\b/i;
+
 export function run(input: AdapterInput): AdapterOutput {
   const idPattern = idPatternOf(input);
   const headingId = new RegExp(`^(?<id>(?:${idPattern}))(?=$|[\\s·:—–-])\\s*[·:—–-]?\\s*(?<rest>.*)$`);
@@ -232,6 +235,10 @@ export function run(input: AdapterInput): AdapterOutput {
   // A table row whose first cell is an identifier defines a requirement: `| ING-001 | Event | When ..., the system shall ... |`.
   // The sentence is the first cell that says shall (a pattern or status column often sits between), else the first cell.
   const tableId = new RegExp(`^\\|\\s*(${idPattern})\\s*\\|`);
+  // A list item that opens with an identifier, bold or not, and states what shall or must hold defines a requirement too:
+  // `- **LED-1** The ledger shall reject a negative amount.` (The analysis A3 and 1.0, stage 77; A-276). An item that
+  // only names an identifier ("- LED-1 is covered by ...") states no obligation and is a mention.
+  const listId = new RegExp(`^[-*+]\\s+(?:\\*\\*)?(${idPattern})(?:\\*\\*)?\\s*[·:—–-]?\\s*(?:\\*\\*)?\\s*(.+)$`);
   const tableCells = (row: string): string[] => row.replace(/^\|/, "").replace(/\|\s*$/, "").split("|").map((c) => plain(c));
   const items: SourceItem[] = [];
   const edges: ItemEdge[] = [];
@@ -459,6 +466,18 @@ export function run(input: AdapterInput): AdapterOutput {
         add(item);
         mentions(raw, row[1]!, span);
         codeMentions(raw, row[1]!, span);
+        return;
+      }
+      const listed = headingsAreItems && open === undefined ? listId.exec(raw.trim()) : null;
+      if (listed !== null && OBLIGES.test(listed[2]!)) {
+        endField();
+        const text = plain(listed[2]!);
+        const item: SourceItem = { id: listed[1]!, kind: "requirement", text, span, textDigest: digestOf(text) };
+        const pattern = classify(text);
+        if (pattern !== undefined) item.pattern = pattern;
+        add(item);
+        mentions(raw, listed[1]!, span);
+        codeMentions(raw, listed[1]!, span);
         return;
       }
       const line = raw.trim();

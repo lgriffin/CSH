@@ -42,9 +42,9 @@ export function pathToken(token: string): string | undefined {
   const t = token.trim();
   if (!/^[\w@-][\w.@-]*(\/[\w.@-]+)+\/?$/.test(t)) return undefined;
   if (t.startsWith("@")) return undefined; // a package specifier, such as @lgriffin/esi.ts
-  // Not repository paths: a placeholder (release/vX.Y.Z), a CIDR block (10.0.0.0/9) and an API group or registry host
+  // Not repository paths: a placeholder (release/vX.Y.Z, deploy/pin-X.Y.Z, A-277), a CIDR block (10.0.0.0/9) and an API group or registry host
   // (coordination.k8s.io/v1).
-  if (/(^|\/)v?[xX]\.[yY]|\/<|[<>{}*]/.test(t)) return undefined;
+  if (/(?:^|[^A-Za-z0-9])v?[xX]\.[yY](?![A-Za-z0-9])|\/<|[<>{}*]/.test(t)) return undefined;
   if (/^\d+(\.\d+)+\//.test(t)) return undefined;
   if (/^[\w-]+(\.[\w-]+)*\.(?:io|com|org|net|dev)\//.test(t)) return undefined;
   // A placeholder with an ellipsis (tests/bdd/steps/...), and a branch or tag whose last segment is a version

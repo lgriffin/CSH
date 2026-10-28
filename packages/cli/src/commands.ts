@@ -34,9 +34,10 @@ export const COMMANDS: readonly Command[] = [
                                   Read a repository cold: propose a profile, lift the layering and EARS sentences of
                                   its documents as told rules, read its code and tests, check, and place every result,
                                   danger first, then conflicts, gaps, indeterminate and converged. Writes
-                                  csh-analysis.html and .json under --out (reports). Never writes into the repository,
-                                  runs its tests or reads a ledger. Exits 0 when it completes; with --expected, 1 when
-                                  the analysis does not meet that csh-expected/v1 file.`,
+                                  csh-analysis.html and .json under --out (reports), and beside them the A3
+                                  (csh-a3.html, .md and .json), ending with where to start. Never writes into the
+                                  repository, runs its tests or reads a ledger. Exits 0 when it completes; with
+                                  --expected, 1 when the analysis does not meet that csh-expected/v1 file.`,
   },
   {
     names: ["run"],

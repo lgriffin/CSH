@@ -11,6 +11,7 @@ const c: Coverage = {
   byName: 0,
   sources: [{ name: "Docs", kind: "Documents", files: 4 }, { name: "Code", kind: "Code", files: 2 }, { name: "Tests", kind: "TestFiles", files: 0 }],
   eligible: 9,
+  languages: [],
   unread: [{ ext: ".rs", files: 3, sample: "verify/src/lib.rs" }, { ext: ".sql", files: 1, sample: "db/a.sql" }],
   skipped: [{ reason: "with no reader", files: 1, sample: "db/a.sql" }],
   missed: [{ ext: ".rs", files: 3, sample: "verify/src/lib.rs" }],

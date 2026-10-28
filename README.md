@@ -148,7 +148,9 @@ terms no citing test observes: a gap, and masked danger ([16](docs/spec/16-analy
 `csh analyse <path>` reads any git repository cold, with no profile: it proposes one, lifts the layering and EARS
 sentences of its documents as told rules, reads its code and tests, checks, and reports danger, then conflicts, gaps,
 indeterminate and converged, then counts ([16](docs/spec/16-analyse-danger-grain.md)). It writes
-`reports/csh-analysis.html` and `.json`, never writes into the repository, never runs its tests and reads no ledger.
+`reports/csh-analysis.html` and `.json`, and beside them an A3 (`csh-a3.html` and `.md`) that reads the results as one
+problem: where it concentrates, why, a proposed goal and the countermeasures that close the most, with the first three
+printed last. It never writes into the repository, never runs its tests and reads no ledger.
 `--profile <dir>` reads a hand-written profile instead, `--at <commit>` another commit, and `--expected <file>` compares the analysis with a `csh-expected/v1` file, exiting 1 when it does not meet it. On a scratch copy of
 [F160](fixtures/F160)'s small Go service:
 
@@ -279,7 +281,7 @@ node packages/cli/bin/csh.js help overview
 A first session on a repository you already have needs one command, and nothing in the repository changes:
 
 ```
-csh analyse ../my-service              # read it cold; writes reports/csh-analysis.html and .json here
+csh analyse ../my-service              # read it cold; writes reports/csh-analysis.* and csh-a3.* here
 ```
 
 A component you keep checking, with its own `csh/component.json`, goes round this loop:

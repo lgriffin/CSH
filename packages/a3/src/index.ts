@@ -5,3 +5,5 @@ export * from "./build.ts";
 export * from "./markdown.ts";
 export * from "./html.ts";
 export * from "./skeleton.ts";
+export * from "./analysis.ts";
+export * from "./analysis-render.ts";

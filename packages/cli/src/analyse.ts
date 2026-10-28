@@ -1,7 +1,9 @@
 // csh analyse (Analyse, danger and grain, section 2; stage 55): read a repository cold and write the analysis. Exits 0
 // when the analysis completes, whatever it found; 1 when the repository cannot be read; 2 on a usage error.
 // With --expected, the analysis is compared with that csh-expected/v1 file (stage 60), and a mismatch exits 1.
-import { isAbsolute, relative, resolve } from "node:path";
+import { writeFileSync } from "node:fs";
+import { isAbsolute, join, relative, resolve } from "node:path";
+import { analysisSheet, renderStartHere, sheetFiles } from "@csh/a3";
 import { renderAnalysis } from "@csh/check";
 import { stableJson } from "@csh/kernel";
 import type { SolverPort } from "@csh/solver";
@@ -33,10 +35,14 @@ export async function analyseCommand(a: Args, io: Io, solver: () => Promise<Solv
     return 1;
   }
   const out = a.options.out ?? "reports";
-  const files = writeAnalysis(isAbsolute(out) ? out : resolve(io.cwd, out), r.analysis);
+  const dir = isAbsolute(out) ? out : resolve(io.cwd, out);
+  const files = writeAnalysis(dir, r.analysis);
+  // The A3 beside the analysis (The analysis A3 and 1.0, section 1): read from the analysis alone.
+  const sheet = analysisSheet(r.analysis);
+  for (const [name, text] of Object.entries(sheetFiles(sheet))) writeFileSync(join(dir, name), text);
   const shown = (p: string) => (relative(io.cwd, p) || p).replace(/\\/g, "/");
   if (a.flags.has("json")) io.out(stableJson(r.analysis));
-  else io.out(`${renderAnalysis(r.analysis)}\nwrote ${shown(files.html)} and ${shown(files.json)}\n`);
+  else io.out(`${renderAnalysis(r.analysis)}\n${renderStartHere(sheet, shown(join(dir, "csh-a3.html")))}\nwrote ${shown(files.html)} and ${shown(files.json)}, and the A3 as ${shown(join(dir, "csh-a3.html"))} and ${shown(join(dir, "csh-a3.md"))}\n`);
   if (a.options.expected !== undefined && (r.analysis.expect?.mismatches.length ?? 0) > 0) {
     io.err(`csh analyse: the analysis does not meet ${a.options.expected}:\n${r.analysis.expect!.mismatches.map((m) => `  ${m.row !== undefined ? `row ${m.row}: ` : ""}${m.message}\n`).join("")}`);
     return 1;

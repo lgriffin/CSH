@@ -1,0 +1,21 @@
+{
+  "fixture": "F228",
+  "section": "The analysis A3, section 1; A-276",
+  "stage": 77,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "guessesInclude": ["Requirements: 1 Markdown file has a heading, table row or list item"],
+      "entries": [
+        { "outcome": "gap", "kind": "unverified", "subject": "Requirements/REQ-1" },
+        { "outcome": "gap", "kind": "unverified", "subject": "Requirements/REQ-2" },
+        { "outcome": "gap", "kind": "unverified", "subject": "Requirements/REQ-4" }
+      ],
+      "entriesAbsent": [
+        { "kind": "unverified", "subject": "Requirements/REQ-3" },
+        { "kind": "dangling-reference", "subject": "Documents/README.md" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

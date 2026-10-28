@@ -453,7 +453,7 @@ describe("the structured trace adapter (stage 28)", () => {
 
 describe("what the audit of other repositories showed", () => {
   it("does not read a placeholder, a CIDR block or an API group as a repository path", () => {
-    for (const t of ["release/vX.Y.Z", "hotfix/vX.Y.Z", "10.0.0.0/9", "coordination.k8s.io/v1", "scripts/<name>.ts", "src/*/index.ts"]) expect(pathToken(t), t).toBeUndefined();
+    for (const t of ["release/vX.Y.Z", "hotfix/vX.Y.Z", "deploy/pin-X.Y.Z", "images/app_x.y", "10.0.0.0/9", "coordination.k8s.io/v1", "scripts/<name>.ts", "src/*/index.ts"]) expect(pathToken(t), t).toBeUndefined();
     expect(pathToken("src/core/util/error.ts")).toBe("src/core/util/error.ts");
     expect(pathToken("packages/v2/api")).toBe("packages/v2/api");
   });
