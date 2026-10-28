@@ -1,0 +1,32 @@
+{
+  "fixture": "F232",
+  "section": "The analysis A3 and 1.0, section 4.1; A-291 to A-293, A-295 to A-297, A-301",
+  "stage": 81,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "told": [{ "item": "Documents/docs/architecture.md#L3", "lifted": "layering" }],
+      "toldAbsent": ["Documents/course/lab-01/README.md#L3"],
+      "entries": [
+        { "outcome": "gap", "kind": "unverified", "subject": "Requirements/BOT-1" },
+        { "outcome": "gap", "kind": "unverified", "subject": "Requirements/BOT-2", "detailIncludes": ["docs/requirements.md:6"] },
+        { "outcome": "gap", "kind": "unverified", "subject": "Requirements/BOT-3" },
+        { "outcome": "gap", "kind": "unverified", "subject": "Requirements/BOT-5" },
+        { "outcome": "gap", "kind": "unverified", "subject": "Documents/docs/architecture.md#L3" },
+        {
+          "outcome": "gap",
+          "kind": "dangling-reference",
+          "subject": "Documents/README.md",
+          "detailIncludes": ["docs/missing.md"],
+          "detailExcludes": ["upgrade-4_XX", "lab-NN", "course/s1", "docs/notes.md", "drop/", "opponents", "style-lab.tar.gz", "answers.md"]
+        }
+      ],
+      "entriesAbsent": [
+        { "kind": "unverified", "subject": "Requirements/BOT-4" },
+        { "kind": "unverified", "subject": "Requirements/BOT-9" },
+        { "kind": "unverified", "subject": "Requirements/docs/a-plan.md#L8" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

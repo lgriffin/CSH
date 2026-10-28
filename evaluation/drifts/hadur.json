@@ -1,0 +1,25 @@
+{
+  "schema": "csh-drifts/v1",
+  "subject": { "repo": "https://github.com/lgriffin/Hadur_Robot", "commit": "91a3abff73205bbe68609b6433b381b43d4ef9cd" },
+  "drifts": [
+    {
+      "id": "deleted-file",
+      "what": "hadur-bench/tools/host_check.py, which the requirements' notes on BENCH-106 name, is deleted",
+      "edits": [{ "op": "delete", "path": "hadur-bench/tools/host_check.py" }],
+      "expect": { "outcome": "gap", "kind": "dangling-reference", "subject": "Requirements/docs/requirements.md", "detailIncludes": ["hadur-bench/tools/host_check.py"] }
+    },
+    {
+      "id": "property-stops-citing",
+      "what": "the jqwik properties of the anti-surfer gun stop tagging GUN-3",
+      "edits": [{ "op": "replace", "path": "hadur-core/src/test/java/hadur2/core/gun/AntiSurferGunProperties.java", "from": "GUN-3", "to": "GUN-X" }],
+      "expect": { "outcome": "gap", "kind": "unverified", "subject": "Requirements/GUN-3", "detailIncludes": ["docs/requirements.md:80"] }
+    },
+    {
+      "id": "test-stops-exercising",
+      "what": "the battle export test stops naming FALLBACK_HEADER, which the harness review names",
+      "edits": [{ "op": "replace", "path": "data/tools/test_export_battles.py", "from": "FALLBACK_HEADER", "to": "DEFAULT_HEADER" }],
+      "expect": { "outcome": "gap", "kind": "unexercised", "subject": "Documents/docs/bench/local/2026-10-06_harness-review.md", "detailIncludes": ["`FALLBACK_HEADER`, which no test mentions"] }
+    }
+  ],
+  "stable": "verify.log"
+}

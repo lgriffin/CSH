@@ -348,7 +348,8 @@ const IDENTIFIER = /[A-Za-z_$][A-Za-z0-9_$]*/g;
  */
 export function observedIn(code: string, from: number, to: number, strings?: Map<number, string>): string[] {
   const out = new Set(code.slice(from, to).match(IDENTIFIER) ?? []);
-  for (const [at, value] of strings ?? []) if (at >= from && at < to && VALUE.test(value)) out.add(value);
+  // A string the test compares observes each name it holds: "build.sh shield-all,smove" observes `smove` (A-293).
+  for (const [at, value] of strings ?? []) if (at >= from && at < to) for (const w of value.match(STRING_WORD) ?? []) out.add(w);
   return [...out].sort(compareCodePoints);
 }
 
@@ -387,7 +388,8 @@ function interpolations(text: string): string[] {
 }
 
 /** A string literal that is a single identifier: a value, not prose. */
-const VALUE = /^[A-Za-z_][\w-]*$/;
+/** A name in a string: a run of letters, digits, `_` and `-` that starts with a letter or `_`. */
+const STRING_WORD = /(?<![\w-])[A-Za-z_][\w-]*/g;
 
 /** The offset where the body of the test named at `at` ends: the next declaration after it, or the end of the file. */
 function bodyEnd(declared: number[], at: number, end: number): number {

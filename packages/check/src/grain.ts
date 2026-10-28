@@ -5,7 +5,8 @@
 
 /** A backticked span that is an identifier, or a dotted path of them, and not a file name. */
 const TERM = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*$/;
-const FILE = /\.(?:[cm]?[jt]sx?|py|pyi|java|go|rs|kt|kts|gradle|md|json|ya?ml|toml|xml|feature|txt|sh|sql|html?|css|scss|mod|ini|proto|graphql)$/i;
+/** A file name by its extension, of data, archives, scripts, images and markup too (A-293): `rounds.csv` is no term. */
+const FILE = /\.(?:[cm]?[jt]sx?|py|pyi|java|go|rs|kt|kts|gradle|md|json|ya?ml|toml|xml|feature|txt|sh|sql|html?|css|scss|mod|ini|proto|graphql|csv|tsv|gz|tgz|tar|zip|jar|war|bat|cmd|ps1|png|jpe?g|gif|svg|pdf|adoc|rst)$/i;
 
 /** The terms a sentence constrains: each backticked identifier, a dotted path read as its last segment (A-197). */
 export function termsOf(text: string): string[] {

@@ -1,0 +1,338 @@
+{
+  "schema": "csh-labels/v1",
+  "subject": {
+    "repo": "https://github.com/lgriffin/Hadur_Robot",
+    "commit": "91a3abff73205bbe68609b6433b381b43d4ef9cd"
+  },
+  "labels": [
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/README.md",
+      "label": true,
+      "why": "line 627 links hadur-core/src/main/java/hadur2/core/RoundStats.java, which is under hadur2/core/stats/ (a wrong path in the README)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/docs/bench/top20-team-strategy.md",
+      "label": true,
+      "why": "line 19 names hadur-bench/Bench.java, which is under hadur-bench/src/main/java/hadur/bench/"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Documents/course-labs/lab-00/README.md",
+      "label": true,
+      "why": "AdvancedRobot is the Robocode API, outside the repository: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Documents/course-labs/lab-03/README.md",
+      "label": true,
+      "why": "NaN is Java's Double.NaN, outside the repository: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Documents/course-labs/lab-05/README.md",
+      "label": true,
+      "why": "nanoTime is the JDK's System.nanoTime: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Documents/course-labs/lab-10/README.md",
+      "label": true,
+      "why": "RobocodeFileOutputStream is the Robocode API: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Documents/hadur-bench/README.md",
+      "label": true,
+      "why": "RobocodeEngine and BattleResults are the Robocode API, and the rest are columns of the bench's TSV output: rightly undecided"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unexercised",
+      "subject": "Documents/course-labs/lab-06/README.md",
+      "label": true,
+      "why": "HadurlingRecorder and roundStarted are the lab's robot-side recorder, which no test mentions"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unexercised",
+      "subject": "Documents/course-labs/lab-12/README.md",
+      "label": true,
+      "why": "BattleRunner drives the Robocode engine and no test mentions it"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unexercised",
+      "subject": "Documents/course-labs/lab-13/README.md",
+      "label": true,
+      "why": "onSkippedTurn is the robot's event handler and no test mentions it"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unexercised",
+      "subject": "Documents/hadur-bench/README.md",
+      "label": true,
+      "why": "BattleRunner drives the Robocode engine and no test mentions it"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unobserved-terms",
+      "subject": "Requirements/BENCH-100",
+      "label": true,
+      "why": "the citing tests do not observe `smovelist`, `saimlist`"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unobserved-terms",
+      "subject": "Requirements/BENCH-101",
+      "label": true,
+      "why": "the citing tests do not observe `sgolist`, `sgo2list`, `sdodge`, `sdodgelist`"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unobserved-terms",
+      "subject": "Requirements/BENCH-105",
+      "label": true,
+      "why": "the citing tests do not observe `local`, `HADUR_BENCH_WORK`, `WORK_DIR`, `work`"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unobserved-terms",
+      "subject": "Requirements/BENCH-111",
+      "label": true,
+      "why": "the citing tests do not observe `sdplanlist`"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unobserved-terms",
+      "subject": "Requirements/BENCH-125",
+      "label": true,
+      "why": "the citing tests do not observe `HOURS`"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unobserved-terms",
+      "subject": "Requirements/BENCH-69",
+      "label": true,
+      "why": "the citing tests do not observe `otherJvms`"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unobserved-terms",
+      "subject": "Requirements/BENCH-99",
+      "label": true,
+      "why": "the citing tests do not observe `slistadd`"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unobserved-terms",
+      "subject": "Requirements/DEISE-16",
+      "label": true,
+      "why": "the citing tests do not observe `DeiseLab`"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unobserved-terms",
+      "subject": "Requirements/DEISE-5",
+      "label": true,
+      "why": "the citing tests do not observe `DeiseLab`"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/BENCH-106",
+      "label": true,
+      "why": "the register says tools/test_host_check.py tests it, and that test does not cite it: citing it is the fix"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/DEISE-11",
+      "label": true,
+      "why": "the register says a robot-level test of DEISE-11 is due by E2"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/DEISE-13",
+      "label": true,
+      "why": "test_saor_live.py covers the field builder and does not cite it"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/SAOR-12",
+      "label": true,
+      "why": "a bench gate: test_saor_gates.py tests its evaluator without citing it, and nothing checks the score itself"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/SAOR-13",
+      "label": true,
+      "why": "a bench gate: test_saor_gates.py tests its evaluator without citing it, and nothing checks the result itself"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/SAOR-14",
+      "label": true,
+      "why": "a bench gate: test_saor_gates.py tests its evaluator without citing it, and nothing checks the result itself"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/SAOR-16",
+      "label": true,
+      "why": "test_saor_live.py and test_saor_arms.py cover it and do not cite it"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/TWIN-4",
+      "label": true,
+      "why": "the register says a test is due before W1"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/TWIN-5",
+      "label": true,
+      "why": "the register says a test is due before W1"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/TWIN-8",
+      "label": true,
+      "why": "the register says a test is due before W1"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/docs/architecture-evolution.md#L176",
+      "label": true,
+      "why": "a brain never imports role: a layering rule with no check named"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/docs/architecture-evolution.md#L69",
+      "label": true,
+      "why": "a strand never imports another strand: a layering rule with no check named"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/docs/requirements.md#L1837",
+      "label": true,
+      "why": "Saor's module isolation: a layering rule with no check named"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/docs/requirements.md#L1884",
+      "label": true,
+      "why": "TwinSaor's module isolation: a layering rule with no check named"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/docs/requirements.md#L1911",
+      "label": true,
+      "why": "Deise's module isolation: a layering rule with no check named"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/docs/requirements.md#L850",
+      "label": true,
+      "why": "duel imports nothing from melee: a layering rule with no check named; StrandContractTest could cite it"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/docs/requirements.md#L972",
+      "label": true,
+      "why": "the gun and move packages may not depend on each other: a layering rule with no check named on its sentence"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/docs/saor.md#L10",
+      "label": true,
+      "why": "Hadur's modules do not depend on Saor: a layering rule with no check named"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unobserved-terms",
+      "subject": "Requirements/MOVE-23",
+      "label": false,
+      "why": "`package.Class` is a placeholder in the sentence, not a term of the code"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/docs/architecture.md#L137",
+      "label": false,
+      "why": "names its check: ArchUnit enforces the boundary on every build"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/docs/bench/live-3.10.md#L134",
+      "label": false,
+      "why": "not a rule about the code: the trigger depends on the host"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/docs/bench/live-3.7.md#L34",
+      "label": false,
+      "why": "not a rule about the code: a measurement plan"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/docs/bench/local/2026-10-09_census-311-findings.md#L34",
+      "label": false,
+      "why": "not a rule about the code: a finding does not depend on a sensitivity rule"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/docs/strategy-evolution.md#L58",
+      "label": false,
+      "why": "not a rule about the code: a history of stage S1"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/docs/requirements.md#L404",
+      "label": false,
+      "why": "not a rule about the code: RammerPolicy is independent of an opponent profile, a description of its data"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/docs/requirements.md#L819",
+      "label": false,
+      "why": "not a rule about the code: a history of how the melee pin changed"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/docs/requirements.md#L877",
+      "label": false,
+      "why": "not a rule about the code: it says only imports change at call sites"
+    }
+  ]
+}

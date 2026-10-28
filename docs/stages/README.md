@@ -128,7 +128,8 @@ Stage 75 answers Leigh's question about what the TypeScript run read ([21](../sp
 section 8): the coverage line counts the eligible files read, parsed and read by name, says why every other tracked
 file was skipped, and a directory named `build` is passed over only where a build writes it. Its fixture is F226.
 
-Stages 76 to 80 prepare 1.0 ([22](../spec/22-analysis-a3-and-1.0.md), [issue 102](https://github.com/lgriffin/CSH/issues/102)):
+Stages 76 to 81 prepare 1.0 ([22](../spec/22-analysis-a3-and-1.0.md), [issue 102](https://github.com/lgriffin/CSH/issues/102)):
 stage 76 publishes the command line as `@lgriffin/csh`, stages 77 and 78 write an A3 beside every analysis and label
 every language but TypeScript experimental, stage 79 labels four TypeScript subjects and gates CI on their precision,
-and stage 80 seeds drift into them and gates CI on its recall and on stable anchors. Their fixtures are F227 to F230.
+stage 80 seeds drift into them and gates CI on its recall and on stable anchors, and stage 81 does both for two mature
+Java repositories, Apache Camel and Hadur_Robot, fixing what their labelling found. Their fixtures are F227 to F233.

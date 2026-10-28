@@ -12,7 +12,7 @@ const input = (files: Record<string, string>): AdapterInput => ({
   config: { commit: "c1" },
 });
 const supers = async (files: Record<string, string>) =>
-  ((await run(input(files))).facts ?? []).flatMap((f: Fact) => (f.kind === "declare" && f.declares !== "const" && f.declares !== "function" && f.declares !== "method" ? [[f.symbol, f.base ?? null, f.bases ?? null]] : []));
+  ((await run(input(files))).facts ?? []).flatMap((f: Fact) => (f.kind === "declare" && f.declares !== "const" && f.declares !== "function" && f.declares !== "method" && f.declares !== "var" ? [[f.symbol, f.base ?? null, f.bases ?? null]] : []));
 
 describe("supertypes", () => {
   it("reads what a Java class implements and what an interface extends after its first", async () => {

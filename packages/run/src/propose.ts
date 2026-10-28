@@ -89,12 +89,19 @@ const FIXTURE_DIR = /^(?:__fixtures__|(?:.*[-_])?fixtures)$/;
 const FIXTURE_GLOBS = ["**/fixtures/**", "**/__fixtures__/**", "**/*-fixtures/**", "**/*_fixtures/**"];
 const underFixtures = (p: string) => segments(p).slice(0, -1).some((s) => FIXTURE_DIR.test(s));
 
+/** A Java test source root of Maven or Gradle: `src/test/java`, and Gradle's integration test and fixture sets. */
+const JAVA_TEST_ROOT = /(?:^|\/)src\/(test|it|integrationTest|testFixtures)\/java\//;
+
 /** A test file's convention, as the glob that selects every file of it; undefined for a file that is not one. */
 function testConvention(p: string): string | undefined {
   const b = posix.basename(p);
   const m = /\.(test|spec)\.([a-z]+)$/.exec(b);
   if (m !== null && JS_EXT.includes(m[2]!)) return `**/*.${m[1]}.${m[2]}`;
   if (/^test_.*\.py$/.test(b)) return "**/test_*.py";
+  // Maven and Gradle compile every file under a test source root as test code: test classes by any name (failsafe's
+  // `*IT`, jqwik's `*Properties`), their support classes and step definitions (A-289).
+  const root = ext(p) === "java" ? JAVA_TEST_ROOT.exec(p) : null;
+  if (root !== null) return `**/src/${root[1]}/java/**/*.java`;
   if (/_test\.py$/.test(b)) return "**/*_test.py";
   if (/Test\.java$/.test(b)) return "**/*Test.java";
   if (/Tests\.java$/.test(b)) return "**/*Tests.java";
@@ -139,7 +146,8 @@ function globsFor(never: readonly string[], intended: string[], universe: string
 /**
  * The identifier families of the documents: prefix, how many different identifiers, how many mentions. A two-part
  * identifier such as `R-FLOW-1` is counted first, in the family `R-[A-Z]+`, and blanked, so that `FLOW-1` inside it is
- * not counted again (The Assertion Ladder, stage 50).
+ * not counted again (The Assertion Ladder, stage 50). A family whose identifiers appear in a link's address is an issue
+ * tracker's, and is left out.
  */
 function families(texts: string[]): { prefix: string; ids: number; mentions: number }[] {
   const by = new Map<string, { ids: Set<string>; mentions: number; head: string }>();
@@ -149,7 +157,11 @@ function families(texts: string[]): { prefix: string; ids: number; mentions: num
     f.mentions++;
     by.set(prefix, f);
   };
+  // An identifier in a link's address is an issue tracker's key, as a path segment (https://issues.apache.org/jira/browse/CAMEL-19279), so
+  // its family belongs to the tracker, not to the repository (A-290).
+  const trackerKeys = new Set<string>();
   for (const t of texts) {
+    for (const m of t.matchAll(/https?:\/\/[^\s)>\]#]*\/([A-Z]{2,5})-[0-9]+(?=$|[\s)>\]/?#.,;])/g)) trackerKeys.add(m[1]!);
     const rest = t.replace(/\b([A-Z]{1,5})-([A-Z]{2,8})-([0-9]+)\b/g, (id: string, head: string) => {
       count(`${head}-[A-Z]+`, head, id);
       return " ".repeat(id.length);
@@ -157,7 +169,7 @@ function families(texts: string[]): { prefix: string; ids: number; mentions: num
     for (const m of rest.matchAll(/\b([A-Z]{2,5})-([0-9]+)\b/g)) count(m[1]!, m[1]!, m[0]);
   }
   return [...by]
-    .filter(([, f]) => f.ids.size >= 2 && !EXTERNAL_FAMILIES.includes(f.head))
+    .filter(([, f]) => f.ids.size >= 2 && !EXTERNAL_FAMILIES.includes(f.head) && !trackerKeys.has(f.head))
     .map(([prefix, f]) => ({ prefix, ids: f.ids.size, mentions: f.mentions }))
     .sort((a, b) => b.mentions - a.mentions || compareCodePoints(a.prefix, b.prefix));
 }

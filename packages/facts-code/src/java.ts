@@ -34,7 +34,7 @@ export interface JavaImport {
 
 export interface JavaDeclaration {
   symbol: string;
-  declares: "class" | "interface" | "enum" | "record" | "annotation" | "const" | "method";
+  declares: "class" | "interface" | "enum" | "record" | "annotation" | "const" | "method" | "var";
   line: number;
   base?: string;
   /** The interfaces a class, enum or record implements, and an interface's further supertypes (stage 59). */
@@ -284,6 +284,17 @@ function declareType(n: Node, outer: string, out: JavaDeclaration[]): void {
       out.push({ symbol: `${symbol}.${name.text}`, declares: "method", line: lineOf(name), nested: true });
     }
   }
+  // Its other fields and a record's components, as `Type.name` (A-300): prose names a Maven goal's parameters and a
+  // record's fields, which a reader of the code finds there.
+  const consts = new Set(out.filter((d) => d.declares === "const").map((d) => d.symbol));
+  const fields = new Set<string>();
+  const field = (id: Node | null) => {
+    if (id === null || consts.has(`${symbol}.${id.text}`) || fields.has(id.text)) return;
+    fields.add(id.text);
+    out.push({ symbol: `${symbol}.${id.text}`, declares: "var", line: lineOf(id), nested: true });
+  };
+  for (const m of membersOf(n)) if (m.type === "field_declaration") for (const d of m.childrenForFieldName("declarator")) field(d.childForFieldName("name"));
+  if (declares === "record") for (const c of n.childForFieldName("parameters")?.namedChildren ?? []) if (c.type === "formal_parameter") field(c.childForFieldName("name"));
   for (const m of membersOf(n)) if (Object.hasOwn(TYPES, m.type)) declareType(m, symbol, out);
 }
 
@@ -352,7 +363,7 @@ export async function readJavaFiles(input: readonly InputFile[], ctx: FactContex
   for (const [path, j] of read) {
     packages.set(j.pkg, [...(packages.get(j.pkg) ?? []), path]);
     for (const d of j.declarations) {
-      if (d.declares === "const" || d.declares === "method") continue;
+      if (d.declares === "const" || d.declares === "method" || d.declares === "var") continue;
       const fqn = j.pkg === "" ? d.symbol : `${j.pkg}.${d.symbol}`;
       types.set(fqn, [...(types.get(fqn) ?? []), path]);
     }

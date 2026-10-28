@@ -227,6 +227,35 @@ export function ignoredPaths(root: string, paths: string[]): string[] {
   return [...new Set(r.stdout.split("\0").filter((f) => f !== ""))].sort(compareCodePoints);
 }
 
+/**
+ * The directories whose files an ignore pattern keeps out of git (A-292): a `.gitignore` at `d` with a pattern such as
+ * `opponents/*.jar` makes `d/opponents` a place a checkout fills locally, so prose that names it names nothing missing.
+ * Only a pattern whose directory part has no wildcard is read; the directory is named without its slash.
+ */
+export function ignoredContentDirs(root: string, files: readonly string[]): Set<string> {
+  const out = new Set<string>();
+  for (const f of files) {
+    if (f !== ".gitignore" && !f.endsWith("/.gitignore")) continue;
+    const at = f.slice(0, -".gitignore".length);
+    let text: string;
+    try {
+      text = readFileSync(join(root, f), "utf8");
+    } catch {
+      continue;
+    }
+    for (const raw of text.split(/\r?\n/)) {
+      const line = raw.trim().replace(/^\//, "");
+      if (line === "" || line.startsWith("#") || line.startsWith("!")) continue;
+      const cut = line.lastIndexOf("/");
+      if (cut <= 0 || cut === line.length - 1) continue;
+      const dir = line.slice(0, cut);
+      if (/[*?[\]\\]/.test(dir) || !/[*?[]/.test(line.slice(cut + 1))) continue;
+      out.add(`${at}${dir}`);
+    }
+  }
+  return out;
+}
+
 const SELF = fileURLToPath(import.meta.url);
 const HERE = dirname(SELF);
 // adapter-runner.ts in the workspace, adapter-runner.js in a packed package (A-40).

@@ -1,0 +1,261 @@
+{
+  "schema": "csh-labels/v1",
+  "subject": {
+    "repo": "https://github.com/apache/camel",
+    "commit": "b2329103df8f5d1edfca2ad262be09e3be95ee68"
+  },
+  "labels": [
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/connect/file-processing/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/connect/http-client/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/connect/stock-api/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/contracts/openapi-client/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/contracts/openapi-server/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/fail-well/circuit-breaker/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/fail-well/error-handling/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/quick-start/rest-api/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/quick-start/routes/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/quick-start/splitter/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/quick-start/timer-log/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/route/aggregator/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/route/content-based-router/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/route/filter-and-multicast/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/route/order-lines/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/run/nightly-report/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/run/order-generator/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/run/properties-and-profiles/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/transform/csv-to-json/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/transform/data-mapping/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/transform/groovy/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/transform/json-transform/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/transform/xml-to-json/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/transform/xslt/README.md",
+      "label": true,
+      "why": "links ../../README.md, examples/README.md, which is not in the repository: the examples folder has a catalogue JSON and no README"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Documents/components/camel-azure/camel-azure-files/readme.md",
+      "label": true,
+      "why": "requireJavaVersion is a Maven Enforcer rule in pom.xml, declared by no code: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Documents/components/camel-braintree/README.md",
+      "label": true,
+      "why": "braintreeAuthenticationType is a system property name, read as a string and declared by no code: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Documents/components/camel-salesforce/camel-salesforce-maven-plugin/README.md",
+      "label": true,
+      "why": "SpecificRecord is Avro's, outside the repository, and generatePubSub is a goal name: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Documents/dsl/camel-jbang/camel-jbang-core/src/main/resources/examples/run/order-generator/README.md",
+      "label": true,
+      "why": "orderNumber is a bean the example's beans.yaml defines, which no reader of CSH declares: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Documents/test-infra/camel-test-infra-openai-mock/README.md",
+      "label": true,
+      "why": "HttpServer is the JDK's com.sun.net.httpserver.HttpServer, outside the repository: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Documents/tooling/maven/camel-repackager-maven-plugin/README.md",
+      "label": true,
+      "why": "JarLauncher is Spring Boot's loader, outside the repository: rightly undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Instructions/archetypes/camel-archetype-dataformat/src/main/resources/archetype-resources/AGENTS.md",
+      "label": true,
+      "why": "InputStream and OutputStream are the JDK's: rightly undecided"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unexercised",
+      "subject": "Documents/components/camel-salesforce/camel-salesforce-maven-plugin/README.md",
+      "label": true,
+      "why": "the plugin parameters it lists, such as httpProxyExcludedAddresses and jwtAudience, are fields of the mojos that no test sets"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unexercised",
+      "subject": "Documents/test-infra/camel-test-infra-openai-mock/README.md",
+      "label": true,
+      "why": "replyWithBatchResponse is a method of OpenAIMock that no test calls"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/.github/CI-ARCHITECTURE.md#L218",
+      "label": false,
+      "why": "not a rule about the code: it describes how Scalpel propagates test-jar dependencies"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/components/camel-oauth/helm/README.md#L72",
+      "label": false,
+      "why": "not a rule about the code: setup steps for a Keycloak realm"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/test-infra/camel-test-infra-openai-mock/README.md#L3",
+      "label": false,
+      "why": "not a rule about the code: it describes what the mock lets tests avoid"
+    }
+  ]
+}
