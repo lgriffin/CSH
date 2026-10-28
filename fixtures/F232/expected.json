@@ -17,14 +17,16 @@
           "outcome": "gap",
           "kind": "dangling-reference",
           "subject": "Documents/README.md",
-          "detailIncludes": ["docs/missing.md"],
+          "detailIncludes": ["docs/missing.md", "docs/gone.md"],
           "detailExcludes": ["upgrade-4_XX", "lab-NN", "course/s1", "docs/notes.md", "drop/", "opponents", "style-lab.tar.gz", "answers.md"]
         }
       ],
       "entriesAbsent": [
         { "kind": "unverified", "subject": "Requirements/BOT-4" },
         { "kind": "unverified", "subject": "Requirements/BOT-9" },
-        { "kind": "unverified", "subject": "Requirements/docs/a-plan.md#L8" }
+        { "kind": "unverified", "subject": "Requirements/BOT-6" },
+        { "kind": "unverified", "subject": "Requirements/BOT-10" },
+        { "kind": "unverified", "subject": "Requirements/docs/a-plan.md#L12" }
       ],
       "subjectUntouched": true
     }

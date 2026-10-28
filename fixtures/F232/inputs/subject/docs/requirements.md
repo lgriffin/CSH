@@ -12,6 +12,8 @@
 |----|---------|-------------|
 | BOT-4 | Ubiquitous | The bot shall ram a disabled enemy. |
 
+- BOT-6: The bot shall hide behind walls.
+
 ## Later
 
 | ID | Pattern | Requirement |

@@ -249,7 +249,7 @@ export function ignoredContentDirs(root: string, files: readonly string[]): Set<
       const cut = line.lastIndexOf("/");
       if (cut <= 0 || cut === line.length - 1) continue;
       const dir = line.slice(0, cut);
-      if (/[*?[\]\\]/.test(dir) || !/[*?[]/.test(line.slice(cut + 1))) continue;
+      if (/[*?[\]\\]/.test(dir) || !/[*?[]/.test(line.slice(cut + 1).replace(/\\./g, ""))) continue;
       out.add(`${at}${dir}`);
     }
   }

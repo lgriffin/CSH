@@ -322,7 +322,8 @@ export function trace(input: TraceInput): TraceResult {
   // The Java and Kotlin test files by their class's name: prose names a test class, `ArchitectureTest` or
   // `ArchitectureTest.memoryIsLeaf`, and in those languages the class is the file (A-299).
   const testStems = new Map<string, string[]>();
-  for (const i of items) if (i.kind === "test-file" && /\.(?:java|kt)$/.test(i.id)) {
+  // A helper beside the tests, with no test of its own, checks nothing.
+  for (const i of items) if (i.kind === "test-file" && /\.(?:java|kt)$/.test(i.id) && Number(i.attrs?.tests ?? "0") > 0) {
     const stem = i.id.slice(i.id.lastIndexOf("/") + 1).replace(/\.[^.]*$/, "");
     testStems.set(stem, [...(testStems.get(stem) ?? []), i.id].sort(compareCodePoints));
   }

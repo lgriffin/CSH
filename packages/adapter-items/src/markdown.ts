@@ -76,10 +76,10 @@ const RETIRED = /\b(?:retired|deprecated|superseded|withdrawn|obsolete)\b/i;
  * A verb of making right before a backticked path (From the TypeScript run, section 1): "Create `x.ts`", "create a new
  * file `x.ts`", "the build writes `out/report.json`". The sentence makes the file, so its being missing is expected.
  * The past ("we created `x.ts`") says the file is there, and so does a negated verb ("do not touch `x.ts`"). "Add `x.md`",
- * "in a new `x.md`" and a plan's "**Output:** `x.md`" make it too, and so does an indefinite article, "answer in a
- * `docs/capstone.md`", which names a kind of file, not the repository's (A-291).
+ * "in a new `x.md`" and a plan's "**Output:** `x.md`" make it too, and so does an indefinite article after in, into, to
+ * or or, "answer in a `docs/capstone.md`", which names a kind of file, not the repository's (A-291).
  */
-const MAKES = /(?:\b(?:create|creates|touch|scaffold|generate|generates|write|writes|add|adds)(?:\s+(?:a|an|the|new|empty|file))*(?:\s+(?:called|named))?|\b(?:a|an)(?:\s+new)?(?:\s+file)?(?:\s+(?:called|named))?|\b(?:output|outputs|deliverable)\s*(?:\*\*)?\s*:\s*(?:\*\*)?)\s*$/i;
+const MAKES = /(?:\b(?:create|creates|touch|scaffold|generate|generates|write|writes|add|adds)(?:\s+(?:a|an|the|new|empty|file))*(?:\s+(?:called|named))?|\b(?:a|an)\s+new(?:\s+file)?(?:\s+(?:called|named))?|\b(?:in|into|to|or)\s+(?:a|an)(?:\s+file)?(?:\s+(?:called|named))?|\b(?:output|outputs|deliverable)\s*(?:\*\*)?\s*:\s*(?:\*\*)?)\s*$/i;
 /**
  * A verb of putting something into a directory right before the directory's backticked path (A-291): "Put it in
  * `opponents/`", "place the jar from the ZIP file into `it/resources/migration-tool/`". The reader fills it.
@@ -295,10 +295,11 @@ export function run(input: AdapterInput): AdapterOutput {
     if (cs.length > 0) contracts.set(file.path, cs);
   }
   // An identifier two files define belongs to the register that defines the most (A-296): a plan's table or a report's
-  // heading that repeats it comes second. Files are read in that order, ties by path.
+  // heading that repeats it comes second, and a plan always comes after the files that are not plans (A-297). Files are
+  // read in that order, ties by path.
   const defining = new RegExp(`^(?:#{1,6}\\s+(?:${idPattern})(?=$|[\\s·:—–-])|\\|\\s*(?:${idPattern})\\s*\\|)`, "gm");
   const definitions = new Map(input.files.map((f) => [f.path, /\.(md|markdown)$/i.test(f.path) ? (decode(f.bytes).match(defining) ?? []).length : 0]));
-  const ordered = sortedFiles(input).sort((a, b) => definitions.get(b.path)! - definitions.get(a.path)! || compareCodePoints(a.path, b.path));
+  const ordered = sortedFiles(input).sort((a, b) => Number(PLAN.test(posix.basename(a.path))) - Number(PLAN.test(posix.basename(b.path))) || definitions.get(b.path)! - definitions.get(a.path)! || compareCodePoints(a.path, b.path));
   for (const file of ordered) {
     // A baseline (section 6): a text file that says it may only shrink, its other lines the gaps it records.
     if (/\.txt$/i.test(file.path)) {
@@ -321,6 +322,10 @@ export function run(input: AdapterInput): AdapterOutput {
     // The level of the heading of a section of retired requirements the line is in, if any (A-295).
     let retiredAt: number | undefined;
     const proposed = PLAN.test(posix.basename(file.path));
+    // The lines inside a section of retired requirements, for the told rules lifted after the walk.
+    const retiredLines = new Set<number>();
+    // Teaching material describes what a learner builds: its sentences are not the repository's rules (A-301).
+    const teaching = posix.dirname(file.path).split("/").some((d) => TEACHING.test(d));
     const prose = new Set<string>();
     const specifies = saysNotExecuted(lines);
     // The Verified by field being read: its mechanisms are the first sentence of the whole value, which may run on to
@@ -452,6 +457,7 @@ export function run(input: AdapterInput): AdapterOutput {
     const fromId = () => open?.item.id ?? doc.id;
     lines.forEach((raw, i) => {
       const span = `${file.path}:${i + 1}`;
+      if (retiredAt !== undefined) retiredLines.add(i + 1);
       const fenceMark = /^\s*(`{3,}|~{3,})(.*)$/.exec(raw);
       if (fenceMark !== null) {
         const mark = fenceMark[1]!;
@@ -463,11 +469,11 @@ export function run(input: AdapterInput): AdapterOutput {
       }
       // Specification prose in Gherkin (section 7): each scenario of a gherkin fence is a requirement of its own, in a
       // document whose prose says its scenarios are not executed; elsewhere a fence is an example of the form.
-      if (fence?.gherkin === true && lift && specifies) {
+      if (fence?.gherkin === true && lift && specifies && !teaching) {
         const sc = /^\s*(?:Scenario Outline|Scenario Template|Scenario|Example):\s*(.+?)\s*$/.exec(raw);
         if (sc !== null) {
           const title = sc[1]!;
-          add({ id: unique(`${file.path}#${slug(title)}`, prose), kind: "requirement", text: title, span, textDigest: digestOf(title), attrs: { gherkin: "prose" } });
+          add({ id: unique(`${file.path}#${slug(title)}`, prose), kind: "requirement", text: title, span, textDigest: digestOf(title), attrs: { gherkin: "prose", ...(retiredAt !== undefined ? { retired: "yes" } : {}), ...(proposed ? { proposed: "yes" } : {}) } });
         }
       }
       if (fence !== undefined) return;
@@ -476,6 +482,8 @@ export function run(input: AdapterInput): AdapterOutput {
         const level = h[1]!.length;
         if (retiredAt !== undefined && level <= retiredAt) retiredAt = undefined;
         if (RETIRED.test(h[2]!)) retiredAt = level;
+        if (retiredAt !== undefined) retiredLines.add(i + 1);
+        else retiredLines.delete(i + 1);
         if (open !== undefined && level <= open.level) close();
         else if (open !== undefined) open.textDone = true;
         endField();
@@ -490,6 +498,7 @@ export function run(input: AdapterInput): AdapterOutput {
           parts.forEach((p, n) => (attrs[fieldNames[n] ?? `heading-${n + 1}`] = p));
           const heading = plain(h[2]!);
           const item: SourceItem = { id: m.groups!.id!, kind: "requirement", text: heading, span, textDigest: digestOf(heading) };
+          if (retiredAt !== undefined) attrs.retired = "yes";
           if (proposed) attrs.proposed = "yes";
           if (Object.keys(attrs).length > 0) item.attrs = attrs;
           if (add(item)) open = { item, level, paragraph: [], textDone: false };
@@ -522,7 +531,8 @@ export function run(input: AdapterInput): AdapterOutput {
         const item: SourceItem = { id: listed[1]!, kind: "requirement", text, span, textDigest: digestOf(text) };
         const pattern = classify(text);
         if (pattern !== undefined) item.pattern = pattern;
-        if (proposed) item.attrs = { proposed: "yes" };
+        if (retiredAt !== undefined) item.attrs = { retired: "yes" };
+        if (proposed) item.attrs = { ...item.attrs, proposed: "yes" };
         add(item);
         mentions(raw, listed[1]!, span);
         codeMentions(raw, listed[1]!, span);
@@ -566,13 +576,13 @@ export function run(input: AdapterInput): AdapterOutput {
     close();
     // Told rules (stage 55): with `told: sentences`, each layering or EARS sentence outside an identified item is an
     // item of its own, at its line, cited as the sentence.
-    // Teaching material describes what a learner builds: its sentences are not the repository's rules (A-301).
-    if (lift && !posix.dirname(file.path).split("/").some((d) => TEACHING.test(d))) {
+    if (lift && !teaching) {
       const taken = new Set<string>();
       const opens = (heading: string) => headingsAreItems && headingId.test(heading);
       for (const s of toldSentences(lines, opens)) {
         const id = unique(`${file.path}#L${s.line}`, taken);
         const item: SourceItem = { id, kind: "requirement", text: s.text, span: `${file.path}:${s.line}`, textDigest: digestOf(s.text), attrs: { lifted: s.told, sentence: s.text } };
+        if (retiredLines.has(s.line)) item.attrs!.retired = "yes";
         if (proposed) item.attrs!.proposed = "yes";
         const pattern = classify(s.text);
         if (pattern !== undefined) item.pattern = pattern;

@@ -62,6 +62,12 @@ describe("proposeProfile", () => {
     expect(r.manifest.practices.find((p) => p.id === "docs")?.settings?.idPattern).toBe("(?:II|HH|GG|FF|EE|DD|BB|AA)-[0-9]+");
   });
 
+  it("leaves out a tracker's family, but not a family whose key a link names as a file (A-290)", () => {
+    const text = "CAM-1 CAM-2 (https://issues.example.org/browse/CAM-3). ADR-1 ADR-2, see https://example.org/docs/ADR-0003.md.\n";
+    const r = propose(checkout({ "docs/x.md": text }));
+    expect(r.manifest.practices.find((p) => p.id === "docs")?.settings?.idPattern).toBe("(?:ADR)-[0-9]+");
+  });
+
   it("past eight families, names every prefix in the pattern and the first eight in the guess (stage 46)", () => {
     const prefixes = ["AUTH", "PERF", "SEC", "DATA", "UX", "OPS", "API", "LOG", "CFG", "NET"];
     const text = prefixes.map((p) => `${p}-001 ${p}-002`).join("\n");

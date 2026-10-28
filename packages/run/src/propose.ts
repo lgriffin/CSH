@@ -158,10 +158,11 @@ function families(texts: string[]): { prefix: string; ids: number; mentions: num
     by.set(prefix, f);
   };
   // An identifier in a link's address is an issue tracker's key, as a path segment (https://issues.apache.org/jira/browse/CAMEL-19279), so
-  // its family belongs to the tracker, not to the repository (A-290).
+  // its family belongs to the tracker, not to the repository (A-290). A file the address names (`/docs/ADR-0001.md`) is
+  // the repository's own.
   const trackerKeys = new Set<string>();
   for (const t of texts) {
-    for (const m of t.matchAll(/https?:\/\/[^\s)>\]#]*\/([A-Z]{2,5})-[0-9]+(?=$|[\s)>\]/?#.,;])/g)) trackerKeys.add(m[1]!);
+    for (const m of t.matchAll(/https?:\/\/[^\s)>\]#]*\/([A-Z]{2,5})-[0-9]+(?=$|[\s)>\]/?#,;]|\.(?![A-Za-z0-9]))/g)) trackerKeys.add(m[1]!);
     const rest = t.replace(/\b([A-Z]{1,5})-([A-Z]{2,8})-([0-9]+)\b/g, (id: string, head: string) => {
       count(`${head}-[A-Z]+`, head, id);
       return " ".repeat(id.length);

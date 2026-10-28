@@ -293,7 +293,7 @@ function declareType(n: Node, outer: string, out: JavaDeclaration[]): void {
     fields.add(id.text);
     out.push({ symbol: `${symbol}.${id.text}`, declares: "var", line: lineOf(id), nested: true });
   };
-  for (const m of membersOf(n)) if (m.type === "field_declaration") for (const d of m.childrenForFieldName("declarator")) field(d.childForFieldName("name"));
+  for (const m of membersOf(n)) if (m.type === "field_declaration" || m.type === "constant_declaration") for (const d of m.childrenForFieldName("declarator")) field(d.childForFieldName("name"));
   if (declares === "record") for (const c of n.childForFieldName("parameters")?.namedChildren ?? []) if (c.type === "formal_parameter") field(c.childForFieldName("name"));
   for (const m of membersOf(n)) if (Object.hasOwn(TYPES, m.type)) declareType(m, symbol, out);
 }

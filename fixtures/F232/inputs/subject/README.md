@@ -9,3 +9,4 @@
 - The old `docs/style-lab.tar.gz` is archived.
 - See `docs/missing.md`.
 - Answer in a `docs/answers.md`.
+- Edit a `docs/gone.md`.

@@ -468,7 +468,9 @@ export function run(input: AdapterInput): AdapterOutput {
         if (bdd.undecided.length > 0) attrs.bindsUndecided = bdd.undecided.join("\n");
       }
       items.push({ id: file.path, kind: "test-file", text: file.path, span: `${file.path}:1`, textDigest: digestOf(text), attrs });
-      if (found.tests === 0 && defs.length === 0 && bdd?.binds !== true && posix.basename(file.path) !== "conftest.py") diagnostics.push({ code: "no-tests", severity: "info", message: `${file.path} declares no test its runner would collect`, span: file.path });
+      // A Java helper under a test source root (A-289) is named for what it helps, not as a test, so it is no omission.
+      const helper = lang === "java" && !/(?:Test|Tests|TestCase|IT|Properties)\.java$/.test(file.path);
+      if (found.tests === 0 && defs.length === 0 && bdd?.binds !== true && posix.basename(file.path) !== "conftest.py" && !helper) diagnostics.push({ code: "no-tests", severity: "info", message: `${file.path} declares no test its runner would collect`, span: file.path });
       continue;
     }
     let steps = 0;
