@@ -227,6 +227,15 @@ describe("proposals the tutors run taught (From the tutors run, sections 3 and 6
     expect(r.manifest.practices.find((p) => p.id === "docs")?.sources).toEqual(["Baselines"]);
   });
 
+  it("proposes as Requirements a file whose only requirements are nested list items, in any case of shall or must (A-276)", () => {
+    const dir = checkout({
+      "REQS.md": "# Ledger\n\n- Ledger rules\n  - **LED-1** The ledger Must reject a negative amount.\n",
+      "notes.md": "LED-1 and LED-2 are both covered.\n",
+      "src/a.ts": "export const a = 1;\n",
+    });
+    expect(reads(dir, propose(dir), "Requirements")).toEqual(["REQS.md"]);
+  });
+
   it("reads test data and suite files as none of Requirements, Instructions or Baselines (stage 70, A-262)", () => {
     const dir = checkout({
       "README.md": "# App\n\n## REQ-1 One\n\n## REQ-2 Two\n",

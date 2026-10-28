@@ -469,7 +469,8 @@ export function run(input: AdapterInput): AdapterOutput {
         return;
       }
       const listed = headingsAreItems && open === undefined ? listId.exec(raw.trim()) : null;
-      if (listed !== null && OBLIGES.test(listed[2]!)) {
+      // An identifier already defined, by a heading, a row or an earlier item, is mentioned here, not defined again.
+      if (listed !== null && OBLIGES.test(listed[2]!) && !seen.has(listed[1]!)) {
         endField();
         const text = plain(listed[2]!);
         const item: SourceItem = { id: listed[1]!, kind: "requirement", text, span, textDigest: digestOf(text) };

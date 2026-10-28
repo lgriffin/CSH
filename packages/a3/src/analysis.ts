@@ -86,7 +86,8 @@ export interface Countermeasure {
   id: string;
   kind: string;
   cause: string;
-  outcome: "gap" | "indeterminate";
+  /** Converged only for a danger the code masks on a converged result: its action closes that danger. */
+  outcome: "gap" | "indeterminate" | "converged";
   place: string;
   /** What would close every result of the group: the danger's `close` for a danger group, else the entries' `next`. */
   action: string;
@@ -169,11 +170,12 @@ export function analysisSheet(a: Analysis): AnalysisSheet {
     };
   });
 
-  // Block 6: one countermeasure per kind and place; danger first, then by what it clears.
-  const groups = new Map<string, (OverviewEntry & { outcome: "gap" | "indeterminate" })[]>();
-  for (const e of open) {
-    // Danger is its own group: its action is to close the danger, which a group's other results do not need.
-    const k = `${e.kind}\u0000${placeOf(e.subject)}\u0000${e.danger !== undefined}`;
+  // Block 6: one countermeasure per kind and place; danger first, then by what it clears. A danger on a converged result
+  // (a check that cannot fail) needs an action too, so it is grouped as well, though it counts in no cause.
+  const groups = new Map<string, OverviewEntry[]>();
+  for (const e of entries.filter((x) => x.outcome !== "converged" || x.danger !== undefined)) {
+    // Danger is its own group, one per shape and outcome: its action is to close that danger, which other results do not need.
+    const k = `${e.kind}\u0000${placeOf(e.subject)}\u0000${e.danger?.shape ?? ""}\u0000${e.outcome}`;
     groups.set(k, [...(groups.get(k) ?? []), e]);
   }
   const all = [...groups.values()].map((es) => {
@@ -197,7 +199,7 @@ export function analysisSheet(a: Analysis): AnalysisSheet {
   // Block 5: proposed, never set.
   const dangerous = entries.filter((e) => e.danger !== undefined).length;
   const top = pareto.find((p) => p.vital);
-  const goal = total === 0
+  const goal = total === 0 && dangerous === 0
     ? ["Nothing to close: every result converged. Keep it so with csh analyse --expected in CI."]
     : [
         ...(dangerous > 0 ? [`Close the ${plural(dangerous, "danger entry", "danger entries")}: each is a statement the code refutes, or a check that cannot fail.`] : []),
@@ -216,7 +218,7 @@ export function analysisSheet(a: Analysis): AnalysisSheet {
   const vital = pareto.filter((p) => p.vital);
   const vitalCount = vital.reduce((n, p) => n + p.count, 0);
   const problem = total === 0
-    ? `CSH found no gap and nothing it could not decide in ${name}: all ${plural(counts.converged, "result")} converged.`
+    ? `CSH found no gap and nothing it could not decide in ${name}: all ${plural(counts.converged, "result")} converged.${dangerous > 0 ? ` ${dangerous} of them ${dangerous === 1 ? "is" : "are"} danger: a check that cannot fail.` : ""}`
     : [
         `${name} has ${plural(counts.gap, "gap")} and ${plural(counts.indeterminate, "result")} CSH could not decide, against ${counts.converged} converged.`,
         ...(dangerous > 0 ? [`${dangerous} of them ${dangerous === 1 ? "is" : "are"} danger: a statement the code refutes, or a check that cannot fail.`] : []),

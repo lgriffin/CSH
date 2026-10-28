@@ -42,7 +42,7 @@ export async function analyseCommand(a: Args, io: Io, solver: () => Promise<Solv
   for (const [name, text] of Object.entries(sheetFiles(sheet))) writeFileSync(join(dir, name), text);
   const shown = (p: string) => (relative(io.cwd, p) || p).replace(/\\/g, "/");
   if (a.flags.has("json")) io.out(stableJson(r.analysis));
-  else io.out(`${renderAnalysis(r.analysis)}\n${renderStartHere(sheet, shown(join(dir, "csh-a3.html")))}\nwrote ${shown(files.html)} and ${shown(files.json)}, and the A3 as ${shown(join(dir, "csh-a3.html"))} and ${shown(join(dir, "csh-a3.md"))}\n`);
+  else io.out(`${renderAnalysis(r.analysis)}\nwrote ${shown(files.html)} and ${shown(files.json)}, and the A3 as ${shown(join(dir, "csh-a3.html"))}, ${shown(join(dir, "csh-a3.md"))} and ${shown(join(dir, "csh-a3.json"))}\n\n${renderStartHere(sheet, shown(join(dir, "csh-a3.html")))}`);
   if (a.options.expected !== undefined && (r.analysis.expect?.mismatches.length ?? 0) > 0) {
     io.err(`csh analyse: the analysis does not meet ${a.options.expected}:\n${r.analysis.expect!.mismatches.map((m) => `  ${m.row !== undefined ? `row ${m.row}: ` : ""}${m.message}\n`).join("")}`);
     return 1;

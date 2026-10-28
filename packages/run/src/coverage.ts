@@ -81,6 +81,7 @@ export function coverageOfSources(root: string, declared: readonly DeclaredSourc
   // A file one source reads by name and another reads whole is read whole.
   const named = new Set<string>();
   const whole = new Set<string>();
+  const code = new Set<string>();
   const sources: Coverage["sources"] = [];
   const dirs = trackedDirsOf(tracked);
   const isTracked = new Set(tracked);
@@ -91,6 +92,7 @@ export function coverageOfSources(root: string, declared: readonly DeclaredSourc
     const names = (s.names ?? []).map(globRegExp);
     for (const f of files) {
       read.add(f.path);
+      if (s.kind === "Code") code.add(f.path);
       if (names.some((r) => r.test(below(f.path)))) named.add(f.path);
       else whole.add(f.path);
     }
@@ -112,14 +114,16 @@ export function coverageOfSources(root: string, declared: readonly DeclaredSourc
     unread,
     skipped,
     missed: grouped(missed, extOf).map((g) => ({ ext: g.key, files: g.files, sample: g.sample })),
-    languages: languagesOf([...whole], missed),
+    // Code read whole by a Code source, by language; then code in a language no reader reads, whether or not a source
+    // would have read it, but not code installed, built or kept as test data.
+    languages: languagesOf([...whole].filter((f) => code.has(f)), notRead.filter((f) => reasons.get(f) === undefined || reasons.get(f) === "with no reader")),
   };
 }
 
-/** Code files read whole by language, then eligible files in a language with no reader; most files first. */
-function languagesOf(whole: readonly string[], missed: readonly string[]): LanguageCount[] {
+/** Code files read whole by language, then unread files in a language with no reader; most files first. */
+function languagesOf(whole: readonly string[], notRead: readonly string[]): LanguageCount[] {
   const read = grouped(whole.filter((f) => readLanguageOf(f) !== undefined), (f) => readLanguageOf(f)!);
-  const unread = grouped(missed.filter((f) => readLanguageOf(f) === undefined && languageOf(f) !== undefined), (f) => languageOf(f)!);
+  const unread = grouped(notRead.filter((f) => readLanguageOf(f) === undefined && languageOf(f) !== undefined), (f) => languageOf(f)!);
   return [...read.map((g) => ({ language: g.key, files: g.files, status: languageStatus(g.key) })), ...unread.map((g) => ({ language: g.key, files: g.files, status: "unread" as const }))];
 }
 

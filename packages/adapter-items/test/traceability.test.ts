@@ -144,3 +144,18 @@ describe("placeholders (stage 43)", () => {
     expect(to({ placeholders: "src/x\\.ts" })).toEqual(["file:src/real.ts"]);
   });
 });
+
+describe("list-item requirements (stage 77, A-276)", () => {
+  const req = (text: string) => markdown({ ...input({ "REQS.md": text }, { idPattern: "LED-[0-9]+" }), source: { name: "R", kind: "Documents", at: "." } });
+
+  it("defines a requirement by a list item that says shall or must, at any indentation", () => {
+    const out = req("# Ledger\n\n- **LED-1** The ledger shall reject a negative amount.\n  - LED-2: Totals mUst balance.\n- LED-3 is covered by the tests.\n");
+    expect(out.items!.filter((i) => i.kind === "requirement").map((i) => i.id)).toEqual(["LED-1", "LED-2"]);
+  });
+
+  it("reads a later list item that names a defined requirement as a mention, not a second definition", () => {
+    const out = req("## LED-1 Reject negatives\n\nThe ledger shall reject a negative amount.\n\n## Traceability\n\n- **LED-1**: tests must cover the overflow case\n");
+    expect(out.items!.filter((i) => i.id === "LED-1")).toHaveLength(1);
+    expect(out.diagnostics.filter((d) => d.code === "duplicate-id")).toEqual([]);
+  });
+});

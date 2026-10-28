@@ -20,6 +20,17 @@ export interface SheetLinks {
   analysis?: string;
 }
 
+/** What a countermeasure clears, with its denominator; a danger on converged results is closed, not cleared. */
+const clearsOf = (c: Countermeasure, open: number) => (c.outcome === "converged" ? `closes the danger on ${plural(c.clears, "converged result")}` : `clears ${c.clears} of ${open}`);
+/** Repository text as an inline code span: a fence longer than any run of backticks in it, on one line. */
+const code = (s: string) => {
+  const t = s.replace(/\s*\n\s*/g, " ");
+  const fence = "`".repeat(Math.max(0, ...[...t.matchAll(/`+/g)].map((m) => m[0].length)) + 1);
+  return /^`|`$/.test(t) ? `${fence} ${t} ${fence}` : `${fence}${t}${fence}`;
+};
+/** Text on one line of a Markdown list, so that it cannot open a block of its own. */
+const line = (s: string) => s.replace(/\s*\n\s*/g, " ");
+
 /** A kind's plain name in parentheses, or nothing when it has none. */
 const named = (kind: string) => (kindName(kind) === kind ? "" : ` (${kindName(kind)})`);
 const exampleOf = (c: Countermeasure) => c.example.detail ?? c.example.subject;
@@ -28,7 +39,7 @@ const flags = (c: Countermeasure) => [...(c.danger ? ["danger"] : []), ...(c.exp
 /** One line per countermeasure to start with: what to do, where, and what it clears. */
 export function startHereLines(s: AnalysisSheet): string[] {
   const open = openOf(s);
-  return s.countermeasures.slice(0, START).flatMap((c) => [`${c.id}  ${c.action}.${flags(c).length > 0 ? ` [${flags(c).join(", ")}]` : ""}`, `      ${c.place}: clears ${c.clears} of ${open}, ${c.kind}${named(c.kind)}; e.g. ${exampleOf(c)}`]);
+  return s.countermeasures.slice(0, START).flatMap((c) => [`${c.id}  ${c.action}.${flags(c).length > 0 ? ` [${flags(c).join(", ")}]` : ""}`, `      ${c.place}: ${clearsOf(c, open)}, ${c.kind}${named(c.kind)}; e.g. ${exampleOf(c)}`]);
 }
 
 /** The lines csh analyse prints after the analysis: where the sheet is, and where to start. */
@@ -47,7 +58,7 @@ export function renderSheetMarkdown(s: AnalysisSheet, links: SheetLinks = {}): s
   if (s.background.experimental.length > 0) out.push(`> **Experimental:** ${s.background.experimental.join(", ")} ${s.background.experimental.length === 1 ? "is" : "are"} read by experimental readers; results in ${s.background.experimental.length === 1 ? "it" : "them"} may be incomplete or wrong. TypeScript and JavaScript are supported.`, "");
   if (s.countermeasures.length > 0) {
     out.push("**Start here**", "");
-    s.countermeasures.slice(0, START).forEach((m, i) => out.push(`${i + 1}. **${m.id}** ${m.action}. In \`${m.place}\`, e.g. \`${exampleOf(m)}\`; clears ${m.clears} of ${open}.${flags(m).length > 0 ? ` _${flags(m).join(", ")}_` : ""}`));
+    s.countermeasures.slice(0, START).forEach((m, i) => out.push(`${i + 1}. **${m.id}** ${line(m.action)}. In ${code(m.place)}, e.g. ${code(exampleOf(m))}; ${clearsOf(m, open)}.${flags(m).length > 0 ? ` _${flags(m).join(", ")}_` : ""}`));
     out.push("");
   }
 
@@ -79,7 +90,7 @@ export function renderSheetMarkdown(s: AnalysisSheet, links: SheetLinks = {}): s
   for (const k of s.causes) {
     out.push(`### ${k.cause}: ${k.count} of ${open}`, "");
     out.push(`- **What CSH saw:** ${k.kinds.map((x) => `${x.count} \`${x.kind}\`${named(x.kind)}`).join("; ")}`);
-    out.push(`- **Where:** ${k.places.map((p) => `\`${p.place}\` (${p.count})`).join(", ")}`);
+    out.push(`- **Where:** ${k.places.map((p) => `${code(p.place)} (${p.count})`).join(", ")}`);
     out.push(`- **Likely mechanism** (a hypothesis to confirm): ${k.mechanism}`, "");
   }
 
@@ -93,7 +104,7 @@ export function renderSheetMarkdown(s: AnalysisSheet, links: SheetLinks = {}): s
     out.push(`Each clears a group of results of one kind in one place. Danger first, then by what each clears. Results link to [the analysis](${href}).`, "");
     for (const m of s.countermeasures) {
       const refs = m.anchors.map((a) => `[${a.slice(0, 8)}](${href}#${a})`).join(" ");
-      out.push(`- [ ] **${m.id}** ${m.action}. In \`${m.place}\`, e.g. \`${exampleOf(m)}\`; clears ${m.clears} of ${open}: \`${m.kind}\`${named(m.kind)}.${flags(m).length > 0 ? ` _${flags(m).join(", ")}_.` : ""} ${refs}${m.clears > m.anchors.length ? ` and ${m.clears - m.anchors.length} more` : ""}`);
+      out.push(`- [ ] **${m.id}** ${line(m.action)}. In ${code(m.place)}, e.g. ${code(exampleOf(m))}; ${clearsOf(m, open)}: \`${m.kind}\`${named(m.kind)}.${flags(m).length > 0 ? ` _${flags(m).join(", ")}_.` : ""} ${refs}${m.clears > m.anchors.length ? ` and ${m.clears - m.anchors.length} more` : ""}`);
     }
     if (s.more.countermeasures > 0) out.push(`- And ${plural(s.more.countermeasures, "more countermeasure")}, for ${plural(s.more.results, "result")}: see [the analysis](${href}).`);
     out.push("");
@@ -113,7 +124,7 @@ export function renderSheetHtml(s: AnalysisSheet, links: SheetLinks = {}): strin
   const all = c.converged + open;
   const code = (k: string) => `<code title="${esc(kindName(k))}">${esc(k)}</code>`;
   const chips = (m: Countermeasure) => flags(m).map((f) => `<span class="chip ${f === "danger" ? "contradiction" : "drift"}">${f}</span>`).join(" ");
-  const cm = (m: Countermeasure, brief: boolean) => `<li class="cm${m.danger ? " danger" : ""}" id="${esc(m.id)}"><span class="cid">${esc(m.id)}</span><div><p class="act">${esc(m.action)}.</p><p class="where">In <code>${esc(m.place)}</code></p><p class="ex">e.g. ${esc(exampleOf(m))}</p><p class="where">Clears <strong>${m.clears}</strong> of ${open} · ${esc(kindName(m.kind))} ${brief ? "" : `<span class="k2">${esc(m.kind)}</span>`} ${chips(m)}</p>${brief ? "" : `<p class="refs">${m.anchors.map((a) => `<a href="${esc(href)}#${esc(a)}">${esc(a.slice(0, 8))}</a>`).join(" ")}${m.clears > m.anchors.length ? ` <span class="src">and ${m.clears - m.anchors.length} more</span>` : ""}</p>`}</div></li>`;
+  const cm = (m: Countermeasure, brief: boolean) => `<li class="cm${m.danger ? " danger" : ""}" id="${esc(m.id)}"><span class="cid">${esc(m.id)}</span><div><p class="act">${esc(m.action)}.</p><p class="where">In <code>${esc(m.place)}</code></p><p class="ex">e.g. ${esc(exampleOf(m))}</p><p class="where">${m.outcome === "converged" ? `Closes the danger on <strong>${m.clears}</strong> converged ${m.clears === 1 ? "result" : "results"}` : `Clears <strong>${m.clears}</strong> of ${open}`} · ${esc(kindName(m.kind))} ${brief ? "" : `<span class="k2">${esc(m.kind)}</span>`} ${chips(m)}</p>${brief ? "" : `<p class="refs">${m.anchors.map((a) => `<a href="${esc(href)}#${esc(a)}">${esc(a.slice(0, 8))}</a>`).join(" ")}${m.clears > m.anchors.length ? ` <span class="src">and ${m.clears - m.anchors.length} more</span>` : ""}</p>`}</div></li>`;
   const tile = (k: string, n: number, sub: string, tone = "") => `<div class="tile${tone}"><span class="k">${k}</span><span class="huge">${n}</span><span class="sub">${sub}</span></div>`;
   const danger = s.current.danger.refuted + s.current.danger.masked;
   const blocks: Record<string, string> = {

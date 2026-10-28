@@ -73,6 +73,24 @@ describe("coverage", () => {
     }
   });
 
+  it("counts as code only what a Code source read, and a language no reader reads as unread (stage 77, A-275)", () => {
+    const dir = mkdtempSync(join(tmpdir(), "csh-coverage-"));
+    try {
+      const git = (...a: string[]) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...a], { cwd: dir, stdio: "ignore" });
+      git("init", "-q");
+      for (const [f, text] of Object.entries({ "src/a.ts": "", "docs/example.py": "", "native/b.c": "", "vendor/c.c": "" })) {
+        mkdirSync(join(dir, f, ".."), { recursive: true });
+        writeFileSync(join(dir, f), text);
+      }
+      git("add", ".");
+      git("commit", "-q", "-m", "one");
+      const c = coverageOfSources(dir, [{ name: "Code", kind: "Code", at: ".", include: ["src/**"] }, { name: "Docs", kind: "Documents", at: ".", include: ["docs/**"] }])!;
+      expect(c.languages).toEqual([{ language: "typescript", files: 1, status: "supported" }, { language: "c", files: 1, status: "unread" }]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("never enters a directory that holds no tracked file (stage 46)", () => {
     const dir = mkdtempSync(join(tmpdir(), "csh-coverage-"));
     try {

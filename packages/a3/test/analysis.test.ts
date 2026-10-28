@@ -103,6 +103,35 @@ describe("analysisSheet", () => {
   });
 });
 
+describe("danger", () => {
+  const masked = { structure: "masked" as const, shape: "self-approved" as const, of: "x", green: "the tests pass", close: "Have someone else approve it" };
+  const silent = { structure: "masked" as const, shape: "silence-beside-rule" as const, of: "y", close: "State the rule's case" };
+
+  it("gives each shape of danger in one place its own countermeasure, with its own action", () => {
+    const s = analysisSheet(analysis([entry("gap", "unverified", "Requirements/R-1", { danger: masked }), entry("gap", "unverified", "Requirements/R-2", { danger: silent })]));
+    expect(s.countermeasures.map((c) => [c.action, c.clears])).toEqual([["Have someone else approve it", 1], ["State the rule's case", 1]]);
+  });
+
+  it("proposes an action for a danger on a converged result, and never says there is nothing to close", () => {
+    const s = analysisSheet(analysis([entry("converged", "satisfied", "Requirements/R-1", { danger: masked }), entry("converged", "tested", "Requirements/R-2")]));
+    expect(s.countermeasures.map((c) => [c.id, c.outcome, c.action])).toEqual([["C1", "converged", "Have someone else approve it"]]);
+    expect(s.pareto).toEqual([]);
+    expect(s.goal.join(" ")).toContain("Close the 1 danger entry");
+    expect(s.problem).toContain("1 of them is danger");
+    expect(renderStartHere(s, "r/csh-a3.html")).toContain("closes the danger on 1 converged result");
+    expect(renderSheetMarkdown(s)).not.toContain("None needed.");
+  });
+});
+
+describe("Markdown from repository text", () => {
+  it("keeps a backtick or a line break in a place or an example inside its code span", () => {
+    const s = analysisSheet(analysis([entry("gap", "dangling-reference", "Documents/a`b.md", { detail: "names `x`\n- [ ] not an item" })]));
+    const md = renderSheetMarkdown(s);
+    expect(md).toContain("In ``a`b.md``, e.g. ``names `x` - [ ] not an item``");
+    expect(md.split("\n").filter((l) => l.startsWith("- [ ]"))).toHaveLength(1);
+  });
+});
+
 describe("renderings", () => {
   const s = analysisSheet(analysis([entry("gap", "dangling-reference", "Documents/README.md", { danger: refuted, detail: "names what does not exist: README.md:4 mentions-file docs/design.md" }), entry("gap", "unverified", "Requirements/R-1")]));
 

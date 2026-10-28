@@ -48,11 +48,12 @@ const EXPERIMENTAL = new Set(["python", "java", "go", "rust"]);
 const SUPPORTED = new Set(["typescript", "javascript", "svelte"]);
 const DISPLAY: Record<string, string> = { typescript: "TypeScript", javascript: "JavaScript", svelte: "Svelte", python: "Python", java: "Java", go: "Go", rust: "Rust" };
 
-/** The language CSH reads a file in, by its extension, or undefined when no reader of CSH reads it as code. */
+/** The language CSH reads a file in, by its extension, or undefined when no reader of CSH reads it as code. The readers
+ * match extensions as written, so `Foo.PY` is not Python. */
 export function readLanguageOf(path: string): string | undefined {
   const base = path.slice(path.lastIndexOf("/") + 1);
   const dot = base.lastIndexOf(".");
-  return dot <= 0 ? undefined : READ_LANGUAGE[base.slice(dot + 1).toLowerCase()];
+  return dot <= 0 ? undefined : READ_LANGUAGE[base.slice(dot + 1)];
 }
 
 /** What 1.0 promises of a language CSH reads: supported, or experimental. */

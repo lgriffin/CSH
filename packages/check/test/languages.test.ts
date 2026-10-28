@@ -7,6 +7,8 @@ describe("languages", () => {
     expect(["a.ts", "b.tsx", "c.mjs", "d.svelte"].map((f) => languageStatus(readLanguageOf(f)!))).toEqual(["supported", "supported", "supported", "supported"]);
     expect(["a.py", "B.java", "c.go", "d.rs"].map((f) => languageStatus(readLanguageOf(f)!))).toEqual(["experimental", "experimental", "experimental", "experimental"]);
     expect(readLanguageOf("README.md")).toBeUndefined();
+    // The readers match extensions as written.
+    expect(readLanguageOf("Foo.PY")).toBeUndefined();
     expect(languageStatus("kotlin")).toBe("unread");
   });
 
