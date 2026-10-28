@@ -43,7 +43,7 @@ measure the reader, and the TypeScript subjects still decide 1.0.
 ## What seeding drift found
 
 Hadur_Robot: a deleted bench tool the requirements' notes name, jqwik properties that stop tagging GUN-3, and the
-battle export test no longer naming `FALLBACK_HEADER`; 3 of 3 reported, 54 of 54 entries keep their anchor. Camel:
+battle export test no longer naming `FALLBACK_HEADER`; 3 of 3 reported, 53 of 53 entries keep their anchor. Camel:
 `MojoHelper.java`, which `AGENTS.md` names, deleted, and the OpenAI batch mock test no longer naming
 `replyWithBatchContent`; 2 of 2 reported, 43 of 43 entries keep their anchor. The first Camel drifts deleted the
 order-generator example's `application.properties`, then its route, which its README names with no folder: such a

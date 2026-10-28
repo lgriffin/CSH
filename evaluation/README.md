@@ -44,7 +44,7 @@ afterwards. The `labelled` job runs it after the labels.
 | `taskboard` | 3 | 3 | 6 | 6 |
 | `typescript-go` | 3 | 3 | 38 | 38 |
 | `camel` | 2 | 2 | 43 | 43 |
-| `hadur` | 3 | 3 | 54 | 54 |
+| `hadur` | 3 | 3 | 53 | 53 |
 
 A drift changes files of its own, so all of a subject's drifts are applied together; an expectation names the
 outcome, kind and subject of the entry, and words its detail must hold.
