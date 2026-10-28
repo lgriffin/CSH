@@ -120,10 +120,10 @@ export function packWorkspace(outDir: string, repo = REPO, version?: string): st
 }
 
 if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const out = process.argv[2];
-  if (out === undefined) {
-    process.stderr.write("usage: node packages/testkit/src/pack.ts <out-dir>\n");
+  const [out, flag, version] = process.argv.slice(2);
+  if (out === undefined || (flag !== undefined && (flag !== "--version" || version === undefined))) {
+    process.stderr.write("usage: node packages/testkit/src/pack.ts <out-dir> [--version <version>]\n");
     process.exit(2);
   }
-  for (const t of packWorkspace(out)) process.stdout.write(`${relative(process.cwd(), t).split(sep).join("/")}\n`);
+  for (const t of packWorkspace(out, REPO, version)) process.stdout.write(`${relative(process.cwd(), t).split(sep).join("/")}\n`);
 }

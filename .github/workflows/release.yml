@@ -26,9 +26,19 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
-      - name: Pack every package
+      - name: Read the version, which a tag must match
         run: |
-          node packages/testkit/src/pack.ts dist/packages
+          version=$(node -p 'require("./packages/cli/package.json").version')
+          case "$GITHUB_REF" in refs/tags/v*)
+            if [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
+              echo "the tag $GITHUB_REF_NAME is not the version $version of packages/cli/package.json" >&2
+              exit 1
+            fi ;;
+          esac
+          echo "NPM_VERSION=$version" >> "$GITHUB_ENV"
+      - name: Pack every package at that version
+        run: |
+          node packages/testkit/src/pack.ts dist/packages --version "$NPM_VERSION"
           name="csh-${GITHUB_REF_NAME//\//-}"
           tar -czf "dist/$name.tar.gz" -C dist packages
           echo "BUNDLE=dist/$name.tar.gz" >> "$GITHUB_ENV"
@@ -44,17 +54,8 @@ jobs:
           npm install --save-dev --no-audit --no-fund ./packages/*.tgz
           npx csh analyse "$subject" --out report
           test -f report/csh-analysis.json
-      - name: Pack the npm package at the tag's version
-        run: |
-          version=$(node -p 'require("./packages/cli/package.json").version')
-          case "$GITHUB_REF" in refs/tags/v*)
-            if [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
-              echo "the tag $GITHUB_REF_NAME is not the version $version of packages/cli/package.json" >&2
-              exit 1
-            fi ;;
-          esac
-          node packages/testkit/src/npm-package.ts dist/npm --version "$version"
-          echo "NPM_VERSION=$version" >> "$GITHUB_ENV"
+      - name: Pack the npm package at that version
+        run: node packages/testkit/src/npm-package.ts dist/npm --version "$NPM_VERSION"
       - name: Install the npm package three ways and analyse a repository with each
         run: .github/scripts/npm-smoke.sh "dist/npm/lgriffin-csh-$NPM_VERSION.tgz" "$NPM_VERSION"
       - uses: actions/upload-artifact@v4
@@ -78,7 +79,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "CSH $GITHUB_REF_NAME" --notes "Install with npm install --global @lgriffin/csh, then csh analyse <path>; the same package is attached here as lgriffin-csh-*.tgz. Every package of CSH is also attached, packed, as before. Needs Node 22.18 or later and git." dist/*.tar.gz dist/packages/*.tgz dist/npm/*.tgz
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "CSH $GITHUB_REF_NAME" --notes "Install with npm install --global @lgriffin/csh once it is on npm, or npm install --global with the lgriffin-csh-*.tgz attached here, then csh analyse <path>. Every package of CSH is also attached, packed, as before. Needs Node 22.18 or later and git." dist/*.tar.gz dist/packages/*.tgz dist/npm/*.tgz
 
   publish:
     name: Publish to npm
@@ -106,4 +107,7 @@ jobs:
             echo "No NPM_TOKEN secret: nothing is published. The package is attached to the release." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          npm publish dist/npm/lgriffin-csh-*.tgz --access public --provenance
+          # A prerelease (a version with a hyphen) goes to the next dist-tag, so it never becomes latest.
+          tag=latest
+          case "${GITHUB_REF_NAME#v}" in *-*) tag=next ;; esac
+          npm publish dist/npm/lgriffin-csh-*.tgz --access public --provenance --tag "$tag"
