@@ -8,7 +8,7 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { csh, csl } from "../src/index.ts";
-import { USAGE } from "../src/commands.ts";
+import { USAGE, version } from "../src/commands.ts";
 
 const BIN = resolve(import.meta.dirname, "../bin");
 let dir: string;
@@ -71,7 +71,7 @@ describe("csh help and version", () => {
   it("prints the version", async () => {
     const r = await cshIn(dir, "--version");
     expect(r.code).toBe(0);
-    expect(r.out).toMatch(/^csh \d+\.\d+\.\d+\n$/);
+    expect(r.out).toBe(`csh ${version()}\n`);
   });
 });
 
@@ -197,7 +197,7 @@ describe("csl usage errors", () => {
 
   it("prints its usage for --help, its version for --version, and refuses no command", async () => {
     expect((await cslIn("--help")).code).toBe(0);
-    expect((await cslIn("--version")).out).toMatch(/^csl \d+\.\d+\.\d+\n$/);
+    expect((await cslIn("--version")).out).toBe(`csl ${version()}\n`);
     expect((await cslIn()).code).toBe(2);
   });
 
@@ -221,7 +221,7 @@ describe.skipIf(process.platform === "win32")("the bin scripts", () => {
     for (const bin of ["csh", "csl"]) {
       const r = spawnSync(process.execPath, [join(BIN, `${bin}.js`), "--version"], { encoding: "utf8" });
       expect(r.status).toBe(0);
-      expect(r.stdout).toMatch(new RegExp(`^${bin} \\d+\\.\\d+\\.\\d+\\n$`));
+      expect(r.stdout).toBe(`${bin} ${version()}\n`);
     }
   });
 
