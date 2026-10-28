@@ -85,7 +85,7 @@ function stagePackage(repo: string, dir: string, compiledDir: string, versions: 
   const deps: Record<string, string> = {};
   for (const [k, v] of Object.entries(pkg.dependencies ?? {})) deps[k] = v.startsWith("workspace:") ? (versions.get(k) ?? v) : v;
   const { devDependencies: _dev, ...rest } = pkg;
-  const packed: PackageJson = { ...rest, exports: exportsOut as never, dependencies: deps, files: ["dist", ...(existsSync(join(src, "bin")) ? ["bin"] : []), "README.md"] };
+  const packed: PackageJson = { ...rest, version: versions.get(pkg.name) ?? pkg.version, exports: exportsOut as never, dependencies: deps, files: ["dist", ...(existsSync(join(src, "bin")) ? ["bin"] : []), "README.md"] };
   writeFileSync(join(out, "package.json"), `${JSON.stringify(packed, null, 2)}\n`);
   // npm is a .cmd script on Windows, which Node runs only through a shell.
   const win = process.platform === "win32";
@@ -93,8 +93,11 @@ function stagePackage(repo: string, dir: string, compiledDir: string, versions: 
   return join(stage, name);
 }
 
-/** Compile and pack every packed package into outDir; returns the tarballs' paths. */
-export function packWorkspace(outDir: string, repo = REPO): string[] {
+/**
+ * Compile and pack every packed package into outDir; returns the tarballs' paths. With `version`, every package is
+ * packed at that version, and depends on the others at it (the npm package, stage 76).
+ */
+export function packWorkspace(outDir: string, repo = REPO, version?: string): string[] {
   const dirs = packedPackages(repo);
   const stage = mkdtempSync(join(tmpdir(), "csh-pack-"));
   try {
@@ -102,7 +105,7 @@ export function packWorkspace(outDir: string, repo = REPO): string[] {
     compile(repo, dirs, compiledDir);
     const versions = new Map(dirs.map((d) => {
       const p = JSON.parse(readFileSync(join(repo, "packages", d, "package.json"), "utf8")) as PackageJson;
-      return [p.name, p.version] as const;
+      return [p.name, version ?? p.version] as const;
     }));
     mkdirSync(outDir, { recursive: true });
     return dirs.map((d) => {
@@ -117,10 +120,10 @@ export function packWorkspace(outDir: string, repo = REPO): string[] {
 }
 
 if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const out = process.argv[2];
-  if (out === undefined) {
-    process.stderr.write("usage: node packages/testkit/src/pack.ts <out-dir>\n");
+  const [out, flag, version] = process.argv.slice(2);
+  if (out === undefined || (flag !== undefined && (flag !== "--version" || version === undefined))) {
+    process.stderr.write("usage: node packages/testkit/src/pack.ts <out-dir> [--version <version>]\n");
     process.exit(2);
   }
-  for (const t of packWorkspace(out)) process.stdout.write(`${relative(process.cwd(), t).split(sep).join("/")}\n`);
+  for (const t of packWorkspace(out, REPO, version)) process.stdout.write(`${relative(process.cwd(), t).split(sep).join("/")}\n`);
 }

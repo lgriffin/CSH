@@ -20,7 +20,8 @@ The test kit is development tooling and is not part of any runtime container. It
 - `verifyNoOutcome(finding, model, fragments, solver)`: checks that a joint-conflict input really has no valid outcome, with a fresh, unminimised query.
 - `createTestRepo(parent, identities)`, `TestRepo`, `gpgAvailable()`: a temporary git repository with test-only gpg keys in a temporary `GNUPGHOME`.
 - `src/run-fixtures.ts`: a script that runs some or all fixtures and prints a summary (`node packages/testkit/src/run-fixtures.ts [F10 F11 ...]`).
-- `packWorkspace(outDir)`, `packedPackages()`, and the script `src/pack.ts <out-dir>`: compile every package except this one to JavaScript with declarations, and pack each into a tarball with `npm pack`, its workspace dependencies replaced by versions ([A-40](../../ASSUMPTIONS.md)).
+- `packWorkspace(outDir)`, `packedPackages()`, and the script `src/pack.ts <out-dir> [--version <version>]`: compile every package except this one to JavaScript with declarations, and pack each into a tarball with `npm pack`, its workspace dependencies replaced by versions ([A-40](../../ASSUMPTIONS.md)). With a version, every package is packed at it.
+- `packNpm(outDir, { name?, version? })`, `npmManifest`, `untar`, and the script `src/npm-package.ts <out-dir> [--name] [--version]` (stage 76): the npm package `@lgriffin/csh`, every packed package bundled inside it under `node_modules`, the registry packages they use as its dependencies, and the tree-sitter grammars carried as WebAssembly ([ADR-36](../../docs/adr/ADR-36-npm-package.md), [A-270](../../ASSUMPTIONS.md) to [A-272](../../ASSUMPTIONS.md)). `.github/scripts/npm-smoke.sh` installs it globally, into a project and through npx, and analyses a repository with each.
 - `commandBlocks(markdown)`, `runtimeContainers()`, `declaredContainers(readme)`, `reaches(dir, container)`, and the script `src/triangle.ts readme`, which runs every `sh` block of the root README in order (09, section 11.1).
 
 - A `run` fixture's expectation may hold `facts` (`members` and `total` of named declarations, `null` for absent), `rungs` (each rule's rung, and mechanisms it must include) and `ladder` (the counts), and its project may be given `authority.approve`, the fragments the stand-in approves (stages 48 and 49).
@@ -32,7 +33,7 @@ The test kit is development tooling and is not part of any runtime container. It
 ## Invariants it protects
 
 - A finding the solver reports is checked again outside the minimiser: counterexamples by exact evaluation, joint conflicts by a fresh query (P8, CSH-019).
-- Packing never touches the workspace: it compiles into a temporary directory, and every packed package keeps its private flag (ADR-32).
+- Packing never touches the workspace: it compiles into a temporary directory, and every packed package keeps its private flag (ADR-32). The npm package is the one package without it, and nothing here publishes it ([ADR-36](../../docs/adr/ADR-36-npm-package.md)).
 - Each fixture is an accepting or rejecting test of the documents, named by stage and section, so a regression in any earlier stage fails the run (P8).
 - A fixture whose expectation is `a3` is built from `inputs/component.json` and `inputs/csh/a3/<slug>/`: its problems, its stage integrity, and its authority through a real, signed ledger with a test-only key (F91 to F95).
 - A fixture with `inputs/component.json` runs with that manifest, so the component errors and the `unowned-source` gap are compared like any other result.

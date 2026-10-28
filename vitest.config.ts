@@ -22,6 +22,7 @@ export default defineConfig({
         "packages/run/src/adapter-runner.ts",
         "packages/cli/src/exit.ts",
         "packages/testkit/src/pack.ts",
+        "packages/testkit/src/npm-package.ts",
         "packages/testkit/src/run-fixtures.ts",
       ],
       reporter: ["text-summary", "json-summary", "html"],
