@@ -18,7 +18,8 @@
           "detailIncludes": ["src/core/retry.ts"],
           "detailExcludes": ["PipelineTransport", "OLD-GUIDE", "site/dist", "require.cts"]
         },
-        { "outcome": "gap", "kind": "unverified", "subject": "Documents/docs/architecture.md#L5" }
+        { "outcome": "gap", "kind": "unverified", "subject": "Documents/docs/architecture.md#L5" },
+        { "outcome": "gap", "kind": "unverified", "subject": "Documents/docs/architecture.md#L10" }
       ],
       "entriesAbsent": [{ "kind": "unverified", "subject": "Documents/docs/architecture.md#L3" }],
       "danger": [{ "kind": "dangling-reference", "subject": "Documents/docs/guide.md", "structure": "refuted", "shape": "code-refutes-prose" }],

@@ -43,7 +43,7 @@ export function parseLabels(text: string): { labels?: Labels; problems: string[]
     return { problems: [`not JSON: ${(err as Error).message}`] };
   }
   const isObj = (x: unknown): x is Record<string, unknown> => typeof x === "object" && x !== null && !Array.isArray(x);
-  if (!isObj(v) || v.schema !== "csh-labels/v1" || !isObj(v.subject) || typeof v.subject.commit !== "string" || !Array.isArray(v.labels)) return { problems: ["not a csh-labels/v1 file with a subject commit and labels"] };
+  if (!isObj(v) || v.schema !== "csh-labels/v1" || !isObj(v.subject) || typeof v.subject.repo !== "string" || v.subject.repo === "" || typeof v.subject.commit !== "string" || !Array.isArray(v.labels)) return { problems: ["not a csh-labels/v1 file with a subject repo and commit and labels"] };
   const problems: string[] = [];
   v.labels.forEach((l: unknown, i) => {
     if (!isObj(l) || (l.outcome !== "gap" && l.outcome !== "indeterminate") || typeof l.kind !== "string" || typeof l.subject !== "string" || typeof l.label !== "boolean" || typeof l.why !== "string" || l.why.trim() === "")

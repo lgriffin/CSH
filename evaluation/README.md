@@ -19,8 +19,8 @@ CSH that adds, drops or renames an entry fails until its labels are updated by h
 
 | Subject | Repository | Commit | Open | True | Precision |
 | --- | --- | --- | ---: | ---: | ---: |
-| `esi-ts` | lgriffin/ESI.ts | `2a2da8a` | 47 | 30 | 64% |
-| `tutors-mono-repo` | tutors-sdk/tutors-mono-repo | `d350404` | 73 | 61 | 84% |
+| `esi-ts` | lgriffin/ESI.ts | `2a2da8a` | 48 | 30 | 63% |
+| `tutors-mono-repo` | tutors-sdk/tutors-mono-repo | `d350404` | 74 | 61 | 82% |
 | `taskboard` | lgriffin/AI-Reference-Projects | `ce2767c` | 4 | 4 | 100% |
 | `typescript-go` | lgriffin/TypeScript | `a91e938` | 18 | 17 | 94% |
 

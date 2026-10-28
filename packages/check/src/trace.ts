@@ -121,6 +121,8 @@ function relativeTo(span: string, path: string): string | undefined {
 /** The extensions a module path written without one may resolve to, as TypeScript and Node resolve it (A-278). */
 const MODULE_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".d.ts", ".js", ".jsx", ".mjs", ".cjs", "/index.ts", "/index.js"];
 /** A file whose path says it checks something: a test, or a lint or layering rule's configuration (A-280). */
+/** A script or task that checks something, by its name: `pnpm dev` or `build` names no check (A-280). */
+const CHECK_TASK = /(?:^|[:._-])(?:test|tests|lint|check|typecheck|types|verify|arch|architecture|layers|depcruise|cruise|e2e|knip|audit|spec|specs)(?:$|[:._-])/i;
 const MECHANISM_FILE = /(?:\.(?:test|spec)\.[cm]?[jt]sx?|_test\.go|(?:^|\/)test_[^/]*\.py|\.rules\.c?[jt]s|(?:^|\/)\.?eslint[^/]*|(?:^|\/)\.dependency-cruiser\.[cm]?js(?:on)?|(?:^|\/)\.?importlinter[^/]*)$/;
 
 export function trace(input: TraceInput): TraceResult {
@@ -241,7 +243,7 @@ export function trace(input: TraceInput): TraceResult {
       if (files === undefined) return null;
       const p = e.to.slice(5).replace(/\/$/, "");
       // A relative link's path is resolved already: checked as written (From the TypeScript run, section 3).
-      if (e.exact === true) return exists(p) ? "file" : ignored.has(p) || e.absent === true || (e.repos ?? []).some((r) => !top.has(r.split("/")[0]!)) ? null : undefined;
+      if (e.exact === true) return exists(p) ? "file" : ignored.has(p) || ignored.has(`${p}/`) || e.absent === true || (e.repos ?? []).some((r) => !top.has(r.split("/")[0]!)) ? null : undefined;
       // From the directory of the file that mentions it, when it names nothing from the root (section 5).
       const near = relativeTo(e.span, p);
       if (near !== undefined && exists(near) && !exists(p)) return "file";
@@ -326,7 +328,8 @@ export function trace(input: TraceInput): TraceResult {
     }
     out.push(row);
     if (r === "file" && !mechanismAt.has(e.span)) {
-      if (e.rel === "mentions-script") mechanismAt.set(e.span, e.to.startsWith("task:") ? e.to.slice(5).replace("#", " ") : `npm run ${e.to.slice(7)}`);
+      const task = e.to.startsWith("task:") ? e.to.slice(e.to.indexOf("#") + 1) : e.to.slice(7);
+      if (e.rel === "mentions-script" && CHECK_TASK.test(task)) mechanismAt.set(e.span, e.to.startsWith("task:") ? e.to.slice(5).replace("#", " ") : `npm run ${e.to.slice(7)}`);
       else if (e.rel === "mentions-file" && MECHANISM_FILE.test(e.to.slice(5))) mechanismAt.set(e.span, e.to.slice(5));
     }
     // A symbol prose names that resolves to the code, and the module that declares it, for what the tests exercise.

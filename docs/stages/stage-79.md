@@ -37,17 +37,17 @@ Each subject read cold on 28 October 2026, before and after the fixes:
 
 | Subject | Commit | Open before | Open after | True after | Precision |
 | --- | --- | ---: | ---: | ---: | ---: |
-| ESI.ts | `2a2da8a` | 82 | 47 | 30 | 64% |
-| tutors-mono-repo | `d350404` | 76 | 73 | 61 | 84% |
+| ESI.ts | `2a2da8a` | 82 | 48 | 30 | 63% |
+| tutors-mono-repo | `d350404` | 76 | 74 | 61 | 82% |
 | taskboard | `ce2767c` | 4 | 4 | 4 | 100% |
 | lgriffin/TypeScript | `a91e938` | 298 | 18 | 17 | 94% |
 
 - **ESI.ts.** 10 of its 13 refuted references were false: build output, folded guides, extensionless modules and paths
   from a fixture's root. 2 refuted remain, both true: ROADMAP names `src/sde/schemas.ts`, which moved, and CHARTER names
   `buildError` in a file that does not declare it. 10 step gaps were test data or jest-cucumber's literal steps. The
-  false entries left are 13 `unverified` sentences that describe rather than rule, and 4 `symbol-undecided` names
+  false entries left are 14 `unverified` sentences that describe rather than rule, and 4 `symbol-undecided` names
   declared in `scripts/` and `tests/`, code outside the profile's code practice.
-- **tutors-mono-repo.** 12 false `unverified` sentences: descriptions, a FAQ answer, a walkthrough.
+- **tutors-mono-repo.** 13 false `unverified` sentences: descriptions, a FAQ answer, a walkthrough.
 - **lgriffin/TypeScript.** All 282 `unaccepted-case` gaps were false: 42 cases in `skippedTests`, most others set an
   option the runner skips, and the rest compile clean with no emit and no type baselines, so write nothing. They are
   now two indeterminate entries, one per suite, which list the cases. One `unpaired-outputs` is false: copies of

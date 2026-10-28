@@ -48,7 +48,9 @@ describe("parseLabels", () => {
   it("refuses a label with no why, or a converged outcome", () => {
     expect(parseLabels('{"schema":"csh-labels/v1","subject":{"repo":"r","commit":"c"},"labels":[{"outcome":"converged","kind":"k","subject":"s","label":true,"why":"w"}]}').problems).toHaveLength(1);
     expect(parseLabels('{"schema":"csh-labels/v1","subject":{"repo":"r","commit":"c"},"labels":[{"outcome":"gap","kind":"k","subject":"s","label":true,"why":" "}]}').problems).toHaveLength(1);
-    expect(parseLabels("[]").problems).toEqual(["not a csh-labels/v1 file with a subject commit and labels"]);
+    expect(parseLabels("[]").problems).toEqual(["not a csh-labels/v1 file with a subject repo and commit and labels"]);
+    for (const subject of [{ commit: "c" }, { repo: 1, commit: "c" }, { repo: "", commit: "c" }])
+      expect(parseLabels(JSON.stringify({ schema: "csh-labels/v1", subject, labels: [] })).problems).toEqual(["not a csh-labels/v1 file with a subject repo and commit and labels"]);
     expect(parseLabels('{"schema":"csh-labels/v1","subject":{"repo":"r","commit":"c"},"labels":[]}').labels?.labels).toEqual([]);
   });
 });

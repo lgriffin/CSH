@@ -9,3 +9,5 @@ The site build writes `site/dist` for publishing.
 The consumer check loads `src/require.cts` from its own folder.
 
 The retry policy lives in `src/core/retry.ts`.
+
+The published [site](../site/dist) is built, not committed.

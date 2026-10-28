@@ -14,6 +14,55 @@
     },
     {
       "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Requirements/guides/CHARTER.md",
+      "label": true,
+      "why": "line 201 says buildError is in src/core/util/error.ts, and no code in src declares buildError; line 653 is a dated revision note"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "no-results",
+      "subject": "Tests",
+      "label": true,
+      "why": "the practice names a results file and none is committed"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Documents/docs/spikes/generator/SPIKE.md",
+      "label": true,
+      "why": "TypeScript compiler options, declared by no code here: rightly left undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Instructions/src/core/requestPipeline/AGENTS.md",
+      "label": false,
+      "why": "textResponse is declared in scripts/spec/schema-drift-core.ts, code CSH did not read"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Instructions/tests/benchmark/AGENTS.md",
+      "label": false,
+      "why": "minSamples and minEffect are declared in tests/benchmark and scripts/bench, code CSH did not read"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Instructions/tests/contract/AGENTS.md",
+      "label": false,
+      "why": "upstreamPages is a field of the recorded fixtures and spyOn is vitest's: both decidable"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Instructions/tests/faults/AGENTS.md",
+      "label": false,
+      "why": "textResponse is declared in scripts/spec/schema-drift-core.ts, code CSH did not read"
+    },
+    {
+      "outcome": "gap",
       "kind": "unexercised",
       "subject": "Documents/guides/RELEASE.md",
       "label": true,
@@ -25,6 +74,13 @@
       "subject": "Documents/guides/ROADMAP.md",
       "label": true,
       "why": "DOC_SOURCES is declared in scripts/docs/doc-examples-core.ts and no test mentions it"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unexercised",
+      "subject": "Instructions/src/core/requestPipeline/AGENTS.md",
+      "label": true,
+      "why": "parseJsonBody is in src/core/ApiRequestHandler.ts and no test mentions it"
     },
     {
       "outcome": "gap",
@@ -176,6 +232,13 @@
     {
       "outcome": "gap",
       "kind": "unverified",
+      "subject": "Documents/guides/TESTING.md#L863",
+      "label": false,
+      "why": "not a rule about the code: it describes how the mutation job restores a shard's baseline"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
       "subject": "Documents/guides/TESTING.md#L896",
       "label": false,
       "why": "not a rule about the code: a dated account of how flaky tests were fixed"
@@ -193,13 +256,6 @@
       "subject": "Documents/guides/sde/REFERENCE.md#L18",
       "label": true,
       "why": "a behaviour claim (importing the SDE loads neither peer) that no test cites on its line"
-    },
-    {
-      "outcome": "gap",
-      "kind": "unexercised",
-      "subject": "Instructions/src/core/requestPipeline/AGENTS.md",
-      "label": true,
-      "why": "parseJsonBody is in src/core/ApiRequestHandler.ts and no test mentions it"
     },
     {
       "outcome": "gap",
@@ -221,13 +277,6 @@
       "subject": "Instructions/tests/fuzz/AGENTS.md#L108",
       "label": false,
       "why": "not a rule about the code: half a sentence of instructions for writing a property test"
-    },
-    {
-      "outcome": "gap",
-      "kind": "dangling-reference",
-      "subject": "Requirements/guides/CHARTER.md",
-      "label": true,
-      "why": "line 201 says buildError is in src/core/util/error.ts, and no code in src declares buildError; line 653 is a dated revision note"
     },
     {
       "outcome": "gap",
@@ -291,48 +340,6 @@
       "subject": "Requirements/guides/CHARTER.md#L129",
       "label": true,
       "why": "resilience is pluggable: a design rule with no check named"
-    },
-    {
-      "outcome": "indeterminate",
-      "kind": "symbol-undecided",
-      "subject": "Documents/docs/spikes/generator/SPIKE.md",
-      "label": true,
-      "why": "TypeScript compiler options, declared by no code here: rightly left undecided"
-    },
-    {
-      "outcome": "indeterminate",
-      "kind": "symbol-undecided",
-      "subject": "Instructions/src/core/requestPipeline/AGENTS.md",
-      "label": false,
-      "why": "textResponse is declared in scripts/spec/schema-drift-core.ts, code CSH did not read"
-    },
-    {
-      "outcome": "indeterminate",
-      "kind": "symbol-undecided",
-      "subject": "Instructions/tests/benchmark/AGENTS.md",
-      "label": false,
-      "why": "minSamples and minEffect are declared in tests/benchmark and scripts/bench, code CSH did not read"
-    },
-    {
-      "outcome": "indeterminate",
-      "kind": "symbol-undecided",
-      "subject": "Instructions/tests/contract/AGENTS.md",
-      "label": false,
-      "why": "upstreamPages is a field of the recorded fixtures and spyOn is vitest's: both decidable"
-    },
-    {
-      "outcome": "indeterminate",
-      "kind": "symbol-undecided",
-      "subject": "Instructions/tests/faults/AGENTS.md",
-      "label": false,
-      "why": "textResponse is declared in scripts/spec/schema-drift-core.ts, code CSH did not read"
-    },
-    {
-      "outcome": "indeterminate",
-      "kind": "no-results",
-      "subject": "Tests",
-      "label": true,
-      "why": "the practice names a results file and none is committed"
     }
   ]
 }

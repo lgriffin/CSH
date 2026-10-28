@@ -62,6 +62,13 @@
       "why": "the baseline lists known findings the suite tolerates: each is a real open finding"
     },
     {
+      "outcome": "indeterminate",
+      "kind": "no-results",
+      "subject": "Tests",
+      "label": true,
+      "why": "the practice names a results file and none is committed"
+    },
+    {
       "outcome": "gap",
       "kind": "unexercised",
       "subject": "Documents/docs/COURSE-PAGE-WALKTHROUGH.md",
@@ -109,6 +116,13 @@
       "subject": "Documents/docs/COURSE-PAGE-WALKTHROUGH.md#L145",
       "label": false,
       "why": "not a rule about the code: a walkthrough describing which stylesheets the reader imports"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/docs/COURSE-PAGE-WALKTHROUGH.md#L149",
+      "label": false,
+      "why": "not a rule about the code: a walkthrough explaining why pnpm dev builds the UI packages first"
     },
     {
       "outcome": "gap",
@@ -508,13 +522,6 @@
       "subject": "Documents/packages/jsr/types/README.md#L6",
       "label": true,
       "why": "a rule about what the package exports, with no check named"
-    },
-    {
-      "outcome": "indeterminate",
-      "kind": "no-results",
-      "subject": "Tests",
-      "label": true,
-      "why": "the practice names a results file and none is committed"
     }
   ]
 }
