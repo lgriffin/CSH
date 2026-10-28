@@ -319,6 +319,21 @@ export function trace(input: TraceInput): TraceResult {
   const stale = new Map<string, Map<string, string>>();
   // What a line names that checks something and exists: a script or task, a test file, or a rule's configuration (A-280).
   const mechanismAt = new Map<string, string>();
+  // The Java and Kotlin test files by their class's name: prose names a test class, `ArchitectureTest` or
+  // `ArchitectureTest.memoryIsLeaf`, and in those languages the class is the file (A-299).
+  const testStems = new Map<string, string[]>();
+  // A helper beside the tests, with no test of its own, checks nothing.
+  for (const i of items) if (i.kind === "test-file" && /\.(?:java|kt)$/.test(i.id) && Number(i.attrs?.tests ?? "0") > 0) {
+    const stem = i.id.slice(i.id.lastIndexOf("/") + 1).replace(/\.[^.]*$/, "");
+    testStems.set(stem, [...(testStems.get(stem) ?? []), i.id].sort(compareCodePoints));
+  }
+  const namedTest = (sentence: string): string | undefined => {
+    for (const m of sentence.matchAll(/`([A-Za-z_$][\w$]*)(?:\.[\w$]+)*(?:\(\))?`/g)) {
+      const found = testStems.get(m[1]!);
+      if (found !== undefined) return found[0];
+    }
+    return undefined;
+  };
   // Each symbol a document names, once for each language that declares it, with a module that does.
   const namedSymbols = new Map<string, Map<string, { name: string; module: string }>>();
   const h = input.history;
@@ -449,10 +464,13 @@ export function trace(input: TraceInput): TraceResult {
     if (h !== undefined && files !== undefined && it.kind !== undefined && VERIFYING.has(it.kind) && status !== undefined && ASSERTED.has(status) && !supported.has(q) && !testCited.has(q)) {
       gaps.push({ kind: "status-unsupported", subject: q, fragments: [], detail: `${it.span}: its stated status is ${status}, and nothing it names as a mechanism resolves, and no test cites it` });
     }
-    // A told rule lifted from a sentence that names its own check, on its line, is verified by it (A-280).
-    const own = it.attrs?.lifted !== undefined ? mechanismAt.get(it.span) : undefined;
-    if (own !== undefined && !verifiedBy.has(q) && !into.has("cites")) check(q, `named on its line: ${own}`);
-    else if (it.kind !== undefined && VERIFYING.has(it.kind) && !verifiedBy.has(q) && !into.has("cites")) {
+    // A told rule lifted from a sentence that names its own check, on its line or as a test class anywhere in it, is
+    // verified by it (A-280, A-299).
+    const onLine = it.attrs?.lifted !== undefined ? mechanismAt.get(it.span) : undefined;
+    const own = onLine ?? (it.attrs?.lifted !== undefined ? namedTest(it.attrs.sentence ?? "") : undefined);
+    if (own !== undefined && !verifiedBy.has(q) && !into.has("cites")) check(q, `${onLine !== undefined ? "named on its line" : "a test class its sentence names"}: ${own}`);
+    // A retired requirement holds no longer, and a plan's only proposes one, so nothing need verify either (A-295, A-297).
+    else if (it.kind !== undefined && VERIFYING.has(it.kind) && !verifiedBy.has(q) && !into.has("cites") && it.attrs?.retired === undefined && it.attrs?.proposed === undefined) {
       const status = it.attrs?.status !== undefined ? `; its stated status is ${it.attrs.status}` : "";
       gaps.push({ kind: "unverified", subject: q, fragments: [], detail: `${it.span}: names no mechanism that verifies it, and no test cites it${status}${nearestTests(it.text)}` });
     } else if (it.kind === "rule" && !into.has("exemplifies")) {

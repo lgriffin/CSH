@@ -58,6 +58,7 @@ class Helper {}
   [`${CORE}/Shape.java`]: `package com.x.core;
 public sealed interface Shape<T> extends java.io.Serializable, Comparable<T> permits Order {
   int SIDES = 4;
+  String NAME = String.valueOf(SIDES);
 }
 enum Colour { RED; static final String DEFAULT = """
     red
@@ -125,7 +126,7 @@ describe("the Java reader", () => {
     expect(out.diagnostics).toEqual([]);
   });
 
-  it("declares types with their bases, a nested one by its dotted name, and static final literals", async () => {
+  it("declares types with their bases, a nested one by its dotted name, static final literals, and other fields (A-300)", async () => {
     const out = await run(input(MAVEN));
     const declared = out.facts!.flatMap((f) => (f.kind === "declare" ? [[f.at.slice(f.at.lastIndexOf("/") + 1), f.symbol, f.declares, f.base ?? null, f.value ?? null]] : []));
     expect(declared).toEqual([
@@ -139,14 +140,19 @@ describe("the Java reader", () => {
       ["Order.java:12", "Order.RATE", "const", null, "-2.5"],
       ["Order.java:12", "Order.OTHER", "const", null, "16"],
       ["Order.java:13", "Order.ON", "const", null, "true"],
+      ["Order.java:14", "Order.NOT_LITERAL", "var", null, null],
+      ["Order.java:15", "Order.instance", "var", null, null],
+      ["Order.java:16", "Order.mutable", "var", null, null],
       ["Order.java:17", "Order.Line", "class", null, null],
       ["Order.java:20", "Helper", "class", null, null],
       ["Shape.java:2", "Shape", "interface", "java.io.Serializable", null],
       ["Shape.java:3", "Shape.SIDES", "const", null, "4"],
-      ["Shape.java:5", "Colour", "enum", null, null],
-      ["Shape.java:5", "Colour.DEFAULT", "const", null, "red\n  dark\n"],
-      ["Shape.java:9", "Point", "record", null, null],
-      ["Shape.java:10", "Marker", "annotation", null, null],
+      ["Shape.java:4", "Shape.NAME", "var", null, null],
+      ["Shape.java:6", "Colour", "enum", null, null],
+      ["Shape.java:6", "Colour.DEFAULT", "const", null, "red\n  dark\n"],
+      ["Shape.java:10", "Point", "record", null, null],
+      ["Shape.java:10", "Point.x", "var", null, null],
+      ["Shape.java:11", "Marker", "annotation", null, null],
     ]);
     const exported = out.facts!.flatMap((f) => (f.kind === "export" ? [`${f.module.slice(f.module.lastIndexOf("/") + 1)} ${f.symbol}`] : []));
     expect(exported).toEqual(["Service.java Service", "Base.java Base", "Order.java Order", "Shape.java Shape"]);

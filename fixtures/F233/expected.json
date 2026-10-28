@@ -1,0 +1,13 @@
+{
+  "fixture": "F233",
+  "section": "The analysis A3 and 1.0, section 4.1; A-294",
+  "stage": 81,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "entries": [{ "outcome": "gap", "kind": "unverified", "subject": "Requirements/CLI-2" }],
+      "entriesAbsent": [{ "kind": "unverified", "subject": "Requirements/CLI-1" }],
+      "subjectUntouched": true
+    }
+  }
+}

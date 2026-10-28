@@ -23,6 +23,8 @@ CSH that adds, drops or renames an entry fails until its labels are updated by h
 | `tutors-mono-repo` | tutors-sdk/tutors-mono-repo | `d350404` | 74 | 61 | 82% |
 | `taskboard` | lgriffin/AI-Reference-Projects | `ce2767c` | 4 | 4 | 100% |
 | `typescript-go` | lgriffin/TypeScript | `a91e938` | 18 | 17 | 94% |
+| `camel` (Java, experimental) | apache/camel | `b232910` (`camel-4.23.0`) | 36 | 33 | 92% |
+| `hadur` (Java, experimental) | lgriffin/Hadur_Robot | `91a3abf` | 47 | 38 | 81% |
 
 Most false entries left are `unverified` sentences lifted as rules that describe rather than rule, and names declared
 in code outside the code practice (ESI.ts's `scripts/`).
@@ -41,14 +43,18 @@ afterwards. The `labelled` job runs it after the labels.
 | `tutors-mono-repo` | 4 | 4 | 79 | 79 |
 | `taskboard` | 3 | 3 | 6 | 6 |
 | `typescript-go` | 3 | 3 | 38 | 38 |
+| `camel` | 2 | 2 | 43 | 43 |
+| `hadur` | 3 | 3 | 53 | 53 |
 
 A drift changes files of its own, so all of a subject's drifts are applied together; an expectation names the
 outcome, kind and subject of the entry, and words its detail must hold.
 
-## Experimental benchmarks
+## The Java subjects (stage 81)
 
-Java, read cold on Apache Camel at `camel-4.23.0` and lgriffin/Hadur_Robot at `91a3abf`. The `benchmark` job reports
-their counts, time and peak memory; they are not labelled and never fail the workflow.
+Java is experimental, and its reader is measured as TypeScript's is: Apache Camel at `camel-4.23.0`, a large Maven
+build, and lgriffin/Hadur_Robot, a Robocode robot with a requirements register, ArchUnit and jqwik tests and a course,
+are labelled subjects with drifts, in the same `labelled` job ([22](../docs/spec/22-analysis-a3-and-1.0.md), section
+4.1). Camel's analysis takes about three minutes, so its job runs three analyses for the drifts and one for the labels.
 
 `fetch.sh` fetches one commit of a repository at depth 1; `measure.sh` analyses it and writes the result, the time and
 the peak memory to the job summary.

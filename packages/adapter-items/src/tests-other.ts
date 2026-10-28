@@ -196,7 +196,7 @@ interface Block {
  * collected, nor one decorated as a fixture, nor any in a class that sets `__test__ = False`, nor in a `Test*` class
  * that defines `__init__` (a `TestCase` subclass is collected regardless). Cites: the name, the first line of the
  * docstring with words, the string arguments of a `@pytest.mark.<marker>(...)` decorator, and of a `parametrize` only
- * its `ids=[...]` and each `pytest.param(id=...)`. The same on a test class, when it holds a test. `@pytest.mark.skip`
+ * its `ids=[...]` and each `pytest.param(id=...)`. The same on a test class, when it holds a test, its docstring too. `@pytest.mark.skip`
  * and `@unittest.skip` count a test as skipped; `skipif` and `xfail` decide at run time and do not.
  */
 function python({ code, strings }: Lexed): Found {
@@ -225,6 +225,9 @@ function python({ code, strings }: Lexed): Found {
       const at = start + cls[0].length - cls[1]!.length;
       const testCase = /\bTestCase\b/.test(line);
       const block: Block = { indent, kind: "class", named: cls[1]!.startsWith("Test") || testCase, testCase, hasInit: false, off: false, skip, cites: [...nameSources(at, cls[1]!, /^Test_?/), ...marks] };
+      // A test class's docstring cites for its tests, as a Java class's @DisplayName does (A-294).
+      const doc = docstring(code, strings, at + cls[1]!.length);
+      if (doc !== undefined) block.cites.push(doc);
       classes.push(block);
       stack.push(block);
     } else if (def !== null) {
@@ -306,11 +309,11 @@ function pytestMarks(code: string, strings: Map<number, string>, a: number, b: n
   return out;
 }
 
-/** The first line with words of a function's docstring, from the end of its name. */
+/** The first line with words of a function's or a class's docstring, from the end of its name. */
 function docstring(code: string, strings: Map<number, string>, from: number): CiteSource | undefined {
-  const open = code.indexOf("(", from);
-  if (open < 0) return undefined;
-  let at = pastClose(code, open + 1);
+  let at = skipSpace(code, from);
+  // A function's parameters, or a class's bases, which a class may leave out.
+  if (code[at] === "(") at = pastClose(code, at + 1);
   // The colon that ends the header, past any return annotation.
   let depth = 0;
   while (at < code.length && !(code[at] === ":" && depth === 0)) {
@@ -333,7 +336,8 @@ function docstring(code: string, strings: Map<number, string>, from: number): Ci
 
 // --- Java -------------------------------------------------------------------------------------------------------
 
-const JAVA_TESTS = new Set(["Test", "ParameterizedTest", "RepeatedTest", "TestFactory"]);
+/** JUnit's test annotations, and jqwik's property and example (A-298). */
+const JAVA_TESTS = new Set(["Test", "ParameterizedTest", "RepeatedTest", "TestFactory", "TestTemplate", "Property", "Example"]);
 const JAVA_MODIFIERS = new Set(["public", "protected", "private", "static", "final", "abstract", "synchronized", "default", "strictfp", "native"]);
 
 interface Annotation {
@@ -343,9 +347,10 @@ interface Annotation {
 }
 
 /**
- * JUnit 4's and 5's conventions: a method annotated `@Test`, `@ParameterizedTest`, `@RepeatedTest` or `@TestFactory`,
- * by its simple name or a qualified one (`@org.junit.Test`). Cites: the method's name, and the strings of a
- * `@DisplayName`, `@Tag` or `@Tags` on the method or on a class that encloses it. `@Disabled` or `@Ignore` on the method
+ * JUnit 4's and 5's conventions: a method annotated `@Test`, `@ParameterizedTest`, `@RepeatedTest`, `@TestFactory` or
+ * `@TestTemplate`, or jqwik's `@Property` or `@Example`, by its simple name or a qualified one (`@org.junit.Test`).
+ * Cites: the method's name, and the strings of a `@DisplayName`, `@Tag` or `@Tags` on the method or on a class that
+ * encloses it. `@Disabled` or `@Ignore` on the method
  * or an enclosing class counts it as skipped.
  */
 function java({ code, strings }: Lexed): Found {

@@ -1,0 +1,24 @@
+{
+  "fixture": "F231",
+  "section": "The analysis A3 and 1.0, section 4.1; A-289, A-290, A-293, A-298 to A-300",
+  "stage": 81,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "entries": [
+        { "outcome": "gap", "kind": "unverified", "subject": "Requirements/SHOP-3" },
+        { "outcome": "gap", "kind": "unobserved-terms", "subject": "Requirements/SHOP-4", "detailIncludes": ["`flushAll`"] },
+        { "outcome": "gap", "kind": "unverified", "subject": "Documents/docs/architecture.md#L6" },
+        { "outcome": "indeterminate", "kind": "symbol-undecided", "subject": "Documents/shop/README.md", "detailIncludes": ["SpecificRecord"], "detailExcludes": ["keystoreResource", "sku"] }
+      ],
+      "entriesAbsent": [
+        { "kind": "unverified", "subject": "Requirements/SHOP-1" },
+        { "kind": "unverified", "subject": "Requirements/SHOP-2" },
+        { "kind": "unobserved-terms", "subject": "Requirements/SHOP-2" },
+        { "kind": "unverified", "subject": "Documents/docs/architecture.md#L3" },
+        { "kind": "dangling-reference", "subject": "Tests/shop/src/test/java/shop/OrderIT.java" }
+      ],
+      "subjectUntouched": true
+    }
+  }
+}

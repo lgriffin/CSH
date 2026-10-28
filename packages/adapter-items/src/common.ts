@@ -46,6 +46,8 @@ export function pathToken(token: string): string | undefined {
   // (coordination.k8s.io/v1).
   if (/(?:^|[^A-Za-z0-9])v?[xX]\.[yY](?![A-Za-z0-9])|\/<|[<>{}*]/.test(t)) return undefined;
   if (/^\d+(\.\d+)+\//.test(t)) return undefined;
+  // A placeholder for a number or version in a part of the path: camel-4x-upgrade-guide-4_XX.adoc, course-labs/lab-NN (A-291).
+  if (/(?:^|[\/._-])(?:XX+|NN+)(?=$|[\/._-])/.test(t)) return undefined;
   if (/^[\w-]+(\.[\w-]+)*\.(?:io|com|org|net|dev)\//.test(t)) return undefined;
   // A placeholder with an ellipsis (tests/bdd/steps/...), and a branch or tag whose last segment is a version
   // (release/16.3.0, release/v16.2.2), name no path (From the tutors run, section 5).

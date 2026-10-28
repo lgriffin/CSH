@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { check, type CheckResult, type EvidenceStore, makeRefiner, mentionLanguageOf, type Report, type AuthorityResolver, type SourceRun, type TestMentions } from "@csh/check";
 import { mentionsOf } from "@csh/adapter-items/tests";
 import { gitHistory } from "./history.ts";
-import { ignoredPaths, runSources, type RunSourcesOptions, toolCodeDigest, trackedFiles } from "./sources.ts";
+import { ignoredContentDirs, ignoredPaths, runSources, type RunSourcesOptions, toolCodeDigest, trackedFiles } from "./sources.ts";
 import { emit, type EmitOptions, type EmitResult, type Lock } from "@csh/emit";
 import { canonicalJson, canonicalModule, compareCodePoints, digestJson, digestOf, fragmentsOf, isArchRule, moduleDigest, refName, type Module } from "@csh/kernel";
 import { type LedgerState, resolveAuthority } from "@csh/ledger";
@@ -185,7 +185,10 @@ export async function checkModule(module: Module, moduleDigest: string, opts: Pi
         return [p, ...nearPath(e.span, p)].flatMap((x) => (dir === "" ? [x] : [x, `${x}/`]));
       }));
       const ignored = ignoredPaths(opts.sourceRoot ?? opts.root, [...new Set(named.filter((p) => p !== "" && p !== "/" && !known.has(p.replace(/\/$/, "")) && !p.startsWith("/") && !p.split("/").includes("..")))]);
-      if (ignored.length > 0) checkOpts.ignored = ignored;
+      // A directory whose files an ignore pattern matches is filled by each checkout, and is ignored too (A-292).
+      const filled = ignoredContentDirs(opts.sourceRoot ?? opts.root, files);
+      for (const p of new Set(named.map((x) => x.replace(/\/$/, "")))) if (filled.has(p) && !known.has(p)) ignored.push(p, `${p}/`);
+      if (ignored.length > 0) checkOpts.ignored = [...new Set(ignored)].sort(compareCodePoints);
     }
   }
   if (opts.component !== undefined) {

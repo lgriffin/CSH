@@ -1,0 +1,24 @@
+{
+  "schema": "csh-drifts/v1",
+  "subject": { "repo": "https://github.com/apache/camel", "commit": "b2329103df8f5d1edfca2ad262be09e3be95ee68" },
+  "drifts": [
+    {
+      "id": "deleted-file",
+      "what": "MojoHelper.java, which AGENTS.md names as the file a new component is registered in, is deleted",
+      "edits": [{ "op": "delete", "path": "tooling/maven/camel-package-maven-plugin/src/main/java/org/apache/camel/maven/packaging/MojoHelper.java" }],
+      "expect": {
+        "outcome": "gap",
+        "kind": "dangling-reference",
+        "subject": "Instructions/AGENTS.md",
+        "detailIncludes": ["camel-package-maven-plugin/src/main/java/org/apache/camel/maven/packaging/MojoHelper.java"]
+      }
+    },
+    {
+      "id": "test-stops-exercising",
+      "what": "the OpenAI batch mock test stops naming replyWithBatchContent, which the mock's README names",
+      "edits": [{ "op": "replace", "path": "components/camel-ai/camel-openai/src/test/java/org/apache/camel/component/openai/OpenAIBatchMockTest.java", "from": "replyWithBatchContent", "to": "replyWithBatchPayload" }],
+      "expect": { "outcome": "gap", "kind": "unexercised", "subject": "Documents/test-infra/camel-test-infra-openai-mock/README.md", "detailIncludes": ["names `replyWithBatchContent`"] }
+    }
+  ],
+  "stable": "KEYS"
+}

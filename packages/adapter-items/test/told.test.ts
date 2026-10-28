@@ -150,6 +150,23 @@ describe("what the tutors run taught the Markdown adapter (From the tutors run, 
     expect(read({ "h.md": "# Hooks\n\nThe hook is not executed on CI.\n\n```gherkin\n  Scenario: An example\n```\n" }).items!.filter((i) => i.attrs?.gherkin === "prose")).toEqual([]);
   });
 
+  it("reads no specification prose in teaching material, and a plan's or a retired section's as proposed or retired (A-295, A-297, A-301)", () => {
+    const prose = "These scenarios are specification prose, not executed.\n\n```gherkin\n  Scenario: Moves\n```\n";
+    const out = read({ "course/lab-01/README.md": prose, "docs/a-plan.md": prose, "docs/spec.md": `# Spec\n\n## Retired\n\n${prose}` });
+    expect(out.items!.filter((i) => i.attrs?.gherkin === "prose").map((i) => [i.id, i.attrs!.proposed ?? null, i.attrs!.retired ?? null])).toEqual([
+      ["docs/spec.md#moves", null, "yes"],
+      ["docs/a-plan.md#moves", "yes", null],
+    ]);
+  });
+
+  it("marks a told rule under a retired heading retired, and not one after it (A-295)", () => {
+    const out = read({ "a.md": "# Rules\n\n## Deprecated\n\nThe gun never imports the radar.\n\n## Current\n\nThe radar never imports the gun.\n" });
+    expect(out.items!.filter((i) => i.attrs?.lifted !== undefined).map((i) => [i.id, i.attrs!.retired ?? null])).toEqual([
+      ["a.md#L5", "yes"],
+      ["a.md#L9", null],
+    ]);
+  });
+
   it("reads a baseline's entries, and nothing of a text file's comments", () => {
     const out = read({ "known.txt": "# This file may only shrink.\n\nrule: a -> b\nrule: c -> d\n" });
     expect(out.items!.map((i) => [i.id, i.kind, i.attrs])).toEqual([["known.txt", "baseline", { entries: "2", first: "rule: a -> b\nrule: c -> d" }]]);

@@ -131,9 +131,46 @@ Before 1.0 the calibration runs become a benchmark, with a number for each claim
 - **Stability.** The same script then appends a line to a file no entry names, commits it, and analyses again: every
   entry must keep its anchor, and none may appear. It holds on all four subjects (186 of 186 entries).
 - **Cost.** CI records the time and peak memory of each subject's analysis.
-- **Experimental subjects.** Apache Camel (tag `camel-4.23.0`) and lgriffin/Hadur_Robot for Java, Toads and
-  fastapi-clean-example for Python, go-clean-arch for Go, hexarch for Rust. They are pinned and run in CI, and their
-  counts, time and memory are reported in the job summary, but they do not gate a release and are not labelled.
+- **Experimental subjects.** Toads and fastapi-clean-example for Python, go-clean-arch for Go, hexarch for Rust. They
+  are pinned and run in CI, and their counts, time and memory are reported in the job summary, but they do not gate a
+  release and are not labelled.
+
+### 4.1 The Java subjects (stage 81)
+
+Java stays experimental (section 3), but its reader is measured as TypeScript's is: two mature Java repositories,
+Apache Camel at tag `camel-4.23.0` and lgriffin/Hadur_Robot, are labelled subjects with drifts files, and the
+`labelled` CI job holds them to their labels and drifts as it holds the TypeScript subjects. Camel is a large Maven
+build (about 1,100 modules); Hadur_Robot is a Robocode robot with a requirements register, ArchUnit and jqwik tests,
+plans, bench reports and a course.
+
+Their first labelling found these false entries, each fixed:
+
+- Tests by their root: Maven and Gradle compile every file under `src/test/java` (and Gradle's `it`,
+  `integrationTest` and `testFixtures` sets) as tests, so failsafe's `*IT` and jqwik's `*Properties` are test files
+  (A-289), and jqwik's `@Property` and `@Example` and JUnit's `@TestTemplate` are tests (A-298).
+- A tracker's keys: a family of identifiers that appears in links' paths, as Camel's `CAMEL-1234` does, is the
+  tracker's, and a test title citing one cites nothing of the repository (A-290).
+- Files that are not the repository's: placeholders with `XX` or `NN`, a `-style` name, a file prose says to add or a
+  directory it says to put something into, an archived or git-ignored file (A-291), and a directory whose contents a
+  `.gitignore` pattern ignores (A-292).
+- Grain: a word a test writes in a string is observed, and a file name with the extension of data, an archive or an
+  image is no term (A-293); a Python test class's docstring cites (A-294).
+- Requirements that need no check: a retired one (A-295) and one only a plan proposes (A-297); an identifier a plan
+  repeats belongs to the register that defines the most (A-296).
+- Told rules: one whose sentence names a Java test class names its check (A-299), and teaching material (a course, a
+  tutorial, lessons) states no rules of the repository (A-301).
+- Names: Java fields and record components are declarations, so a Maven goal's parameters resolve (A-300).
+
+What stays false is recorded in each label's reason: Camel's three `unverified` sentences that describe, and
+Hadur_Robot's eight that describe or name their check in words ("ArchUnit enforces"), and a placeholder written as a
+term (`package.Class`). Camel's labels hold 33 of 36 entries true, and Hadur_Robot's 38 of 47.
+
+Seeding drift into them found two limits, kept. A file name written with no folder that names no tracked file is
+unchecked (A-110), since prose writes such names of files the reader makes, so deleting the `application.properties`
+or the route beside Camel's order-generator example, which its README names bare, goes unreported. And a path whose
+first folder is neither at the root nor beside the document is unchecked (A-288): each of Camel's example READMEs
+names its Citrus test as `test/<name>.citrus.it.yaml`, and no such file is tracked, yet none is reported. The Camel
+drift deletes a file `AGENTS.md` names from the root instead.
 
 ## 5. Limits
 
