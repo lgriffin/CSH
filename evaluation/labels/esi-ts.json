@@ -1,0 +1,338 @@
+{
+  "schema": "csh-labels/v1",
+  "subject": {
+    "repo": "https://github.com/lgriffin/ESI.ts",
+    "commit": "2a2da8a626821bef77ad8726da2c8018e2961236"
+  },
+  "labels": [
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Documents/guides/ROADMAP.md",
+      "label": true,
+      "why": "line 277 says the schema fuzz reads src/sde/schemas.ts, which moved to src/sde/domain/schemas.ts"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unexercised",
+      "subject": "Documents/guides/RELEASE.md",
+      "label": true,
+      "why": "OLDEST_TYPESCRIPT is declared in scripts/quality/consumer-contract-core.ts and no test mentions it"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unexercised",
+      "subject": "Documents/guides/ROADMAP.md",
+      "label": true,
+      "why": "DOC_SOURCES is declared in scripts/docs/doc-examples-core.ts and no test mentions it"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/README.md#L131",
+      "label": true,
+      "why": "a design rule (resilience is pluggable) that names no check, and no test cites it"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/ARCHITECTURE.md#L1182",
+      "label": true,
+      "why": "the logging resolution rule names requirement ids, not a check, and no test cites it"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/ARCHITECTURE.md#L1182~2",
+      "label": true,
+      "why": "the second rule of the same sentence: ARCH-09 is named, no check is"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/ARCHITECTURE.md#L256",
+      "label": true,
+      "why": "the inward dependency rule names no check on its line; lint:layers holds it elsewhere and could be cited"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/ARCHITECTURE.md#L410",
+      "label": true,
+      "why": "strategies-not-imports names ARCH-04, not a check, and no test cites it"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/ARCHITECTURE.md#L422",
+      "label": true,
+      "why": "ports import nothing: a layering rule with no check named on its line"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/DESIGN-RULES.md#L141",
+      "label": false,
+      "why": "not a rule about the code: it describes what a generator script writes"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/DESIGN-RULES.md#L70",
+      "label": true,
+      "why": "do not import the global logger in a client: a rule with no check named"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/LOGGING.md#L103",
+      "label": true,
+      "why": "a behaviour claim (an unrecognised level throws when the logger is built) that no test cites"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/LOGGING.md#L336",
+      "label": false,
+      "why": "restates ARCH-06, which tests/tdd/core/importSideEffects.test.ts holds (named in CHARTER.md)"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/RELEASE.md#L215",
+      "label": false,
+      "why": "not a rule about the code: npm's unpublish policy"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/ROADMAP.md#L167",
+      "label": true,
+      "why": "the SDE isolation the roadmap itself says is a fact and not yet a rule"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/ROADMAP.md#L346",
+      "label": false,
+      "why": "not a rule about the code: a schedule"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/ROADMAP.md#L37",
+      "label": false,
+      "why": "not a rule about the code: the order of roadmap phases"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/SDE.md#L430",
+      "label": false,
+      "why": "not a rule about the code: it describes how the tests stub the transport"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/SDE.md#L446",
+      "label": true,
+      "why": "src/core/ports is the one directory the SDE reaches: a layering rule with no check named"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/SDE.md#L452",
+      "label": false,
+      "why": "names its check, the ESLint rule layers/inward-imports, which CSH does not read as a path"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/SEMVER.md#L34",
+      "label": false,
+      "why": "not a rule about the code: a definition of what is not public API"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/TESTING.md#L471",
+      "label": false,
+      "why": "names its check: a scenario proves each exclusion and the report lists them"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/TESTING.md#L471~2",
+      "label": false,
+      "why": "the second rule of the same sentence, checked the same way"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/TESTING.md#L718",
+      "label": false,
+      "why": "not a rule about the code: it describes what a check fails on; it is the check"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/TESTING.md#L896",
+      "label": false,
+      "why": "not a rule about the code: a dated account of how flaky tests were fixed"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/sde/ARCHITECTURE.md#L210",
+      "label": true,
+      "why": "a design claim (no separate build before querying) that no test cites"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Documents/guides/sde/REFERENCE.md#L18",
+      "label": true,
+      "why": "a behaviour claim (importing the SDE loads neither peer) that no test cites on its line"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unexercised",
+      "subject": "Instructions/src/core/requestPipeline/AGENTS.md",
+      "label": true,
+      "why": "parseJsonBody is in src/core/ApiRequestHandler.ts and no test mentions it"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Instructions/CLAUDE.md#L86",
+      "label": true,
+      "why": "ports import nothing: a rule with no check named"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Instructions/CLAUDE.md#L88",
+      "label": true,
+      "why": "generated code imports only the ports: a rule with no check named"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Instructions/tests/fuzz/AGENTS.md#L108",
+      "label": false,
+      "why": "not a rule about the code: half a sentence of instructions for writing a property test"
+    },
+    {
+      "outcome": "gap",
+      "kind": "dangling-reference",
+      "subject": "Requirements/guides/CHARTER.md",
+      "label": true,
+      "why": "line 201 says buildError is in src/core/util/error.ts, and no code in src declares buildError; line 653 is a dated revision note"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/ARCH-03",
+      "label": true,
+      "why": "the charter states it Practised, with no Verified by and no citing test"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/DES-05",
+      "label": true,
+      "why": "the charter states it Practised, with no Verified by and no citing test"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/DOC-06",
+      "label": true,
+      "why": "the charter itself marks it a Gap"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/PROC-01",
+      "label": true,
+      "why": "the charter states it Practised, with no Verified by and no citing test"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/PROC-02",
+      "label": true,
+      "why": "the charter states it Practised, with no Verified by and no citing test"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/PROC-04",
+      "label": true,
+      "why": "the charter itself marks it Partial"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/PROC-05",
+      "label": true,
+      "why": "the charter itself marks it Partial"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/REL-04",
+      "label": true,
+      "why": "the charter itself marks it Partial"
+    },
+    {
+      "outcome": "gap",
+      "kind": "unverified",
+      "subject": "Requirements/guides/CHARTER.md#L129",
+      "label": true,
+      "why": "resilience is pluggable: a design rule with no check named"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Documents/docs/spikes/generator/SPIKE.md",
+      "label": true,
+      "why": "TypeScript compiler options, declared by no code here: rightly left undecided"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Instructions/src/core/requestPipeline/AGENTS.md",
+      "label": false,
+      "why": "textResponse is declared in scripts/spec/schema-drift-core.ts, code CSH did not read"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Instructions/tests/benchmark/AGENTS.md",
+      "label": false,
+      "why": "minSamples and minEffect are declared in tests/benchmark and scripts/bench, code CSH did not read"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Instructions/tests/contract/AGENTS.md",
+      "label": false,
+      "why": "upstreamPages is a field of the recorded fixtures and spyOn is vitest's: both decidable"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "symbol-undecided",
+      "subject": "Instructions/tests/faults/AGENTS.md",
+      "label": false,
+      "why": "textResponse is declared in scripts/spec/schema-drift-core.ts, code CSH did not read"
+    },
+    {
+      "outcome": "indeterminate",
+      "kind": "no-results",
+      "subject": "Tests",
+      "label": true,
+      "why": "the practice names a results file and none is committed"
+    }
+  ]
+}

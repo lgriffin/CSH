@@ -76,8 +76,8 @@ these rules:
 
 - **Start here.** The first thing on the sheet, and the last thing `csh analyse` prints, is the first three
   countermeasures, each one line: what to do, where, and how many results it clears.
-- **Plain names.** Every kind is shown with a plain name beside its code: `unaccepted-case` is "a test case with no
-  accepted output". The code stays, so a person can search for it.
+- **Plain names.** Every kind is shown with a plain name beside its code: `unaccepted-case` is "test cases with no
+  accepted output, which the runner may skip". The code stays, so a person can search for it.
 - **Every number has a denominator.** "282 of 298 gaps", never a bare 282.
 - **Hypotheses are marked.** The mechanism in block 4 and the goal in block 5 say they are CSH's proposal.
 - **Works without the page.** The Markdown holds everything the HTML does but the layout, and renders on GitHub.
@@ -104,9 +104,20 @@ grammars and readers built in stages 29 to 37. 1.0 is a promise about the first 
 Before 1.0 the calibration runs become a benchmark, with a number for each claim the README makes.
 
 - **Precision, from labelled subjects (stage 79).** Each TypeScript subject (ESI.ts, tutors-mono-repo,
-  lgriffin/TypeScript, the lockout example, taskboard-typescript) is pinned to a commit with an `expected.json` whose
-  every gap and indeterminate entry is labelled true or false by hand. CI reports, per subject and per kind, how many
-  entries are labelled true. 1.0 requires every subject to meet its labels and no false refuted entry.
+  lgriffin/TypeScript, taskboard from lgriffin/AI-Reference-Projects) is pinned to a commit, with a labels file,
+  `evaluation/labels/<subject>.json`, that judges every gap and indeterminate entry of its cold analysis true or false
+  by hand, with a sentence a reviewer can check against the repository. True means the entry is right about the
+  repository and acting on it would be right; an indeterminate entry is true when CSH cannot decide it from what it
+  reads, and false when a file it reads, or could read with a reader it has, decides it.
+  `csh analyse <dir> --labels <file>` (`csh-labels/v1`: the subject's repo and commit, then one label per entry by
+  outcome, kind and subject) prints the precision overall and per kind, and exits 1 when an open entry is unlabelled, a
+  label names no entry, the labels judge another commit, or a refuted entry is labelled false. CI runs it on each
+  subject, so 1.0 requires every subject to meet its labels. The lockout example is not a subject: it sits inside this
+  repository, so a cold analysis of it reads CSH's own profile.
+  The first labelling found false refutations (a module named without its extension, a former file, ignored build
+  output, a path written from a fixture's root), false unverified rules (a rule that names its own check, a dated
+  record), false step gaps (jest-cucumber's literal steps, named fixture directories, steps in a unit test), and 282
+  false `unaccepted-case` gaps on lgriffin/TypeScript, each fixed in stage 79 (A-278 to A-287).
 - **Recall, from seeded drift (stage 80).** For each TypeScript subject, a set of drifts applied to a copy at the
   pinned commit: a renamed function a document names, a deleted file a document links, a broken import rule, a
   removed accepted output, a test that stops citing its requirement. CSH must report each one as the gap the drift
@@ -114,9 +125,9 @@ Before 1.0 the calibration runs become a benchmark, with a number for each claim
 - **Stability.** Two analyses of commits that differ only in an unrelated file have the same anchors for every
   unchanged entry, so a countermeasure can be tracked across commits.
 - **Cost.** CI records the time and peak memory of each subject's analysis.
-- **Experimental subjects.** Apache Camel and lgriffin/Hadur_Robot for Java, Toads and fastapi-clean-example for
-  Python, go-clean-arch for Go, hexarch for Rust. They are pinned and run in CI, and their results are reported, but
-  they do not gate a release.
+- **Experimental subjects.** Apache Camel (tag `camel-4.23.0`) and lgriffin/Hadur_Robot for Java, Toads and
+  fastapi-clean-example for Python, go-clean-arch for Go, hexarch for Rust. They are pinned and run in CI, and their
+  counts, time and memory are reported in the job summary, but they do not gate a release and are not labelled.
 
 ## 5. Limits
 

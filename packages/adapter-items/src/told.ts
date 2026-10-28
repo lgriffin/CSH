@@ -21,6 +21,8 @@ const CODE_NOUN = /^(?:contracts?|rules?|boundary|boundaries|linter|graph|of|fro
 const SUBORDINATOR = /^(?:because|since|whereas|although|though|so)$/i;
 /** A quotation of three or more words, straight or curly: something said, not something stated (A-219). */
 const QUOTED = /"[^"\n]*"|“[^”\n]*”/g;
+/** The opening of a dated record or a plan's step: `2026-10-08, no import cycles.`, `**Done when.**`, `**Landed 2026-09-28.**`. */
+const RECORD = /^(?:\*\*|__)?\s*(?:\d{4}-\d{2}-\d{2}\b|(?:Landed|Done when|Brief)\b)/;
 /** How many words before and after the dependency phrase a restriction is looked for (A-203). */
 const BEFORE = 5;
 const AFTER = 4;
@@ -89,6 +91,9 @@ export function toldSentences(lines: string[], opensItem: (headingText: string) 
     if (para === undefined) return;
     const p = para;
     para = undefined;
+    // A paragraph or item that opens with a date, or as a plan's "Done when", "Brief" or "Landed", records the past or
+    // the planned: it tells nothing of the code now (stage 79, A-283).
+    if (RECORD.test(p.text)) return;
     for (const s of sentencesOf(p.text)) {
       const told = toldKind(s.text.replace(/\*\*|__/g, ""));
       if (told === undefined) continue;

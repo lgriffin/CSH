@@ -7,7 +7,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symli
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { type Analysis, checkExpected, overviewOf, parseExpected, renderAnalysisHtml, type Report } from "@csh/check";
+import { type Analysis, checkExpected, checkLabels, overviewOf, parseExpected, parseLabels, renderAnalysisHtml, type Report } from "@csh/check";
 import { COMPONENT_PATH } from "@csh/component";
 import { stableJson } from "@csh/kernel";
 import type { SolverPort } from "@csh/solver";
@@ -28,6 +28,8 @@ export interface AnalyseOptions {
    * cold read, kept outside the repository. Without it, a given profile's own csh/expected.json is used when present.
    */
   expected?: string;
+  /** A csh-labels/v1 file of a person's labels of the open entries (stage 79), measured against the analysis. */
+  labels?: string;
   solver: SolverPort;
   budgetMs?: number;
 }
@@ -158,6 +160,12 @@ export async function analyse(o: AnalyseOptions): Promise<AnalyseResult> {
       if (parsed.expected !== undefined) analysis.expect = checkExpected(overview, parsed.expected);
       else if (o.expected !== undefined) return { ok: false, message: `${o.expected}: ${parsed.problems.join("; ")}` };
     } else if (o.expected !== undefined) return { ok: false, message: `${o.expected} does not exist` };
+    if (o.labels !== undefined) {
+      if (!existsSync(resolve(o.labels))) return { ok: false, message: `${o.labels} does not exist` };
+      const parsed = parseLabels(readFileSync(resolve(o.labels), "utf8"));
+      if (parsed.labels === undefined) return { ok: false, message: `${o.labels}: ${parsed.problems.join("; ")}` };
+      analysis.labels = checkLabels(overview, parsed.labels, commit);
+    }
     return { ok: true, analysis, report };
   } finally {
     rmSync(work, { recursive: true, force: true });

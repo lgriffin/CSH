@@ -53,9 +53,10 @@ const DEPENDENCY_CRUISER = /(?:^|\/)\.dependency-cruiser\.(?:c?js|mjs|json)$/;
 /**
  * A sentence that says the file it names is absent (From the tutors run, section 5): retired, removed, optional, a
  * leftover, or none committed. It is read with its backticked tokens left out, so `api/delete.ts` says nothing, and
- * "used to" is the past ("two scripts used to point at"), not a purpose ("is used to configure").
+ * "used to" is the past ("two scripts used to point at"), not a purpose ("is used to configure"). A file folded or merged
+ * into another, a former one, or one a configuration excludes is absent too (stage 79, A-279).
  */
-const ABSENT = /\b(?:retired|removed|deleted|no longer|leftover|optional|none is|formerly|(?<!\b(?:is|are|was|were|be|been|being|gets?|got)\s+)used to|absent)\b/i;
+const ABSENT = /\b(?:retired|removed|deleted|no longer|leftover|optional|none is|former(?:ly)?|folded|folds|merged|superseded|exclud(?:e|es|ed|ing)|(?<!\b(?:is|are|was|were|be|been|being|gets?|got)\s+)used to|absent)\b/i;
 
 /**
  * A verb of making right before a backticked path (From the TypeScript run, section 1): "Create `x.ts`", "create a new
@@ -81,6 +82,10 @@ const CHANGE_LOG = /^(?:CHANGELOG|CHANGES|HISTORY|NEWS|RELEASES)(?:\.[^/]*)?$/i;
  * it is not an option, up to the end of the token or a space.
  */
 const TASK_COMMAND = /^(?:npx\s+)?(hereby|make|just)\s+([\w:.\/][\w:.\/-]*)(?=$|\s)/;
+
+/** `pnpm test:runway` and `yarn lint` run a script without `run` (stage 79, A-280), unless the word is the tool's own. */
+const SHORT_SCRIPT = /^(?:pnpm|yarn) ([\w][\w:.\-]*)(?=$|\s)/;
+const PACKAGE_MANAGER_COMMANDS = new Set(["add", "audit", "bin", "cache", "config", "create", "dedupe", "deploy", "dlx", "doctor", "env", "exec", "fetch", "i", "import", "info", "init", "install", "licenses", "link", "list", "ls", "outdated", "pack", "patch", "prune", "publish", "rebuild", "remove", "rm", "root", "run", "self-update", "server", "setup", "store", "un", "uninstall", "unlink", "up", "update", "upgrade", "why", "workspace", "workspaces"]);
 
 /** A negation among the three words before the verb of making, in its clause. */
 const NEGATED = /(?:\b(?:not|never|no)\b|n't\b)(?:\s+\S+){0,2}\s*$/i;
@@ -294,13 +299,16 @@ export function run(input: AdapterInput): AdapterOutput {
     let verifying: { item: SourceItem; value: string; tokens: { t: string; span: string }[] } | undefined;
     const endField = () => {
       if (verifying === undefined) return;
-      const mechanisms = new Set(backticked(firstSentence(verifying.value)));
+      const first = firstSentence(verifying.value);
+      const mechanisms = new Set(backticked(first));
+      // A mechanism sentence that says a file it names is retired or deleted names no mechanism in it (A-279).
+      const gone = ABSENT.test(first.replace(/`[^`]*`/g, " "));
       const made = new Set<string>();
       for (const { t, span } of verifying.tokens) {
         if (mechanisms.has(t) && !made.has(t)) {
           made.add(t);
           const p = pathOf(t);
-          edges.push({ from: verifying.item.id, rel: "verified-by", to: p !== undefined ? `file:${p}` : `text:${t}`, span });
+          edges.push({ from: verifying.item.id, rel: "verified-by", to: p !== undefined ? `file:${p}` : `text:${t}`, span, ...(gone && p !== undefined ? { absent: true } : {}) });
         } else if (!mechanisms.has(t)) {
           const p = pathOf(t);
           if (p !== undefined) edges.push({ from: verifying.item.id, rel: "mentions-file", to: `file:${p}`, span });
@@ -335,6 +343,9 @@ export function run(input: AdapterInput): AdapterOutput {
         // The name ends the token or a word: `npm run test:<name>` is a pattern of names, not a script.
         const s = /^(?:npm|pnpm|yarn) run ([\w:.\-]+)(?=$|\s)/.exec(t);
         if (s !== null) edges.push({ from, rel: "mentions-script", to: `script:${s[1]}`, span });
+        // The short form may name a script of a workspace package, so it is checked only when it resolves: never dangling.
+        const short = s === null ? SHORT_SCRIPT.exec(t) : null;
+        if (short !== null && !PACKAGE_MANAGER_COMMANDS.has(short[1]!)) edges.push({ from, rel: "mentions-script", to: `script:${short[1]}`, span, absent: true });
         // A task runner's command names its task (stage 68): `npx hereby test`, `make lint`, `just fmt`.
         const task = TASK_COMMAND.exec(t);
         if (task !== null) edges.push({ from, rel: "mentions-script", to: `task:${task[1]}#${task[2]}`, span, ...(gone(text, span, t) ? { absent: true } : {}) });

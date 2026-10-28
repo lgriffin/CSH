@@ -84,6 +84,10 @@ const ext = (p: string) => {
   return i <= 0 ? "" : b.slice(i + 1);
 };
 const underAny = (p: string, dirs: string[]) => segments(p).slice(0, -1).some((s) => dirs.includes(s));
+/** A fixture directory: `fixtures`, `__fixtures__`, or one named for what it holds, such as `step-fixtures` (A-285). */
+const FIXTURE_DIR = /^(?:__fixtures__|(?:.*[-_])?fixtures)$/;
+const FIXTURE_GLOBS = ["**/fixtures/**", "**/__fixtures__/**", "**/*-fixtures/**", "**/*_fixtures/**"];
+const underFixtures = (p: string) => segments(p).slice(0, -1).some((s) => FIXTURE_DIR.test(s));
 
 /** A test file's convention, as the glob that selects every file of it; undefined for a file that is not one. */
 function testConvention(p: string): string | undefined {
@@ -226,7 +230,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   else guesses.push(`subject.repo ${origin}: the checkout's origin remote; subject.commit is its HEAD`);
 
   // A fixture, or a file under a dot-directory (.claude, .github), is test data or tooling, not the project's own.
-  const fixtures = (p: string) => underAny(p, ["fixtures", "__fixtures__"]) || segments(p).slice(0, -1).some((d) => d.startsWith("."));
+  const fixtures = (p: string) => underFixtures(p) || segments(p).slice(0, -1).some((d) => d.startsWith("."));
   // Suites of cases and accepted outputs (Reading test suites as evidence, section 2), and test data (A-262): a file
   // under a testdata directory, which Go's tooling ignores by definition and other languages use the same way, and every
   // file of a suite, is read by the Outputs source alone, never as code, a document or a test.
@@ -265,7 +269,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   // An import-linter configuration names the contracts a told rule may name, read the same way (From the Toads run,
   // section 4): a pyproject.toml with a [tool.importlinter] table, an .importlinter, or a setup.cfg with [importlinter].
   const linters = files.filter((p) => !fixtures(p) && !dataOrSuite(p) && ((posix.basename(p) === "pyproject.toml" && /^\s*\[tool\.importlinter\]/m.test(read(p))) || posix.basename(p) === ".importlinter" || (posix.basename(p) === "setup.cfg" && /^\s*\[importlinter\]/m.test(read(p)))));
-  const cruisers = [...files.filter((p) => DEPENDENCY_CRUISER.test(posix.basename(p)) && !underAny(p, ["fixtures", "__fixtures__"])), ...linters];
+  const cruisers = [...files.filter((p) => DEPENDENCY_CRUISER.test(posix.basename(p)) && !underFixtures(p)), ...linters];
 
   // Instructions: the files an agent reads at the start of every session (The Assertion Ladder, stage 50).
   const instructions = markdown.filter((p) => INSTRUCTION_FILES.includes(posix.basename(p)) || p === ".github/copilot-instructions.md");
@@ -343,7 +347,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
       guesses.push(`tagCites ${settings.tagCites}: the documents' identifiers appear as scenario tags`);
     }
     const left = allFeatures.filter((p) => fixtures(p));
-    add({ name: "Features", kind: "Features", at: ".", include: ["**/*.feature"], exclude: [...neverGlobs, ...(left.length > 0 ? ["**/fixtures/**", "**/__fixtures__/**", "**/.*/**"] : [])] }, { id: "bdd", name: "BDD", kind: "scenarios", unit: "the rule", ...(Object.keys(settings).length > 0 ? { settings } : {}) });
+    add({ name: "Features", kind: "Features", at: ".", include: ["**/*.feature"], exclude: [...neverGlobs, ...(left.length > 0 ? [...FIXTURE_GLOBS, "**/.*/**"] : [])] }, { id: "bdd", name: "BDD", kind: "scenarios", unit: "the rule", ...(Object.keys(settings).length > 0 ? { settings } : {}) });
     guesses.push(`Features: ${features.length} .feature files${left.length > 0 ? `, leaving out ${left.length} in fixtures or dot-directories, which are test data` : ""}`);
   }
 
@@ -388,7 +392,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
       const command = runner === "vitest" ? `npx vitest run --reporter=json --outputFile=${report}` : `npx jest --json --outputFile=${report}`;
       guesses.push(`executions csh/results.json: package.json names ${runner}; in the subject run ${command}, then csh results import tdd <subject>/${report}`);
     }
-    add({ name: "Tests", kind: "TestFiles", at: ".", ...globsFor(neverGlobs, [...tests, ...steps, ...conftests], files, [...testGlobs, ...stepGlobs, ...(conftests.length > 0 ? ["**/conftest.py"] : [])], ["**/fixtures/**", "**/__fixtures__/**", "**/testdata/**"]) }, testPractice);
+    add({ name: "Tests", kind: "TestFiles", at: ".", ...globsFor(neverGlobs, [...tests, ...steps, ...conftests], files, [...testGlobs, ...stepGlobs, ...(conftests.length > 0 ? ["**/conftest.py"] : [])], [...FIXTURE_GLOBS, "**/testdata/**"]) }, testPractice);
     guesses.push(`Tests: ${tests.length} files by the conventions ${testGlobs.join(", ") || "none"}${steps.length > 0 ? `, and ${steps.length} step definition files` : ""}`);
   }
 
@@ -404,7 +408,7 @@ export function proposeProfile(dir: string, o: ProposeOptions = {}): Proposal | 
   // A repository with no code CSH reads but a task runner's file still has a Code source, for the runner's tasks.
   const runners = manifests.filter((p) => runnerOf(p) !== undefined);
   if (code.length > 0) {
-    const g = globsFor(neverGlobs, code, files, undefined, [...testGlobs, ...stepGlobs, "**/fixtures/**", "**/__fixtures__/**", "**/testdata/**"]);
+    const g = globsFor(neverGlobs, code, files, undefined, [...testGlobs, ...stepGlobs, ...FIXTURE_GLOBS, "**/testdata/**"]);
     add({ name: "Code", kind: "Code", at: ".", include: [...g.include, ...manifests], exclude: g.exclude }, { id: "code", name: "Code facts", kind: "facts", unit: "the module" });
     guesses.push(`Code: ${code.length} source files in ${[...new Set(code.map((p) => ext(p)))].sort(compareCodePoints).join(", ")}${manifests.length > 0 ? `, and ${manifests.join(", ")}` : ""}`);
   } else if (runners.length > 0) {

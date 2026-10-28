@@ -9,7 +9,7 @@
       "entries": [
         { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/testdata/baselines/reference/compiler", "detailIncludes": ["reference tree", "2 of 5 cases", "testdata/tests/cases/compiler"] },
         { "outcome": "converged", "kind": "accepted-outputs", "subject": "Outputs/testdata/baselines/reference/conformance", "detailIncludes": ["1 of 1 case", "testdata/tests/cases/conformance"] },
-        { "outcome": "gap", "kind": "unaccepted-case", "subject": "Outputs/testdata/tests/cases/compiler/skipped.ts", "detailIncludes": ["testdata/baselines/reference/compiler", "may skip"] },
+        { "outcome": "indeterminate", "kind": "unaccepted-case", "subject": "Outputs/testdata/baselines/reference/compiler", "detailIncludes": ["1 case under testdata/tests/cases/compiler has no accepted output", "testdata/baselines/reference/compiler", "compiler/skipped.ts", "may skip"], "detailExcludes": ["arrays.ts", "arrays.b.ts", "twin.ts", "twin.js"] },
         { "outcome": "gap", "kind": "orphan-output", "subject": "Outputs/testdata/baselines/reference/compiler/removed.types", "detailIncludes": ["testdata/tests/cases/compiler"] },
         { "outcome": "indeterminate", "kind": "shared-stem", "subject": "Outputs/testdata/tests/cases/compiler/twin", "detailIncludes": ["twin.js", "twin.ts", "twin.types"] },
         { "outcome": "indeterminate", "kind": "unpaired-outputs", "subject": "Outputs/testdata/baselines/reference/fourslash", "detailIncludes": ["1 file", "closing/tag.baseline"] }

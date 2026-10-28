@@ -34,7 +34,7 @@ export const KIND_NAME: Record<string, string> = {
   "stepless-scenario": "a scenario with no steps that still passes",
   "unbound-scenario": "a scenario no test binds",
   baselined: "known problems a baseline file records",
-  "unaccepted-case": "a test case with no accepted output",
+  "unaccepted-case": "test cases with no accepted output, which the runner may skip",
   "orphan-output": "an accepted output no case produces",
   "obsolete-snapshot": "a snapshot entry no test writes",
   unexercised: "a symbol the prose names that no test mentions",

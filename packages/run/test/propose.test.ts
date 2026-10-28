@@ -92,11 +92,15 @@ describe("proposeProfile", () => {
       "features/a.feature": "Feature: A\n  Scenario: S\n    Given a\n",
       "features/steps/a.steps.js": "Given('a', () => {});\n",
       "tests/suite-health/fixtures/b.steps.js": "Given('b', () => {});\n",
+      // A directory named for what its fixtures hold is one too (A-285); a word that only ends in "fixtures" is not.
+      "tests/spec-audit/step-fixtures/e.steps.js": "Given('e', () => {});\n",
+      "tests/report_fixtures/f.steps.js": "Given('f', () => {});\n",
+      "tests/nofixtures/g.test.js": "test('g', () => {});\n",
       ".claude/skills/x/c.test.js": "test('c', () => {});\n",
       "src/d.test.js": "test('d', () => {});\n",
     });
     const r = propose(dir);
-    expect(reads(dir, r, "Tests")).toEqual(["features/steps/a.steps.js", "src/d.test.js"]);
+    expect(reads(dir, r, "Tests")).toEqual(["features/steps/a.steps.js", "src/d.test.js", "tests/nofixtures/g.test.js"]);
   });
 
   it("keeps a Python steps package in Code where no feature file is, and reads it as steps beside features (stage 62)", () => {

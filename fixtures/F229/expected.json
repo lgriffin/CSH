@@ -1,0 +1,28 @@
+{
+  "fixture": "F229",
+  "section": "The analysis A3 and 1.0, section 4; A-278 to A-283",
+  "stage": 79,
+  "expect": {
+    "analyse": {
+      "exit": 0,
+      "told": [
+        { "item": "Documents/docs/architecture.md#L3", "lifted": "layering" },
+        { "item": "Documents/docs/architecture.md#L5", "lifted": "layering" }
+      ],
+      "toldAbsent": ["Documents/docs/architecture.md#L7", "Documents/docs/architecture.md#L8"],
+      "entries": [
+        {
+          "outcome": "gap",
+          "kind": "dangling-reference",
+          "subject": "Documents/docs/guide.md",
+          "detailIncludes": ["src/core/retry.ts"],
+          "detailExcludes": ["PipelineTransport", "OLD-GUIDE", "site/dist", "require.cts"]
+        },
+        { "outcome": "gap", "kind": "unverified", "subject": "Documents/docs/architecture.md#L5" }
+      ],
+      "entriesAbsent": [{ "kind": "unverified", "subject": "Documents/docs/architecture.md#L3" }],
+      "danger": [{ "kind": "dangling-reference", "subject": "Documents/docs/guide.md", "structure": "refuted", "shape": "code-refutes-prose" }],
+      "subjectUntouched": true
+    }
+  }
+}

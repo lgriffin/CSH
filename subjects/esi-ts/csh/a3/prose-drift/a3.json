@@ -260,7 +260,6 @@
       "overall": "allow"
     },
     "returned": [
-      "dangling-reference: QUALITY-GATES.md",
       "stale-prose: SEC-05"
     ]
   },
@@ -276,11 +275,11 @@
         45,
         45,
         45,
+        51,
+        52,
         52,
         53,
-        53,
-        54,
-        57
+        56
       ],
       "id": "charter-prose",
       "practice": "charter",
@@ -297,11 +296,11 @@
         12,
         12,
         12,
-        27,
-        28,
-        28,
-        30,
-        31
+        22,
+        23,
+        23,
+        25,
+        26
       ],
       "id": "guides-prose",
       "practice": "guides",
@@ -1128,44 +1127,44 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.5945945945945946,
+          "cumulative": 0.6285714285714286,
           "n": 66,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.7387387387387387,
+          "cumulative": 0.780952380952381,
           "n": 16,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.8198198198198198,
+          "cumulative": 0.8666666666666667,
           "n": 9,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
           "vital": true
         },
         {
-          "cause": "names-outlive-files",
-          "cumulative": 0.8918918918918919,
-          "n": 8,
-          "name": "Names outlive the files and symbols they name",
-          "vital": false
-        },
-        {
           "cause": "untraced",
-          "cumulative": 0.954954954954955,
+          "cumulative": 0.9333333333333333,
           "n": 7,
           "name": "Changes to src carry no test and no trace",
           "vital": false
         },
         {
           "cause": "named-and-mentioned",
-          "cumulative": 1,
+          "cumulative": 0.9809523809523809,
           "n": 5,
           "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
+          "vital": false
+        },
+        {
+          "cause": "names-outlive-files",
+          "cumulative": 1,
+          "n": 2,
+          "name": "Names outlive the files and symbols they name",
           "vital": false
         }
       ],
@@ -1175,37 +1174,37 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.6355140186915887,
+          "cumulative": 0.6732673267326733,
           "n": 68,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.7850467289719626,
+          "cumulative": 0.8316831683168316,
           "n": 16,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.8691588785046729,
+          "cumulative": 0.9207920792079208,
           "n": 9,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
-          "vital": true
-        },
-        {
-          "cause": "names-outlive-files",
-          "cumulative": 0.9439252336448598,
-          "n": 8,
-          "name": "Names outlive the files and symbols they name",
           "vital": false
         },
         {
           "cause": "named-and-mentioned",
-          "cumulative": 0.9906542056074766,
+          "cumulative": 0.9702970297029703,
           "n": 5,
           "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
+          "vital": false
+        },
+        {
+          "cause": "names-outlive-files",
+          "cumulative": 0.9900990099009901,
+          "n": 2,
+          "name": "Names outlive the files and symbols they name",
           "vital": false
         },
         {
@@ -1222,37 +1221,37 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.6355140186915887,
+          "cumulative": 0.6732673267326733,
           "n": 68,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.7850467289719626,
+          "cumulative": 0.8316831683168316,
           "n": 16,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.8691588785046729,
+          "cumulative": 0.9207920792079208,
           "n": 9,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
-          "vital": true
-        },
-        {
-          "cause": "names-outlive-files",
-          "cumulative": 0.9439252336448598,
-          "n": 8,
-          "name": "Names outlive the files and symbols they name",
           "vital": false
         },
         {
           "cause": "named-and-mentioned",
-          "cumulative": 0.9906542056074766,
+          "cumulative": 0.9702970297029703,
           "n": 5,
           "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
+          "vital": false
+        },
+        {
+          "cause": "names-outlive-files",
+          "cumulative": 0.9900990099009901,
+          "n": 2,
+          "name": "Names outlive the files and symbols they name",
           "vital": false
         },
         {
@@ -1269,44 +1268,44 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.6339285714285714,
+          "cumulative": 0.6698113207547169,
           "n": 71,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.7767857142857143,
+          "cumulative": 0.8207547169811321,
           "n": 16,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.8571428571428571,
+          "cumulative": 0.9056603773584906,
           "n": 9,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
-          "vital": true
-        },
-        {
-          "cause": "names-outlive-files",
-          "cumulative": 0.9285714285714286,
-          "n": 8,
-          "name": "Names outlive the files and symbols they name",
           "vital": false
         },
         {
           "cause": "named-and-mentioned",
-          "cumulative": 0.9732142857142857,
+          "cumulative": 0.9528301886792453,
           "n": 5,
           "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
           "vital": false
         },
         {
           "cause": "untraced",
-          "cumulative": 1,
+          "cumulative": 0.9811320754716981,
           "n": 3,
           "name": "Changes to src carry no test and no trace",
+          "vital": false
+        },
+        {
+          "cause": "names-outlive-files",
+          "cumulative": 1,
+          "n": 2,
+          "name": "Names outlive the files and symbols they name",
           "vital": false
         }
       ],
@@ -1316,44 +1315,44 @@
       "bars": [
         {
           "cause": "written-once",
-          "cumulative": 0.6507936507936508,
+          "cumulative": 0.6833333333333333,
           "n": 82,
           "name": "A line naming a file is not revisited when the file changes",
           "vital": true
         },
         {
           "cause": "unchecked-claims",
-          "cumulative": 0.7777777777777778,
+          "cumulative": 0.8166666666666667,
           "n": 16,
           "name": "Prose states facts about the code that nothing compares with it",
           "vital": true
         },
         {
           "cause": "verified-by-prose",
-          "cumulative": 0.8492063492063492,
+          "cumulative": 0.8916666666666667,
           "n": 9,
           "name": "Verification is named in prose, not by a mechanism or a citing test",
-          "vital": true
-        },
-        {
-          "cause": "names-outlive-files",
-          "cumulative": 0.9126984126984127,
-          "n": 8,
-          "name": "Names outlive the files and symbols they name",
           "vital": false
         },
         {
           "cause": "named-and-mentioned",
-          "cumulative": 0.9603174603174603,
+          "cumulative": 0.9416666666666667,
           "n": 6,
           "name": "Prose names symbols a test mentions, which exercises them and may observe nothing said",
           "vital": false
         },
         {
           "cause": "recorded-silence",
-          "cumulative": 0.9841269841269841,
+          "cumulative": 0.9666666666666667,
           "n": 3,
           "name": "A silence recorded with its reason",
+          "vital": false
+        },
+        {
+          "cause": "names-outlive-files",
+          "cumulative": 0.9833333333333333,
+          "n": 2,
+          "name": "Names outlive the files and symbols they name",
           "vital": false
         },
         {
@@ -1945,7 +1944,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:418 mentions-file src/require.cts (never tracked); guides/TESTING.md:418 mentions-file src/import.mts (never tracked); guides/TESTING.md:562 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:711 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:721 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
+          "detail": "names what does not exist: guides/TESTING.md:562 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:711 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:721 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
           "fragments": [],
           "id": "6e0d19aa07c134b3",
           "kind": "dangling-reference",
@@ -3385,7 +3384,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
+          "detail": "names what does not exist: guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
           "fragments": [],
           "id": "6e0d19aa07c134b3",
           "kind": "dangling-reference",
@@ -4789,7 +4788,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
+          "detail": "names what does not exist: guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
           "fragments": [],
           "id": "6e0d19aa07c134b3",
           "kind": "dangling-reference",
@@ -6181,7 +6180,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
+          "detail": "names what does not exist: guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
           "fragments": [],
           "id": "6e0d19aa07c134b3",
           "kind": "dangling-reference",
@@ -7573,7 +7572,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
+          "detail": "names what does not exist: guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
           "fragments": [],
           "id": "6e0d19aa07c134b3",
           "kind": "dangling-reference",
@@ -8993,7 +8992,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
+          "detail": "names what does not exist: guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
           "fragments": [],
           "id": "6e0d19aa07c134b3",
           "kind": "dangling-reference",
@@ -10401,7 +10400,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:661 mentions-file src/require.cts (never tracked); guides/TESTING.md:661 mentions-file src/import.mts (never tracked); guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
+          "detail": "names what does not exist: guides/TESTING.md:864 mentions-file src/core/clock.ts (never tracked); guides/TESTING.md:1019 mentions-file tests/bdd/features/core/alliance.feature (deleted); guides/TESTING.md:1029 mentions-file tests/bdd/step-definitions/core/alliance.steps.ts (deleted)",
           "fragments": [],
           "id": "6e0d19aa07c134b3",
           "kind": "dangling-reference",
@@ -11409,13 +11408,6 @@
         "entries": [
           {
             "kind": "dangling-reference",
-            "of": "Charter/DOC-01",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Charter/DOC-01"
-          },
-          {
-            "kind": "dangling-reference",
             "of": "Charter/guides/CHARTER.md",
             "shape": "code-refutes-prose",
             "structure": "refuted",
@@ -11431,45 +11423,10 @@
           },
           {
             "kind": "dangling-reference",
-            "of": "Guides/guides/DESIGN-RULES.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/DESIGN-RULES.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/DOCUMENTATION.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/DOCUMENTATION.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/QUALITY-GATES.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/QUALITY-GATES.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/RELEASE.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/RELEASE.md"
-          },
-          {
-            "kind": "dangling-reference",
             "of": "Guides/guides/ROADMAP.md",
             "shape": "code-refutes-prose",
             "structure": "refuted",
             "subject": "Guides/guides/ROADMAP.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/TESTING.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/TESTING.md"
           },
           {
             "kind": "claim-conflict",
@@ -11557,7 +11514,7 @@
           }
         ],
         "masked": 1,
-        "refuted": 20
+        "refuted": 14
       },
       "examples": {
         "citing": 0,
@@ -11758,71 +11715,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked)",
-          "fragments": [],
-          "id": "4347b749ff6629c9",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: QUALITY-GATES.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/QUALITY-GATES.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/RELEASE.md:44 mentions-file docs-site/.vitepress/dist (never tracked)",
-          "fragments": [],
-          "id": "5002f8f21a136b56",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: RELEASE.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/RELEASE.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:38 mentions-file src/clients/generated/ (deleted); guides/TESTING.md:718 mentions-file src/require.cts (never tracked); guides/TESTING.md:718 mentions-file src/import.mts (never tracked)",
-          "fragments": [],
-          "id": "6e0d19aa07c134b3",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: TESTING.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/TESTING.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/DESIGN-RULES.md:297 mentions-file src/adapters/PipelineTransport (never tracked)",
-          "fragments": [],
-          "id": "8a009a13a50cbec9",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: DESIGN-RULES.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/DESIGN-RULES.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:195 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:615 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:873 mentions-file guides/MUTATION-TESTING.md (deleted)",
+          "detail": "names what does not exist: guides/CHARTER.md:195 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:615 mentions-file guides/MUTATION-TESTING.md (deleted)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -11838,23 +11731,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:689 verified-by guides/MUTATION-TESTING.md (deleted)",
-          "fragments": [],
-          "id": "e4abbc5f80ff28cc",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: DOC-01",
-          "lane": "charter-prose",
-          "practices": [
-            "charter"
-          ],
-          "sources": [
-            "Charter"
-          ],
-          "subject": "Charter/DOC-01"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/ROADMAP.md:68 mentions-file src/adapters/PipelineTransport (never tracked); guides/ROADMAP.md:155 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:224 mentions-file src/sde/SdeTestDataFactory.ts (deleted); guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
+          "detail": "names what does not exist: guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
           "fragments": [],
           "id": "ea7d42ac158e5b74",
           "kind": "dangling-reference",
@@ -11867,22 +11744,6 @@
             "Guides"
           ],
           "subject": "Guides/guides/ROADMAP.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/DOCUMENTATION.md:50 mentions-file docs-site/.vitepress/dist (never tracked); guides/DOCUMENTATION.md:135 mentions-file guides/MUTATION-TESTING.md (deleted)",
-          "fragments": [],
-          "id": "ffe1ff3273983abb",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: DOCUMENTATION.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/DOCUMENTATION.md"
         },
         {
           "cause": "named-and-mentioned",
@@ -13432,13 +13293,6 @@
         "entries": [
           {
             "kind": "dangling-reference",
-            "of": "Charter/DOC-01",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Charter/DOC-01"
-          },
-          {
-            "kind": "dangling-reference",
             "of": "Charter/guides/CHARTER.md",
             "shape": "code-refutes-prose",
             "structure": "refuted",
@@ -13454,45 +13308,10 @@
           },
           {
             "kind": "dangling-reference",
-            "of": "Guides/guides/DESIGN-RULES.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/DESIGN-RULES.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/DOCUMENTATION.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/DOCUMENTATION.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/QUALITY-GATES.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/QUALITY-GATES.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/RELEASE.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/RELEASE.md"
-          },
-          {
-            "kind": "dangling-reference",
             "of": "Guides/guides/ROADMAP.md",
             "shape": "code-refutes-prose",
             "structure": "refuted",
             "subject": "Guides/guides/ROADMAP.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/TESTING.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/TESTING.md"
           },
           {
             "kind": "claim-conflict",
@@ -13580,7 +13399,7 @@
           }
         ],
         "masked": 1,
-        "refuted": 20
+        "refuted": 14
       },
       "examples": {
         "citing": 0,
@@ -13781,71 +13600,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked)",
-          "fragments": [],
-          "id": "4347b749ff6629c9",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: QUALITY-GATES.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/QUALITY-GATES.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/RELEASE.md:44 mentions-file docs-site/.vitepress/dist (never tracked)",
-          "fragments": [],
-          "id": "5002f8f21a136b56",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: RELEASE.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/RELEASE.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:38 mentions-file src/clients/generated/ (deleted); guides/TESTING.md:718 mentions-file src/require.cts (never tracked); guides/TESTING.md:718 mentions-file src/import.mts (never tracked)",
-          "fragments": [],
-          "id": "6e0d19aa07c134b3",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: TESTING.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/TESTING.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/DESIGN-RULES.md:297 mentions-file src/adapters/PipelineTransport (never tracked)",
-          "fragments": [],
-          "id": "8a009a13a50cbec9",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: DESIGN-RULES.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/DESIGN-RULES.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:195 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:615 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:873 mentions-file guides/MUTATION-TESTING.md (deleted)",
+          "detail": "names what does not exist: guides/CHARTER.md:195 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:615 mentions-file guides/MUTATION-TESTING.md (deleted)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -13861,23 +13616,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:689 verified-by guides/MUTATION-TESTING.md (deleted)",
-          "fragments": [],
-          "id": "e4abbc5f80ff28cc",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: DOC-01",
-          "lane": "charter-prose",
-          "practices": [
-            "charter"
-          ],
-          "sources": [
-            "Charter"
-          ],
-          "subject": "Charter/DOC-01"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/ROADMAP.md:68 mentions-file src/adapters/PipelineTransport (never tracked); guides/ROADMAP.md:155 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:224 mentions-file src/sde/SdeTestDataFactory.ts (deleted); guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
+          "detail": "names what does not exist: guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
           "fragments": [],
           "id": "ea7d42ac158e5b74",
           "kind": "dangling-reference",
@@ -13890,22 +13629,6 @@
             "Guides"
           ],
           "subject": "Guides/guides/ROADMAP.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/DOCUMENTATION.md:50 mentions-file docs-site/.vitepress/dist (never tracked); guides/DOCUMENTATION.md:135 mentions-file guides/MUTATION-TESTING.md (deleted)",
-          "fragments": [],
-          "id": "ffe1ff3273983abb",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: DOCUMENTATION.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/DOCUMENTATION.md"
         },
         {
           "cause": "named-and-mentioned",
@@ -15415,13 +15138,6 @@
         "entries": [
           {
             "kind": "dangling-reference",
-            "of": "Charter/DOC-01",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Charter/DOC-01"
-          },
-          {
-            "kind": "dangling-reference",
             "of": "Charter/guides/CHARTER.md",
             "shape": "code-refutes-prose",
             "structure": "refuted",
@@ -15437,45 +15153,10 @@
           },
           {
             "kind": "dangling-reference",
-            "of": "Guides/guides/DESIGN-RULES.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/DESIGN-RULES.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/DOCUMENTATION.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/DOCUMENTATION.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/QUALITY-GATES.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/QUALITY-GATES.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/RELEASE.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/RELEASE.md"
-          },
-          {
-            "kind": "dangling-reference",
             "of": "Guides/guides/ROADMAP.md",
             "shape": "code-refutes-prose",
             "structure": "refuted",
             "subject": "Guides/guides/ROADMAP.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/TESTING.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/TESTING.md"
           },
           {
             "kind": "claim-conflict",
@@ -15563,7 +15244,7 @@
           }
         ],
         "masked": 1,
-        "refuted": 20
+        "refuted": 14
       },
       "examples": {
         "citing": 0,
@@ -15764,71 +15445,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked)",
-          "fragments": [],
-          "id": "4347b749ff6629c9",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: QUALITY-GATES.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/QUALITY-GATES.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/RELEASE.md:44 mentions-file docs-site/.vitepress/dist (never tracked)",
-          "fragments": [],
-          "id": "5002f8f21a136b56",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: RELEASE.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/RELEASE.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:38 mentions-file src/clients/generated/ (deleted); guides/TESTING.md:718 mentions-file src/require.cts (never tracked); guides/TESTING.md:718 mentions-file src/import.mts (never tracked)",
-          "fragments": [],
-          "id": "6e0d19aa07c134b3",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: TESTING.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/TESTING.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/DESIGN-RULES.md:297 mentions-file src/adapters/PipelineTransport (never tracked)",
-          "fragments": [],
-          "id": "8a009a13a50cbec9",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: DESIGN-RULES.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/DESIGN-RULES.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:195 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:615 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:873 mentions-file guides/MUTATION-TESTING.md (deleted)",
+          "detail": "names what does not exist: guides/CHARTER.md:195 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:615 mentions-file guides/MUTATION-TESTING.md (deleted)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -15844,23 +15461,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:689 verified-by guides/MUTATION-TESTING.md (deleted)",
-          "fragments": [],
-          "id": "e4abbc5f80ff28cc",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: DOC-01",
-          "lane": "charter-prose",
-          "practices": [
-            "charter"
-          ],
-          "sources": [
-            "Charter"
-          ],
-          "subject": "Charter/DOC-01"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/ROADMAP.md:68 mentions-file src/adapters/PipelineTransport (never tracked); guides/ROADMAP.md:155 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:224 mentions-file src/sde/SdeTestDataFactory.ts (deleted); guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
+          "detail": "names what does not exist: guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
           "fragments": [],
           "id": "ea7d42ac158e5b74",
           "kind": "dangling-reference",
@@ -15873,22 +15474,6 @@
             "Guides"
           ],
           "subject": "Guides/guides/ROADMAP.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/DOCUMENTATION.md:50 mentions-file docs-site/.vitepress/dist (never tracked); guides/DOCUMENTATION.md:135 mentions-file guides/MUTATION-TESTING.md (deleted)",
-          "fragments": [],
-          "id": "ffe1ff3273983abb",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: DOCUMENTATION.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/DOCUMENTATION.md"
         },
         {
           "cause": "named-and-mentioned",
@@ -17398,13 +16983,6 @@
         "entries": [
           {
             "kind": "dangling-reference",
-            "of": "Charter/DOC-01",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Charter/DOC-01"
-          },
-          {
-            "kind": "dangling-reference",
             "of": "Charter/guides/CHARTER.md",
             "shape": "code-refutes-prose",
             "structure": "refuted",
@@ -17420,45 +16998,10 @@
           },
           {
             "kind": "dangling-reference",
-            "of": "Guides/guides/DESIGN-RULES.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/DESIGN-RULES.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/DOCUMENTATION.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/DOCUMENTATION.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/QUALITY-GATES.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/QUALITY-GATES.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/RELEASE.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/RELEASE.md"
-          },
-          {
-            "kind": "dangling-reference",
             "of": "Guides/guides/ROADMAP.md",
             "shape": "code-refutes-prose",
             "structure": "refuted",
             "subject": "Guides/guides/ROADMAP.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/TESTING.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/TESTING.md"
           },
           {
             "kind": "claim-conflict",
@@ -17546,7 +17089,7 @@
           }
         ],
         "masked": 1,
-        "refuted": 20
+        "refuted": 14
       },
       "examples": {
         "citing": 0,
@@ -17747,71 +17290,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:379 mentions-file docs-site/.vitepress/dist (never tracked)",
-          "fragments": [],
-          "id": "4347b749ff6629c9",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: QUALITY-GATES.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/QUALITY-GATES.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/RELEASE.md:44 mentions-file docs-site/.vitepress/dist (never tracked)",
-          "fragments": [],
-          "id": "5002f8f21a136b56",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: RELEASE.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/RELEASE.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:38 mentions-file src/clients/generated/ (deleted); guides/TESTING.md:718 mentions-file src/require.cts (never tracked); guides/TESTING.md:718 mentions-file src/import.mts (never tracked)",
-          "fragments": [],
-          "id": "6e0d19aa07c134b3",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: TESTING.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/TESTING.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/DESIGN-RULES.md:297 mentions-file src/adapters/PipelineTransport (never tracked)",
-          "fragments": [],
-          "id": "8a009a13a50cbec9",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: DESIGN-RULES.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/DESIGN-RULES.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:195 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:615 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:873 mentions-file guides/MUTATION-TESTING.md (deleted)",
+          "detail": "names what does not exist: guides/CHARTER.md:195 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:615 mentions-file guides/MUTATION-TESTING.md (deleted)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -17827,23 +17306,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:689 verified-by guides/MUTATION-TESTING.md (deleted)",
-          "fragments": [],
-          "id": "e4abbc5f80ff28cc",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: DOC-01",
-          "lane": "charter-prose",
-          "practices": [
-            "charter"
-          ],
-          "sources": [
-            "Charter"
-          ],
-          "subject": "Charter/DOC-01"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/ROADMAP.md:68 mentions-file src/adapters/PipelineTransport (never tracked); guides/ROADMAP.md:155 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:224 mentions-file src/sde/SdeTestDataFactory.ts (deleted); guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
+          "detail": "names what does not exist: guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
           "fragments": [],
           "id": "ea7d42ac158e5b74",
           "kind": "dangling-reference",
@@ -17856,22 +17319,6 @@
             "Guides"
           ],
           "subject": "Guides/guides/ROADMAP.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/DOCUMENTATION.md:50 mentions-file docs-site/.vitepress/dist (never tracked); guides/DOCUMENTATION.md:135 mentions-file guides/MUTATION-TESTING.md (deleted)",
-          "fragments": [],
-          "id": "ffe1ff3273983abb",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: DOCUMENTATION.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/DOCUMENTATION.md"
         },
         {
           "cause": "named-and-mentioned",
@@ -19453,13 +18900,6 @@
         "entries": [
           {
             "kind": "dangling-reference",
-            "of": "Charter/DOC-01",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Charter/DOC-01"
-          },
-          {
-            "kind": "dangling-reference",
             "of": "Charter/guides/CHARTER.md",
             "shape": "code-refutes-prose",
             "structure": "refuted",
@@ -19475,45 +18915,10 @@
           },
           {
             "kind": "dangling-reference",
-            "of": "Guides/guides/DESIGN-RULES.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/DESIGN-RULES.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/DOCUMENTATION.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/DOCUMENTATION.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/QUALITY-GATES.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/QUALITY-GATES.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/RELEASE.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/RELEASE.md"
-          },
-          {
-            "kind": "dangling-reference",
             "of": "Guides/guides/ROADMAP.md",
             "shape": "code-refutes-prose",
             "structure": "refuted",
             "subject": "Guides/guides/ROADMAP.md"
-          },
-          {
-            "kind": "dangling-reference",
-            "of": "Guides/guides/TESTING.md",
-            "shape": "code-refutes-prose",
-            "structure": "refuted",
-            "subject": "Guides/guides/TESTING.md"
           },
           {
             "kind": "claim-conflict",
@@ -19602,7 +19007,7 @@
           }
         ],
         "masked": 2,
-        "refuted": 19
+        "refuted": 13
       },
       "examples": {
         "citing": 0,
@@ -19803,71 +19208,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/QUALITY-GATES.md:395 mentions-file docs-site/.vitepress/dist (never tracked)",
-          "fragments": [],
-          "id": "4347b749ff6629c9",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: QUALITY-GATES.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/QUALITY-GATES.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/RELEASE.md:44 mentions-file docs-site/.vitepress/dist (never tracked)",
-          "fragments": [],
-          "id": "5002f8f21a136b56",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: RELEASE.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/RELEASE.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/TESTING.md:38 mentions-file src/clients/generated/ (deleted); guides/TESTING.md:718 mentions-file src/require.cts (never tracked); guides/TESTING.md:718 mentions-file src/import.mts (never tracked)",
-          "fragments": [],
-          "id": "6e0d19aa07c134b3",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: TESTING.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/TESTING.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/DESIGN-RULES.md:297 mentions-file src/adapters/PipelineTransport (never tracked)",
-          "fragments": [],
-          "id": "8a009a13a50cbec9",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: DESIGN-RULES.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/DESIGN-RULES.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:201 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:653 mentions-file guides/MUTATION-TESTING.md (deleted); guides/CHARTER.md:911 mentions-file guides/MUTATION-TESTING.md (deleted)",
+          "detail": "names what does not exist: guides/CHARTER.md:201 mentions-symbol src/core/util/error.ts#buildError; guides/CHARTER.md:653 mentions-file guides/MUTATION-TESTING.md (deleted)",
           "fragments": [],
           "id": "df17aaab7b91515a",
           "kind": "dangling-reference",
@@ -19883,23 +19224,7 @@
         },
         {
           "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/CHARTER.md:727 verified-by guides/MUTATION-TESTING.md (deleted)",
-          "fragments": [],
-          "id": "e4abbc5f80ff28cc",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: DOC-01",
-          "lane": "charter-prose",
-          "practices": [
-            "charter"
-          ],
-          "sources": [
-            "Charter"
-          ],
-          "subject": "Charter/DOC-01"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/ROADMAP.md:68 mentions-file src/adapters/PipelineTransport (never tracked); guides/ROADMAP.md:155 mentions-file guides/MUTATION-TESTING.md (deleted); guides/ROADMAP.md:224 mentions-file src/sde/SdeTestDataFactory.ts (deleted); guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
+          "detail": "names what does not exist: guides/ROADMAP.md:277 mentions-file src/sde/schemas.ts (deleted); guides/ROADMAP.md:311 mentions-file src/sde/docs (deleted)",
           "fragments": [],
           "id": "ea7d42ac158e5b74",
           "kind": "dangling-reference",
@@ -19912,22 +19237,6 @@
             "Guides"
           ],
           "subject": "Guides/guides/ROADMAP.md"
-        },
-        {
-          "cause": "names-outlive-files",
-          "detail": "names what does not exist: guides/DOCUMENTATION.md:50 mentions-file docs-site/.vitepress/dist (never tracked); guides/DOCUMENTATION.md:135 mentions-file guides/MUTATION-TESTING.md (deleted)",
-          "fragments": [],
-          "id": "ffe1ff3273983abb",
-          "kind": "dangling-reference",
-          "label": "dangling-reference: DOCUMENTATION.md",
-          "lane": "guides-prose",
-          "practices": [
-            "guides"
-          ],
-          "sources": [
-            "Guides"
-          ],
-          "subject": "Guides/guides/DOCUMENTATION.md"
         },
         {
           "cause": "named-and-mentioned",

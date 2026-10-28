@@ -81,7 +81,6 @@ export const GAP_NEXT: Record<string, string> = {
   // From the tutors run, section 6: a gap the repository records itself.
   baselined: "Fix the entries the baseline records and delete their lines, so the file shrinks",
   // Accepted outputs (Reading test suites as evidence, section 2).
-  "unaccepted-case": "Accept the output the runner writes for the case, or remove the case if the runner is meant to skip it",
   "orphan-output": "Delete the output, or restore the case that produced it",
   "obsolete-snapshot": "Delete the entry (the runner's update mode removes it), or restore the test that wrote it",
   // What prose names, tests exercise (Reading test suites as evidence, section 4).
@@ -99,6 +98,7 @@ export const INDETERMINATE_NEXT: Record<string, string> = {
   "unconstrained-after": "Say what the event leaves unchanged",
   "steps-undecided": "Check by hand whether a definition CSH cannot read (a custom parameter type, a computed pattern) matches the step",
   "binding-undecided": "Write the scenario's title as a literal in its @scenario call, or check by hand which scenarios the computed title binds",
+  "unaccepted-case": "Check each case against the runner: accept the output it writes, remove it, or leave it if the runner skips it on purpose or it writes nothing",
   "shared-stem": "Rename one of the cases, or check by hand which of them the runner reads and which wrote the outputs",
   "unpaired-outputs": "Check by hand which test writes these outputs, or keep them where a convention pairs them with their cases",
   "snapshot-undecided": "Check by hand which test writes each entry, or give the tests literal titles CSH can read",

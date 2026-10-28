@@ -96,12 +96,14 @@ describe("the adapter and the check", () => {
     const gaps = outputGaps((out.items ?? []).map((i) => ({ ...i, source: "Outputs" })));
     expect(gaps.map((g) => `${g.kind} ${g.subject}`)).toEqual([
       "accepted-outputs Outputs/baselines/reference/s",
-      "unaccepted-case Outputs/cases/s/b.ts",
+      "unaccepted-case Outputs/baselines/reference/s",
       "orphan-output Outputs/baselines/reference/s/gone.types",
       "shared-stem Outputs/cases/s/t",
       "unpaired-outputs Outputs/g",
     ]);
     expect(gaps[0]!.detail).toBe("reference tree: 1 of 4 cases under cases/s has accepted outputs, 1 file under baselines/reference/s; the runner compares each case with them");
+    // The suite's cases with no output are one entry, listing them (A-287).
+    expect(gaps[1]!.detail).toBe("1 case under cases/s has no accepted output under baselines/reference/s with its stem: cases/s/b.ts; the runner may skip each on purpose, by name or by an option, or accept that it writes nothing, or it never accepted what the case writes");
     expect(suiteFilesOf(outputDirsOf(paths))).toEqual([...paths].sort());
   });
 

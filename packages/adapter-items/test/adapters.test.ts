@@ -489,6 +489,12 @@ describe("Cucumber step definitions", () => {
     expect((out.edges ?? []).map((e) => [e.from, e.to])).toEqual([["s.ts", "ARCH-01"]]);
   });
 
+  it("are test data in a unit test that loads no feature and imports no step library (A-286)", () => {
+    const unit = ['describe("the binder", () => {', '  const library = libraryOf(({ Given }) => { Given("a client", () => undefined); });', '  it("binds", () => expect(library).toBeDefined());', "});", ""].join("\n");
+    const out = tests(input({ "binder.test.ts": unit, "s.ts": steps }, { style: "cucumber" }, "TestFiles"));
+    expect((out.items ?? []).map((i) => [i.id, i.attrs?.steps])).toEqual([["binder.test.ts", undefined], ["s.ts", "2"]]);
+  });
+
   it("are not read at all otherwise", () => {
     const out = tests(input({ "s.ts": steps }, undefined, "TestFiles"));
     expect((out.items ?? [])[0]!.attrs).toEqual({ tests: "0" });

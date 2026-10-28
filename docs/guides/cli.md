@@ -129,14 +129,18 @@ csh: the Composable Specification Harness
   csh init --subject <dir>        Propose csh/component.json from a checkout's tracked files: sources by directory and
                                   extension, an identifier pattern, tag and test settings, a results file. Prints
                                   every guess and what the proposal leaves unread.
-  csh analyse <path> [--at <commit>] [--json] [--out <dir>] [--profile <dir>] [--expected <file>] [--budget ms]
+  csh analyse <path> [--at <commit>] [--json] [--out <dir>] [--profile <dir>] [--expected <file>]
+              [--labels <file>] [--budget ms]
                                   Read a repository cold: propose a profile, lift the layering and EARS sentences of
                                   its documents as told rules, read its code and tests, check, and place every result,
                                   danger first, then conflicts, gaps, indeterminate and converged. Writes
                                   csh-analysis.html and .json under --out (reports), and beside them the A3
-                                  (csh-a3.html, .md and .json), ending with where to start. Never writes into the
-                                  repository, runs its tests or reads a ledger. Exits 0 when it completes; with
-                                  --expected, 1 when the analysis does not meet that csh-expected/v1 file.
+                                  (csh-a3.html, .md and .json), ending with where to start. With --labels, a
+                                  person's csh-labels/v1 labels of the open entries, it reports precision by kind.
+                                  Never writes into the repository, runs its tests or reads a ledger. Exits 0 when
+                                  it completes; 1 when the analysis does not meet the --expected csh-expected/v1
+                                  file, or an open entry is unlabelled, a label names no entry, or a refuted entry is
+                                  labelled false.
   csh run [--at <commit>] [--mode advisory|enforcing] [--budget ms] [--no-cache]
                                   Run each practice's harness, check and gate one snapshot of the component, and
                                   store the run under .csh-cache/runs/. Exits 1 only on block in enforcing mode, or

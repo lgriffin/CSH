@@ -3,6 +3,7 @@
 // every guess it made, the coverage, the told rules lifted from prose) and its results in the order the specification
 // gives: danger, conflicts, gaps, indeterminate, converged, then counts. It decides nothing the overview does not.
 import type { ExpectResult } from "./expect.ts";
+import type { LabelResult } from "./labels.ts";
 import { ladderLine } from "./ladder.ts";
 import { dangerLine } from "./danger.ts";
 import { dangerHtml, type OverviewEntry, type Overview, renderOverviewHtml } from "./overview.ts";
@@ -24,6 +25,8 @@ export interface Analysis {
   overview: Overview;
   /** The profile's expected results compared with the overview, when the profile has them. */
   expect?: ExpectResult;
+  /** A person's labels of the open entries compared with the overview (stage 79): precision, by kind. */
+  labels?: LabelResult;
 }
 
 /**
@@ -186,6 +189,7 @@ export function renderAnalysis(a: Analysis): string {
   out.push("== Counts", `  ${a.overview.counts.gap} gaps, ${a.overview.counts.indeterminate} indeterminate, ${a.overview.counts.converged} converged`, `  of these, ${a.overview.danger.refuted} refuted and ${a.overview.danger.masked} masked`);
   if (a.overview.ladder !== undefined) out.push(`  ${ladderLine(a.overview.ladder)}`);
   if (a.expect !== undefined) out.push(`  expected results: ${a.expect.mismatches.length === 0 ? "every expectation met" : plural(a.expect.mismatches.length, "mismatch")}`);
+  if (a.labels !== undefined) out.push(`  labels: ${a.labels.true} of ${a.labels.true + a.labels.false} labelled entries true${a.labels.mismatches.length === 0 ? "" : `; ${plural(a.labels.mismatches.length, "mismatch")}`}`);
   out.push("");
   return out.filter((l, i, all) => !(l === "" && all[i - 1] === "")).join("\n");
 }

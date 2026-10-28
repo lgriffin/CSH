@@ -232,12 +232,17 @@ const LOAD = /(?<![.\w$])loadFeature\s*\(/g;
  * CSH can read (a template with an interpolation, or a regular expression that does not compile), which could match
  * any step.
  */
-export type StepPattern = { k: "expression"; text: string } | { k: "vitest"; text: string } | { k: "regex"; source: string; flags: string } | { k: "unreadable"; text: string };
+export type StepPattern = { k: "expression"; text: string } | { k: "vitest"; text: string } | { k: "literal"; text: string } | { k: "regex"; source: string; flags: string } | { k: "unreadable"; text: string };
 
-/** A file that imports vitest-cucumber, whose step strings are read in its dialect (From the tutors run, section 4). */
-/** Whether a file imports @amiceli/vitest-cucumber: an import or require in its code, not a mention in a comment. */
-function importsVitestCucumber(code: string, strings: Map<number, string>): boolean {
-  return [...code.matchAll(/\b(?:from|import)\s*|\brequire\(\s*/g)].some((m) => strings.get(m.index + m[0].length) === "@amiceli/vitest-cucumber");
+/**
+ * Whether a file imports a module: an import or require in its code, not a mention in a comment. A file that imports
+ * vitest-cucumber has its step strings read in that dialect (From the tutors run, section 4); one that imports
+ * jest-cucumber has them read as jest-cucumber compares them, whole and ignoring case (A-284).
+ */
+const STEP_LIBRARIES = ["@cucumber/cucumber", "cucumber", "jest-cucumber", "@amiceli/vitest-cucumber", "playwright-bdd", "@badeball/cypress-cucumber-preprocessor"];
+
+function imports(code: string, strings: Map<number, string>, name: string): boolean {
+  return [...code.matchAll(/\b(?:from|import)\s*|\brequire\(\s*/g)].some((m) => strings.get(m.index + m[0].length) === name);
 }
 
 /**
@@ -248,7 +253,7 @@ export function stepDefinitions(text: string): { line: number; title: string; pa
   const { code, strings } = lex(text);
   const out: { line: number; title: string; pattern: StepPattern }[] = [];
   const loads = new RegExp(LOAD.source).test(code);
-  const dialect = importsVitestCucumber(code, strings) ? "vitest" : "expression";
+  const dialect = imports(code, strings, "@amiceli/vitest-cucumber") ? "vitest" : imports(code, strings, "jest-cucumber") ? "literal" : "expression";
   for (const m of code.matchAll(loads ? LOWER_STEP : STEP)) {
     const at = skipSpace(code, m.index + m[0].length);
     const line = code.slice(0, at).split("\n").length;
@@ -497,8 +502,12 @@ export function run(input: AdapterInput): AdapterOutput {
     }
     const defs: string[] = [];
     if (cucumber) {
-      for (const f of loadedFeatures(file.path, text)) edges.push({ from: file.path, rel: "loads", to: f.feature, span: `${file.path}:${f.line}` });
-      for (const d of stepDefinitions(text)) {
+      const loaded = loadedFeatures(file.path, text);
+      for (const f of loaded) edges.push({ from: file.path, rel: "loads", to: f.feature, span: `${file.path}:${f.line}` });
+      // A unit test that loads no feature and imports no step library defines no steps: a Given it calls is test data
+      // for the code it tests, such as a binder's own (A-286).
+      const unitTest = tests > 0 && loaded.length === 0 && !STEP_LIBRARIES.some((m) => imports(tsCode, tsStrings, m));
+      for (const d of unitTest ? [] : stepDefinitions(text)) {
         steps++;
         defs.push(encodeStep(d));
         for (const c of d.title.matchAll(id)) {

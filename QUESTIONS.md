@@ -586,6 +586,9 @@ CSH does not read the runner.
 - **Indeterminate.** Nothing is called a gap that the runner might skip, at the cost of hiding cases that check nothing
   by accident.
 
+Revisited in stage 79 as [Q-85](#q-85-whether-a-case-with-no-accepted-output-is-a-gap), when labelling showed every one of
+the 282 a skip or an empty output.
+
 Built as the first on 23 October 2026.
 
 ## Q-81 Whether an orphan output or an obsolete snapshot is masked danger
@@ -649,3 +652,21 @@ held by npm's security team as a placeholder, and `csh-cli` belongs to another p
 - **Another unscoped name.**
 
 Decided by the owner on 28 October 2026: `@lgriffin/csh`. Recorded as A-270.
+
+## Q-85 Whether a case with no accepted output is a gap
+
+Raised in stage 79 ([22](docs/spec/22-analysis-a3-and-1.0.md), section 4), by labelling lgriffin/TypeScript at `a91e938`.
+Q-80 made each case with no accepted output a gap. Labelled by hand against the runner, all 282 were false: 42 are in
+`skippedTests` in `compiler_runner.go`, most others set an option `SkipUnsupportedCompilerOptions` skips (module `umd` or
+`system`, `moduleResolution` `node10` or `classic`, `baseUrl`, target `es5`, directly or in the case's `tsconfig.json`),
+and the rest ask for no emit and no type baselines, so a clean compile writes nothing. A runner that compares outputs
+fails on a case whose output it never accepted, so in a repository whose tests pass such a case is rare.
+
+- **One indeterminate entry per suite, listing the cases (chosen):** nothing the runner may skip on purpose is called a
+  gap, the cases stay listed for a reader to check against the runner, and 282 lines of noise become one.
+- **A gap for each case (Q-80):** each is addressable, at a precision of 0 of 282 on the subject that motivated it.
+- **Read the runner's skip list:** a case whose file name the code writes as a string is skipped by name; it decides 42
+  of the 282 and needs every code file's strings in the pairing.
+
+Built as the first on 28 October 2026. Recorded as A-287.
+
